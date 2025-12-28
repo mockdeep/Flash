@@ -33,6 +33,7 @@ Metrics/BlockLength:
     - db/schema.rb
     - config/environments/development.rb
 Rails/FilePath: { EnforcedStyle: slashes }
+Metrics/MethodLength: { Exclude: [db/migrate/**/*.rb] }
 RSpec/MultipleExpectations:
   Exclude:
     - spec/system/**/*.rb
@@ -101,6 +102,8 @@ Style/WordArray: { EnforcedStyle: brackets }
 
 Bundler/GemComment: { Enabled: false }
 Lint/ConstantResolution: { Enabled: false }
+Rails/RedundantPresenceValidationOnBelongsTo: { Enabled: false }
+Rails/SchemaComment: { Enabled: false }
 RSpec/AlignLeftLetBrace: { Enabled: false }
 RSpec/AlignRightLetBrace: { Enabled: false }
 Style/ConstantVisibility: { Enabled: false }
