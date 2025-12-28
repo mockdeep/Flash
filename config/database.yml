@@ -5,12 +5,12 @@ default: &default
 
 development:
   <<: *default
-  database: yourappnamehere_development
+  database: cram_development
 
 test:
   <<: *default
-  database: yourappnamehere_test
+  database: cram_test
 
 production:
   <<: *default
-  database: yourappnamehere_production
+  database: cram_production
