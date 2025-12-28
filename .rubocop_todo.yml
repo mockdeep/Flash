@@ -49,7 +49,7 @@ Metrics/MethodLength:
 # WaywardPredicates: nonzero?
 Naming/PredicateMethod:
   Exclude:
-    - 'app/models/nulls/null_user.rb'
+    - 'app/nulls/null_user.rb'
 
 # Offense count: 3
 Rails/Env:
