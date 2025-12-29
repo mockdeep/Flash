@@ -1,4 +1,0 @@
-inherit_from: .haml-lint_todo.yml
-
-exclude:
-  - vendor/**/*

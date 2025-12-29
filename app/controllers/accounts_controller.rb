@@ -6,11 +6,11 @@ class AccountsController < ApplicationController
   skip_before_action(:authenticate_user, only: [:new, :create])
 
   def show
-    render(locals: { user: current_user })
+    render(Views::Accounts::Show.new(user: current_user))
   end
 
   def new
-    render(locals: { user: User.new })
+    render(Views::Accounts::New.new(user: User.new))
   end
 
   def create
@@ -21,7 +21,7 @@ class AccountsController < ApplicationController
       redirect_to(root_path)
     else
       flash.now[:error] = "There was a problem setting up your account"
-      render(:new, locals: { user: user })
+      render(Views::Accounts::New.new(user:))
     end
   end
 
@@ -31,7 +31,7 @@ class AccountsController < ApplicationController
       redirect_to(root_path)
     else
       flash.now[:error] = "There was a problem updating your account"
-      render(:show, locals: { user: current_user })
+      render(Views::Accounts::Show.new(user: current_user))
     end
   end
 
@@ -42,7 +42,7 @@ class AccountsController < ApplicationController
       redirect_to(root_path)
     else
       flash.now[:error] = "Account could not be deleted"
-      render(:show, locals: { user: current_user })
+      render(Views::Accounts::Show.new(user: current_user))
     end
   end
 

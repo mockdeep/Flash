@@ -10,9 +10,9 @@ gem "rails", "~> 8.1.1"
 gem "bcrypt"
 gem "bootsnap", require: false
 gem "goldiloader"
-gem "haml-rails"
 gem "jsbundling-rails"
 gem "pg"
+gem "phlex-rails"
 gem "propshaft"
 gem "puma", "~> 7.0"
 gem "strong_migrations"
@@ -26,10 +26,8 @@ end
 group :development do
   gem "brakeman", require: false
   gem "guard", require: false
-  gem "guard-haml_lint", require: false
   gem "guard-rspec", require: false
   gem "guard-rubocop", require: false
-  gem "haml_lint", require: false
   gem "rubocop", require: false
   gem "rubocop-capybara", require: false
   gem "rubocop-factory_bot", require: false

@@ -2,4 +2,8 @@
 
 class WelcomeController < ApplicationController
   skip_before_action(:authenticate_user)
+
+  def index
+    render(Views::Welcome::Index.new)
+  end
 end

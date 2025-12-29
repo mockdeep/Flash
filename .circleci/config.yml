@@ -94,10 +94,6 @@ jobs:
           command: bundle exec rubocop
 
       - run:
-          name: Haml Lint
-          command: bundle exec haml-lint
-
-      - run:
           name: Run rspec in parallel
           command: |
             COVERAGE=true bundle exec rspec

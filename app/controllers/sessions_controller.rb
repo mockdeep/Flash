@@ -3,7 +3,9 @@
 class SessionsController < ApplicationController
   skip_before_action(:authenticate_user, only: [:new, :create])
 
-  def new; end
+  def new
+    render(Views::Sessions::New.new)
+  end
 
   def create
     user = User.find_by(email: session_params[:email])
@@ -12,7 +14,7 @@ class SessionsController < ApplicationController
       redirect_to(root_path)
     else
       flash.now[:error] = "Invalid email or password"
-      render(:new)
+      render(Views::Sessions::New.new)
     end
   end
 

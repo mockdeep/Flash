@@ -20,7 +20,7 @@ group :everything, halt_on_fail: true do
     ruby = dsl.ruby
     dsl.watch_spec_files_for(ruby.lib_files)
 
-    rails = dsl.rails(view_extensions: ["haml"])
+    rails = dsl.rails
     dsl.watch_spec_files_for(rails.app_files)
     dsl.watch_spec_files_for(rails.views)
 
@@ -35,11 +35,6 @@ group :everything, halt_on_fail: true do
 
     watch(rails.view_dirs)     { |m| rspec.spec.call("features/#{m[1]}") }
     watch(rails.layouts)       { |m| rspec.spec.call("features/#{m[1]}") }
-  end
-
-  guard :haml_lint, all_on_start: false do
-    watch(/.+\.html.*\.haml$/)
-    watch(%r{(?:.+/)?\.haml-lint\.yml$}) { |m| File.dirname(m[0]) }
   end
 
   guard :rubocop, all_on_start: false, cli: ["-a", "--display-cop-names"] do
