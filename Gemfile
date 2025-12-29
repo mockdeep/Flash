@@ -31,7 +31,9 @@ group :development do
   gem "rubocop", require: false
   gem "rubocop-capybara", require: false
   gem "rubocop-factory_bot", require: false
+  gem "rubocop-i18n", require: false
   gem "rubocop-rails", require: false
+  gem "rubocop-rake", require: false
   gem "rubocop-rspec", require: false
   gem "rubocop-rspec_rails", require: false
   gem "web-console"
