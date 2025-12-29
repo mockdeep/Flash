@@ -14,7 +14,7 @@ gem "jsbundling-rails"
 gem "pg"
 gem "phlex-rails"
 gem "propshaft"
-gem "puma", "~> 7.0"
+gem "puma"
 gem "strong_migrations"
 
 group :development, :test do

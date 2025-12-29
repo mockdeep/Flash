@@ -404,7 +404,7 @@ DEPENDENCIES
   pg
   phlex-rails
   propshaft
-  puma (~> 7.0)
+  puma
   rails (~> 8.1.1)
   rspec-rails
   rubocop
