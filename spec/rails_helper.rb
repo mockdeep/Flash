@@ -41,6 +41,8 @@ RSpec.configure do |config|
 
   config.example_status_persistence_file_path = "spec/examples.txt"
 
+  config.raise_errors_for_deprecations!
+  config.raise_on_warning = true
   config.disable_monkey_patching!
 
   config.default_formatter = "doc" if config.files_to_run.one?
