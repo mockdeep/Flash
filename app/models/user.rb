@@ -9,6 +9,8 @@ class User < ApplicationRecord
 
   validates :email, presence: true, format: EMAIL_REGEXP, uniqueness: true
 
+  has_many :decks
+
   def self.find_by(args)
     super || NullUser.new
   end

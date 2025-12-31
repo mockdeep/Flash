@@ -6,6 +6,7 @@ module Components
     include Phlex::Rails::Helpers::ButtonTo
     include Phlex::Rails::Helpers::Routes
     include Phlex::Rails::Helpers::Pluralize
+    include Phlex::Rails::Helpers::LinkTo
 
     register_value_helper :current_user
   end
