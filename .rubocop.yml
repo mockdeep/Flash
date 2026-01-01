@@ -29,6 +29,8 @@ Layout/LineLength:
   Max: 80
   AutoCorrect: true
   Exclude: ['config/**/*']
+Layout/MultilineMethodCallIndentation: { EnforcedStyle: indented }
+Layout/MultilineOperationIndentation: { EnforcedStyle: indented }
 Layout/TrailingEmptyLines: { Enabled: false }
 Metrics/BlockLength:
   AllowedMethods:
