@@ -12,6 +12,7 @@
   "errorOnDeprecated": true,
   "moduleFileExtensions": ["js", "jsx", "ts", "tsx"],
   "modulePaths": [
+    "<rootDir>",
     "<rootDir>/app/javascript/",
     "<rootDir>/spec/javascript/"
   ],
@@ -29,6 +30,10 @@
   },
   "testEnvironment": "jsdom",
   "transform": {
-    "^.+\\.ts$": ["ts-jest", { "tsconfig": "tsconfig.json" }]
-  }
+    "^.+\\.ts$": ["ts-jest", { "tsconfig": "tsconfig.json" }],
+    "^.+\\.js$": "babel-jest"
+  },
+  "transformIgnorePatterns": [
+    "/node_modules/.store/(?!(@hotwired.*)/)"
+  ]
 }

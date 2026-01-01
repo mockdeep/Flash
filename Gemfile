@@ -16,7 +16,9 @@ gem "pg"
 gem "phlex-rails"
 gem "propshaft"
 gem "puma"
+gem "stimulus-rails"
 gem "strong_migrations"
+gem "turbo-rails"
 
 group :development, :test do
   gem "bundler-audit", require: false
