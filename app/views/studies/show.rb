@@ -21,13 +21,13 @@ module Views
         turbo_frame_tag("study") do
           h2 { card.front }
 
-          study.possible_answers.each do |answer|
-            ul do
+          ol do
+            study.possible_answers.each_with_index do |answer, index|
               li do
                 params = { answer: { answer:, card_id: card.id } }
-                button_to(deck_study_path(deck), params:, method: :patch) do
-                  answer
-                end
+                path = deck_study_path(deck)
+                data = { hotkeys_target: "click", hotkey: (index + 1).to_s }
+                button_to(path, data:, params:, method: :patch) { answer }
               end
             end
           end

@@ -12,10 +12,6 @@ module Views
       end
 
       def view_template
-        link_to("Back to Decks", decks_path)
-
-        h1 { deck.name }
-
         turbo_frame_tag("study") do
           if result.correct?
             p { "Correct! 🎉" }
@@ -23,7 +19,8 @@ module Views
             p { "Incorrect. The correct answer was: #{result.correct_answer}" }
           end
 
-          link_to("Next Card", deck_study_path(deck))
+          data = { hotkeys_target: "click", hotkey: " " }
+          link_to("Next Card", deck_study_path(deck), data:)
         end
       end
     end
