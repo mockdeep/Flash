@@ -2,9 +2,9 @@
   "name": "Flash",
   "private": true,
   "engines": {
-    "node": "24.12.0",
-    "yarn": "4.9.2"
+    "node": "24.12.0"
   },
+  "packageManager": "pnpm@10.26.1",
   "version": "0.1.0",
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
@@ -54,9 +54,9 @@
     "eslint": "eslint ./ --cache --max-warnings=0",
     "eslint_find_unused_rules": "eslint-find-rules --unused --flatConfig --no-core eslint.config.mts",
     "jest": "./node_modules/jest/bin/jest.js --coverage --config config/jest.json",
-    "pretest": "yarn tscheck && yarn eslint",
+    "pretest": "pnpm tscheck && pnpm eslint",
     "stylelint": "./node_modules/stylelint/bin/stylelint.mjs 'app/assets/stylesheets/**/*'",
-    "test": "yarn jest",
-    "tscheck": "yarn tsc --noEmit"
+    "test": "pnpm jest",
+    "tscheck": "pnpm tsc --noEmit"
   }
 }

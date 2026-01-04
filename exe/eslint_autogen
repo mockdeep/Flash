@@ -12,7 +12,7 @@ HEADING = <<~COMMENTS.freeze
 COMMENTS
 
 File.write(TODO_FILE_PATH, "export default []")
-json = `yarn eslint --format json`
+json = `pnpm eslint --format json`
 results = JSON.parse(json)
 
 by_rule =

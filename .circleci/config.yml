@@ -28,7 +28,7 @@ jobs:
           node-version: 24.12.0
 
       - node/install-packages:
-          pkg-manager: yarn-berry
+          pkg-manager: pnpm
 
       - browser-tools/install_firefox
 
@@ -37,7 +37,7 @@ jobs:
           command: |
             bundle -v
             node --version
-            yarn --version
+            pnpm --version
 
       # https://circleci.com/docs/2.0/caching/
       - restore_cache:
@@ -67,19 +67,19 @@ jobs:
 
       - run:
           name: Typescript
-          command: yarn tscheck
+          command: pnpm tscheck
 
       - run:
           name: Find Unused ESLint Rules
-          command: yarn eslint_find_unused_rules
+          command: pnpm eslint_find_unused_rules
 
       - run:
           name: ESLint
-          command: yarn eslint
+          command: pnpm eslint
 
       - run:
           name: Jest
-          command: yarn jest --ci
+          command: pnpm jest --ci
 
       - run:
           name: Brakeman
@@ -87,7 +87,7 @@ jobs:
 
       - run:
           name: Stylelint
-          command: yarn stylelint
+          command: pnpm stylelint
 
       - run:
           name: Rubocop

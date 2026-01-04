@@ -13,7 +13,7 @@ HEADING = <<~COMMENTS.freeze
 COMMENTS
 
 File.write(TODO_FILE_PATH, "{}")
-json = `yarn stylelint --quiet-deprecation-warnings --formatter json 2>&1`
+json = `pnpm stylelint --quiet-deprecation-warnings --formatter json 2>&1`
 results = JSON.parse(json)
 
 by_rule =
