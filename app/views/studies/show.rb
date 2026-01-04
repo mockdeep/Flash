@@ -19,7 +19,10 @@ module Views
         card = study.next_card
 
         turbo_frame_tag("study") do
-          progress(value: deck.cards.done.count, max: deck.cards.count)
+          done_count = deck.cards.done.count
+          cards_count = deck.cards.count
+          progress(value: done_count, max: cards_count)
+          plain("#{done_count} / #{cards_count} cards done")
 
           h2 { card.front }
 
