@@ -24,6 +24,7 @@ AllCops:
 ################################################################################
 
 # https://github.com/rubocop-hq/rubocop/issues/7841
+Style/ModuleFunction: { EnforcedStyle: extend_self }
 Style/TrailingCommaInBlockArgs: { Enabled: false }
 Layout/LineLength:
   Max: 80
