@@ -19,6 +19,8 @@ module Views
         card = study.next_card
 
         turbo_frame_tag("study") do
+          progress(value: deck.cards.done.count, max: deck.cards.count)
+
           h2 { card.front }
 
           ol do

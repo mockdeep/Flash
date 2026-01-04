@@ -15,6 +15,7 @@ class Card < ApplicationRecord
   validates :view_count, presence: true
 
   scope :active, -> { where(status: "active") }
+  scope :done, -> { where(status: "done") }
   scope :pending, -> { where(status: "pending") }
   scope :ordered, -> { order(:id) }
 end

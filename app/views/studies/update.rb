@@ -13,6 +13,8 @@ module Views
 
       def view_template
         turbo_frame_tag("study") do
+          progress(value: deck.cards.done.count, max: deck.cards.count)
+
           if result.correct?
             p { "Correct! 🎉" }
           else
