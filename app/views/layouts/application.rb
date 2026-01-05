@@ -20,6 +20,7 @@ module Views
             csp_meta_tag
 
             stylesheet_link_tag("application", media: "all")
+            stylesheet_link_tag("flash", media: "all")
             javascript_include_tag("application")
           end
 

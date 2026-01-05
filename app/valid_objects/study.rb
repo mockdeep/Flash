@@ -43,21 +43,26 @@ class Study
       card.correct_streak += 1
       card.status = "done" if card.correct_streak >= CARD_DONE_THRESHOLD
       card.save!
-      Result.new(correct: true, correct_answer: card.back)
+      Result.new(correct: true, correct_answer: card.back, question: card.front)
     else
       card.wrong_answers.unshift(answer).uniq!
       card.correct_streak = 0
       card.save!
-      Result.new(correct: false, correct_answer: card.back)
+      Result.new(
+        correct: false,
+        correct_answer: card.back,
+        question: card.front,
+      )
     end
   end
 
   class Result
-    attr_accessor :correct, :correct_answer
+    attr_accessor :correct, :correct_answer, :question
 
-    def initialize(correct:, correct_answer:)
+    def initialize(correct:, correct_answer:, question:)
       self.correct = correct
       self.correct_answer = correct_answer
+      self.question = question
     end
 
     def correct?
