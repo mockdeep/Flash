@@ -10,7 +10,9 @@ gem "rails", "~> 8.1.1"
 gem "bcrypt"
 gem "bootsnap", require: false
 gem "csv"
+gem 'dotenv-rails', groups: [:development, :test]
 gem "goldiloader"
+gem "httparty"
 gem "jsbundling-rails"
 gem "pg"
 gem "phlex-rails"

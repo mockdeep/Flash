@@ -110,6 +110,10 @@ GEM
     date (3.5.1)
     diff-lcs (1.6.2)
     docile (1.4.1)
+    dotenv (3.2.0)
+    dotenv-rails (3.2.0)
+      dotenv (= 3.2.0)
+      railties (>= 6.1)
     drb (2.2.3)
     erb (6.0.1)
     erubi (1.13.1)
@@ -146,6 +150,10 @@ GEM
       guard (~> 2.0)
       rubocop (< 2.0)
     hashdiff (1.2.1)
+    httparty (0.24.0)
+      csv
+      mini_mime (>= 1.0.0)
+      multi_xml (>= 0.5.2)
     i18n (1.14.8)
       concurrent-ruby (~> 1.0)
     io-console (0.8.2)
@@ -180,6 +188,8 @@ GEM
     minitest (6.0.1)
       prism (~> 1.5)
     msgpack (1.8.0)
+    multi_xml (0.8.0)
+      bigdecimal (>= 3.1, < 5)
     nenv (0.3.0)
     net-imap (0.6.2)
       date
@@ -403,11 +413,13 @@ DEPENDENCIES
   bundler-audit
   capybara
   csv
+  dotenv-rails
   factory_bot_rails
   goldiloader
   guard
   guard-rspec
   guard-rubocop
+  httparty
   jsbundling-rails
   pg
   phlex-rails

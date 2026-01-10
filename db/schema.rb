@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_28_185059) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_05_193332) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -37,6 +37,17 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_28_185059) do
     t.index ["user_id", "name"], name: "index_decks_on_user_id_and_name", unique: true
   end
 
+  create_table "subscriptions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at"
+    t.string "polar_subscription_id"
+    t.string "status"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["polar_subscription_id"], name: "index_subscriptions_on_polar_subscription_id", unique: true
+    t.index ["user_id"], name: "index_subscriptions_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -47,4 +58,5 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_28_185059) do
 
   add_foreign_key "cards", "decks"
   add_foreign_key "decks", "users"
+  add_foreign_key "subscriptions", "users"
 end

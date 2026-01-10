@@ -32,3 +32,7 @@ spec/examples.txt
 !/app/assets/builds/.keep
 tsconfig.tsbuildinfo
 .eslintcache
+
+# Environment variables
+.env
+.env.local
