@@ -38,8 +38,6 @@ module Views
             end
           end
         end
-
-        link_to("Back to Decks", decks_path)
       end
     end
   end

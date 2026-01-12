@@ -17,7 +17,9 @@ module Views
             done_count = deck.cards.done.count
             cards_count = deck.cards.count
             progress(value: done_count, max: cards_count)
-            plain("#{done_count} / #{cards_count} cards done")
+            div(class: "progress-text") do
+              plain("#{done_count} / #{cards_count} cards done")
+            end
 
             h2(class: "card-front") { result.question }
 

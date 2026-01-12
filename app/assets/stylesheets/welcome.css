@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=Spectral:wght@600;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root {
+  --color-primary: #1e3a5f;
+  --color-accent: #d97706;
+  --color-surface: #fafaf9;
+  --color-text: #1c1917;
+  --color-text-muted: #57534e;
+}
+
+.welcome-hero {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 4rem 2rem 6rem;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.welcome-title {
+  font-family: 'Spectral', serif;
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1.1;
+  margin: 0 0 1.5rem 0;
+  letter-spacing: -0.02em;
+}
+
+.welcome-subtitle {
+  font-family: 'Source Serif 4', serif;
+  font-size: clamp(1.125rem, 2vw, 1.375rem);
+  color: var(--color-text-muted);
+  max-width: 650px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.welcome-cta {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin: 2.5rem 0 4rem;
+  flex-wrap: wrap;
+}
+
+.btn-primary, .btn-secondary {
+  font-family: 'Source Serif 4', serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  padding: 1rem 2.5rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  display: inline-block;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2d5986;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(30, 58, 95, 0.3);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--color-primary);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.welcome-screenshot {
+  position: relative;
+  max-width: 1000px;
+  margin: 0 auto 5rem;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.screenshot-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 12px 32px rgba(0, 0, 0, 0.08),
+    0 24px 64px rgba(30, 58, 95, 0.12);
+  border: 1px solid rgba(30, 58, 95, 0.1);
+}
+
+.screenshot-card img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 0.5rem;
+}
+
+.welcome-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.feature-card {
+  position: relative;
+  padding: 2rem 1.5rem 2rem 4.5rem;
+  background: linear-gradient(135deg, rgba(30, 58, 95, 0.02) 0%, rgba(217, 119, 6, 0.02) 100%);
+  border-left: 3px solid var(--color-accent);
+  border-radius: 0.5rem;
+}
+
+.feature-number {
+  position: absolute;
+  left: 1.5rem;
+  top: 1.75rem;
+  font-family: 'Spectral', serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-accent);
+  opacity: 0.3;
+}
+
+.feature-title {
+  font-family: 'Spectral', serif;
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin: 0 0 0.75rem 0;
+}
+
+.feature-description {
+  font-family: 'Source Serif 4', serif;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .welcome-hero {
+    padding: 2rem 1rem 3rem;
+  }
+
+  .welcome-cta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-primary, .btn-secondary {
+    text-align: center;
+  }
+}
