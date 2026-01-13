@@ -19,12 +19,7 @@ require_relative "support/mocks"
 require_relative "support/shoulda_matchers"
 require_relative "support/webmock"
 
-begin
-  ActiveRecord::Migration.maintain_test_schema!
-rescue ActiveRecord::PendingMigrationError => e
-  puts e.to_s.strip
-  exit 1
-end
+ActiveRecord::Migration.maintain_test_schema!
 
 RSpec.configure do |config|
   config.fixture_paths = [Rails.root.join("/spec/fixtures")]
