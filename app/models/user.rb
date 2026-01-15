@@ -10,13 +10,14 @@ class User < ApplicationRecord
   validates :email, presence: true, format: EMAIL_REGEXP, uniqueness: true
 
   has_many :decks
+  has_one :subscription
 
   def self.find_by(args)
     super || NullUser.new
   end
 
-  def self.find(id)
-    id ? super : NullUser.new
+  def self.find_by!(args)
+    super.presence || raise(ActiveRecord::RecordNotFound)
   end
 
   def logged_in?

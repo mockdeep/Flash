@@ -5,6 +5,8 @@ class NullUser
     false
   end
 
+  def presence; end
+
   def logged_in?
     false
   end

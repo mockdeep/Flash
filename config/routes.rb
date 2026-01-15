@@ -8,4 +8,7 @@ Rails.application.routes.draw do
     resource :study, only: [:show, :update]
   end
   resource :session, only: [:new, :create, :destroy]
+  resource :subscription, only: [:show, :create, :destroy]
+
+  post "webhooks/creem", to: "webhooks/creem#create"
 end
