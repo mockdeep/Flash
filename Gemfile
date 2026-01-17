@@ -5,6 +5,8 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 ruby File.read("./.ruby-version").strip
 
+gem "dotenv-rails", groups: [:development, :test]
+
 gem "rails", "~> 8.1.1"
 
 gem "bcrypt"

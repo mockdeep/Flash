@@ -110,6 +110,10 @@ GEM
     date (3.5.1)
     diff-lcs (1.6.2)
     docile (1.4.1)
+    dotenv (3.2.0)
+    dotenv-rails (3.2.0)
+      dotenv (= 3.2.0)
+      railties (>= 6.1)
     drb (2.2.3)
     erb (6.0.1)
     erubi (1.13.1)
@@ -403,6 +407,7 @@ DEPENDENCIES
   bundler-audit
   capybara
   csv
+  dotenv-rails
   factory_bot_rails
   goldiloader
   guard
@@ -433,7 +438,7 @@ DEPENDENCIES
   webmock
 
 RUBY VERSION
-   ruby 4.0.0
+  ruby 4.0.0
 
 BUNDLED WITH
-   4.0.3
+  4.0.3
