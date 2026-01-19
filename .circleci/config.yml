@@ -94,16 +94,37 @@ jobs:
           command: bundle exec rubocop
 
       - run:
-          name: Run rspec in parallel
+          name: ✨ 🌈 ✨ Run Unit Tests ✨ 🌈 ✨
           command: |
-            COVERAGE=true bundle exec rspec
-            # DRIVER=firefox bundle exec rspec spec/system
-            # DRIVER=chrome bundle exec rspec spec/system
-            # bundle exec rspec --profile 10 \
-            #                   --format RspecJunitFormatter \
-            #                   --out test_results/rspec.xml \
-            #                   --format progress \
-            #                   $(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)
+            TEST_FILES="$(circleci tests glob "spec/**/*_spec.rb" | \
+              grep -v "spec/system" | \
+              circleci tests split --split-by=timings)"
 
-      - store_test_results: # https://circleci.com/docs/2.0/collect-test-data/
+            echo "******************** TEST_FILES ************************"
+            echo "bundle exec rspec -s <seed-from-failed-build> $TEST_FILES"
+            echo "********************************************************"
+
+            COVERAGE=true bundle exec rspec \
+              --format progress \
+              --format RspecJunitFormatter \
+              --out /tmp/test-results/rspec.xml \
+              $TEST_FILES
+
+      - run:
+          name: ✨ 🌈 ✨ Run System Tests ✨ 🌈 ✨
+          command: |
+            TEST_FILES="$(circleci tests glob "spec/system/**/*_spec.rb" | \
+              circleci tests split --split-by=timings)"
+
+            echo "******************** TEST_FILES ************************"
+            echo "bundle exec rspec -s <seed-from-failed-build> $TEST_FILES"
+            echo "********************************************************"
+
+            xvfb-run -a bundle exec rspec \
+              --format progress \
+              --format RspecJunitFormatter \
+              --out /tmp/test-results/rspec.xml \
+              $TEST_FILES
+
+      - store_test_results:
           path: test_results
