@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "rails_helper"
-
 RSpec.describe SessionsController do
   def user_params
     {
@@ -24,7 +22,7 @@ RSpec.describe SessionsController do
 
   describe "#new" do
     it "renders a new form" do
-      get(:new)
+      get(new_session_path)
 
       expect(response.body).to include("Log in to")
     end
@@ -35,7 +33,7 @@ RSpec.describe SessionsController do
       it "sets the user id in the session" do
         user = User.create!(user_params)
 
-        post(:create, params: valid_create_params)
+        post(session_path, params: valid_create_params)
 
         expect(session[:user_id]).to eq(user.id)
       end
@@ -43,7 +41,7 @@ RSpec.describe SessionsController do
       it "redirects to the home page" do
         User.create!(user_params)
 
-        post(:create, params: valid_create_params)
+        post(session_path, params: valid_create_params)
 
         expect(response).to redirect_to(root_path)
       end
@@ -53,7 +51,7 @@ RSpec.describe SessionsController do
       it "flashes an error" do
         User.create!(user_params)
 
-        post(:create, params: invalid_create_params)
+        post(session_path, params: invalid_create_params)
 
         expect(response.body).to include("Invalid email or password")
       end
@@ -61,7 +59,7 @@ RSpec.describe SessionsController do
       it "renders the new template" do
         User.create!(user_params)
 
-        post(:create, params: invalid_create_params)
+        post(session_path, params: invalid_create_params)
 
         expect(response.body).to include("Log in to")
       end
@@ -69,44 +67,24 @@ RSpec.describe SessionsController do
   end
 
   describe "#destroy" do
-    context "when user is not logged in" do
-      it "redirects to log in page" do
-        delete(:destroy)
+    it "redirects to log in page when user is not logged in" do
+      delete(session_path)
 
-        expect(response).to redirect_to(new_session_path)
-      end
-
-      it "does not clear the session" do
-        session[:blah] = "boo"
-
-        delete(:destroy)
-
-        expect(session[:blah]).to eq("boo")
-      end
-    end
-
-    it "signs out the user" do
-      session[:user_id] = User.create!(user_params).id
-
-      delete(:destroy)
-
-      expect(session[:user_id]).to be_nil
+      expect(response).to redirect_to(new_session_path)
     end
 
     it "clears the session" do
-      session[:user_id] = User.create!(user_params).id
-      session[:blah] = "boo"
+      login_as(default_user)
 
-      delete(:destroy)
+      delete(session_path)
 
-      expect(session[:blah]).to be_nil
+      expect(session).to be_empty
     end
 
     it "redirects to the home page" do
-      user = User.create!(user_params)
-      session[:user_id] = user.id
+      login_as(default_user)
 
-      delete(:destroy)
+      delete(session_path)
 
       expect(response).to redirect_to(root_path)
     end

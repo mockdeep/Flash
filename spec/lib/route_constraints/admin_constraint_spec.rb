@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "rails_helper"
-
 RSpec.describe AdminConstraint do
   describe "#matches?" do
     def make_request(session:)

@@ -111,6 +111,7 @@ Style/WordArray: { EnforcedStyle: brackets }
 ################################################################################
 
 Bundler/GemComment: { Enabled: false }
+Layout/SingleLineBlockChain: { Enabled: false }
 Lint/ConstantResolution: { Enabled: false }
 Rails/OrderById: { Enabled: false }
 Rails/RedundantPresenceValidationOnBelongsTo: { Enabled: false }

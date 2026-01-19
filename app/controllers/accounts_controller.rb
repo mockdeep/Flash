@@ -36,14 +36,10 @@ class AccountsController < ApplicationController
   end
 
   def destroy
-    if current_user.destroy
-      log_out
-      flash[:success] = "Account permanently deleted"
-      redirect_to(root_path)
-    else
-      flash.now[:error] = "Account could not be deleted"
-      render(Views::Accounts::Show.new(user: current_user))
-    end
+    current_user.destroy!
+    log_out
+    flash[:success] = "Account permanently deleted"
+    redirect_to(root_path)
   end
 
   private
