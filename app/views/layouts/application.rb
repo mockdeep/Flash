@@ -28,10 +28,12 @@ module Views
           body(data: { controller: "hotkeys", action: }) do
             if current_user.logged_in?
               plain(current_user.email)
+              plain(" | ")
               link_to("Account", account_path)
               button_to("Log Out", session_path, method: :delete)
             else
               link_to("Log In", new_session_path)
+              plain(" | ")
               link_to("Sign Up", new_account_path)
             end
 
@@ -42,8 +44,22 @@ module Views
             end
 
             yield
+
+            footer do
+              plain("Please send feedback to ")
+              mail_to("support+flash@boon.gl")
+              br
+              plain(" or feel free to open an issue on ")
+              link_to("the Github Repo", repo_url)
+            end
           end
         end
+      end
+
+      private
+
+      def repo_url
+        "https://www.github.com/mockdeep/flash"
       end
     end
   end

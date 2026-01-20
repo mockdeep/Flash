@@ -33,11 +33,24 @@ module Views
 
           div(class: "field") do
             form.label(:cards_csv, "Cards (CSV format)")
+            plain(<<~PLAIN)
+              Upload a CSV file with columns: front, back, and category. Use
+              ';' to separate multiple back answers. You can download a sample
+            PLAIN
+            link_options = { target: "_blank", rel: "noopener" }
+            link_to("Spanish CSV file here", csv_url, **link_options)
+            br
             form.file_field(:cards_csv, required: true)
           end
 
           div { form.submit("Create Deck") }
         end
+      end
+
+      private
+
+      def csv_url
+        ENV["SAMPLE_CSV_URL"]
       end
     end
   end

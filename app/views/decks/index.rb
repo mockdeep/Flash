@@ -23,7 +23,7 @@ module Views
         ul do
           decks.each do |deck|
             li do
-              link_to(deck.name, deck)
+              link_to(deck.name, deck_study_path(deck))
             end
           end
         end

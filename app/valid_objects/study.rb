@@ -4,7 +4,7 @@ class Study
   attr_accessor :deck, :next_card
 
   ACTIVE_CARD_THRESHOLD = 20
-  CARD_DONE_THRESHOLD = 3
+  CARD_DONE_THRESHOLD = 1
 
   def initialize(deck:)
     self.deck = deck

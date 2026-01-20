@@ -13,7 +13,9 @@ module Views
 
       def view_template
         div(class: "content-container") do
-          link_to("Back to Decks", decks_path)
+          link_to("View Deck", deck_path(deck))
+          plain(" | ")
+          link_to("All Decks", decks_path)
 
           h1 { deck.name }
 
