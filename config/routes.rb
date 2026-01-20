@@ -10,5 +10,8 @@ Rails.application.routes.draw do
   resource :session, only: [:new, :create, :destroy]
   resource :subscription, only: [:show, :create, :destroy]
 
+  get "privacy", to: "pages#privacy"
+  get "terms", to: "pages#terms"
+
   post "webhooks/creem", to: "webhooks/creem#create"
 end

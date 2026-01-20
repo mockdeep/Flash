@@ -51,6 +51,10 @@ module Views
               br
               plain(" or feel free to open an issue on ")
               link_to("the Github Repo", repo_url)
+              br
+              link_to("Privacy Policy", privacy_path)
+              plain(" | ")
+              link_to("Terms of Service", terms_path)
             end
           end
         end
