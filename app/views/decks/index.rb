@@ -11,20 +11,85 @@ module Views
       end
 
       def view_template
-        h1 { "Your Decks" }
+        div(class: "decks-container") do
+          div(class: "decks-header") do
+            h1(class: "decks-title") { "Your Decks" }
+            link_to("+ Create New Deck", new_deck_path, class: "btn-create-deck")
+          end
 
-        link_to("Create New Deck", new_deck_path)
-
-        if decks.empty?
-          p { "You have no decks yet." }
-          return
+          if decks.empty?
+            render_empty_state
+          else
+            render_decks_grid
+          end
         end
+      end
 
-        ul do
+      private
+
+      def render_empty_state
+        div(class: "empty-state") do
+          div(class: "empty-state-icon") { "📚" }
+          h2(class: "empty-state-title") { "No Decks Yet" }
+          p(class: "empty-state-text") do
+            "Create your first flashcard deck to start learning with spaced repetition."
+          end
+          link_to("Create Your First Deck", new_deck_path, class: "btn-empty-state")
+        end
+      end
+
+      def render_decks_grid
+        div(class: "decks-grid") do
           decks.each do |deck|
-            li do
-              link_to(deck.name, deck_study_path(deck))
+            render_deck_card(deck)
+          end
+        end
+      end
+
+      def render_deck_card(deck)
+        div(class: "deck-card") do
+          div(class: "deck-card-header") do
+            h3(class: "deck-card-title") { deck.name }
+            div(class: "deck-card-count") do
+              span(class: "count-number") { deck.cards.count }
+              span(class: "count-label") { "cards" }
             end
+          end
+
+          if deck.cards.any?
+            render_deck_stats(deck)
+          else
+            div(class: "deck-empty-message") do
+              "No cards yet"
+            end
+          end
+
+          div(class: "deck-card-actions") do
+            link_to("Study", deck_study_path(deck), class: "btn-study")
+            link_to("View Details", deck_path(deck), class: "btn-details")
+          end
+        end
+      end
+
+      def render_deck_stats(deck)
+        pending_count = deck.cards.pending.count
+        active_count = deck.cards.active.count
+        done_count = deck.cards.done.count
+
+        div(class: "deck-stats") do
+          div(class: "stat-item stat-pending") do
+            div(class: "stat-value") { pending_count }
+            div(class: "stat-label") { "Pending" }
+          end
+
+          div(class: "stat-item stat-active") do
+            div(class: "stat-value") { active_count }
+            div(class: "stat-label") { "Active" }
+          end
+
+          div(class: "stat-item stat-done") do
+            div(class: "stat-value") { done_count }
+            div(class: "stat-label") { "Done" }
           end
         end
       end
