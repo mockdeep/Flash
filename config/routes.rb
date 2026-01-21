@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   resource :session, only: [:new, :create, :destroy]
   resource :subscription, only: [:show, :create, :destroy]
 
+  get "pricing", to: "pages#pricing"
   get "privacy", to: "pages#privacy"
   get "terms", to: "pages#terms"
 

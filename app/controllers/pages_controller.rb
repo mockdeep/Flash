@@ -3,6 +3,10 @@
 class PagesController < ApplicationController
   skip_before_action(:authenticate_user)
 
+  def pricing
+    render(Views::Pages::Pricing.new)
+  end
+
   def privacy
     render(Views::Pages::Privacy.new)
   end

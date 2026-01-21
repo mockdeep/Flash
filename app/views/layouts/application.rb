@@ -26,6 +26,7 @@ module Views
             stylesheet_link_tag("layout", media: "all")
             stylesheet_link_tag("welcome", media: "all")
             stylesheet_link_tag("decks", media: "all")
+            stylesheet_link_tag("pricing", media: "all")
             javascript_include_tag("application")
           end
 
@@ -79,6 +80,7 @@ module Views
                   h3(class: "footer-heading") { "Product" }
                   ul(class: "footer-links") do
                     li { link_to("Home", root_path) }
+                    li { link_to("Pricing", pricing_path) }
                     if current_user.logged_in?
                       li { link_to("My Decks", decks_path) }
                       li { link_to("Account Settings", account_path) }

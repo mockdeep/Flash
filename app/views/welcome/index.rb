@@ -36,19 +36,19 @@ module Views
             feature_card(
               number: "01",
               title: "Spaced Repetition",
-              description: "Our intelligent algorithm presents cards at optimal intervals, maximizing retention and minimizing study time."
+              description: "Our intelligent algorithm presents cards at optimal intervals, maximizing retention and minimizing study time.",
             )
 
             feature_card(
               number: "02",
               title: "Custom Decks",
-              description: "Create unlimited flashcard decks or import from CSV. Organize by topic, category, or subject."
+              description: "Create unlimited flashcard decks or import from CSV. Organize by topic, category, or subject.",
             )
 
             feature_card(
               number: "03",
               title: "Progress Tracking",
-              description: "Watch your knowledge grow with detailed statistics that adapt your study plan to your learning pace."
+              description: "Watch your knowledge grow with detailed statistics that adapt your study plan to your learning pace.",
             )
           end
         end
