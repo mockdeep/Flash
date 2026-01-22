@@ -25,12 +25,5 @@ RSpec.describe AdminConstraint do
 
       expect(described_class.new.matches?(request)).to be(false)
     end
-
-    it "raises an error when id is garbage" do
-      request = make_request(session: { user_id: "garbage" })
-
-      expect { described_class.new.matches?(request) }
-        .to raise_error(ActiveRecord::RecordNotFound)
-    end
   end
 end

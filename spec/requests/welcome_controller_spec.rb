@@ -5,7 +5,7 @@ RSpec.describe WelcomeController do
     it "renders the welcome index view" do
       get(root_path)
 
-      expect(response.body).to include("Welcome")
+      expect(response.body).to include("Memorize Anything")
     end
   end
 end

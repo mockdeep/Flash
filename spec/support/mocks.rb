@@ -9,8 +9,8 @@ def record_double(klass, **method_overrides)
   mock_methods(fake_record, method_overrides)
 
   RSpec::Mocks
-    .expect_message(klass, :find, expected_from: expected_from)
-    .with(FAKE_ID)
+    .expect_message(klass, :find_by, expected_from: expected_from)
+    .with(id: FAKE_ID)
     .at_least(:once)
     .and_return(fake_record)
 
