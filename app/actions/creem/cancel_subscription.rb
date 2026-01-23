@@ -9,7 +9,7 @@ module Creem
       )
 
       if response[:success]
-        subscription.update!(status: "canceled", canceled_at: Time.current)
+        subscription.update!(status: "canceled")
         Result.new(success: true)
       else
         Rails.logger.error("Failed to cancel Creem subscription: #{response[:error]}")

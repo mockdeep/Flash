@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Subscription < ApplicationRecord
+  self.ignored_columns += ["canceled_at"]
+
   belongs_to :user
 
   validates :creem_subscription_id, presence: true, uniqueness: true

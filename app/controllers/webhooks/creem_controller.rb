@@ -72,7 +72,7 @@ module Webhooks
       subscription = Subscription.find_by(creem_subscription_id: data[:id])
       return unless subscription
 
-      subscription.update!(status: "canceled", canceled_at: Time.current)
+      subscription.update!(status: "canceled")
     end
 
     def handle_payment_failed(data)

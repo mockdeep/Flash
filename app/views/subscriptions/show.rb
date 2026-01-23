@@ -81,10 +81,6 @@ module Views
               dd(class: "detail-value") { subscription.current_period_end.strftime("%B %d, %Y") }
             end
 
-            if subscription.canceled_at
-              dt { "Canceled on" }
-              dd(class: "detail-value") { subscription.canceled_at.strftime("%B %d, %Y") }
-            end
           end
 
           if subscription.active?
