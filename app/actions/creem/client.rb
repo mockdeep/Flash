@@ -39,7 +39,6 @@ module Creem
       if response.code.to_i >= 200 && response.code.to_i < 300
         { success: true, data: body }
       else
-        Rails.logger.error("Creem API error: #{body}")
         { success: false, error: body }
       end
     end

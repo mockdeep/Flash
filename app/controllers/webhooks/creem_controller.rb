@@ -20,8 +20,6 @@ module Webhooks
         handle_subscription_canceled(event_data)
       when "subscription.payment_failed"
         handle_payment_failed(event_data)
-      else
-        Rails.logger.info("Unhandled Creem webhook event: #{event_type}")
       end
 
       head(:ok)
@@ -40,7 +38,6 @@ module Webhooks
       )
 
       unless ActiveSupport::SecurityUtils.secure_compare(signature, expected_signature)
-        Rails.logger.warn("Invalid Creem webhook signature")
         raise ActionController::RoutingError, 'Not Found'
       end
     end

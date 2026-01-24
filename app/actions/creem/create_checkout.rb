@@ -21,7 +21,6 @@ module Creem
         checkout_url = response[:data][:checkout_url]
         Result.new(success: true, checkout_url:)
       else
-        Rails.logger.error("Failed to create Creem checkout: #{response[:error]}")
         Result.new(success: false, checkout_url: nil)
       end
     end

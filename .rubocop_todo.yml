@@ -68,6 +68,14 @@ Layout/EmptyLineAfterMagicComment:
     - 'config/initializers/mime_types.rb'
     - 'config/initializers/permissions_policy.rb'
 
+# Offense count: 1
+# This cop supports safe autocorrection (--autocorrect).
+# Configuration parameters: EnforcedStyle.
+# SupportedStyles: empty_lines, no_empty_lines
+Layout/EmptyLinesAroundBlockBody:
+  Exclude:
+    - 'app/views/subscriptions/show.rb'
+
 # Offense count: 2
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: IndentationWidth.
@@ -88,8 +96,6 @@ Layout/FirstMethodArgumentLineBreak:
 # URISchemes: http, https
 Layout/LineLength:
   Exclude:
-    - 'app/actions/creem/cancel_subscription.rb'
-    - 'app/actions/creem/create_checkout.rb'
     - 'app/controllers/webhooks/creem_controller.rb'
     - 'app/views/decks/index.rb'
     - 'app/views/decks/new.rb'
@@ -166,7 +172,6 @@ Metrics/ClassLength:
 # Configuration parameters: CountComments, Max, CountAsOne, AllowedMethods, AllowedPatterns.
 Metrics/MethodLength:
   Exclude:
-    - 'app/actions/creem/cancel_subscription.rb'
     - 'app/actions/creem/create_checkout.rb'
     - 'app/actions/decks/create.rb'
     - 'app/controllers/subscriptions_controller.rb'
@@ -263,13 +268,6 @@ Style/FetchEnvVar:
 Style/GlobalStdStream:
   Exclude:
     - 'config/environments/production.rb'
-
-# Offense count: 1
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: MinBodyLength, AllowConsecutiveConditionals.
-Style/GuardClause:
-  Exclude:
-    - 'app/controllers/webhooks/creem_controller.rb'
 
 # Offense count: 1
 # This cop supports safe autocorrection (--autocorrect).

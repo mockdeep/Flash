@@ -12,7 +12,6 @@ module Creem
         subscription.update!(status: "canceled")
         Result.new(success: true)
       else
-        Rails.logger.error("Failed to cancel Creem subscription: #{response[:error]}")
         Result.new(success: false)
       end
     end
