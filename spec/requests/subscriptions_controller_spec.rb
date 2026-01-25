@@ -89,7 +89,7 @@ RSpec.describe SubscriptionsController do
 
     context "when cancellation succeeds" do
       it "redirects to subscription page" do
-        subscription = create(:subscription, user: default_user)
+        subscription = create(:subscription)
         stub_creem_cancel(subscription, status: 200)
         login_as(default_user)
 
@@ -99,7 +99,7 @@ RSpec.describe SubscriptionsController do
       end
 
       it "sets success flash message" do
-        subscription = create(:subscription, user: default_user)
+        subscription = create(:subscription)
         stub_creem_cancel(subscription, status: 200)
         login_as(default_user)
 
@@ -111,7 +111,7 @@ RSpec.describe SubscriptionsController do
 
     context "when cancellation fails" do
       it "redirects to subscription page" do
-        subscription = create(:subscription, user: default_user)
+        subscription = create(:subscription)
         stub_creem_cancel(subscription, status: 400)
         login_as(default_user)
 
@@ -121,7 +121,7 @@ RSpec.describe SubscriptionsController do
       end
 
       it "sets error flash message" do
-        subscription = create(:subscription, user: default_user)
+        subscription = create(:subscription)
         stub_creem_cancel(subscription, status: 400)
         login_as(default_user)
 
