@@ -45,7 +45,7 @@ RSpec.describe DecksController do
     def deck_params(name:, csv_file:)
       {
         deck: {
-          name: name,
+          name:,
           cards_csv: csv_file,
         },
       }
