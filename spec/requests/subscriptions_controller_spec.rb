@@ -12,8 +12,7 @@ RSpec.describe SubscriptionsController do
   end
 
   def stub_creem_checkout(status:, body: {})
-    stub_request(:post, checkouts_url)
-      .to_return(status: status, body: body.to_json)
+    stub_request(:post, checkouts_url).to_return(status:, body: body.to_json)
   end
 
   def cancel_url(subscription)
@@ -23,7 +22,7 @@ RSpec.describe SubscriptionsController do
 
   def stub_creem_cancel(subscription, status:, body: {})
     stub_request(:post, cancel_url(subscription))
-      .to_return(status: status, body: body.to_json)
+      .to_return(status:, body: body.to_json)
   end
 
   describe "#show" do
@@ -39,10 +38,9 @@ RSpec.describe SubscriptionsController do
   describe "#create" do
     context "when checkout creation succeeds" do
       it "redirects to Creem checkout URL" do
-        user = default_user
         stub_creem_checkout(status: 200, body: { checkout_url: })
+        login_as(default_user)
 
-        login_as(user)
         post(subscription_path)
 
         expect(response).to redirect_to(checkout_url)
@@ -51,20 +49,18 @@ RSpec.describe SubscriptionsController do
 
     context "when checkout creation fails" do
       it "redirects to subscription page" do
-        user = default_user
         stub_creem_checkout(status: 400)
+        login_as(default_user)
 
-        login_as(user)
         post(subscription_path)
 
         expect(response).to redirect_to(subscription_path)
       end
 
       it "sets error flash message" do
-        user = default_user
         stub_creem_checkout(status: 400)
+        login_as(default_user)
 
-        login_as(user)
         post(subscription_path)
 
         expect(flash[:error]).to eq("Unable to create checkout session")
@@ -73,23 +69,19 @@ RSpec.describe SubscriptionsController do
   end
 
   describe "#destroy" do
-    def cancel_subscription(user:, subscription: nil, api_status: nil)
-      create(:subscription, user:) if subscription.nil? && api_status
-      stub_creem_cancel(user.subscription, status: api_status) if api_status
-
-      login_as(user)
-      delete(subscription_path)
-    end
-
     context "when user has no subscription" do
       it "redirects to subscription page" do
-        cancel_subscription(user: default_user)
+        login_as(default_user)
+
+        delete(subscription_path)
 
         expect(response).to redirect_to(subscription_path)
       end
 
       it "sets error flash message" do
-        cancel_subscription(user: default_user)
+        login_as(default_user)
+
+        delete(subscription_path)
 
         expect(flash[:error]).to eq("No active subscription found")
       end
@@ -97,13 +89,21 @@ RSpec.describe SubscriptionsController do
 
     context "when cancellation succeeds" do
       it "redirects to subscription page" do
-        cancel_subscription(user: default_user, api_status: 200)
+        subscription = create(:subscription, user: default_user)
+        stub_creem_cancel(subscription, status: 200)
+        login_as(default_user)
+
+        delete(subscription_path)
 
         expect(response).to redirect_to(subscription_path)
       end
 
       it "sets success flash message" do
-        cancel_subscription(user: default_user, api_status: 200)
+        subscription = create(:subscription, user: default_user)
+        stub_creem_cancel(subscription, status: 200)
+        login_as(default_user)
+
+        delete(subscription_path)
 
         expect(flash[:success]).to eq("Subscription canceled successfully")
       end
@@ -111,13 +111,21 @@ RSpec.describe SubscriptionsController do
 
     context "when cancellation fails" do
       it "redirects to subscription page" do
-        cancel_subscription(user: default_user, api_status: 400)
+        subscription = create(:subscription, user: default_user)
+        stub_creem_cancel(subscription, status: 400)
+        login_as(default_user)
+
+        delete(subscription_path)
 
         expect(response).to redirect_to(subscription_path)
       end
 
       it "sets error flash message" do
-        cancel_subscription(user: default_user, api_status: 400)
+        subscription = create(:subscription, user: default_user)
+        stub_creem_cancel(subscription, status: 400)
+        login_as(default_user)
+
+        delete(subscription_path)
 
         expect(flash[:error]).to eq("Unable to cancel subscription")
       end
