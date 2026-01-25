@@ -80,7 +80,17 @@ module Webhooks
     end
 
     def webhook_params
-      params.permit!.to_h.deep_symbolize_keys
+      params.permit(
+        :type,
+        data: [
+          :id,
+          :status,
+          :current_period_start,
+          :current_period_end,
+          { plan: [:name] },
+          { customer: [:email] },
+        ]
+      ).to_h.deep_symbolize_keys
     end
   end
 end
