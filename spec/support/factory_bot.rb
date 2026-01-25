@@ -6,11 +6,15 @@ module FactoryCache
   extend self
 
   def user
-    @user ||= FactoryBot.create(:user)
+    return @user if @user&.persisted?
+
+    @user = FactoryBot.create(:user)
   end
 
   def deck
-    @deck ||= FactoryBot.create(:deck)
+    return @deck if @deck&.persisted?
+
+    @deck = FactoryBot.create(:deck)
   end
 
   def reset
