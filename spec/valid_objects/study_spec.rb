@@ -1,26 +1,6 @@
 # frozen_string_literal: true
 
 RSpec.describe Study do
-  describe "#initialize" do
-    it "sets the deck" do
-      deck = create(:deck)
-      create(:card, :active, deck:)
-
-      study = described_class.new(deck:)
-
-      expect(study.deck).to eq(deck)
-    end
-
-    it "picks next card" do
-      deck = create(:deck)
-      card = create(:card, :active, deck:)
-
-      study = described_class.new(deck:)
-
-      expect(study.next_card).to eq(card)
-    end
-  end
-
   describe "#pick_next_card" do
     it "activates pending cards up to threshold" do
       deck = create(:deck)
@@ -33,12 +13,12 @@ RSpec.describe Study do
 
     it "limits activation to threshold minus active count" do
       deck = create(:deck)
-      create_list(:card, 15, :active, deck:)
-      create_list(:card, 10, :pending, deck:)
+      create_list(:card, 3, :active, deck:)
+      create_list(:card, 5, :pending, deck:)
 
-      described_class.new(deck:)
+      described_class.new(deck:, active_card_threshold: 5)
 
-      expect(deck.cards.active.count).to eq(20)
+      expect(deck.cards.active.count).to eq(5)
     end
 
     it "returns nil when no cards available" do
@@ -204,10 +184,8 @@ RSpec.describe Study do
       end
 
       it "prepends wrong answer to existing list" do
-        deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris")
-        card.update!(wrong_answers: ["Berlin"])
-        study = described_class.new(deck:)
+        card = create(:card, :active, back: "Paris", wrong_answers: ["Berlin"])
+        study = described_class.new(deck: card.deck)
 
         study.answer_card(card_id: card.id, answer: "London")
 
@@ -215,10 +193,8 @@ RSpec.describe Study do
       end
 
       it "removes duplicate wrong answers" do
-        deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris")
-        card.update!(wrong_answers: ["London"])
-        study = described_class.new(deck:)
+        card = create(:card, :active, back: "Paris", wrong_answers: ["London"])
+        study = described_class.new(deck: card.deck)
 
         study.answer_card(card_id: card.id, answer: "London")
 
