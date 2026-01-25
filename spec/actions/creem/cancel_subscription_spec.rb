@@ -8,7 +8,7 @@ RSpec.describe Creem::CancelSubscription do
 
   def stub_creem_cancel(subscription, status:, body: {})
     stub_request(:post, cancel_url(subscription))
-      .to_return(status: status, body: body.to_json)
+      .to_return(status:, body: body.to_json)
   end
 
   describe ".call" do

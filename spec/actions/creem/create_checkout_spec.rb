@@ -10,15 +10,14 @@ RSpec.describe Creem::CreateCheckout do
   end
 
   def stub_creem_checkout(status:, body: {})
-    stub_request(:post, checkouts_url)
-      .to_return(status: status, body: body.to_json)
+    stub_request(:post, checkouts_url).to_return(status:, body: body.to_json)
   end
 
   describe ".call" do
     context "when Creem API returns success" do
       it "returns success result" do
         user = create(:user)
-        stub_creem_checkout(status: 200, body: { checkout_url: checkout_url })
+        stub_creem_checkout(status: 200, body: { checkout_url: })
 
         result = described_class.call(user:)
 
@@ -27,7 +26,7 @@ RSpec.describe Creem::CreateCheckout do
 
       it "includes checkout URL" do
         user = create(:user)
-        stub_creem_checkout(status: 200, body: { checkout_url: checkout_url })
+        stub_creem_checkout(status: 200, body: { checkout_url: })
 
         result = described_class.call(user:)
 
@@ -36,7 +35,7 @@ RSpec.describe Creem::CreateCheckout do
 
       it "sends user email to Creem" do
         user = create(:user, email: "test@example.com")
-        stub_creem_checkout(status: 200, body: { checkout_url: checkout_url })
+        stub_creem_checkout(status: 200, body: { checkout_url: })
 
         described_class.call(user:)
 
@@ -46,7 +45,7 @@ RSpec.describe Creem::CreateCheckout do
 
       it "sends product ID to Creem" do
         user = create(:user)
-        stub_creem_checkout(status: 200, body: { checkout_url: checkout_url })
+        stub_creem_checkout(status: 200, body: { checkout_url: })
 
         described_class.call(user:)
 

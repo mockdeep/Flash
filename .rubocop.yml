@@ -23,8 +23,9 @@ AllCops:
 #
 ################################################################################
 
-# https://github.com/rubocop-hq/rubocop/issues/7841
+Style/HashSyntax: { EnforcedShorthandSyntax: always }
 Style/ModuleFunction: { EnforcedStyle: extend_self }
+# https://github.com/rubocop-hq/rubocop/issues/7841
 Style/TrailingCommaInBlockArgs: { Enabled: false }
 Layout/LineLength:
   Max: 80

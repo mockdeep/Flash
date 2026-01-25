@@ -9,7 +9,7 @@ def record_double(klass, **method_overrides)
   mock_methods(fake_record, method_overrides)
 
   RSpec::Mocks
-    .expect_message(klass, :find_by, expected_from: expected_from)
+    .expect_message(klass, :find_by, expected_from:)
     .with(id: FAKE_ID)
     .at_least(:once)
     .and_return(fake_record)
@@ -20,7 +20,7 @@ end
 def mock_methods(fake_record, method_overrides)
   method_overrides.each do |method_name, return_value|
     RSpec::Mocks
-      .expect_message(fake_record, method_name, expected_from: expected_from)
+      .expect_message(fake_record, method_name, expected_from:)
       .at_least(:once)
       .and_return(return_value)
   end

@@ -3,7 +3,7 @@
 RSpec.describe AdminConstraint do
   describe "#matches?" do
     def make_request(session:)
-      instance_double(ActionDispatch::Request, session: session)
+      instance_double(ActionDispatch::Request, session:)
     end
 
     it "returns true when user is admin" do
