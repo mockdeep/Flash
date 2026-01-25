@@ -22,6 +22,9 @@ export default class extends Controller {
   handleKeydown(event: KeyboardEvent): void {
     const clickable = this.indexedClickTargets.get(event.key);
 
-    if (clickable) { clickable.click(); }
+    if (clickable) {
+      event.preventDefault();
+      clickable.click();
+    }
   }
 }
