@@ -3,10 +3,8 @@
 require "rails_helper"
 
 RSpec.describe Subscription do
-  # Associations
   it { is_expected.to belong_to(:user) }
 
-  # Validations
   it { is_expected.to validate_presence_of(:creem_subscription_id) }
   it { is_expected.to validate_presence_of(:status) }
 
@@ -17,16 +15,15 @@ RSpec.describe Subscription do
       .to validate_uniqueness_of(:creem_subscription_id)
   end
 
-  # Methods
   describe "#active?" do
     it "returns true when status is active" do
-      subscription = build(:subscription, status: "active")
+      subscription = build(:subscription)
 
       expect(subscription.active?).to be(true)
     end
 
     it "returns false when status is not active" do
-      subscription = build(:subscription, status: "canceled")
+      subscription = build(:subscription, :canceled)
 
       expect(subscription.active?).to be(false)
     end
@@ -34,13 +31,13 @@ RSpec.describe Subscription do
 
   describe "#canceled?" do
     it "returns true when status is canceled" do
-      subscription = build(:subscription, status: "canceled")
+      subscription = build(:subscription, :canceled)
 
       expect(subscription.canceled?).to be(true)
     end
 
     it "returns false when status is not canceled" do
-      subscription = build(:subscription, status: "active")
+      subscription = build(:subscription)
 
       expect(subscription.canceled?).to be(false)
     end
