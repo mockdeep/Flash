@@ -23,8 +23,8 @@ RSpec.describe Card do
   describe ".active" do
     it "returns cards with active status" do
       deck = create(:deck)
-      active_card = create(:card, :active, deck: deck)
-      create(:card, :pending, deck: deck)
+      active_card = create(:card, :active, deck:)
+      create(:card, :pending, deck:)
 
       expect(deck.cards.active).to eq([active_card])
     end
@@ -33,8 +33,8 @@ RSpec.describe Card do
   describe ".done" do
     it "returns cards with done status" do
       deck = create(:deck)
-      done_card = create(:card, :done, deck: deck)
-      create(:card, :active, deck: deck)
+      done_card = create(:card, :done, deck:)
+      create(:card, :active, deck:)
 
       expect(deck.cards.done).to eq([done_card])
     end
@@ -43,8 +43,8 @@ RSpec.describe Card do
   describe ".pending" do
     it "returns cards with pending status" do
       deck = create(:deck)
-      pending_card = create(:card, :pending, deck: deck)
-      create(:card, :active, deck: deck)
+      pending_card = create(:card, :pending, deck:)
+      create(:card, :active, deck:)
 
       expect(deck.cards.pending).to eq([pending_card])
     end
@@ -53,8 +53,8 @@ RSpec.describe Card do
   describe ".ordered" do
     it "returns cards ordered by id" do
       deck = create(:deck)
-      card1 = create(:card, deck: deck)
-      card2 = create(:card, deck: deck)
+      card1 = create(:card, deck:)
+      card2 = create(:card, deck:)
 
       expect(deck.cards.ordered).to eq([card1, card2])
     end
