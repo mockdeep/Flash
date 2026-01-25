@@ -6,6 +6,10 @@ module Helpers
       params = { session: { email: user.email, password: user.password } }
       post(session_path, params:)
     end
+
+    def rendered
+      Capybara.string(response.body)
+    end
   end
 end
 

@@ -3,27 +3,27 @@
 require "rails_helper"
 
 RSpec.describe PagesController do
-  describe "GET /pricing" do
+  describe "#pricing" do
     it "renders the pricing page" do
       get(pricing_path)
 
-      expect(response).to have_http_status(:ok)
+      expect(rendered).to have_content("Pricing")
     end
   end
 
-  describe "GET /privacy" do
+  describe "#privacy" do
     it "renders the privacy page" do
       get(privacy_path)
 
-      expect(response).to have_http_status(:ok)
+      expect(rendered).to have_content("Privacy Policy")
     end
   end
 
-  describe "GET /terms" do
+  describe "#terms" do
     it "renders the terms page" do
       get(terms_path)
 
-      expect(response).to have_http_status(:ok)
+      expect(rendered).to have_content("Terms of Service")
     end
   end
 end
