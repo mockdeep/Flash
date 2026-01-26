@@ -33,6 +33,68 @@ RSpec.describe SubscriptionsController do
 
       expect(rendered).to have_content("Subscription")
     end
+
+    it "shows no subscription message when user has no subscription" do
+      login_as(default_user)
+
+      get(subscription_path)
+
+      expect(rendered).to have_content("don't have an active subscription")
+    end
+
+    it "shows active subscriber badge when user has subscription" do
+      create(:subscription, status: "active")
+      login_as(default_user)
+
+      get(subscription_path)
+
+      expect(rendered).to have_content("Active Subscriber")
+    end
+
+    it "shows subscription status" do
+      create(:subscription, status: "active")
+      login_as(default_user)
+
+      get(subscription_path)
+
+      expect(rendered).to have_content("Active")
+    end
+
+    it "shows plan name" do
+      create(:subscription, plan_name: "Monthly Plan")
+      login_as(default_user)
+
+      get(subscription_path)
+
+      expect(rendered).to have_content("Monthly Plan")
+    end
+
+    it "shows next billing date when period end is set" do
+      create(:subscription, current_period_end: Date.new(2026, 2, 15))
+      login_as(default_user)
+
+      get(subscription_path)
+
+      expect(rendered).to have_content("February 15, 2026")
+    end
+
+    it "shows cancel form for active subscription" do
+      create(:subscription, status: "active")
+      login_as(default_user)
+
+      get(subscription_path)
+
+      expect(rendered).to have_css("input[value='Cancel Subscription']")
+    end
+
+    it "does not show cancel button for canceled subscription" do
+      create(:subscription, status: "canceled")
+      login_as(default_user)
+
+      get(subscription_path)
+
+      expect(rendered).to have_no_css("input[value='Cancel Subscription']")
+    end
   end
 
   describe "#create" do

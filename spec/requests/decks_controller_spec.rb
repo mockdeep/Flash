@@ -2,12 +2,50 @@
 
 RSpec.describe DecksController do
   describe "#index" do
-    it "renders the decks index page" do
+    it "renders the empty state when user has no decks" do
       login_as(default_user)
 
       get(decks_path)
 
-      expect(rendered).to have_content("My Decks")
+      expect(rendered).to have_content("No Decks Yet")
+    end
+
+    it "renders decks grid when user has decks" do
+      login_as(default_user)
+      create(:deck, user: default_user, name: "My Test Deck")
+
+      get(decks_path)
+
+      expect(rendered).to have_content("My Test Deck")
+    end
+
+    it "shows card count for each deck" do
+      login_as(default_user)
+      deck = create(:deck, user: default_user)
+      create(:card, deck:)
+
+      get(decks_path)
+
+      expect(rendered).to have_content("1")
+    end
+
+    it "shows 'No cards yet' for empty deck" do
+      login_as(default_user)
+      create(:deck, user: default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_content("No cards yet")
+    end
+
+    it "shows stats for deck with cards" do
+      deck = create(:deck, user: default_user)
+      create(:card, deck:, status: "pending")
+      login_as(default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_content("Pending")
     end
   end
 
@@ -19,6 +57,35 @@ RSpec.describe DecksController do
       get(deck_path(deck))
 
       expect(rendered).to have_content(deck.name)
+    end
+
+    it "shows empty message when deck has no cards" do
+      deck = create(:deck)
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_content("no cards yet")
+    end
+
+    it "shows card table when deck has cards" do
+      deck = create(:deck)
+      create(:card, deck:, front: "Test Front", back: "Test Back")
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_content("Test Front")
+    end
+
+    it "shows study link when deck has cards" do
+      deck = create(:deck)
+      create(:card, deck:)
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_content("Study Deck")
     end
 
     it "prevents viewing another user's deck" do
