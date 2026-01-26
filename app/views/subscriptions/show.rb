@@ -84,8 +84,8 @@ module Views
           end
 
           if subscription.active?
-            form_with(url: subscription_path, method: :delete, class: "subscription-form") do
-              submit("Cancel Subscription", class: "subscription-button subscription-button-danger", data: { confirm: "Are you sure you want to cancel your subscription?" })
+            form_with(url: subscription_path, method: :delete, class: "subscription-form") do |form|
+              form.submit("Cancel Subscription", class: "subscription-button subscription-button-danger", data: { confirm: "Are you sure you want to cancel your subscription?" })
             end
           end
         end
