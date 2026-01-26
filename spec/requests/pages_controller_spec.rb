@@ -9,6 +9,22 @@ RSpec.describe PagesController do
 
       expect(rendered).to have_content("Pricing")
     end
+
+    it "shows 'Current Plan' link for logged-in users" do
+      login_as(default_user)
+
+      get(pricing_path)
+
+      expect(rendered).to have_content("Current Plan")
+    end
+
+    it "shows 'Subscribe' link for logged-in users" do
+      login_as(default_user)
+
+      get(pricing_path)
+
+      expect(rendered).to have_content("Subscribe")
+    end
   end
 
   describe "#privacy" do

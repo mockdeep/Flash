@@ -121,6 +121,16 @@ RSpec.describe Study do
         expect(card.reload.status).to eq("done")
       end
 
+      it "keeps card active when streak below threshold" do
+        stub_const("Study::CARD_DONE_THRESHOLD", 5)
+        card = create(:card, :active, back: "Paris", correct_streak: 0)
+        study = described_class.new(deck: card.deck)
+
+        study.answer_card(card_id: card.id, answer: "Paris")
+
+        expect(card.reload.status).to eq("active")
+      end
+
       it "returns result with correct true" do
         deck = create(:deck)
         card = create(:card, :active, deck:, back: "Paris")

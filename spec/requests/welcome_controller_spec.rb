@@ -7,5 +7,13 @@ RSpec.describe WelcomeController do
 
       expect(response.body).to include("Memorize Anything")
     end
+
+    it "redirects logged-in users to decks page" do
+      login_as(default_user)
+
+      get(root_path)
+
+      expect(response).to redirect_to(decks_path)
+    end
   end
 end
