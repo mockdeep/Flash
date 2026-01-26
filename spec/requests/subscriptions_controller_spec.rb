@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe SubscriptionsController do
   def checkouts_url
-    "https://test-api.creem.io/v1/checkouts"
+    "https://api.creem.io/v1/checkouts"
   end
 
   def checkout_url
@@ -17,7 +17,7 @@ RSpec.describe SubscriptionsController do
 
   def cancel_url(subscription)
     sub_id = subscription.creem_subscription_id
-    "https://test-api.creem.io/v1/subscriptions/#{sub_id}/cancel"
+    "https://api.creem.io/v1/subscriptions/#{sub_id}/cancel"
   end
 
   def stub_creem_cancel(subscription, status:, body: {})

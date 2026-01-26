@@ -2,7 +2,7 @@
 
 RSpec.describe Creem::CreateCheckout do
   def checkouts_url
-    "https://test-api.creem.io/v1/checkouts"
+    "https://api.creem.io/v1/checkouts"
   end
 
   def checkout_url

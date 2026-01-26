@@ -8,10 +8,9 @@ module Creem
     extend self
 
     BASE_URL = "https://api.creem.io/v1"
-    TEST_BASE_URL = "https://test-api.creem.io/v1"
 
     def post(path, body = {})
-      uri = URI("#{base_url}#{path}")
+      uri = URI("#{BASE_URL}#{path}")
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
 
@@ -20,10 +19,6 @@ module Creem
 
       response = http.request(request)
       parse_response(response)
-    end
-
-    def base_url
-      Rails.env.production? ? BASE_URL : TEST_BASE_URL
     end
 
     def headers
