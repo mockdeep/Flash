@@ -1,18 +1,19 @@
 # frozen_string_literal: true
 
 class Study
-  attr_accessor :deck, :next_card
-
   ACTIVE_CARD_THRESHOLD = 20
   CARD_DONE_THRESHOLD = 1
 
-  def initialize(deck:)
+  attr_accessor :deck, :next_card, :active_card_threshold
+
+  def initialize(deck:, active_card_threshold: ACTIVE_CARD_THRESHOLD)
+    self.active_card_threshold = active_card_threshold
     self.deck = deck
     self.next_card = pick_next_card
   end
 
   def pick_next_card
-    new_cards_count = ACTIVE_CARD_THRESHOLD - deck.cards.active.count
+    new_cards_count = active_card_threshold - deck.cards.active.count
     deck.cards.pending.ordered.limit(new_cards_count)
       .update_all(status: "active")
 
