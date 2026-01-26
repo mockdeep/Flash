@@ -733,6 +733,18 @@ stub_creem_cancel(subscription.creem_subscription_id, status: 400, body: { error
 
 If the code only checks success/failure based on HTTP status, the default empty `{}` is sufficient. This keeps tests focused on what matters.
 
+**WebMock header matching:** Use plain hashes, not RSpec matchers:
+
+```ruby
+# Good - plain hash for WebMock
+expect(WebMock).to have_requested(:post, url)
+  .with(headers: { "x-api-key" => "test_key" })
+
+# Bad - RSpec matcher doesn't work with WebMock
+expect(WebMock).to have_requested(:post, url)
+  .with(headers: hash_including("x-api-key" => "test_key"))
+```
+
 ## Factory Best Practices
 
 ### Define Required Attributes
