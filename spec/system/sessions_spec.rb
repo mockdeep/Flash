@@ -14,7 +14,7 @@ RSpec.describe "user sessions" do
 
     click_link("Log In")
 
-    expect(page).to have_text("Log in to Flash")
+    expect(page).to have_text("Welcome Back")
 
     fill_in("Email", with: email)
     fill_in("Password", with: password)

@@ -27,6 +27,7 @@ module Views
             stylesheet_link_tag("welcome", media: "all")
             stylesheet_link_tag("decks", media: "all")
             stylesheet_link_tag("pricing", media: "all")
+            stylesheet_link_tag("auth", media: "all")
             javascript_include_tag("application")
           end
 
