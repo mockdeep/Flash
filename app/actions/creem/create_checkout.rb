@@ -4,10 +4,7 @@ module Creem
   module CreateCheckout
     def self.call(user:)
       product_id = ENV.fetch("CREEM_PRODUCT_ID")
-      success_url = Rails.application.routes.url_helpers.subscription_url(
-        host: Rails.application.config.action_mailer.default_url_options[:host],
-        protocol: Rails.application.config.force_ssl ? "https" : "http",
-      )
+      success_url = Rails.application.routes.url_helpers.subscription_url
 
       response = Client.post("/checkouts", {
         product_id:,

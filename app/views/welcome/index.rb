@@ -17,13 +17,8 @@ module Views
           end
 
           div(class: "welcome-cta") do
-            if current_user.logged_in?
-              link_to("Browse Decks", decks_path, class: "btn-primary")
-              link_to("Create New Deck", new_deck_path, class: "btn-secondary")
-            else
-              link_to("Get Started", new_account_path, class: "btn-primary")
-              link_to("Sign In", new_session_path, class: "btn-secondary")
-            end
+            link_to("Get Started", new_account_path, class: "btn-primary")
+            link_to("Sign In", new_session_path, class: "btn-secondary")
           end
 
           div(class: "welcome-screenshot") do

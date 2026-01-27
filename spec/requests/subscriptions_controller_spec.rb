@@ -78,6 +78,15 @@ RSpec.describe SubscriptionsController do
       expect(rendered).to have_content("February 15, 2026")
     end
 
+    it "does not show billing date when period end is not set" do
+      create(:subscription, current_period_end: nil)
+      login_as(default_user)
+
+      get(subscription_path)
+
+      expect(rendered).to have_no_content("Next billing date")
+    end
+
     it "shows cancel form for active subscription" do
       create(:subscription, status: "active")
       login_as(default_user)
