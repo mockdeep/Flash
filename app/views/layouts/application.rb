@@ -12,7 +12,7 @@ module Views
       include Phlex::Rails::Helpers::MailTo
       include Phlex::Rails::Helpers::Flash
 
-      def view_template
+      def view_template(&)
         doctype
 
         html do
@@ -61,9 +61,7 @@ module Views
               end
             end
 
-            main(class: "site-main") do
-              yield
-            end
+            main(class: "site-main", &)
 
             footer(class: "site-footer") do
               div(class: "site-footer-container") do
