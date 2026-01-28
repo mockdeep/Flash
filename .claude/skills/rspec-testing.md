@@ -192,8 +192,8 @@ end
 ```ruby
 # Good - URL helpers keep lines short
 def cancel_url(subscription)
-  sub_id = subscription.creem_subscription_id
-  "https://test-api.creem.io/v1/subscriptions/#{sub_id}/cancel"
+  subscription_id = subscription.creem_subscription_id
+  "https://test-api.creem.io/v1/subscriptions/#{subscription_id}/cancel"
 end
 
 def stub_creem_cancel(subscription, status:, body: {})
