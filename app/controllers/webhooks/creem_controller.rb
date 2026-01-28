@@ -34,11 +34,11 @@ module Webhooks
       expected_signature = OpenSSL::HMAC.hexdigest(
         "sha256",
         ENV.fetch("CREEM_WEBHOOK_SECRET"),
-        payload
+        payload,
       )
 
       unless ActiveSupport::SecurityUtils.secure_compare(signature, expected_signature)
-        raise ActionController::RoutingError, 'Not Found'
+        raise ActionController::RoutingError, "Not Found"
       end
     end
 
