@@ -80,7 +80,6 @@ module Views
               dt { "Next billing date" }
               dd(class: "detail-value") { subscription.current_period_end.strftime("%B %d, %Y") }
             end
-
           end
 
           if subscription.active?

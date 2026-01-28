@@ -82,7 +82,7 @@ module Views
       private
 
       def csv_url
-        ENV["SAMPLE_CSV_URL"]
+        ENV.fetch("SAMPLE_CSV_URL", nil)
       end
     end
   end
