@@ -5,14 +5,10 @@ module Creem
     def self.call(user:)
       product_id = ENV.fetch("CREEM_PRODUCT_ID")
       success_url = Rails.application.routes.url_helpers.subscription_url
+      customer = { email: user.email }
 
-      response = Client.post("/checkouts", {
-        product_id:,
-        customer: {
-          email: user.email
-        },
-        success_url:
-      })
+      response =
+        Client.post("/checkouts", { product_id:, customer:, success_url: })
 
       if response[:success]
         checkout_url = response[:data][:checkout_url]

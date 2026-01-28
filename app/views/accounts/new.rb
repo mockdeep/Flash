@@ -74,7 +74,7 @@ module Views
 
       def render_errors
         errors = user.errors
-        return unless errors.any?
+        return if errors.none?
 
         div(class: "auth-error") do
           div(class: "auth-error-icon") { "⚠" }

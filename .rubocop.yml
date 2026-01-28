@@ -66,6 +66,7 @@ Style/MethodCallWithArgsParentheses:
     - fit
     - gem
     - has_many
+    - has_one
     - helper_method
     - include
     - it
