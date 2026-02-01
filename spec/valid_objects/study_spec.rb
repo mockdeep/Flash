@@ -31,6 +31,13 @@ RSpec.describe Study do
   end
 
   describe "#possible_answers" do
+    it "returns empty array when no next card" do
+      deck = create(:deck)
+      study = described_class.new(deck:)
+
+      expect(study.possible_answers).to eq([])
+    end
+
     it "includes the correct answer" do
       deck = create(:deck)
       create(:card, :active, deck:, back: "Paris")
