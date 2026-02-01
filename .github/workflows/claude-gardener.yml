@@ -29,6 +29,6 @@ jobs:
       - name: Run Claude Gardener
         uses: mockdeep/claude-gardener@main
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_oauth_token: ${{ secrets.CLAUDE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           category: ${{ github.event.inputs.category || 'auto' }}
