@@ -1,0 +1,28 @@
+version: 1
+
+workers:
+  max_concurrent: 2
+
+priorities:
+  - category: test_coverage
+    max_prs: 2
+    enabled: true
+
+  - category: linter_fixes
+    max_prs: 3
+    enabled: true
+
+  - category: code_improvements
+    max_prs: 2
+    enabled: true
+
+guardrails:
+  max_iterations_per_pr: 5
+  max_files_per_pr: 10
+  require_tests: true
+
+excluded_paths:
+  - "vendor/**"
+  - "node_modules/**"
+  - ".github/**"
+  - "*.lock"
