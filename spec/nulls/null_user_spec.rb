@@ -18,4 +18,10 @@ RSpec.describe NullUser do
       expect(described_class.new.admin?).to be(false)
     end
   end
+
+  describe "#presence" do
+    it "returns nil" do
+      expect(described_class.new.presence).to be_nil
+    end
+  end
 end
