@@ -249,4 +249,34 @@ RSpec.describe Study do
       end
     end
   end
+
+  describe Study::Result do
+    describe "#correct?" do
+      it "returns true when correct is true" do
+        result = described_class.new(correct: true, correct_answer: "Answer", question: "Q")
+
+        expect(result.correct?).to be(true)
+      end
+
+      it "returns false when correct is false" do
+        result = described_class.new(correct: false, correct_answer: "Answer", question: "Q")
+
+        expect(result.correct?).to be(false)
+      end
+    end
+
+    describe "#initialize" do
+      it "sets all attributes correctly" do
+        result = described_class.new(
+          correct: true,
+          correct_answer: "Paris",
+          question: "Capital of France?"
+        )
+
+        expect(result.correct).to be(true)
+        expect(result.correct_answer).to eq("Paris")
+        expect(result.question).to eq("Capital of France?")
+      end
+    end
+  end
 end

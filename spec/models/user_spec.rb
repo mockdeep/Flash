@@ -70,4 +70,23 @@ RSpec.describe User do
       expect(described_class.new.admin?).to be(false)
     end
   end
+
+  describe "associations with dependent destroy" do
+    it "destroys associated decks when user is destroyed" do
+      user = create(:user)
+      deck1 = create(:deck, user:)
+      deck2 = create(:deck, user:)
+
+      expect { user.destroy! }
+        .to change(Deck, :count).by(-2)
+    end
+
+    it "destroys associated subscription when user is destroyed" do
+      user = create(:user)
+      create(:subscription, user:)
+
+      expect { user.destroy! }
+        .to change(Subscription, :count).by(-1)
+    end
+  end
 end
