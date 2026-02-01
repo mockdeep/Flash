@@ -1,0 +1,42 @@
+name: Claude Gardener
+
+on:
+  workflow_dispatch:
+    inputs:
+      category:
+        description: 'Category to work on'
+        required: false
+        type: choice
+        options:
+          - auto
+          - test_coverage
+          - security_fixes
+          - linter_fixes
+          - code_improvements
+
+  pull_request_review:
+    types: [submitted]
+
+  push:
+    branches: [main]
+
+jobs:
+  garden:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request_review' &&
+       contains(github.event.pull_request.labels.*.name, 'claude-gardener')) ||
+      (github.event_name == 'push' &&
+       contains(github.event.head_commit.message, '[gardener]'))
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Claude Gardener
+        uses: mockdeep/claude-gardener@main
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          event_type: ${{ github.event_name }}
+          category: ${{ github.event.inputs.category || 'auto' }}
