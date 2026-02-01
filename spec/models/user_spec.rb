@@ -46,6 +46,19 @@ RSpec.describe User do
     end
   end
 
+  describe ".find_by!" do
+    it "returns a user record when it exists" do
+      user = described_class.create!(user_params)
+
+      expect(described_class.find_by!(email: user.email)).to eq(user)
+    end
+
+    it "raises RecordNotFound when user does not exist" do
+      expect { described_class.find_by!(email: "missing@email.com") }
+        .to raise_error(ActiveRecord::RecordNotFound)
+    end
+  end
+
   describe "#logged_in?" do
     it "returns true" do
       expect(described_class.new.logged_in?).to be(true)

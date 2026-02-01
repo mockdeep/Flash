@@ -21,6 +21,8 @@ class Study
   end
 
   def possible_answers
+    return [] if next_card.nil?
+
     wrong_answers = next_card.wrong_answers.first(4)
     other_cards = deck.cards.distinct(:back).where.not(back: next_card.back)
 
