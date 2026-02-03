@@ -28,6 +28,12 @@ module Flash
 
     config.active_record.belongs_to_required_by_default = false
 
+    url_options = { host: ENV.fetch("HOST") }
+    url_options[:port] = Integer(ENV["PORT"]) if ENV["PORT"]
+
+    Rails.application.routes.default_url_options = url_options
+    config.action_mailer.default_url_options = url_options
+
     extra_paths = [
       Rails.root.join("app/actions"),
       Rails.root.join("app/nulls"),
