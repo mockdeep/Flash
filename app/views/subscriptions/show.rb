@@ -62,9 +62,16 @@ module Views
 
       def render_subscription_details
         div(class: "subscription-card") do
-          div(class: "subscription-active-badge") do
-            span(class: "badge-icon") { "✓" }
-            span(class: "badge-text") { "Active Subscriber" }
+          if subscription.active?
+            div(class: "subscription-active-badge") do
+              span(class: "badge-icon") { "✓" }
+              span(class: "badge-text") { "Active Subscriber" }
+            end
+          else
+            div(class: "subscription-canceled-badge") do
+              span(class: "badge-icon") { "✗" }
+              span(class: "badge-text") { "Subscription #{subscription.status.titleize}" }
+            end
           end
 
           h2(class: "subscription-subtitle") { "Current Subscription" }
@@ -76,7 +83,7 @@ module Views
             dt { "Plan" }
             dd(class: "detail-value") { subscription.plan_name }
 
-            if subscription.current_period_end
+            if subscription.active? && subscription.current_period_end
               dt { "Next billing date" }
               dd(class: "detail-value") { subscription.current_period_end.strftime("%B %d, %Y") }
             end
@@ -85,6 +92,10 @@ module Views
           if subscription.active?
             form_with(url: subscription_path, method: :delete, class: "subscription-form") do |form|
               form.submit("Cancel Subscription", class: "subscription-button subscription-button-danger", data: { confirm: "Are you sure you want to cancel your subscription?" })
+            end
+          else
+            form_with(url: subscription_path, method: :post, class: "subscription-form") do |form|
+              form.submit("Resubscribe for $5/month", class: "subscription-button")
             end
           end
         end

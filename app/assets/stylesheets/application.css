@@ -425,19 +425,7 @@ progress::-moz-progress-bar {
   border-color: #5a2d0e;
 }
 
-/* Active Subscription Styles */
-.subscription-active-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  margin-bottom: 1.5rem;
-  background: #e8f5e1;
-  border: 3px solid #5a8f4a;
-  border-radius: 0;
-  box-shadow: 3px 3px 0 -1px #fdf8f3, 3px 3px 0 0 #5a8f4a;
-}
-
+/* Badge Base Styles */
 .badge-icon {
   display: flex;
   align-items: center;
@@ -458,6 +446,40 @@ progress::-moz-progress-bar {
   color: #2d5f2d;
   letter-spacing: 0.5px;
   text-transform: uppercase;
+}
+
+/* Canceled Subscription Styles */
+.subscription-canceled-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  margin-bottom: 1.5rem;
+  background: #f5ede2;
+  border: 3px solid #8a7f77;
+  border-radius: 0;
+  box-shadow: 3px 3px 0 -1px #fdf8f3, 3px 3px 0 0 #8a7f77;
+}
+
+.subscription-canceled-badge .badge-icon {
+  background: #8a7f77;
+}
+
+.subscription-canceled-badge .badge-text {
+  color: #5a4f47;
+}
+
+/* Active Subscription Styles */
+.subscription-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  margin-bottom: 1.5rem;
+  background: #e8f5e1;
+  border: 3px solid #5a8f4a;
+  border-radius: 0;
+  box-shadow: 3px 3px 0 -1px #fdf8f3, 3px 3px 0 0 #5a8f4a;
 }
 
 .subscription-subtitle {

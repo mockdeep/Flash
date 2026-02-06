@@ -104,6 +104,34 @@ RSpec.describe SubscriptionsController do
 
       expect(rendered).to have_no_css("input[value='Cancel Subscription']")
     end
+
+    it "shows resubscribe button for canceled subscription" do
+      create(:subscription, status: "canceled")
+      login_as(default_user)
+
+      get(subscription_path)
+
+      expect(rendered).to have_css("input[value='Resubscribe for $5/month']")
+    end
+
+    it "shows canceled badge for canceled subscription" do
+      create(:subscription, status: "canceled")
+      login_as(default_user)
+
+      get(subscription_path)
+
+      expect(rendered).to have_content("Subscription Canceled")
+    end
+
+    it "does not show billing date for canceled subscription" do
+      period_end = Date.new(2026, 2, 15)
+      create(:subscription, status: "canceled", current_period_end: period_end)
+      login_as(default_user)
+
+      get(subscription_path)
+
+      expect(rendered).to have_no_content("Next billing date")
+    end
   end
 
   describe "#create" do
