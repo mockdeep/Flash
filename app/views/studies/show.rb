@@ -50,6 +50,8 @@ module Views
                 end
               end
             end
+
+            p(class: "keyboard-hint") { "Press 1-5 to answer" }
           end
         end
       end

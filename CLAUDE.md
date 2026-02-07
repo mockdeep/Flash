@@ -10,6 +10,7 @@ Flash is a flashcard study application built with Ruby on Rails that uses spaced
 - Phlex for HTML views
 - Creem for payment processing
 - Hotwire (Turbo + Stimulus)
+- pnpm for JavaScript package management
 
 ## Design Philosophy
 
@@ -211,6 +212,24 @@ end
 - `active` - Currently being studied
 - `done` - Mastered (high streak)
 
+### Keyboard Hotkeys
+
+The app uses a **Stimulus hotkeys controller** (`app/javascript/controllers/hotkeys_controller.ts`) for keyboard shortcuts. It listens for `keydown` events at the document level and clicks the matching target element.
+
+**Adding a hotkey to any element:**
+```ruby
+data = { hotkeys_target: "click", hotkey: "a" }
+link_to("My Link", some_path, data:)
+```
+
+**Current shortcuts:**
+- `1`-`5` - Select answer during study
+- `Space` - Next card after answering
+
+**Hint styles:**
+- `.hotkey-hint` - Prominent hint (amber background, bordered, used on buttons like "Press Space")
+- `.keyboard-hint` - Subtle hint (muted text, used below answer grid for "Press 1-4 to answer")
+
 ### Payment Processing
 
 Uses **Creem** (creem.io) for subscription payments:
@@ -254,6 +273,9 @@ app/
 │   ├── pages/
 │   │   ├── privacy.rb
 │   │   └── terms.rb
+│   ├── studies/
+│   │   ├── show.rb
+│   │   └── update.rb
 │   └── subscriptions/
 │       └── show.rb
 └── assets/
@@ -304,6 +326,32 @@ The project uses **RSpec** for automated testing with a comprehensive local test
 - Create focused, behavior-driven tests
 
 See `.claude/skills/rspec-testing.md` for detailed guidelines and examples.
+
+### JavaScript Testing
+
+The project uses **Jest** with **jsdom** for JavaScript/TypeScript tests:
+
+- **Running Tests:** `pnpm jest` (or `pnpm test` which also runs `tscheck` and `eslint`)
+- **Config:** `config/jest.json`
+- **Test Files:** `spec/javascript/**/*_spec.ts`
+- **Stimulus Helper:** `spec/javascript/support/stimulus.ts` provides `bootStimulus()` and `getController()`
+
+**Key Conventions:**
+- Use `@jest/globals` imports (`describe`, `expect`, `it`, `jest`) — not global jest
+- Follow the same one-assertion-per-test pattern as RSpec
+- Use top-level `describe` blocks per method/behavior (not one nested `describe`)
+- Keep describe arrow functions under 50 lines (split into multiple top-level describes)
+- Use named helper functions for DOM setup, element lookups, and test data
+- `DataTransfer` is not available in jsdom — use `Object.defineProperty` to set `files` on file inputs
+
+**Coverage Thresholds (enforced):**
+- 100% branch coverage
+- 100% function coverage
+
+**Linting:**
+- `pnpm eslint` — strict max-len of 80 chars (`@stylistic`) / 84 chars (base), URLs excluded
+- `pnpm stylelint` — for CSS files
+- `pnpm tscheck` — TypeScript type checking with `--noEmit`
 
 ### Forms
 
