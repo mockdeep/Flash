@@ -8,19 +8,14 @@ module Webhooks
     def create
       verify_signature!
 
-      event_type = webhook_params[:type]
-      event_data = webhook_params[:data]
+      event_type = webhook_params.fetch(:eventType)
+      object = webhook_params.fetch(:object)
 
-      case event_type
-      when "subscription.created"
-        handle_subscription_created(event_data)
-      when "subscription.updated"
-        handle_subscription_updated(event_data)
-      when "subscription.canceled"
-        handle_subscription_canceled(event_data)
-      when "subscription.payment_failed"
-        handle_payment_failed(event_data)
+      unless event_type.start_with?("subscription.")
+        raise ArgumentError, "wrong event type: #{event_type.inspect}"
       end
+
+      update_subscription(object)
 
       head(:ok)
     end
@@ -42,53 +37,29 @@ module Webhooks
       end
     end
 
-    def handle_subscription_created(data)
-      user = User.find_by!(email: data[:customer][:email])
-
-      user.create_subscription!(
-        creem_subscription_id: data[:id],
-        status: data[:status],
-        current_period_start: Time.zone.at(data[:current_period_start]),
-        current_period_end: Time.zone.at(data[:current_period_end]),
-        plan_name: data[:plan][:name],
-      )
-    end
-
-    def handle_subscription_updated(data)
-      subscription = Subscription.find_by(creem_subscription_id: data[:id])
-      return unless subscription
+    def update_subscription(object)
+      user = User.find_by!(email: object[:customer][:email])
+      subscription = user.subscription || user.build_subscription
 
       subscription.update!(
-        status: data[:status],
-        current_period_start: Time.zone.at(data[:current_period_start]),
-        current_period_end: Time.zone.at(data[:current_period_end]),
+        creem_subscription_id: object.fetch(:id),
+        status: object.fetch(:status),
+        current_period_start: Time.zone.parse(object.fetch(:current_period_start_date)),
+        current_period_end: Time.zone.parse(object.fetch(:current_period_end_date)),
+        plan_name: object.fetch(:product).fetch(:name),
       )
-    end
-
-    def handle_subscription_canceled(data)
-      subscription = Subscription.find_by(creem_subscription_id: data[:id])
-      return unless subscription
-
-      subscription.update!(status: "canceled")
-    end
-
-    def handle_payment_failed(data)
-      subscription = Subscription.find_by(creem_subscription_id: data[:id])
-      return unless subscription
-
-      subscription.update!(status: "past_due")
     end
 
     def webhook_params
-      data = [
+      object = [
         :id,
         :status,
-        :current_period_start,
-        :current_period_end,
-        { plan: [:name] },
+        :current_period_start_date,
+        :current_period_end_date,
+        { product: [:name] },
         { customer: [:email] },
       ]
-      params.permit(:type, data:, creem: [:type, { data: }])
+      params.permit(:eventType, object:, creem: [:eventType, { object: }])
         .to_h.deep_symbolize_keys
     end
   end
