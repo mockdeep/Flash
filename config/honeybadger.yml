@@ -1,0 +1,18 @@
+---
+# For more options, see https://docs.honeybadger.io/lib/ruby/gem-reference/configuration
+
+api_key: "<%= ENV['HONEYBADGER_API_KEY'] %>"
+
+env: "<%= Rails.env %>"
+
+root: "<%= Rails.root.to_s %>"
+
+development_environments:
+- test
+- development
+- cucumber
+
+debug: false
+
+insights:
+  enabled: true
