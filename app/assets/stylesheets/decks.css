@@ -39,7 +39,8 @@
   margin: 0;
 }
 
-.btn-create-deck {
+.btn-create-deck,
+.btn-create-deck:visited {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -126,7 +127,8 @@
   margin: 0 0 2rem 0;
 }
 
-.btn-empty-state {
+.btn-empty-state,
+.btn-empty-state:visited {
   display: inline-flex;
   align-items: center;
   padding: 1rem 2.5rem;
@@ -366,7 +368,8 @@
   text-align: center;
 }
 
-.btn-study {
+.btn-study,
+.btn-study:visited {
   background: #2c5f4f;
   border-color: #234a3e;
   color: white;
@@ -393,7 +396,8 @@
     0 1px 4px rgba(44, 95, 79, 0.15);
 }
 
-.btn-details {
+.btn-details,
+.btn-details:visited {
   background: transparent;
   border-color: #d4c4b0;
   color: #5a4f47;
