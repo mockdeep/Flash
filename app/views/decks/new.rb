@@ -61,11 +61,11 @@ module Views
                   end
                 end
 
-                div(class: "file-upload-wrapper") do
-                  form.file_field(:cards_csv, required: true, class: "file-input", accept: ".csv")
+                div(class: "file-upload-wrapper", data: { controller: "file-upload" }) do
+                  form.file_field(:cards_csv, required: true, class: "file-input", accept: ".csv", data: { file_upload_target: "input", action: "file-upload#select" })
                   div(class: "file-upload-label") do
-                    span(class: "upload-icon") { "📤" }
-                    span(class: "upload-text") { "Choose CSV file or drag here" }
+                    span(class: "upload-icon", data: { file_upload_target: "icon" }) { "📤" }
+                    span(class: "upload-text", data: { file_upload_target: "text" }) { "Choose CSV file or drag here" }
                   end
                 end
               end

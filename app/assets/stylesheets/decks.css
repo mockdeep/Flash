@@ -781,6 +781,19 @@
   text-align: center;
 }
 
+.file-upload-wrapper.file-selected {
+  border-style: solid;
+  border-color: #2c5f4f;
+  background: rgba(44, 95, 79, 0.04);
+}
+
+.file-upload-wrapper.file-selected .upload-text {
+  color: #2a2420;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  word-break: break-all;
+}
+
 .file-input:focus + .file-upload-label {
   outline: 3px solid #e6a94e;
   outline-offset: 3px;
