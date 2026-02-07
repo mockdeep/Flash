@@ -11,51 +11,39 @@ RSpec.describe Webhooks::CreemController do
     { "CONTENT_TYPE" => "application/json", "creem-signature" => signature }
   end
 
-  def subscription_data(email:, id: "sub_123", status: "active")
+  def subscription_object(email:, id: "sub_123", status: "active")
     {
       id:,
       status:,
-      current_period_start: Time.current.to_i,
-      current_period_end: 30.days.from_now.to_i,
-      plan: { name: "Monthly" },
+      current_period_start_date: Time.current.iso8601,
+      current_period_end_date: 30.days.from_now.iso8601,
+      product: { name: "Monthly" },
       customer: { email: },
     }
   end
 
   def created_payload(user)
-    { type: "subscription.created", data: subscription_data(email: user.email) }
+    {
+      eventType: "subscription.active",
+      object: subscription_object(email: user.email),
+    }
   end
 
   def updated_payload(subscription, status: "active")
     {
-      type: "subscription.updated",
-      data: {
+      eventType: "subscription.paid",
+      object: subscription_object(
+        email: subscription.user.email,
         id: subscription.creem_subscription_id,
         status:,
-        current_period_start: Time.current.to_i,
-        current_period_end: 30.days.from_now.to_i,
-      },
-    }
-  end
-
-  def failed_payload(subscription)
-    {
-      type: "subscription.payment_failed",
-      data: { id: subscription.creem_subscription_id },
-    }
-  end
-
-  def canceled_payload(subscription)
-    {
-      type: "subscription.canceled",
-      data: { id: subscription.creem_subscription_id },
+      ),
     }
   end
 
   describe "#create" do
     describe "signature verification" do
       it "returns 404 for invalid signature" do
-        payload = { type: "subscription.created", data: {} }
+        payload = { eventType: "subscription.active", object: {} }
         headers = webhook_headers(payload).merge("creem-signature" => "x")
 
         post(webhooks_creem_path, params: payload.to_json, headers:)
@@ -64,7 +52,7 @@ RSpec.describe Webhooks::CreemController do
       end
 
       it "raises KeyError for missing signature header" do
-        payload = { type: "subscription.created", data: {} }
+        payload = { eventType: "subscription.active", object: {} }
         headers = { "CONTENT_TYPE" => "application/json" }
 
         expect { post(webhooks_creem_path, params: payload.to_json, headers:) }
@@ -72,7 +60,7 @@ RSpec.describe Webhooks::CreemController do
       end
 
       it "returns 200 for valid signature" do
-        payload = { type: "unknown.event", data: {} }
+        payload = updated_payload(create(:subscription))
         headers = webhook_headers(payload)
 
         post(webhooks_creem_path, params: payload.to_json, headers:)
@@ -81,7 +69,7 @@ RSpec.describe Webhooks::CreemController do
       end
     end
 
-    describe "subscription.created" do
+    describe "subscription.active" do
       it "creates a subscription for existing user" do
         payload = created_payload(default_user)
         headers = webhook_headers(payload)
@@ -91,13 +79,13 @@ RSpec.describe Webhooks::CreemController do
       end
 
       it "sets the creem subscription id" do
-        data = subscription_data(email: default_user.email, id: "sub_xyz789")
-        payload = { type: "subscription.created", data: }
+        object = subscription_object(email: default_user.email, id: "sub_xyz67")
+        payload = { eventType: "subscription.active", object: }
         headers = webhook_headers(payload)
 
         post(webhooks_creem_path, params: payload.to_json, headers:)
 
-        expect(Subscription.last.creem_subscription_id).to eq("sub_xyz789")
+        expect(Subscription.last.creem_subscription_id).to eq("sub_xyz67")
       end
 
       it "sets the status" do
@@ -137,8 +125,8 @@ RSpec.describe Webhooks::CreemController do
       end
 
       it "returns 404 when user not found" do
-        data = subscription_data(email: "nonexistent@example.com")
-        payload = { type: "subscription.created", data: }
+        object = subscription_object(email: "nonexistent@example.com")
+        payload = { eventType: "subscription.active", object: }
         headers = webhook_headers(payload)
 
         post(webhooks_creem_path, params: payload.to_json, headers:)
@@ -156,7 +144,7 @@ RSpec.describe Webhooks::CreemController do
       end
     end
 
-    describe "subscription.updated" do
+    describe "subscription.paid" do
       it "updates the subscription period end" do
         subscription = create(:subscription, current_period_end: 1.day.from_now)
         payload = updated_payload(subscription)
@@ -175,18 +163,19 @@ RSpec.describe Webhooks::CreemController do
           .to change_record(subscription, :status).to("trialing")
       end
 
-      it "returns 200 when subscription not found" do
-        subscription = Subscription.new(creem_subscription_id: "x")
-        payload = updated_payload(subscription)
+      it "returns 404 when user not found" do
+        object = subscription_object(email: "nonexistent@example.com")
+        payload = { eventType: "subscription.paid", object: }
         headers = webhook_headers(payload)
 
         post(webhooks_creem_path, params: payload.to_json, headers:)
 
-        expect(response).to have_http_status(:ok)
+        expect(response).to have_http_status(:not_found)
       end
 
-      it "does not create a subscription when not found" do
-        payload = updated_payload(Subscription.new(creem_subscription_id: "x"))
+      it "does not create a subscription when user not found" do
+        object = subscription_object(email: "nonexistent@example.com")
+        payload = { eventType: "subscription.paid", object: }
         headers = webhook_headers(payload)
 
         expect { post(webhooks_creem_path, params: payload.to_json, headers:) }
@@ -197,77 +186,51 @@ RSpec.describe Webhooks::CreemController do
     describe "subscription.canceled" do
       it "sets subscription status to canceled" do
         subscription = create(:subscription, status: "active")
-        payload = canceled_payload(subscription)
+        payload = updated_payload(subscription, status: "canceled")
         headers = webhook_headers(payload)
 
         expect { post(webhooks_creem_path, params: payload.to_json, headers:) }
           .to change_record(subscription, :status).to("canceled")
       end
 
-      it "returns 200 when subscription not found" do
-        payload = { type: "subscription.canceled", data: { id: "sub_x" } }
+      it "returns 404 when user not found" do
+        object = subscription_object(email: "nonexistent@example.com")
+        payload = { eventType: "subscription.canceled", object: }
         headers = webhook_headers(payload)
 
         post(webhooks_creem_path, params: payload.to_json, headers:)
 
-        expect(response).to have_http_status(:ok)
-      end
-
-      it "does not raise error when subscription not found" do
-        payload = { type: "subscription.canceled", data: { id: "sub_x" } }
-        headers = webhook_headers(payload)
-
-        expect { post(webhooks_creem_path, params: payload.to_json, headers:) }
-          .not_to raise_error
+        expect(response).to have_http_status(:not_found)
       end
     end
 
-    describe "subscription.payment_failed" do
+    describe "subscription.past_due" do
       it "sets subscription status to past_due" do
         subscription = create(:subscription, status: "active")
-        payload = failed_payload(subscription)
+        payload = updated_payload(subscription, status: "past_due")
         headers = webhook_headers(payload)
 
         expect { post(webhooks_creem_path, params: payload.to_json, headers:) }
           .to change_record(subscription, :status).to("past_due")
       end
 
-      it "returns 200 when subscription not found" do
-        payload = { type: "subscription.payment_failed", data: { id: "sub_x" } }
+      it "returns 404 when user not found" do
+        object = subscription_object(email: "nonexistent@example.com")
+        payload = { eventType: "subscription.past_due", object: }
         headers = webhook_headers(payload)
 
         post(webhooks_creem_path, params: payload.to_json, headers:)
 
-        expect(response).to have_http_status(:ok)
-      end
-
-      it "does not raise error when subscription not found" do
-        payload = { type: "subscription.payment_failed", data: { id: "sub_x" } }
-        headers = webhook_headers(payload)
-
-        expect { post(webhooks_creem_path, params: payload.to_json, headers:) }
-          .not_to raise_error
+        expect(response).to have_http_status(:not_found)
       end
     end
 
-    describe "unknown event type" do
-      it "returns 200 for unknown event types" do
-        payload = { type: "charge.succeeded", data: { id: "ch_123" } }
-        headers = webhook_headers(payload)
+    it "raises an error for unknown event types" do
+      payload = { eventType: "charge.succeeded", object: { id: "ch_123" } }
+      headers = webhook_headers(payload)
 
-        post(webhooks_creem_path, params: payload.to_json, headers:)
-
-        expect(response).to have_http_status(:ok)
-      end
-
-      it "does not create or modify any subscriptions" do
-        create(:subscription)
-        payload = { type: "charge.succeeded", data: { id: "ch_123" } }
-        headers = webhook_headers(payload)
-
-        expect { post(webhooks_creem_path, params: payload.to_json, headers:) }
-          .not_to(change(Subscription, :count))
-      end
+      expect { post(webhooks_creem_path, params: payload.to_json, headers:) }
+        .to raise_error(ArgumentError, /wrong event type/)
     end
   end
 end
