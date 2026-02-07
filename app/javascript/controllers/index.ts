@@ -9,5 +9,8 @@ import {application} from "./application";
 import DialogController from "./dialog_controller";
 application.register("dialog", DialogController);
 
+import FileUploadController from "./file_upload_controller";
+application.register("file-upload", FileUploadController);
+
 import HotkeysController from "./hotkeys_controller";
 application.register("hotkeys", HotkeysController);
