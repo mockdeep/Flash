@@ -136,6 +136,106 @@ RSpec.describe Decks::Create do
         expect { described_class.call(user:, name: "", cards_csv: csv) }
           .not_to change(Card, :count)
       end
+
+      it "returns failure when CSV is missing 'front' header" do
+        user = create(:user)
+        csv = csv_file("back,category\nA,C\n")
+
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.success?).to be(false)
+      end
+
+      it "returns failure when CSV is missing 'back' header" do
+        user = create(:user)
+        csv = csv_file("front,category\nQ,C\n")
+
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.success?).to be(false)
+      end
+
+      it "includes error about missing columns" do
+        user = create(:user)
+        csv = csv_file("foo,bar\n1,2\n")
+
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.record.errors[:cards_csv])
+          .to include("must include 'front' and 'back' columns")
+      end
+
+      it "returns failure when a row has blank front" do
+        user = create(:user)
+        csv = csv_file("front,back,category\n,A,C\n")
+
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.success?).to be(false)
+      end
+
+      it "returns failure when a row has blank back" do
+        user = create(:user)
+        csv = csv_file("front,back,category\nQ,,C\n")
+
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.success?).to be(false)
+      end
+
+      it "includes error about the row with missing value" do
+        user = create(:user)
+        csv = csv_file("front,back,category\nQ1,A1,C1\n,A2,C2\n")
+
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.record.errors[:cards_csv])
+          .to include("row 2 is missing a 'front' or 'back' value")
+      end
+
+      it "does not create cards when a row has blank values" do
+        user = create(:user)
+        cards_csv = csv_file("front,back,category\nQ,,C\n")
+
+        expect { described_class.call(user:, name: "Test Deck", cards_csv:) }
+          .not_to change(Card, :count)
+      end
+
+      it "does not create deck when CSV has missing headers" do
+        user = create(:user)
+        cards_csv = csv_file("foo,bar\n1,2\n")
+
+        expect { described_class.call(user:, name: "Test", cards_csv:) }
+          .not_to change(Deck, :count)
+      end
+
+      it "does not create deck when a row has blank values" do
+        user = create(:user)
+        cards_csv = csv_file("front,back,category\nQ,,C\n")
+
+        expect { described_class.call(user:, name: "Test", cards_csv:) }
+          .not_to change(Deck, :count)
+      end
+    end
+
+    context "when category column is missing" do
+      it "succeeds with empty category" do
+        user = create(:user)
+        csv = csv_file("front,back\nQ,A\n")
+
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.success?).to be(true)
+      end
+
+      it "sets category to empty string" do
+        user = create(:user)
+        csv = csv_file("front,back\nQ,A\n")
+
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.record.cards.first.category).to eq("")
+      end
     end
   end
 end
