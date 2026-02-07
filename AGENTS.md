@@ -473,6 +473,7 @@ All pages must be fully responsive:
 6. Include hover and active states
 7. Mobile breakpoints at 768px and 1024px
 8. Test with real content, not lorem ipsum
+9. **Button-styled links must include `:visited` in their selector** - The global `a:visited` rule in `application.css` overrides text color on visited links. Any `<a>` styled as a button needs `.btn-foo, .btn-foo:visited { color: ...; }` to prevent low-contrast text after the link has been visited.
 
 ### UI/UX Testing Checklist
 
