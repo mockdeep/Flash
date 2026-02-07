@@ -21,12 +21,16 @@ class DecksController < ApplicationController
       flash[:success] = "Deck created successfully"
       redirect_to(decks_path)
     else
-      flash.now[:error] = "There was a problem creating the deck"
+      flash.now[:error] = error_messages(result.record)
       render(Views::Decks::New.new(deck: result.record))
     end
   end
 
   private
+
+  def error_messages(record)
+    record.errors.full_messages.join(", ")
+  end
 
   def deck_params
     params.expect(deck: [:name, :cards_csv]).to_h.symbolize_keys

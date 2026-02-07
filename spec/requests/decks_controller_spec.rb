@@ -154,7 +154,7 @@ RSpec.describe DecksController do
 
         post(decks_path, params: deck_params(name: "", csv_file: csv))
 
-        expect(flash.now[:error]).to eq("There was a problem creating the deck")
+        expect(flash.now[:error]).to eq("Name can't be blank")
       end
     end
   end
