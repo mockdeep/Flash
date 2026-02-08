@@ -4,6 +4,9 @@ Rails.application.routes.draw do
   root to: "welcome#index"
 
   resource :account, only: [:new, :create, :show, :update, :destroy]
+  resources :catalog, only: [:index, :show] do
+    post :copy, on: :member
+  end
   resources :decks, only: [:new, :create, :index, :show] do
     resource :study, only: [:show, :update]
   end

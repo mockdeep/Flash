@@ -33,6 +33,8 @@ I18n/GetText/DecorateFunctionMessage:
 # This cop supports safe autocorrection (--autocorrect).
 I18n/GetText/DecorateString:
   Exclude:
+    - 'app/views/catalog/index.rb'
+    - 'app/views/catalog/show.rb'
     - 'app/views/decks/index.rb'
     - 'app/views/decks/new.rb'
     - 'app/views/decks/show.rb'
@@ -44,10 +46,13 @@ I18n/GetText/DecorateString:
     - 'app/views/welcome/index.rb'
     - 'spec/actions/decks/create_spec.rb'
     - 'spec/rails_helper.rb'
+    - 'spec/requests/catalog_controller_spec.rb'
 
 # Offense count: 24
 I18n/RailsI18n/DecorateString:
   Exclude:
+    - 'app/views/catalog/index.rb'
+    - 'app/views/catalog/show.rb'
     - 'app/views/decks/index.rb'
     - 'app/views/decks/new.rb'
     - 'app/views/decks/show.rb'
@@ -59,6 +64,7 @@ I18n/RailsI18n/DecorateString:
     - 'app/views/welcome/index.rb'
     - 'spec/actions/decks/create_spec.rb'
     - 'spec/rails_helper.rb'
+    - 'spec/requests/catalog_controller_spec.rb'
 
 # Offense count: 46
 # This cop supports safe autocorrection (--autocorrect).
@@ -95,6 +101,7 @@ Metrics/AbcSize:
     - 'app/valid_objects/study.rb'
     - 'app/views/accounts/new.rb'
     - 'app/views/accounts/show.rb'
+    - 'app/views/catalog/show.rb'
     - 'app/views/decks/index.rb'
     - 'app/views/decks/new.rb'
     - 'app/views/decks/show.rb'
@@ -128,6 +135,8 @@ Metrics/BlockLength:
 # Configuration parameters: CountComments, Max, CountAsOne.
 Metrics/ClassLength:
   Exclude:
+    - 'app/views/catalog/show.rb'
+    - 'app/views/layouts/application.rb'
     - 'app/views/pages/pricing.rb'
     - 'app/views/pages/privacy.rb'
     - 'app/views/pages/terms.rb'
@@ -138,11 +147,13 @@ Metrics/MethodLength:
   Exclude:
     - 'app/actions/creem/create_checkout.rb'
     - 'app/actions/decks/create.rb'
+    - 'app/controllers/catalog_controller.rb'
     - 'app/controllers/subscriptions_controller.rb'
     - 'app/controllers/webhooks/creem_controller.rb'
     - 'app/valid_objects/study.rb'
     - 'app/views/accounts/new.rb'
     - 'app/views/accounts/show.rb'
+    - 'app/views/catalog/show.rb'
     - 'app/views/decks/index.rb'
     - 'app/views/decks/new.rb'
     - 'app/views/decks/show.rb'
@@ -190,6 +201,7 @@ Rails/FindByOrAssignmentMemoization:
 Rails/I18nLocaleTexts:
   Exclude:
     - 'app/controllers/accounts_controller.rb'
+    - 'app/controllers/catalog_controller.rb'
     - 'app/controllers/decks_controller.rb'
     - 'app/controllers/sessions_controller.rb'
     - 'app/controllers/subscriptions_controller.rb'
@@ -199,6 +211,7 @@ Rails/I18nLocaleTexts:
 # ForbiddenMethods: decrement!, decrement_counter, increment!, increment_counter, insert, insert!, insert_all, insert_all!, toggle!, touch, touch_all, update_all, update_attribute, update_column, update_columns, update_counters, upsert, upsert_all
 Rails/SkipsModelValidations:
   Exclude:
+    - 'app/actions/catalog/copy_deck.rb'
     - 'app/actions/decks/create.rb'
     - 'app/valid_objects/study.rb'
     - 'db/migrate/20251215211527_add_service_name_to_active_storage_blobs.active_storage.rb'

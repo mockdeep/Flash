@@ -28,6 +28,7 @@ module Views
             stylesheet_link_tag("decks", media: "all")
             stylesheet_link_tag("pricing", media: "all")
             stylesheet_link_tag("auth", media: "all")
+            stylesheet_link_tag("catalog", media: "all")
             javascript_include_tag("application")
           end
 
@@ -41,6 +42,7 @@ module Views
                 end
 
                 nav(class: "site-nav") do
+                  link_to("Catalog", catalog_index_path, class: "nav-link")
                   if current_user.logged_in?
                     link_to("Decks", decks_path, class: "nav-link")
                     link_to("Account", account_path, class: "nav-link")
@@ -79,6 +81,7 @@ module Views
                   h3(class: "footer-heading") { "Product" }
                   ul(class: "footer-links") do
                     li { link_to("Home", root_path) }
+                    li { link_to("Catalog", catalog_index_path) }
                     li { link_to("Pricing", pricing_path) }
                     if current_user.logged_in?
                       li { link_to("My Decks", decks_path) }
