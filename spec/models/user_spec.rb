@@ -44,13 +44,13 @@ RSpec.describe User do
   end
 
   it "allows valid usernames" do
-    good_usernames = ["alice", "bob_smith", "User123", "test_user_99"]
+    good_usernames = ["alice", "bob_smith", "User123", "test.user"]
 
     expect(described_class.new).to allow_values(*good_usernames).for(:username)
   end
 
   it "does not allow invalid usernames" do
-    bad_usernames = ["has space", "no@sign", "no.dots", "no-dashes"]
+    bad_usernames = ["has space", "no@sign", "no-dashes", "no!bang"]
 
     expect(described_class.new)
       .not_to allow_values(*bad_usernames).for(:username)
