@@ -103,7 +103,7 @@ RSpec.describe CatalogController do
 
       get(catalog_path(deck))
 
-      expect(rendered).to have_content("by #{deck.user.email}")
+      expect(rendered).to have_content("by #{deck.user.username}")
     end
 
     it "limits preview to 5 cards" do

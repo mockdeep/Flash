@@ -3,6 +3,7 @@
 RSpec.describe "user sessions" do
   def user_params
     {
+      username: "demo_user",
       email: "demo@lmkw.io",
       password: "secret",
       password_confirmation: "secret",
@@ -27,7 +28,7 @@ RSpec.describe "user sessions" do
 
     sign_in_with(email: user.email, password: user.password)
 
-    expect(page).to have_text(user.email)
+    expect(page).to have_text(user.username)
     expect(page).to have_link("Account")
     expect(page).to have_no_link("Log In")
   end
@@ -40,6 +41,6 @@ RSpec.describe "user sessions" do
     click_button("Log Out")
 
     expect(page).to have_link("Log In")
-    expect(page).to have_no_text(user.email)
+    expect(page).to have_no_text(user.username)
   end
 end

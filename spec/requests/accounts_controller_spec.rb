@@ -4,6 +4,7 @@ RSpec.describe AccountsController do
   def valid_create_params
     {
       user: {
+        username: "demo_user",
         email: "demo@exampoo.com",
         password: "super-secure",
         password_confirmation: "super-secure",

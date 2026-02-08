@@ -27,6 +27,11 @@ module Views
           end
 
           div(class: "field") do
+            form.label(:username)
+            form.text_field(:username, required: true)
+          end
+
+          div(class: "field") do
             form.label(:email)
             form.email_field(:email, required: true)
           end

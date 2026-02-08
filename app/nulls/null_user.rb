@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class NullUser
+  def username = nil
+
   def authenticate(_password)
     false
   end

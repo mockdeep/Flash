@@ -40,7 +40,7 @@ module Views
         div(class: "catalog-show-meta") do
           span { "#{deck.cards.count} cards" }
           span(class: "catalog-meta-separator") { "|" }
-          span { "by #{deck.user.email}" }
+          span { "by #{deck.user.username}" }
         end
       end
 

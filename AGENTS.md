@@ -207,7 +207,7 @@ end
 ### Data Model
 
 **Core Models:**
-- `User` - Authentication, has many decks
+- `User` - Authentication, has many decks. Has `username` (unique, alphanumeric + underscores)
 - `Deck` - Collection of flashcards, belongs to user. Has `visibility` (`"public"` or `"private"`, default `"private"`). Public decks appear in the catalog.
 - `Card` - Individual flashcard with front/back, belongs to deck
 - `Subscription` - Payment/subscription info, belongs to user

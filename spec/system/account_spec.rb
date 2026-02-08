@@ -2,12 +2,14 @@
 
 RSpec.describe "user account" do
   def sign_up_with(
+    username: "demo_user",
     email: "demo@lmkw.io",
     password: "secret",
     password_confirmation: password
   )
     visit("/")
     click_link("Sign Up")
+    fill_in("Username", with: username)
     fill_in("Email", with: email)
     fill_in("Password", with: password)
     fill_in("Confirm Password", with: password_confirmation)
@@ -33,14 +35,14 @@ RSpec.describe "user account" do
     sign_up_with(email: "demo@lmkw.io")
 
     expect(page).to have_flash(:success, "Account created")
-    expect(page).to have_text("demo@lmkw.io")
+    expect(page).to have_text("demo_user")
   end
 
   it "allows a user to edit their email" do
     sign_up_with(email: "demo@lmkw.io")
     update_account_with(email: "demo2@lmkw.io")
 
-    expect(page).to have_text("demo2@lmkw.io")
+    expect(page).to have_text("demo_user")
   end
 
   it "allows a user to delete their account" do
@@ -49,6 +51,6 @@ RSpec.describe "user account" do
     delete_account
 
     expect(page).to have_flash(:success, "Account permanently deleted")
-    expect(page).to have_no_text("demo@lmkw.io")
+    expect(page).to have_no_text("demo_user")
   end
 end

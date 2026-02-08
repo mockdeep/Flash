@@ -72,7 +72,7 @@ module Views
       def render_card_meta(deck)
         div(class: "catalog-card-meta") do
           span(class: "catalog-card-owner") do
-            "by #{deck.user.email}"
+            "by #{deck.user.username}"
           end
         end
       end

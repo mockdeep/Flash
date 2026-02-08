@@ -3,6 +3,7 @@
 RSpec.describe User do
   def user_params
     {
+      username: "demo_user",
       email: "demo@exampoo.com",
       password: "super-secure",
       password_confirmation: "super-secure",
@@ -10,14 +11,22 @@ RSpec.describe User do
   end
 
   it { is_expected.to validate_presence_of(:email) }
+  it { is_expected.to validate_presence_of(:username) }
   it { is_expected.to have_secure_password }
   it { is_expected.to normalize(:email).from(" FO@bOOn.GL ").to("fo@boon.gl") }
+  it { is_expected.to normalize(:username).from(" spacey ").to("spacey") }
 
   it do
     create(:user)
 
     expect(described_class.new)
       .to validate_uniqueness_of(:email).case_insensitive
+  end
+
+  it do
+    create(:user)
+
+    expect(described_class.new).to validate_uniqueness_of(:username)
   end
 
   it "allows good emails" do
@@ -32,6 +41,19 @@ RSpec.describe User do
     bad_emails = ["b#b.com", "mrspicy>extra@yepyep.com", "blahbloo"]
 
     expect(described_class.new).not_to allow_values(bad_emails).for(:email)
+  end
+
+  it "allows valid usernames" do
+    good_usernames = ["alice", "bob_smith", "User123", "test_user_99"]
+
+    expect(described_class.new).to allow_values(*good_usernames).for(:username)
+  end
+
+  it "does not allow invalid usernames" do
+    bad_usernames = ["has space", "no@sign", "no.dots", "no-dashes"]
+
+    expect(described_class.new)
+      .not_to allow_values(*bad_usernames).for(:username)
   end
 
   describe ".find_by" do
