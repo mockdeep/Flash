@@ -3,6 +3,7 @@
 RSpec.describe SessionsController do
   def user_params
     {
+      username: "demo_user",
       email: "demo@exampoo.com",
       password: "super-secure",
       password_confirmation: "super-secure",

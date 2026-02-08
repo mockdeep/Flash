@@ -47,7 +47,7 @@ module Views
                     link_to("Decks", decks_path, class: "nav-link")
                     link_to("Account", account_path, class: "nav-link")
                     link_to("Subscription", subscription_path, class: "nav-link")
-                    span(class: "nav-user") { current_user.email }
+                    span(class: "nav-user") { current_user.username }
                     button_to("Log Out", session_path, method: :delete, class: "nav-logout")
                   else
                     link_to("Log In", new_session_path, class: "nav-link nav-link-primary")

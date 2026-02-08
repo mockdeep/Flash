@@ -26,6 +26,16 @@ module Views
 
             form_with(model: user, url: account_path, class: "auth-form") do |form|
               div(class: "auth-form-field") do
+                form.label(:username, "Username", class: "auth-label")
+                form.text_field(
+                  :username,
+                  required: true,
+                  class: "auth-input",
+                  placeholder: "your_username",
+                )
+              end
+
+              div(class: "auth-form-field") do
                 form.label(:email, "Email", class: "auth-label")
                 form.email_field(
                   :email,
