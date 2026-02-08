@@ -39,6 +39,49 @@
   margin: 0;
 }
 
+.decks-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-browse-catalog,
+.btn-browse-catalog:visited {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #5a4f47;
+  background: transparent;
+  border: 3px solid #d4c4b0;
+  border-radius: 0;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-browse-catalog:hover {
+  background: #f5ede2;
+  border-color: #b8a895;
+  color: #2a2420;
+  transform: translate(-1px, -1px);
+  box-shadow:
+    2px 2px 0 -1px #fdf8f3,
+    2px 2px 0 0 #b8a895;
+}
+
+.btn-browse-catalog:active {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
+.btn-browse-catalog:focus-visible {
+  outline: 3px solid #e6a94e;
+  outline-offset: 3px;
+}
+
 .btn-create-deck,
 .btn-create-deck:visited {
   display: inline-flex;
@@ -442,6 +485,11 @@
     width: 120px;
   }
 
+  .decks-header-actions {
+    flex-direction: column;
+  }
+
+  .btn-browse-catalog,
   .btn-create-deck {
     justify-content: center;
   }

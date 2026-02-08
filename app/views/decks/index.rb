@@ -14,7 +14,10 @@ module Views
         div(class: "decks-container") do
           div(class: "decks-header") do
             h1(class: "decks-title") { "Your Decks" }
-            link_to("+ Create New Deck", new_deck_path, class: "btn-create-deck")
+            div(class: "decks-header-actions") do
+              link_to("Browse Catalog", catalog_index_path, class: "btn-browse-catalog")
+              link_to("+ Create New Deck", new_deck_path, class: "btn-create-deck")
+            end
           end
 
           if decks.empty?
@@ -32,7 +35,7 @@ module Views
           div(class: "empty-state-icon") { "📚" }
           h2(class: "empty-state-title") { "No Decks Yet" }
           p(class: "empty-state-text") do
-            "Create your first flashcard deck to start learning with spaced repetition."
+            "Create your first flashcard deck or browse the catalog to get started."
           end
           link_to("Create Your First Deck", new_deck_path, class: "btn-empty-state")
         end

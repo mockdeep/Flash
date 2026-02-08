@@ -1,5 +1,9 @@
 # Flash - Project Documentation
 
+## Maintenance
+
+When adding new features, controllers, actions, views, or CSS files, update the relevant sections of this file (file tree, data model, CSS organization, important notes, etc.) to keep it accurate.
+
 ## Overview
 
 Flash is a flashcard study application built with Ruby on Rails that uses spaced repetition to help users learn and retain information. The app features a distinctive "Terminal Scholar" design aesthetic and uses Phlex for view rendering instead of ERB.
@@ -191,6 +195,7 @@ end
 - `layout.css` - Header, footer, navigation
 - `welcome.css` - Landing page styles
 - `decks.css` - Deck listing and form styles
+- `catalog.css` - Public deck catalog browsing and preview
 
 **Key Principles:**
 - Separate CSS files per major section
@@ -203,7 +208,7 @@ end
 
 **Core Models:**
 - `User` - Authentication, has many decks
-- `Deck` - Collection of flashcards, belongs to user
+- `Deck` - Collection of flashcards, belongs to user. Has `visibility` (`"public"` or `"private"`, default `"private"`). Public decks appear in the catalog.
 - `Card` - Individual flashcard with front/back, belongs to deck
 - `Subscription` - Payment/subscription info, belongs to user
 
@@ -245,6 +250,8 @@ Uses **Creem** (creem.io) for subscription payments:
 ```
 app/
 ├── actions/             # Service objects for complex operations
+│   ├── catalog/
+│   │   └── copy_deck.rb  # Duplicates a public deck into a user's account
 │   └── creem/
 │       ├── cancel_subscription.rb
 │       └── client.rb
@@ -252,6 +259,7 @@ app/
 │   └── base.rb           # Base component with Rails helpers
 ├── controllers/
 │   ├── application_controller.rb
+│   ├── catalog_controller.rb
 │   ├── decks_controller.rb
 │   ├── pages_controller.rb
 │   └── subscriptions_controller.rb
@@ -264,6 +272,9 @@ app/
 │   ├── base.rb           # Base view class
 │   ├── layouts/
 │   │   └── application.rb
+│   ├── catalog/
+│   │   ├── index.rb      # Public deck grid
+│   │   └── show.rb       # Deck preview + copy action
 │   ├── welcome/
 │   │   └── index.rb
 │   ├── decks/
@@ -281,11 +292,35 @@ app/
 └── assets/
     └── stylesheets/
         ├── application.css
+        ├── catalog.css
         ├── flash.css
         ├── layout.css
         ├── welcome.css
         └── decks.css
 ```
+
+### Actions
+
+Business logic lives in **action modules** under `app/actions/`. Each action is a module with a `.call` class method that returns a `Result` object:
+
+```ruby
+module Catalog
+  module CopyDeck
+    def self.call(user:, deck:)
+      # ... perform work ...
+      Result.new(success: true, record: new_deck)
+    end
+
+    class Result
+      attr_accessor :success, :record
+      def initialize(success:, record:) = ...
+      def success? = success
+    end
+  end
+end
+```
+
+Controllers call actions and branch on `result.success?`.
 
 ### Authentication
 
@@ -418,6 +453,15 @@ end
 
 ## Important Notes
 
+### Deck Catalog
+
+Users can browse and copy public decks at `/catalog`:
+- **Browse**: `/catalog` — grid of all public decks (no auth required)
+- **Preview**: `/catalog/:id` — card preview (first 5 cards), deck info (no auth required)
+- **Copy**: `POST /catalog/:id/copy` — duplicates deck + cards into current user's account (auth required)
+- Deck visibility is controlled by `deck.visibility` (`"public"` / `"private"`)
+- Visibility is currently set via Rails console; there is no UI for changing it yet
+
 ### CSV Import
 
 Decks are created by uploading CSV files with this format:
@@ -499,7 +543,7 @@ Manual testing checklist for new features:
 Things to keep in mind for future development:
 
 1. **Subscription Features** - If adding paid features, update subscription messaging
-2. **Deck Sharing** - Consider public deck library
+2. **Catalog Enhancements** - UI for setting deck visibility, search/filter, categories
 3. **Mobile App** - Progressive Web App capabilities
 4. **Bulk Operations** - Edit/delete multiple cards at once
 5. **Study Statistics** - More detailed progress tracking and visualizations
