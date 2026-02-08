@@ -12,7 +12,7 @@ class User < ApplicationRecord
   validates :username,
             presence: true,
             uniqueness: true,
-            format: { with: /\A[a-zA-Z0-9_]+\z/ }
+            format: { with: /\A[a-zA-Z0-9_.]+\z/ }
 
   has_many :decks, dependent: :destroy
   has_one :subscription, dependent: :destroy
