@@ -33,12 +33,7 @@ module Flash
     Rails.application.routes.default_url_options = url_options
     config.action_mailer.default_url_options = url_options
 
-    extra_paths = [
-      Rails.root.join("app/actions"),
-      Rails.root.join("app/nulls"),
-      Rails.root.join("app/value_objects"),
-      Rails.root.join("lib/route_constraints"),
-    ]
+    extra_paths = [Rails.root.join("lib/route_constraints")]
     config.autoload_paths += extra_paths
     config.eager_load_paths += extra_paths
   end
