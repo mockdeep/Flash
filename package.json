@@ -42,7 +42,7 @@
     "jest-util": "^30.0.5",
     "jiti": "^2.6.1",
     "stylelint": "^16.26.1",
-    "stylelint-config-property-sort-order-smacss": "^10.0.0",
+    "stylelint-config-property-sort-order-smacss": "^11.0.0",
     "stylelint-config-standard": "^39.0.1",
     "stylelint-selector-bem-pattern": "^4.0.1",
     "ts-jest": "^29.4.6",

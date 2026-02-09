@@ -109,8 +109,8 @@ importers:
         specifier: ^16.26.1
         version: 16.26.1(typescript@5.9.3)
       stylelint-config-property-sort-order-smacss:
-        specifier: ^10.0.0
-        version: 10.0.0(stylelint@16.26.1(typescript@5.9.3))
+        specifier: ^11.0.0
+        version: 11.0.0(stylelint@16.26.1(typescript@5.9.3))
       stylelint-config-standard:
         specifier: ^39.0.1
         version: 39.0.1(stylelint@16.26.1(typescript@5.9.3))
@@ -1659,8 +1659,8 @@ packages:
     resolution: {integrity: sha512-IQOkD3hbR5KrN93MtcYuad6YPuTSUhntLHDuLEbFWE+ff2/XSZNdZG+LcbbIW5AXKg/WFIfYItIzVoHngHXZzA==}
     engines: {node: '>=12 || >=16'}
 
-  css-property-sort-order-smacss@2.2.0:
-    resolution: {integrity: sha512-nXutswsivIEBOrPo/OZw2KQjFPLvtg68aovJf6Kqrm3L6FmTvvFPaeDrk83hh0+pRJGuP3PeKJwMS0E6DFipdQ==}
+  css-property-sort-order-smacss@3.0.0:
+    resolution: {integrity: sha512-qtZBUTnWR3S5We/hKedz4dmGWv30ML9Qirj34oCzl7q7YtwvHsew62jYGbgNNj12zEpL4fxTqJeDEslK83Pokw==}
 
   css-tree@3.1.0:
     resolution: {integrity: sha512-0eW44TGN5SQXU1mWSkKwFstI/22X2bG1nYzZTYMAWjylYURhse752YgbE4Cx46AC+bAvI+/dYTPRk1LqSUnu6w==}
@@ -2108,11 +2108,12 @@ packages:
 
   glob@10.5.0:
     resolution: {integrity: sha512-DfXN8DfhJ7NH3Oe7cFmu3NCu1wKbkReJ8TorzSAFbSKrlNaQSKfIzqYqVY8zlbs2NLBbWpRiU52GX2PbaBVNkg==}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
-    deprecated: Glob versions prior to v9 are no longer supported
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   global-modules@2.0.0:
     resolution: {integrity: sha512-NGbfmJBp9x8IxyJSd1P+otYK8vonoJactOogrVfFRIAEY1ukil8RSKDz2Yo7wh1oihl51l/r6W4epkeKJHqL8A==}
@@ -2881,8 +2882,8 @@ packages:
     resolution: {integrity: sha512-orRsuYpJVw8LdAwqqLykBj9ecS5/cRHlI5+nvTo8LcCKmzDmqVORXtOIYEEQuL9D4BxtA1lm5isAqzQZCoQ6Eg==}
     engines: {node: '>=4'}
 
-  postcss-sorting@8.0.2:
-    resolution: {integrity: sha512-M9dkSrmU00t/jK7rF6BZSZauA5MAaBW4i5EnJXspMwt4iqTh/L9j6fgMnbElEOfyRyfLfVbIHj/R52zHzAPe1Q==}
+  postcss-sorting@9.1.0:
+    resolution: {integrity: sha512-Mn8KJ45HNNG6JBpBizXcyf6LqY/qyqetGcou/nprDnFwBFBLGj0j/sNKV2lj2KMOVOwdXu14aEzqJv8CIV6e8g==}
     peerDependencies:
       postcss: ^8.4.20
 
@@ -3142,11 +3143,11 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
 
-  stylelint-config-property-sort-order-smacss@10.0.0:
-    resolution: {integrity: sha512-NuiTgyqD8UdYY1IpTBIodBbrWKwaib5r8sq5kGHQ52UrmT8O7Fa8ZWYGipSZw6k9tGoljl9Hng2jtH+wBTMa1Q==}
-    engines: {node: '>=18.12.0'}
+  stylelint-config-property-sort-order-smacss@11.0.0:
+    resolution: {integrity: sha512-DgbX+5f1drdIiz+nSWJdiz04Scovrn+wv0666FCLv08+WzkuLIgpeOU4PRTVrcQQldsRUYVx6jWNjEhAZ2Y/Cw==}
+    engines: {node: '>=20.19.0'}
     peerDependencies:
-      stylelint: ^14.0.0 || ^15.0.0 || ^16.0.0
+      stylelint: ^16.18.0 || ^17.0.0
 
   stylelint-config-recommended@17.0.0:
     resolution: {integrity: sha512-WaMSdEiPfZTSFVoYmJbxorJfA610O0tlYuU2aEwY33UQhSPgFbClrVJYWvy3jGJx+XW37O+LyNLiZOEXhKhJmA==}
@@ -3160,10 +3161,11 @@ packages:
     peerDependencies:
       stylelint: ^16.23.0
 
-  stylelint-order@6.0.4:
-    resolution: {integrity: sha512-0UuKo4+s1hgQ/uAxlYU4h0o0HS4NiQDud0NAUNI0aa8FJdmYHA5ZZTFHiV5FpmE3071e9pZx5j0QpVJW5zOCUA==}
+  stylelint-order@7.0.1:
+    resolution: {integrity: sha512-GWPei1zBVDDjxM+/BmcSCiOcHNd8rSqW6FUZtqQGlTRpD0Z5nSzspzWD8rtKif5KPdzUG68DApKEV/y/I9VbTw==}
+    engines: {node: '>=20.19.0'}
     peerDependencies:
-      stylelint: ^14.0.0 || ^15.0.0 || ^16.0.1
+      stylelint: ^16.18.0 || ^17.0.0
 
   stylelint-selector-bem-pattern@4.0.1:
     resolution: {integrity: sha512-zpyC52/aqwbxbtliyTKdV3gv+h/ExZUTIn7tKMt9nfILtMhYIeJNF5a3UE1dtv9L826ulXU+83YA83Ymx3jW0A==}
@@ -5278,7 +5280,7 @@ snapshots:
 
   css-functions-list@3.2.3: {}
 
-  css-property-sort-order-smacss@2.2.0: {}
+  css-property-sort-order-smacss@3.0.0: {}
 
   css-tree@3.1.0:
     dependencies:
@@ -6780,7 +6782,7 @@ snapshots:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
 
-  postcss-sorting@8.0.2(postcss@8.5.6):
+  postcss-sorting@9.1.0(postcss@8.5.6):
     dependencies:
       postcss: 8.5.6
 
@@ -7060,11 +7062,11 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  stylelint-config-property-sort-order-smacss@10.0.0(stylelint@16.26.1(typescript@5.9.3)):
+  stylelint-config-property-sort-order-smacss@11.0.0(stylelint@16.26.1(typescript@5.9.3)):
     dependencies:
-      css-property-sort-order-smacss: 2.2.0
+      css-property-sort-order-smacss: 3.0.0
       stylelint: 16.26.1(typescript@5.9.3)
-      stylelint-order: 6.0.4(stylelint@16.26.1(typescript@5.9.3))
+      stylelint-order: 7.0.1(stylelint@16.26.1(typescript@5.9.3))
 
   stylelint-config-recommended@17.0.0(stylelint@16.26.1(typescript@5.9.3)):
     dependencies:
@@ -7075,10 +7077,10 @@ snapshots:
       stylelint: 16.26.1(typescript@5.9.3)
       stylelint-config-recommended: 17.0.0(stylelint@16.26.1(typescript@5.9.3))
 
-  stylelint-order@6.0.4(stylelint@16.26.1(typescript@5.9.3)):
+  stylelint-order@7.0.1(stylelint@16.26.1(typescript@5.9.3)):
     dependencies:
       postcss: 8.5.6
-      postcss-sorting: 8.0.2(postcss@8.5.6)
+      postcss-sorting: 9.1.0(postcss@8.5.6)
       stylelint: 16.26.1(typescript@5.9.3)
 
   stylelint-selector-bem-pattern@4.0.1(stylelint@16.26.1(typescript@5.9.3)):
