@@ -23,21 +23,14 @@ module Views
 
             h2(class: "card-front") { result.question }
 
-            if result.correct?
-              div(class: "result-card result-correct") do
-                div(class: "result-icon") { "✓" }
-                h2 { "Correct!" }
-                p(class: "answer-display") do
-                  strong { result.correct_answer }
-                end
-              end
-            else
-              div(class: "result-card result-incorrect") do
-                div(class: "result-icon") { "✗" }
-                h2 { "Not quite" }
-                p(class: "correct-answer") do
-                  plain("The correct answer was: ")
-                  strong { result.correct_answer }
+            ol(class: "study-answers-grid") do
+              result.possible_answers.each do |answer|
+                css_class = answer_row_class(answer)
+                li do
+                  div(class: "answer-row #{css_class}") do
+                    span(class: "answer-number") { answer_badge(answer) }
+                    span(class: "answer-text") { answer }
+                  end
                 end
               end
             end
@@ -47,7 +40,31 @@ module Views
               span { "Next Card" }
               span(class: "hotkey-hint") { "Press Space" }
             end
+
+            p(class: "keyboard-hint") { "Press Space to continue" }
           end
+        end
+      end
+
+      private
+
+      def answer_row_class(answer)
+        if answer == result.correct_answer
+          "answer-correct"
+        elsif answer == result.selected_answer
+          "answer-incorrect"
+        else
+          "answer-faded"
+        end
+      end
+
+      def answer_badge(answer)
+        if answer == result.correct_answer
+          "✓"
+        elsif answer == result.selected_answer
+          "✗"
+        else
+          ""
         end
       end
     end
