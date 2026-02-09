@@ -23,12 +23,16 @@ RSpec.describe StudiesController do
   end
 
   describe "#update" do
-    def answer_params(card:, answer:)
-      { answer: { card_id: card.id, answer: } }
-    end
-
     def submit_answer(deck:, card:, answer:)
-      patch(deck_study_path(deck), params: answer_params(card:, answer:))
+      possible = ["Paris", "London", "Berlin", "Rome"]
+      params = {
+        answer: {
+          card_id: card.id,
+          answer:,
+          possible_answers: possible,
+        },
+      }
+      patch(deck_study_path(deck), params:)
     end
 
     context "when answer is correct" do
@@ -50,14 +54,24 @@ RSpec.describe StudiesController do
           .to change_record(card, :correct_streak).from(0).to(1)
       end
 
-      it "renders the result view" do
+      it "highlights the correct answer" do
         deck = create(:deck)
         card = create(:card, deck:, back: "Paris")
         login_as(default_user)
 
         submit_answer(deck:, card:, answer: "Paris")
 
-        expect(rendered).to have_content("Correct!")
+        expect(rendered).to have_css(".answer-correct", text: "Paris")
+      end
+
+      it "fades the other answers" do
+        deck = create(:deck)
+        card = create(:card, deck:, back: "Paris")
+        login_as(default_user)
+
+        submit_answer(deck:, card:, answer: "Paris")
+
+        expect(rendered).to have_css(".answer-faded", text: "London")
       end
     end
 
@@ -80,14 +94,24 @@ RSpec.describe StudiesController do
           .to change_record(card, :wrong_answers).from([]).to(["London"])
       end
 
-      it "renders the result view" do
+      it "marks the wrong answer" do
         deck = create(:deck)
         card = create(:card, deck:, back: "Paris")
         login_as(default_user)
 
         submit_answer(deck:, card:, answer: "London")
 
-        expect(rendered).to have_content("Not quite")
+        expect(rendered).to have_css(".answer-incorrect", text: "London")
+      end
+
+      it "highlights the correct answer" do
+        deck = create(:deck)
+        card = create(:card, deck:, back: "Paris")
+        login_as(default_user)
+
+        submit_answer(deck:, card:, answer: "London")
+
+        expect(rendered).to have_css(".answer-correct", text: "Paris")
       end
     end
   end

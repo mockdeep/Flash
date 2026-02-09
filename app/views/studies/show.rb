@@ -31,10 +31,17 @@ module Views
 
             h2(class: "card-front") { card.front }
 
+            answers = study.possible_answers
             ol(class: "study-answers-grid") do
-              study.possible_answers.each_with_index do |answer, index|
+              answers.each_with_index do |answer, index|
                 li do
-                  params = { answer: { answer:, card_id: card.id } }
+                  params = {
+                    answer: {
+                      answer:,
+                      card_id: card.id,
+                      possible_answers: answers,
+                    },
+                  }
                   path = deck_study_path(deck)
                   data = { hotkeys_target: "click", hotkey: (index + 1).to_s }
                   button_to(

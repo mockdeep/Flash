@@ -38,7 +38,7 @@ class Study
     [*wrong_answers, next_card.back].shuffle
   end
 
-  def answer_card(card_id:, answer:)
+  def answer_card(card_id:, answer:, possible_answers: [])
     card = deck.cards.find(card_id)
     card.view_count += 1
     if card.back == answer
@@ -46,7 +46,13 @@ class Study
       card.correct_streak += 1
       card.status = "done" if card.correct_streak >= CARD_DONE_THRESHOLD
       card.save!
-      Result.new(correct: true, correct_answer: card.back, question: card.front)
+      Result.new(
+        correct: true,
+        correct_answer: card.back,
+        question: card.front,
+        selected_answer: answer,
+        possible_answers:,
+      )
     else
       card.wrong_answers.unshift(answer).uniq!
       card.correct_streak = 0
@@ -55,17 +61,33 @@ class Study
         correct: false,
         correct_answer: card.back,
         question: card.front,
+        selected_answer: answer,
+        possible_answers:,
       )
     end
   end
 
   class Result
-    attr_accessor :correct, :correct_answer, :question
+    attr_accessor(
+      :correct,
+      :correct_answer,
+      :question,
+      :selected_answer,
+      :possible_answers,
+    )
 
-    def initialize(correct:, correct_answer:, question:)
+    def initialize(
+      correct:,
+      correct_answer:,
+      question:,
+      selected_answer:,
+      possible_answers:
+    )
       self.correct = correct
       self.correct_answer = correct_answer
       self.question = question
+      self.selected_answer = selected_answer
+      self.possible_answers = possible_answers
     end
 
     def correct?
