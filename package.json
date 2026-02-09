@@ -41,7 +41,7 @@
     "jest-junit": "^16.0.0",
     "jest-util": "^30.0.5",
     "jiti": "^2.6.1",
-    "stylelint": "^16.26.1",
+    "stylelint": "^17.0.0",
     "stylelint-config-property-sort-order-smacss": "^11.0.0",
     "stylelint-config-standard": "^39.0.1",
     "stylelint-selector-bem-pattern": "^4.0.1",
