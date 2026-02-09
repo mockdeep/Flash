@@ -1,4 +1,4 @@
-import {afterEach} from "@jest/globals";
+import {afterEach} from "vitest";
 import type {Context, Controller} from "@hotwired/stimulus";
 import {Application} from "@hotwired/stimulus";
 
