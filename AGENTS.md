@@ -364,15 +364,15 @@ See `.claude/skills/rspec-testing.md` for detailed guidelines and examples.
 
 ### JavaScript Testing
 
-The project uses **Jest** with **jsdom** for JavaScript/TypeScript tests:
+The project uses **Vitest** with **jsdom** for JavaScript/TypeScript tests:
 
-- **Running Tests:** `pnpm jest` (or `pnpm test` which also runs `tscheck` and `eslint`)
-- **Config:** `config/jest.json`
+- **Running Tests:** `pnpm vitest` (or `pnpm test` which also runs `tscheck` and `eslint`)
+- **Config:** `vitest.config.ts`
 - **Test Files:** `spec/javascript/**/*_spec.ts`
 - **Stimulus Helper:** `spec/javascript/support/stimulus.ts` provides `bootStimulus()` and `getController()`
 
 **Key Conventions:**
-- Use `@jest/globals` imports (`describe`, `expect`, `it`, `jest`) — not global jest
+- Use `vitest` imports (`describe`, `expect`, `it`, `vi`) — not globals
 - Follow the same one-assertion-per-test pattern as RSpec
 - Use top-level `describe` blocks per method/behavior (not one nested `describe`)
 - Keep describe arrow functions under 50 lines (split into multiple top-level describes)

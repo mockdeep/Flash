@@ -1,4 +1,4 @@
-import {expect, it} from "@jest/globals";
+import {expect, it} from "vitest";
 import {bootStimulus} from "spec/javascript/support/stimulus";
 import DialogController from "controllers/dialog_controller";
 
