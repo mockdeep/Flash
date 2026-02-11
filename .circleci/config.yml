@@ -78,8 +78,8 @@ jobs:
           command: pnpm eslint
 
       - run:
-          name: Jest
-          command: pnpm jest --ci
+          name: Vitest
+          command: pnpm vitest
 
       - run:
           name: Brakeman

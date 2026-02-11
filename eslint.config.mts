@@ -1,6 +1,6 @@
 import globals from "globals";
 import importPlugin from "eslint-plugin-import";
-import jest from "eslint-plugin-jest";
+import vitest from "eslint-plugin-vitest";
 import js from "@eslint/js";
 import stylistic from "@stylistic/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
@@ -13,13 +13,12 @@ export default defineConfig([
   js.configs.all,
   tseslint.configs.all,
   importPlugin.flatConfigs.recommended,
-  jest.configs["flat/all"],
+  vitest.configs.all,
   stylistic.configs.all,
   {
     ignores: [
       ".eslint_todo.ts",
       "app/assets/builds/**",
-      "babel.config.js",
       "coverage/**",
       "public/**",
       "vendor/**",
@@ -38,10 +37,10 @@ export default defineConfig([
     },
     plugins: {
       importPlugin,
-      jest,
       js,
       "sort-keys-fix": sortKeysFix,
       stylistic,
+      vitest,
     },
     rules: {
       "@stylistic/array-element-newline": ["error", "consistent"],
@@ -64,9 +63,6 @@ export default defineConfig([
       "@typescript-eslint/prefer-readonly-parameter-types": "off",
       "arrow-body-style": ["error", "always"],
       "func-style": ["error", "declaration"],
-      "jest/consistent-test-it": ["error", {fn: "it", withinDescribe: "it"}],
-      "jest/prefer-expect-assertions": "off",
-      "jest/require-top-level-describe": "off",
       "max-len": ["error", 84, {ignoreUrls: true}],
       "no-duplicate-imports": ["error", {allowSeparateTypeImports: true}],
       "no-magic-numbers": "off",
@@ -77,6 +73,12 @@ export default defineConfig([
       "sort-keys": ["error", "asc", {caseSensitive: false, natural: true}],
       "sort-keys-fix/sort-keys-fix":
         ["error", "asc", {caseSensitive: false, natural: true}],
+      "vitest/consistent-test-it":
+        ["error", {fn: "it", withinDescribe: "it"}],
+      "vitest/prefer-expect-assertions": "off",
+      "vitest/prefer-to-be-falsy": "off",
+      "vitest/prefer-to-be-truthy": "off",
+      "vitest/require-top-level-describe": "off",
     },
     settings: {
       "import/resolver": {
@@ -89,20 +91,20 @@ export default defineConfig([
   {
     files: ["spec/javascript/test_helper.ts"],
     rules: {
-      "jest/no-hooks": "off",
-      "jest/no-standalone-expect": "off",
+      "vitest/no-hooks": "off",
+      "vitest/no-standalone-expect": "off",
     },
   },
   {
     files: ["spec/javascript/support/**/*"],
     rules: {
-      "jest/no-hooks": "off",
+      "vitest/no-hooks": "off",
     },
   },
   {
     files: ["app/javascript/**/*.ts"],
     rules: {
-      "jest/require-hook": "off",
+      "vitest/require-hook": "off",
     },
   },
   ...eslintTodo,

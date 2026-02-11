@@ -1,4 +1,4 @@
-import {describe, expect, it, jest} from "@jest/globals";
+import {describe, expect, it, vi} from "vitest";
 import {bootStimulus, getController} from "spec/javascript/support/stimulus";
 import HotkeysController from "controllers/hotkeys_controller";
 import {assert} from "javascript/helpers";
@@ -56,7 +56,7 @@ describe("clickTargetDisconnected", () => {
 describe("handleKeydown", () => {
   it("clicks the target for the pressed key", async () => {
     await setupController();
-    const clickSpy = jest.spyOn(button(), "click");
+    const clickSpy = vi.spyOn(button(), "click");
 
     controller().handleKeydown(new KeyboardEvent("keydown", {key: "a"}));
 
@@ -65,7 +65,7 @@ describe("handleKeydown", () => {
 
   it("does nothing if there is no target for the pressed key", async () => {
     await setupController();
-    const clickSpy = jest.spyOn(button(), "click");
+    const clickSpy = vi.spyOn(button(), "click");
 
     controller().handleKeydown(new KeyboardEvent("keydown", {key: "b"}));
 

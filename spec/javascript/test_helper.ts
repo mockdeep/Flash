@@ -1,4 +1,4 @@
-import {beforeEach, expect} from "@jest/globals";
+import {beforeEach, expect} from "vitest";
 
 beforeEach(() => {
   expect.hasAssertions();
