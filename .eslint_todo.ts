@@ -3,5 +3,15 @@
 // The point is for the user to remove these configuration records
 // one by one as the offenses are removed from the code base.
 
-export default [
+import type {Linter} from "eslint";
+
+const eslintTodo: Linter.Config[] = [
+  {
+    files: ["spec/javascript/controllers/file_upload_controller_spec.ts"],
+    rules: {
+      "@typescript-eslint/consistent-type-assertions": "off",
+    },
+  },
 ];
+
+export default eslintTodo;
