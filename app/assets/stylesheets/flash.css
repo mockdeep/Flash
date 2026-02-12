@@ -100,20 +100,8 @@ body {
 }
 
 /* Progress section */
-.progress-text {
-  margin-bottom: var(--spacing-xs);
-  color: var(--color-text-muted);
-  font-size: 14px;
-  font-weight: 600;
-  font-family: var(--font-mono);
-  text-align: center;
-  letter-spacing: 0.5px;
-}
-
 .content-container progress {
   width: 100%;
-  height: 12px;
-  margin-bottom: var(--spacing-xs);
   border: 3px solid var(--color-border-dark);
   border-radius: 0;
   background-color: var(--color-bg-subtle);
@@ -128,19 +116,37 @@ body {
 
 .content-container progress::-webkit-progress-value {
   border-radius: 0;
-  background: repeating-linear-gradient(
-    45deg,
-    var(--color-primary),
-    var(--color-primary) 10px,
-    var(--color-primary-dark) 10px,
-    var(--color-primary-dark) 20px
-  );
   box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
   transition: width var(--transition-slow);
 }
 
 .content-container progress::-moz-progress-bar {
   border-radius: 0;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  transition: width var(--transition-slow);
+}
+
+/* Session progress container */
+.session-progress {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  border: 2px solid var(--color-border);
+  background: var(--color-bg-elevated);
+}
+
+/* Deck-wide progress bar - spans both columns, de-emphasized */
+.content-container .progress-deck {
+  grid-column: 1 / -1;
+  height: 6px;
+  border: none;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+.content-container .progress-deck::-webkit-progress-value {
   background: repeating-linear-gradient(
     45deg,
     var(--color-primary),
@@ -148,8 +154,73 @@ body {
     var(--color-primary-dark) 10px,
     var(--color-primary-dark) 20px
   );
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
-  transition: width var(--transition-slow);
+}
+
+.content-container .progress-deck::-moz-progress-bar {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-primary),
+    var(--color-primary) 10px,
+    var(--color-primary-dark) 10px,
+    var(--color-primary-dark) 20px
+  );
+}
+
+/* Session progress bars */
+.session-progress-bar progress {
+  height: 16px;
+  margin-bottom: 4px;
+}
+
+.progress-label {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* Completed progress bar - green */
+.content-container .progress-completed::-webkit-progress-value {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-success-border),
+    var(--color-success-border) 10px,
+    #4a7f3a 10px,
+    #4a7f3a 20px
+  );
+}
+
+.content-container .progress-completed::-moz-progress-bar {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-success-border),
+    var(--color-success-border) 10px,
+    #4a7f3a 10px,
+    #4a7f3a 20px
+  );
+}
+
+/* Reviewed progress bar - gold */
+.content-container .progress-reviewed::-webkit-progress-value {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-accent),
+    var(--color-accent) 10px,
+    #d4992e 10px,
+    #d4992e 20px
+  );
+}
+
+.content-container .progress-reviewed::-moz-progress-bar {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-accent),
+    var(--color-accent) 10px,
+    #d4992e 10px,
+    #d4992e 20px
+  );
 }
 
 .card-front {
@@ -526,6 +597,116 @@ body {
   transform: translateX(-3px);
 }
 
+/* Completed bar celebration animation */
+@keyframes progress-glow {
+  0% { box-shadow: 0 0 0 0 rgba(90, 143, 74, 0); }
+  30% { box-shadow: 0 0 12px 4px rgba(90, 143, 74, 0.5); }
+  100% { box-shadow: 0 0 0 0 rgba(90, 143, 74, 0); }
+}
+
+.session-progress-bar-complete {
+  animation: progress-glow 1s ease-out;
+}
+
+/* Milestone prompt */
+.session-milestone {
+  margin: var(--spacing-md) 0 var(--spacing-lg);
+  padding: var(--spacing-xl) var(--spacing-lg);
+  border: 4px solid var(--color-border-dark);
+  background: var(--color-bg-elevated);
+  box-shadow:
+    8px 8px 0 -2px var(--color-bg),
+    8px 8px 0 0 var(--color-border-dark),
+    0 4px 12px var(--color-shadow-warm-md);
+  text-align: center;
+  animation: card-enter var(--transition-slow) ease-out;
+}
+
+.session-milestone p {
+  margin: 0 0 var(--spacing-lg);
+  color: var(--color-text);
+  font-size: clamp(20px, 4vw, 26px);
+  font-weight: 400;
+  font-family: var(--font-display);
+  line-height: 1.4;
+}
+
+.session-milestone-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.session-milestone-primary {
+  display: inline-flex;
+  padding: var(--spacing-md) var(--spacing-xl);
+  transition: all var(--transition-base);
+  border: 3px solid var(--color-border-dark);
+  background: var(--color-accent);
+  box-shadow:
+    5px 5px 0 -2px var(--color-bg),
+    5px 5px 0 0 var(--color-border-dark),
+    0 4px 12px var(--color-shadow-warm-md);
+  color: var(--color-black);
+  font-size: 17px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.session-milestone-primary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow:
+    7px 7px 0 -2px var(--color-bg),
+    7px 7px 0 0 var(--color-border-dark),
+    0 6px 20px var(--color-shadow-warm-lg);
+}
+
+.session-milestone-primary:active {
+  transform: translate(2px, 2px);
+  box-shadow:
+    3px 3px 0 -2px var(--color-bg),
+    3px 3px 0 0 var(--color-border-dark),
+    0 2px 8px var(--color-shadow-warm);
+}
+
+.session-milestone-secondary {
+  display: inline-flex;
+  padding: var(--spacing-md) var(--spacing-xl);
+  transition: all var(--transition-base);
+  border: 3px solid var(--color-border);
+  background: var(--color-white);
+  box-shadow:
+    5px 5px 0 -2px var(--color-bg),
+    5px 5px 0 0 var(--color-border-medium),
+    0 4px 12px var(--color-shadow-warm-md);
+  color: var(--color-text-secondary);
+  font-size: 17px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.session-milestone-secondary:hover {
+  transform: translate(-2px, -2px);
+  border-color: var(--color-border-dark);
+  box-shadow:
+    7px 7px 0 -2px var(--color-bg),
+    7px 7px 0 0 var(--color-border-dark),
+    0 6px 20px var(--color-shadow-warm-lg);
+}
+
+.session-milestone-secondary:active {
+  transform: translate(2px, 2px);
+  box-shadow:
+    3px 3px 0 -2px var(--color-bg),
+    3px 3px 0 0 var(--color-border),
+    0 2px 8px var(--color-shadow-warm);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .content-container {
@@ -543,8 +724,13 @@ body {
     margin: var(--spacing-xs) 0 var(--spacing-sm);
   }
 
-  .progress-text {
-    font-size: 13px;
+  .session-progress {
+    padding: var(--spacing-xs);
+    gap: var(--spacing-xs);
+  }
+
+  .progress-label {
+    font-size: 11px;
   }
 
   .card-front {

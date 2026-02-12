@@ -4,20 +4,50 @@ class StudiesController < ApplicationController
   def show
     deck = current_user.decks.find(params[:deck_id])
     study = Study.new(deck:)
-
-    render(Views::Studies::Show.new(deck:, study:))
+    reset_counters
+    render_study(Views::Studies::Show, deck:, study:)
   end
 
   def update
     deck = current_user.decks.find(params[:deck_id])
-    study = Study.new(deck:)
-
-    result = study.answer_card(**answer_params)
-
-    render(Views::Studies::Update.new(deck:, result:))
+    result = Study.new(deck:).answer_card(**answer_params)
+    increment_counters(result)
+    render_study(Views::Studies::Update, deck:, result:)
   end
 
   private
+
+  def reset_counters
+    reset_daily_counters
+    return unless params[:reset_session]
+
+    session[:study_reviewed] = 0
+    session[:study_completed] = 0
+  end
+
+  def increment_counters(result)
+    reset_daily_counters
+    session[:study_reviewed] += 1
+    session[:study_completed] += 1 if result.card_completed?
+  end
+
+  def render_study(view, **args)
+    render(
+      view.new(
+        **args,
+        reviewed: session[:study_reviewed],
+        completed: session[:study_completed],
+      ),
+    )
+  end
+
+  def reset_daily_counters
+    return if session[:study_date] == Date.current.to_s
+
+    session[:study_date] = Date.current.to_s
+    session[:study_reviewed] = 0
+    session[:study_completed] = 0
+  end
 
   def answer_params
     params.expect(answer: [:card_id, :answer, { possible_answers: [] }])

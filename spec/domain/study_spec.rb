@@ -138,6 +138,26 @@ RSpec.describe Study do
         expect(card.reload.status).to eq("active")
       end
 
+      it "returns card_completed true when streak meets threshold" do
+        deck = create(:deck)
+        card = create(:card, :active, deck:, back: "Paris", correct_streak: 0)
+        study = described_class.new(deck:)
+
+        result = study.answer_card(card_id: card.id, answer: "Paris")
+
+        expect(result.card_completed?).to be(true)
+      end
+
+      it "returns card_completed false when streak below threshold" do
+        stub_const("Study::CARD_DONE_THRESHOLD", 5)
+        card = create(:card, :active, back: "Paris", correct_streak: 0)
+        study = described_class.new(deck: card.deck)
+
+        result = study.answer_card(card_id: card.id, answer: "Paris")
+
+        expect(result.card_completed?).to be(false)
+      end
+
       it "returns result with correct true" do
         deck = create(:deck)
         card = create(:card, :active, deck:, back: "Paris")
@@ -216,6 +236,16 @@ RSpec.describe Study do
         study.answer_card(card_id: card.id, answer: "London")
 
         expect(card.reload.wrong_answers).to eq(["London"])
+      end
+
+      it "returns result with card_completed false" do
+        deck = create(:deck)
+        card = create(:card, :active, deck:, back: "Paris")
+        study = described_class.new(deck:)
+
+        result = study.answer_card(card_id: card.id, answer: "London")
+
+        expect(result.card_completed?).to be(false)
       end
 
       it "returns result with correct false" do
