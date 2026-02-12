@@ -78,6 +78,10 @@ jobs:
           command: pnpm eslint
 
       - run:
+          name: Verify ESLint Autogen
+          command: bundle exec exe/eslint_autogen
+
+      - run:
           name: Vitest
           command: pnpm vitest
 
@@ -88,6 +92,10 @@ jobs:
       - run:
           name: Stylelint
           command: pnpm stylelint
+
+      - run:
+          name: Verify Stylelint Autogen
+          command: bundle exec exe/stylelint_autogen
 
       - run:
           name: Rubocop
