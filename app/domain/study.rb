@@ -3,6 +3,18 @@
 class Study
   ACTIVE_CARD_THRESHOLD = 20
   CARD_DONE_THRESHOLD = 1
+  Result =
+    Data.define(
+      :correct,
+      :correct_answer,
+      :question,
+      :selected_answer,
+      :possible_answers,
+      :card_completed,
+    ) do
+      def correct? = correct
+      def card_completed? = card_completed
+    end
 
   attr_accessor :deck, :next_card, :active_card_threshold
 
@@ -44,7 +56,8 @@ class Study
     if card.back == answer
       card.correct_count += 1
       card.correct_streak += 1
-      card.status = "done" if card.correct_streak >= CARD_DONE_THRESHOLD
+      card_completed = card.correct_streak >= CARD_DONE_THRESHOLD
+      card.status = "done" if card_completed
       card.save!
       Result.new(
         correct: true,
@@ -52,6 +65,7 @@ class Study
         question: card.front,
         selected_answer: answer,
         possible_answers:,
+        card_completed:,
       )
     else
       card.wrong_answers.unshift(answer).uniq!
@@ -63,35 +77,8 @@ class Study
         question: card.front,
         selected_answer: answer,
         possible_answers:,
+        card_completed: false,
       )
-    end
-  end
-
-  class Result
-    attr_accessor(
-      :correct,
-      :correct_answer,
-      :question,
-      :selected_answer,
-      :possible_answers,
-    )
-
-    def initialize(
-      correct:,
-      correct_answer:,
-      question:,
-      selected_answer:,
-      possible_answers:
-    )
-      self.correct = correct
-      self.correct_answer = correct_answer
-      self.question = question
-      self.selected_answer = selected_answer
-      self.possible_answers = possible_answers
-    end
-
-    def correct?
-      correct
     end
   end
 end
