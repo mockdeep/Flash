@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "active_support/all"
+require "stringio"
 
 TODO_FILE_PATH = "./.eslint_todo.ts"
 HEADING = <<~COMMENTS.freeze
@@ -12,7 +13,7 @@ HEADING = <<~COMMENTS.freeze
 COMMENTS
 
 File.write(TODO_FILE_PATH, "export default []")
-json = `pnpm eslint --format json`
+json = `pnpm --silent eslint --format json`
 results = JSON.parse(json)
 
 by_rule =
@@ -29,7 +30,9 @@ by_rule =
 output = StringIO.new
 output.puts(HEADING)
 output.puts
-output.puts("export default [")
+output.puts("import type {Linter} from \"eslint\";")
+output.puts
+output.puts("const config: Linter.Config[] = [")
 
 by_rule.sort.each do |rule, file_paths|
   output.puts("  // Offense count: #{file_paths.length}")
@@ -49,5 +52,7 @@ by_rule.sort.each do |rule, file_paths|
 end
 
 output.puts("];")
+output.puts
+output.puts("export default config;")
 
 File.write(TODO_FILE_PATH, output.string)
