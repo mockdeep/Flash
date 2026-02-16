@@ -1,21 +1,26 @@
-import {resolve} from "node:path";
 import {defineConfig} from "vitest/config";
+import path from "node:path";
+
+const root = import.meta.dirname;
+
+function appPath(subpath: string): string {
+  return `${path.resolve(root, "app/javascript", subpath)}/`;
+}
 
 export default defineConfig({
   resolve: {
-    alias: {
-      channels: resolve(__dirname, "app/javascript/channels"),
-      controllers: resolve(__dirname, "app/javascript/controllers"),
-      javascript: resolve(__dirname, "app/javascript"),
-      "spec/javascript": resolve(__dirname, "spec/javascript"),
-    },
+    alias: [
+      {find: /^channels\//u, replacement: appPath("channels")},
+      {find: /^controllers\//u, replacement: appPath("controllers")},
+      {find: /^javascript\//u, replacement: appPath("")},
+      {find: /^spec\//u, replacement: `${path.resolve(root, "spec")}/`},
+    ],
   },
   test: {
     coverage: {
       exclude: ["app/javascript/@types/**"],
       include: ["app/javascript/**/*.ts"],
       provider: "v8",
-      reporter: ["html"],
       reportsDirectory: "coverage/vitest",
       thresholds: {
         branches: 100,
@@ -31,8 +36,12 @@ export default defineConfig({
       },
     },
     include: ["spec/javascript/**/*_spec.ts"],
-    mockReset: true,
+    outputFile: {
+      junit: "/tmp/test-results/junit.xml",
+    },
+    reporters: ["default", "junit"],
     restoreMocks: true,
-    setupFiles: ["spec/javascript/test_helper.ts"],
+    root: ".",
+    setupFiles: ["spec/javascript/setup.ts"],
   },
 });

@@ -85,7 +85,7 @@ export default defineConfig([
     },
   },
   {
-    files: ["spec/javascript/test_helper.ts"],
+    files: ["spec/javascript/setup.ts"],
     rules: {
       "vitest/no-hooks": "off",
       "vitest/no-standalone-expect": "off",
