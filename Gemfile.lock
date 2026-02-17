@@ -106,6 +106,8 @@ GEM
       bigdecimal
       rexml
     crass (1.0.6)
+    cssbundling-rails (1.4.3)
+      railties (>= 6.0.0)
     csv (3.3.5)
     date (3.5.1)
     diff-lcs (1.6.2)
@@ -416,6 +418,7 @@ DEPENDENCIES
   brakeman
   bundler-audit
   capybara
+  cssbundling-rails
   csv
   dotenv-rails
   factory_bot_rails
