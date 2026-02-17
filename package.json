@@ -43,6 +43,7 @@
   },
   "scripts": {
     "build": "esbuild app/javascript/*.* --bundle --sourcemap --format=iife --outdir=app/assets/builds --public-path=/assets",
+    "build:css": "esbuild app/assets/stylesheets/application.css --bundle --outdir=app/assets/builds --public-path=/assets",
     "eslint": "eslint ./ --cache --max-warnings=0",
     "eslint_find_unused_rules": "eslint-find-rules --unused --flatConfig --no-core eslint.config.ts",
     "pretest": "pnpm tscheck && pnpm eslint",
