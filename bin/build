@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+esbuild app/javascript/application.ts \
+  --bundle \
+  --sourcemap \
+  --format=iife \
+  --outdir=app/assets/builds \
+  --public-path=/assets
