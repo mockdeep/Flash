@@ -22,13 +22,6 @@ module Views
             csp_meta_tag
 
             stylesheet_link_tag("application", media: "all")
-            stylesheet_link_tag("flash", media: "all")
-            stylesheet_link_tag("layout", media: "all")
-            stylesheet_link_tag("welcome", media: "all")
-            stylesheet_link_tag("decks", media: "all")
-            stylesheet_link_tag("pricing", media: "all")
-            stylesheet_link_tag("auth", media: "all")
-            stylesheet_link_tag("catalog", media: "all")
             javascript_include_tag("application")
           end
 
