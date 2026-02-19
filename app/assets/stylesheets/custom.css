@@ -1,8 +1,8 @@
 /* custom CSS goes here */
-@import url("./flash.css");
-@import url("./layout.css");
-@import url("./welcome.css");
-@import url("./decks.css");
-@import url("./pricing.css");
-@import url("./auth.css");
-@import url("./catalog.css");
+@import "./flash.css";
+@import "./layout.css";
+@import "./welcome.css";
+@import "./decks.css";
+@import "./pricing.css";
+@import "./auth.css";
+@import "./catalog.css";
