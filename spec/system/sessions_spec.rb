@@ -1,14 +1,8 @@
 # frozen_string_literal: true
 
 RSpec.describe "user sessions" do
-  def user_params
-    {
-      username: "demo_user",
-      email: "demo@lmkw.io",
-      password: "secret",
-      password_confirmation: "secret",
-    }
-  end
+  let(:password) { "secret" }
+  let(:user) { create(:user, password:, password_confirmation: password) }
 
   def sign_in_with(email:, password:)
     visit("/")
@@ -24,9 +18,7 @@ RSpec.describe "user sessions" do
   end
 
   it "allows a user to log into their account" do
-    user = User.create!(user_params)
-
-    sign_in_with(email: user.email, password: user.password)
+    sign_in_with(email: user.email, password:)
 
     expect(page).to have_text(user.username)
     expect(page).to have_link("Account")
@@ -34,9 +26,7 @@ RSpec.describe "user sessions" do
   end
 
   it "allows a user to log out" do
-    user = User.create!(user_params)
-
-    sign_in_with(email: user.email, password: user.password)
+    sign_in_with(email: user.email, password:)
 
     click_button("Log Out")
 

@@ -3,14 +3,15 @@
 module Views
   module Studies
     class Update < Views::Base
-      attr_accessor :deck, :result, :reviewed, :completed
+      attr_accessor :deck, :result, :reviewed, :completed, :demo
 
-      def initialize(deck:, result:, reviewed:, completed:)
+      def initialize(deck:, result:, reviewed:, completed:, demo: false)
         super()
         self.deck = deck
         self.result = result
         self.reviewed = reviewed
         self.completed = completed
+        self.demo = demo
       end
 
       def view_template
@@ -44,51 +45,73 @@ module Views
             end
 
             if reviewed >= 100
-              div(class: "session-milestone") do
-                p { "You've reviewed 100 cards — nice work!" }
-                div(class: "session-milestone-actions") do
-                  link_to(
-                    "Keep Going",
-                    deck_study_path(deck, reset_session: true),
-                    class: "session-milestone-primary",
-                  )
-                  link_to(
-                    "Done for Now",
-                    root_path,
-                    class: "session-milestone-secondary",
-                  )
-                end
-              end
+              render_milestone
             else
-              h2(class: "card-front") { result.question }
-
-              ol(class: "study-answers-grid") do
-                result.possible_answers.each do |answer|
-                  css_class = answer_row_class(answer)
-                  li do
-                    div(class: "answer-row #{css_class}") do
-                      span(class: "answer-number") { answer_badge(answer) }
-                      span(class: "answer-text") { answer }
-                    end
-                  end
-                end
-              end
-
-              data = { hotkeys_target: "click", hotkey: " " }
-              link_to(
-                deck_study_path(deck),
-                data:,
-                class: "next-card-button",
-              ) do
-                span { "Next Card" }
-                span(class: "hotkey-hint") { "Press Space" }
-              end
+              render_card_result
             end
           end
         end
       end
 
       private
+
+      def render_milestone
+        div(class: "session-milestone") do
+          p { "You've reviewed 100 cards — nice work!" }
+          div(class: "session-milestone-actions") do
+            if demo
+              link_to(
+                "Sign Up Free",
+                new_account_path,
+                class: "session-milestone-primary",
+                data: { turbo_frame: "_top" },
+              )
+              link_to(
+                "Keep Going",
+                deck_study_path(deck, reset_session: true),
+                class: "session-milestone-secondary",
+              )
+            else
+              link_to(
+                "Keep Going",
+                deck_study_path(deck, reset_session: true),
+                class: "session-milestone-primary",
+              )
+              link_to(
+                "Done for Now",
+                root_path,
+                class: "session-milestone-secondary",
+              )
+            end
+          end
+        end
+      end
+
+      def render_card_result
+        h2(class: "card-front") { result.question }
+
+        ol(class: "study-answers-grid") do
+          result.possible_answers.each do |answer|
+            css_class = answer_row_class(answer)
+            li do
+              div(class: "answer-row #{css_class}") do
+                span(class: "answer-number") { answer_badge(answer) }
+                span(class: "answer-text") { answer }
+              end
+            end
+          end
+        end
+
+        data = { hotkeys_target: "click", hotkey: " " }
+        link_to(
+          deck_study_path(deck),
+          data:,
+          class: "next-card-button",
+        ) do
+          span { "Next Card" }
+          span(class: "hotkey-hint") { "Press Space" }
+        end
+      end
 
       def answer_row_class(answer)
         if answer == result.correct_answer

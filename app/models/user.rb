@@ -2,12 +2,14 @@
 
 class User < ApplicationRecord
   EMAIL_REGEXP = URI::MailTo::EMAIL_REGEXP.freeze
+  ROLES = ["user", "admin", "guest"].freeze
 
   has_secure_password
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase }
   normalizes :username, with: ->(username) { username.to_s.strip }
 
+  validates :role, inclusion: { in: ROLES }
   validates :email, presence: true, format: EMAIL_REGEXP, uniqueness: true
   validates :username,
             presence: true,
@@ -30,6 +32,10 @@ class User < ApplicationRecord
   end
 
   def admin?
-    false
+    role == "admin"
+  end
+
+  def guest?
+    role == "guest"
   end
 end

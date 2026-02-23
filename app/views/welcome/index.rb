@@ -18,6 +18,7 @@ module Views
 
           div(class: "welcome-cta") do
             link_to("Get Started", new_account_path, class: "btn-primary")
+            link_to("Try a Demo", demo_path, class: "btn-secondary")
             link_to("Sign In", new_session_path, class: "btn-secondary")
           end
 

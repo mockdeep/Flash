@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   resources :catalog, only: [:index, :show] do
     post :copy, on: :member
   end
+  resource :demo, only: [:show, :create], controller: "demo"
   resources :decks, only: [:new, :create, :index, :show] do
     resource :study, only: [:show, :update]
   end

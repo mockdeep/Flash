@@ -39,6 +39,7 @@ I18n/GetText/DecorateString:
     - 'app/views/decks/index.rb'
     - 'app/views/decks/new.rb'
     - 'app/views/decks/show.rb'
+    - 'app/views/demo/show.rb'
     - 'app/views/layouts/application.rb'
     - 'app/views/pages/pricing.rb'
     - 'app/views/pages/privacy.rb'
@@ -57,6 +58,7 @@ I18n/RailsI18n/DecorateString:
     - 'app/views/decks/index.rb'
     - 'app/views/decks/new.rb'
     - 'app/views/decks/show.rb'
+    - 'app/views/demo/show.rb'
     - 'app/views/layouts/application.rb'
     - 'app/views/pages/pricing.rb'
     - 'app/views/pages/privacy.rb'
@@ -111,6 +113,7 @@ Metrics/AbcSize:
     - 'app/views/studies/show.rb'
     - 'app/views/studies/update.rb'
     - 'app/views/subscriptions/show.rb'
+    - 'app/views/welcome/index.rb'
 
 # Offense count: 47
 # Configuration parameters: CountComments, Max, CountAsOne, AllowedMethods, AllowedPatterns, inherit_mode.
@@ -137,6 +140,7 @@ Metrics/ClassLength:
     - 'app/views/pages/pricing.rb'
     - 'app/views/pages/privacy.rb'
     - 'app/views/pages/terms.rb'
+    - 'app/views/studies/update.rb'
 
 # Offense count: 26
 # Configuration parameters: CountComments, Max, CountAsOne, AllowedMethods, AllowedPatterns.
@@ -210,6 +214,7 @@ Rails/SkipsModelValidations:
     - 'app/actions/decks/create.rb'
     - 'app/domain/study.rb'
     - 'db/migrate/20251215211527_add_service_name_to_active_storage_blobs.active_storage.rb'
+    - 'db/migrate/20260221050308_add_role_to_users.rb'
 
 # Offense count: 1
 # This cop supports unsafe autocorrection (--autocorrect-all).

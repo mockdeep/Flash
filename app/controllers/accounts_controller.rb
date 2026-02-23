@@ -14,7 +14,7 @@ class AccountsController < ApplicationController
   end
 
   def create
-    user = User.new(user_params)
+    user = User.new(user_params.merge(role: "user"))
     if user.save
       flash[:success] = "Account created successfully"
       log_in(user)

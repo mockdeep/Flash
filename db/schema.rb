@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_07_205340) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_21_050309) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -36,6 +36,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_07_205340) do
     t.bigint "user_id", null: false
     t.string "visibility", default: "private", null: false
     t.index ["user_id", "name"], name: "index_decks_on_user_id_and_name", unique: true
+    t.index ["visibility"], name: "index_decks_on_visibility"
   end
 
   create_table "subscriptions", force: :cascade do |t|
@@ -55,9 +56,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_07_205340) do
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.string "password_digest", null: false
+    t.string "role", null: false
     t.datetime "updated_at", null: false
     t.string "username", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["role"], name: "index_users_on_role"
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 

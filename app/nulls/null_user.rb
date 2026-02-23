@@ -16,4 +16,10 @@ class NullUser
   def admin?
     false
   end
+
+  def guest?
+    false
+  end
+
+  def destroy!; end
 end
