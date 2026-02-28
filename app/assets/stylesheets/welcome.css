@@ -1,14 +1,12 @@
 @import 'https://fonts.googleapis.com/css2?family=Spectral:wght@600;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap';
 
-:root {
+.welcome-hero {
   --color-primary: #1e3a5f;
   --color-accent: #d97706;
   --color-surface: #fafaf9;
   --color-text: #1c1917;
   --color-text-muted: #57534e;
-}
 
-.welcome-hero {
   max-width: 1200px;
   margin: 0 auto;
   padding: 4rem 2rem 6rem;
