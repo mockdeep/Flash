@@ -29,6 +29,9 @@
   --color-success-dark: #4a7f3a;
   --color-warning-bg: #fcefd8;
   --color-warning-border: #d2691e;
+  --color-primary-darker: #8b4513;
+  --color-success-text: #2d5f2d;
+  --color-secondary-dark: #234a3e;
 
   /* Spacing */
   --spacing-xs: 0.5rem;
