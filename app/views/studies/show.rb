@@ -81,6 +81,9 @@ module Views
             end
 
             p(class: "keyboard-hint") { "Press 1-5 to answer" }
+
+            # Claim the space hotkey to prevent scrolling down
+            span(data: { hotkeys_target: "click", hotkey: " " }, hidden: true)
           end
         end
       end
