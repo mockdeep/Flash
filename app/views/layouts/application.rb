@@ -18,6 +18,7 @@ module Views
         html do
           head do
             title { "Flash" }
+            meta(name: "viewport", content: "width=device-width, initial-scale=1")
             csrf_meta_tags
             csp_meta_tag
 
@@ -27,14 +28,30 @@ module Views
 
           action = "keydown@document->hotkeys#handleKeydown"
           body(data: { controller: "hotkeys", action: }) do
-            header(class: "site-header") do
+            header(
+              class: "site-header",
+              data: { controller: "mobile-nav" },
+            ) do
               div(class: "site-header-container") do
                 link_to(root_path, class: "site-logo") do
                   span(class: "logo-icon") { "⚡" }
                   span(class: "logo-text") { "Flash" }
                 end
 
-                nav(class: "site-nav") do
+                button(
+                  class: "nav-hamburger",
+                  data: { action: "mobile-nav#toggle" },
+                  aria: { label: "Toggle navigation" },
+                ) do
+                  span(class: "hamburger-line")
+                  span(class: "hamburger-line")
+                  span(class: "hamburger-line")
+                end
+
+                nav(
+                  class: "site-nav",
+                  data: { mobile_nav_target: "menu" },
+                ) do
                   link_to("Catalog", catalog_index_path, class: "nav-link")
                   if current_user.logged_in?
                     link_to("Decks", decks_path, class: "nav-link")

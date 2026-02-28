@@ -83,8 +83,6 @@ module Views
                 span { "Next Card" }
                 span(class: "hotkey-hint") { "Press Space" }
               end
-
-              p(class: "keyboard-hint") { "Press Space to continue" }
             end
           end
         end
