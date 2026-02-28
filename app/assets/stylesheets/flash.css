@@ -130,9 +130,9 @@ body {
 .session-progress {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
   margin-bottom: var(--spacing-xs);
-  padding: var(--spacing-sm);
+  padding: var(--spacing-xs);
   border: 2px solid var(--color-border);
   background: var(--color-bg-elevated);
 }
@@ -225,8 +225,8 @@ body {
 
 .card-front {
   position: relative;
-  margin: var(--spacing-md) 0 var(--spacing-lg);
-  padding: var(--spacing-xl) var(--spacing-lg);
+  margin: var(--spacing-xs) 0 var(--spacing-sm);
+  padding: var(--spacing-lg) var(--spacing-md);
   border: 4px solid var(--color-border-dark);
   border-radius: 0;
   background: var(--color-bg-elevated);
@@ -294,9 +294,9 @@ body {
 .study-answers-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--spacing-md);
+  gap: var(--spacing-xs);
   padding: 0;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-xs);
   list-style: none;
 }
 
@@ -310,7 +310,7 @@ body {
 .study-answers-grid li:nth-child(4) { animation-delay: 225ms; }
 
 .keyboard-hint {
-  margin: var(--spacing-md) 0 0;
+  margin: var(--spacing-xs) 0 0;
   color: var(--color-text-muted);
   font-size: 13px;
   font-family: var(--font-mono);
@@ -335,7 +335,7 @@ body {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: var(--spacing-lg) var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
   overflow: hidden;
   transition: all var(--transition-base);
   border: 3px solid var(--color-border-dark);
@@ -394,8 +394,8 @@ body {
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  min-width: 40px;
-  height: 40px;
+  min-width: 32px;
+  height: 32px;
   border: 2px solid var(--color-black);
   border-radius: 0;
   background: var(--color-accent);
@@ -419,7 +419,7 @@ body {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
   border: 3px solid var(--color-border-dark);
   background: var(--color-white);
   box-shadow:
@@ -491,12 +491,14 @@ body {
 }
 
 .next-card-button {
+  position: fixed;
+  bottom: var(--spacing-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
   display: inline-flex;
-  flex-direction: column;
   align-items: center;
-  width: fit-content;
-  margin: var(--spacing-lg) auto;
-  padding: var(--spacing-lg) var(--spacing-2xl);
+  padding: var(--spacing-md) var(--spacing-2xl);
   transition: all var(--transition-base);
   border: 3px solid var(--color-border-dark);
   border-radius: 0;
@@ -504,18 +506,31 @@ body {
   box-shadow:
     5px 5px 0 -2px var(--color-bg),
     5px 5px 0 0 var(--color-border-dark),
-    0 4px 12px var(--color-shadow-warm-md);
+    0 4px 12px var(--color-shadow-warm-md),
+    0 8px 30px var(--color-shadow-warm-lg);
   color: var(--color-text);
   font-size: 20px;
   font-weight: 700;
   font-family: var(--font-body);
   text-decoration: none;
   cursor: pointer;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-md);
+  animation: next-card-appear var(--transition-slow) ease-out;
+}
+
+@keyframes next-card-appear {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .next-card-button:hover {
-  transform: translate(-2px, -2px);
+  transform: translateX(-50%) translateY(-2px);
   border-color: var(--color-secondary);
   background: var(--color-cream);
   box-shadow:
@@ -525,7 +540,7 @@ body {
 }
 
 .next-card-button:active {
-  transform: translate(2px, 2px);
+  transform: translateX(-50%) translateY(2px);
   box-shadow:
     3px 3px 0 -2px var(--color-bg),
     3px 3px 0 0 var(--color-border-dark),
@@ -547,7 +562,7 @@ body {
 
 /* Typography - Headings and Links */
 .content-container h1 {
-  margin: 0 0 var(--spacing-sm);
+  margin: 0 0 var(--spacing-xs);
   color: var(--color-text);
   font-size: clamp(26px, 4.5vw, 34px);
   font-weight: 400;
@@ -560,24 +575,13 @@ body {
   position: relative;
   display: inline-block;
   margin: 0;
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: 2px var(--spacing-xs);
   border: 2px solid transparent;
   color: var(--color-text-secondary);
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
   transition: all var(--transition-base);
-}
-
-.content-container > a:first-of-type {
-  margin-bottom: var(--spacing-sm);
-}
-
-.content-container > a:last-of-type {
-  display: block;
-  width: fit-content;
-  margin: var(--spacing-md) auto 0;
-  text-align: center;
 }
 
 .content-container > a:hover {
@@ -710,65 +714,36 @@ body {
 /* Responsive design */
 @media (max-width: 768px) {
   .content-container {
-    padding: var(--spacing-sm) var(--spacing-md);
+    max-width: 100%;
+    padding: var(--spacing-xs) var(--spacing-sm);
   }
 
   .content-container::before,
   .content-container::after {
-    width: 24px;
-    height: 24px;
-  }
-
-  .content-container h1 {
-    font-size: clamp(24px, 7vw, 32px);
-    margin: var(--spacing-xs) 0 var(--spacing-sm);
-  }
-
-  .session-progress {
-    padding: var(--spacing-xs);
-    gap: var(--spacing-xs);
-  }
-
-  .progress-label {
-    font-size: 11px;
+    display: none;
   }
 
   .card-front {
-    margin: var(--spacing-md) 0 var(--spacing-sm);
-    padding: var(--spacing-lg) var(--spacing-md);
-    font-size: clamp(20px, 5.5vw, 26px);
+    padding: var(--spacing-md) var(--spacing-sm);
+    font-size: clamp(22px, 6vw, 30px);
     box-shadow:
-      6px 6px 0 -2px var(--color-bg),
-      6px 6px 0 0 var(--color-border-dark),
-      0 4px 12px var(--color-shadow-warm-md);
-  }
-
-  .card-front::after {
-    font-size: 9px;
-    padding: 3px 6px;
+      4px 4px 0 -2px var(--color-bg),
+      4px 4px 0 0 var(--color-border-dark);
   }
 
   .answer-button {
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: 16px;
-    gap: var(--spacing-sm);
-  }
-
-  .answer-number {
-    min-width: 36px;
-    height: 36px;
-    font-size: 16px;
+    padding: var(--spacing-sm) var(--spacing-sm);
+    font-size: 17px;
   }
 
   .answer-row {
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: 16px;
-    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-sm);
+    font-size: 17px;
   }
 
   .next-card-button {
     padding: var(--spacing-sm) var(--spacing-lg);
-    font-size: 17px;
+    font-size: 18px;
   }
 }
 
