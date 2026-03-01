@@ -217,15 +217,3 @@
     font-size: 16px;
   }
 }
-
-/* Reduced Motion */
-@media (prefers-reduced-motion: reduce) {
-  .auth-container {
-    animation: none;
-  }
-
-  .auth-actions .button,
-  .auth-input {
-    transition: none;
-  }
-}
