@@ -19,13 +19,7 @@
   left: 0;
   width: 200px;
   height: 3px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--color-primary),
-    var(--color-primary) 12px,
-    var(--color-primary-dark) 12px,
-    var(--color-primary-dark) 24px
-  );
+  background: var(--stripe-large);
 }
 
 .catalog-title {
@@ -95,10 +89,7 @@
   border-radius: 0;
   padding: 1.75rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    6px 6px 0 -2px var(--color-white),
-    6px 6px 0 0 var(--color-border-medium),
-    0 6px 18px rgba(42, 36, 32, 0.08);
+  box-shadow: var(--shadow-small);
   position: relative;
   overflow: hidden;
 }
@@ -110,22 +101,13 @@
   left: 0;
   right: 0;
   height: 6px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--color-primary),
-    var(--color-primary) 8px,
-    var(--color-primary-dark) 8px,
-    var(--color-primary-dark) 16px
-  );
+  background: var(--stripe-small);
 }
 
 .catalog-card:hover {
   transform: translate(-3px, -3px);
   border-color: var(--color-border-medium);
-  box-shadow:
-    9px 9px 0 -2px var(--color-white),
-    9px 9px 0 0 var(--color-text-muted),
-    0 10px 30px rgba(42, 36, 32, 0.15);
+  box-shadow: var(--shadow-hover);
 }
 
 .catalog-card-header {
@@ -223,13 +205,7 @@
   left: 0;
   width: 200px;
   height: 3px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--color-primary),
-    var(--color-primary) 12px,
-    var(--color-primary-dark) 12px,
-    var(--color-primary-dark) 24px
-  );
+  background: var(--stripe-large);
 }
 
 .catalog-show-title {
@@ -258,10 +234,7 @@
   border-radius: 0;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow:
-    6px 6px 0 -2px var(--color-white),
-    6px 6px 0 0 var(--color-border-medium),
-    0 6px 18px rgba(42, 36, 32, 0.08);
+  box-shadow: var(--shadow-small);
   position: relative;
 }
 
@@ -272,13 +245,7 @@
   left: 0;
   right: 0;
   height: 6px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--color-primary),
-    var(--color-primary) 8px,
-    var(--color-primary-dark) 8px,
-    var(--color-primary-dark) 16px
-  );
+  background: var(--stripe-small);
 }
 
 .catalog-preview-title {

@@ -50,6 +50,17 @@
   --font-display: 'DM Serif Display', Georgia, serif;
   --font-body: 'Manrope', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --stripe-small: repeating-linear-gradient(90deg, var(--color-primary), var(--color-primary) 8px, var(--color-primary-dark) 8px, var(--color-primary-dark) 16px);
+  --stripe-large: repeating-linear-gradient(90deg, var(--color-primary), var(--color-primary) 12px, var(--color-primary-dark) 12px, var(--color-primary-dark) 24px);
+  --stripe-diagonal: repeating-linear-gradient(45deg, var(--color-primary), var(--color-primary) 10px, var(--color-primary-dark) 10px, var(--color-primary-dark) 20px);
+  --stripe-success: repeating-linear-gradient(45deg, var(--color-success-border), var(--color-success-border) 10px, var(--color-success-dark) 10px, var(--color-success-dark) 20px);
+  --stripe-accent: repeating-linear-gradient(45deg, var(--color-accent), var(--color-accent) 10px, var(--color-accent-dark) 10px, var(--color-accent-dark) 20px);
+  --stripe-overlay: repeating-linear-gradient(45deg, transparent, transparent 20px, rgb(230 169 78 / 3%) 20px, rgb(230 169 78 / 3%) 40px);
+  --shadow-small: 6px 6px 0 -2px var(--color-white), 6px 6px 0 0 var(--color-border-medium), 0 6px 18px rgb(42 36 32 / 8%);
+  --shadow-medium: 6px 6px 0 -2px var(--color-white), 6px 6px 0 0 var(--color-border-medium), 0 6px 18px rgb(42 36 32 / 12%);
+  --shadow-large: 8px 8px 0 -2px var(--color-white), 8px 8px 0 0 var(--color-border-medium), 0 8px 24px rgb(42 36 32 / 12%);
+  --shadow-hover: 9px 9px 0 -2px var(--color-white), 9px 9px 0 0 var(--color-text-muted), 0 10px 30px rgb(42 36 32 / 15%);
+  --shadow-alert: 4px 4px 0 -2px var(--color-white), 4px 4px 0 0 var(--color-primary);
 }
 
 /* Base Styles & Layout */
@@ -142,23 +153,11 @@ body {
 }
 
 .content-container .progress-deck::-webkit-progress-value {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--color-primary),
-    var(--color-primary) 10px,
-    var(--color-primary-dark) 10px,
-    var(--color-primary-dark) 20px
-  );
+  background: var(--stripe-diagonal);
 }
 
 .content-container .progress-deck::-moz-progress-bar {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--color-primary),
-    var(--color-primary) 10px,
-    var(--color-primary-dark) 10px,
-    var(--color-primary-dark) 20px
-  );
+  background: var(--stripe-diagonal);
 }
 
 /* Session progress bars */
@@ -178,44 +177,20 @@ body {
 
 /* Completed progress bar - green */
 .content-container .progress-completed::-webkit-progress-value {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--color-success-border),
-    var(--color-success-border) 10px,
-    var(--color-success-dark) 10px,
-    var(--color-success-dark) 20px
-  );
+  background: var(--stripe-success);
 }
 
 .content-container .progress-completed::-moz-progress-bar {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--color-success-border),
-    var(--color-success-border) 10px,
-    var(--color-success-dark) 10px,
-    var(--color-success-dark) 20px
-  );
+  background: var(--stripe-success);
 }
 
 /* Reviewed progress bar - gold */
 .content-container .progress-reviewed::-webkit-progress-value {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--color-accent),
-    var(--color-accent) 10px,
-    var(--color-accent-dark) 10px,
-    var(--color-accent-dark) 20px
-  );
+  background: var(--stripe-accent);
 }
 
 .content-container .progress-reviewed::-moz-progress-bar {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--color-accent),
-    var(--color-accent) 10px,
-    var(--color-accent-dark) 10px,
-    var(--color-accent-dark) 20px
-  );
+  background: var(--stripe-accent);
 }
 
 .card-front {
@@ -259,13 +234,7 @@ body {
   right: -4px;
   height: 12px;
   background: var(--color-primary);
-  background-image: repeating-linear-gradient(
-    90deg,
-    var(--color-primary),
-    var(--color-primary) 8px,
-    var(--color-primary-dark) 8px,
-    var(--color-primary-dark) 16px
-  );
+  background-image: var(--stripe-small);
   content: "";
 }
 
