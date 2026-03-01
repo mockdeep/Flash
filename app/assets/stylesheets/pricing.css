@@ -323,14 +323,6 @@
 
 .faq-answer a {
   color: var(--color-primary);
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 2px;
-}
-
-.faq-answer a:hover {
-  color: var(--color-primary-dark);
-  background-color: rgba(210, 105, 30, 0.1);
 }
 
 /* Animations */
