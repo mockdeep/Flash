@@ -28,13 +28,13 @@
   font-size: 1.75rem;
   font-weight: 400;
   color: var(--color-text);
-  transition: all 0.2s ease;
+  transition: all var(--transition);
 }
 
 .logo-icon {
   font-size: 2rem;
   filter: drop-shadow(2px 2px 4px rgba(210, 105, 30, 0.3));
-  transition: transform 0.3s ease;
+  transition: transform var(--transition);
 }
 
 .site-logo:hover .logo-icon {
@@ -53,7 +53,7 @@
   width: 0;
   height: 2px;
   background: var(--color-primary);
-  transition: width 0.3s ease;
+  transition: width var(--transition);
 }
 
 .site-logo:hover .logo-text::after {
@@ -75,7 +75,7 @@
   text-decoration: none;
   color: var(--color-text-secondary);
   border-radius: 0.375rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition);
   border: 2px solid transparent;
 }
 
@@ -129,7 +129,7 @@
   border: 2px solid var(--color-primary);
   border-radius: 0.375rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition);
 }
 
 .nav-logout:hover {
@@ -160,7 +160,7 @@
   width: 20px;
   height: 2px;
   background: var(--color-primary);
-  transition: all 0.2s ease;
+  transition: all var(--transition);
 }
 
 /* Main Content */
@@ -260,7 +260,7 @@
   text-decoration: none;
   font-size: 0.9375rem;
   font-family: var(--font-body);
-  transition: all 0.2s ease;
+  transition: all var(--transition);
   display: inline-block;
   position: relative;
   padding-left: 1rem;
@@ -272,7 +272,7 @@
   left: 0;
   opacity: 0;
   transform: translateX(-5px);
-  transition: all 0.2s ease;
+  transition: all var(--transition);
 }
 
 .footer-links a:hover {
