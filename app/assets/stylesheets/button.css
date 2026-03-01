@@ -27,7 +27,7 @@
   background: var(--color-primary);
   border-color: var(--color-primary-dark);
   box-shadow:
-    4px 4px 0 -2px var(--color-white),
+    4px 4px 0 -2px var(--color-background),
     4px 4px 0 0 var(--color-primary-dark),
     0 4px 12px rgb(210 105 30 / 25%);
 }
@@ -35,7 +35,7 @@
 .button--primary:hover {
   background: var(--color-primary-dark);
   box-shadow:
-    6px 6px 0 -2px var(--color-white),
+    6px 6px 0 -2px var(--color-background),
     6px 6px 0 0 var(--color-primary-darker),
     0 6px 16px rgb(210 105 30 / 35%);
   transform: translate(-2px, -2px);
@@ -43,7 +43,7 @@
 
 .button--primary:active {
   box-shadow:
-    2px 2px 0 -2px var(--color-white),
+    2px 2px 0 -2px var(--color-background),
     2px 2px 0 0 var(--color-primary-dark),
     0 2px 8px rgb(210 105 30 / 15%);
   transform: translate(2px, 2px);
@@ -58,10 +58,10 @@
 
 .button--ghost:hover {
   color: var(--color-text);
-  background: var(--color-cream);
+  background: var(--color-background-subtle);
   border-color: var(--color-border-medium);
   box-shadow:
-    2px 2px 0 -1px var(--color-white),
+    2px 2px 0 -1px var(--color-background),
     2px 2px 0 0 var(--color-border-medium);
   transform: translate(-1px, -1px);
 }
@@ -77,7 +77,7 @@
   background: var(--color-secondary);
   border-color: var(--color-secondary-dark);
   box-shadow:
-    3px 3px 0 -1px var(--color-white),
+    3px 3px 0 -1px var(--color-background),
     3px 3px 0 0 var(--color-secondary-dark),
     0 3px 8px rgb(44 95 79 / 20%);
 }
@@ -85,7 +85,7 @@
 .button--secondary:hover {
   background: var(--color-secondary-dark);
   box-shadow:
-    4px 4px 0 -1px var(--color-white),
+    4px 4px 0 -1px var(--color-background),
     4px 4px 0 0 var(--color-secondary-darker),
     0 4px 12px rgb(44 95 79 / 30%);
   transform: translate(-1px, -1px);
@@ -93,7 +93,7 @@
 
 .button--secondary:active {
   box-shadow:
-    1px 1px 0 -1px var(--color-white),
+    1px 1px 0 -1px var(--color-background),
     1px 1px 0 0 var(--color-secondary-dark),
     0 1px 4px rgb(44 95 79 / 15%);
   transform: translate(2px, 2px);
@@ -105,7 +105,7 @@
   background: var(--color-primary-darker);
   border-color: var(--color-danger);
   box-shadow:
-    4px 4px 0 -2px var(--color-white),
+    4px 4px 0 -2px var(--color-background),
     4px 4px 0 0 var(--color-danger),
     0 4px 12px rgb(139 69 19 / 25%);
 }
@@ -114,7 +114,7 @@
   background: var(--color-danger);
   border-color: var(--color-danger-dark);
   box-shadow:
-    6px 6px 0 -2px var(--color-white),
+    6px 6px 0 -2px var(--color-background),
     6px 6px 0 0 var(--color-danger-dark),
     0 6px 16px rgb(139 69 19 / 35%);
   transform: translate(-2px, -2px);
@@ -122,7 +122,7 @@
 
 .button--danger:active {
   box-shadow:
-    2px 2px 0 -2px var(--color-white),
+    2px 2px 0 -2px var(--color-background),
     2px 2px 0 0 var(--color-danger),
     0 2px 8px rgb(139 69 19 / 15%);
   transform: translate(2px, 2px);
@@ -135,7 +135,7 @@
   background: var(--color-text-muted);
   border-color: var(--color-text-secondary);
   box-shadow:
-    4px 4px 0 -2px var(--color-white),
+    4px 4px 0 -2px var(--color-background),
     4px 4px 0 0 var(--color-text-secondary),
     0 4px 12px rgb(42 36 32 / 12%);
 }

@@ -170,8 +170,8 @@
 
 /* Site Footer */
 .site-footer {
-  background: linear-gradient(135deg, var(--color-text) 0%, var(--color-black) 100%);
-  color: var(--color-cream);
+  background: linear-gradient(135deg, var(--color-text) 0%, var(--color-foreground) 100%);
+  color: var(--color-background-subtle);
   margin-top: 6rem;
   padding: 4rem 2rem 2rem;
   border-top: 4px solid var(--color-primary);
@@ -220,7 +220,7 @@
   gap: 0.625rem;
   font-family: var(--font-display);
   font-size: 1.875rem;
-  color: var(--color-white);
+  color: var(--color-background);
   margin-bottom: 1rem;
 }
 

@@ -8,16 +8,14 @@
   --color-secondary: #2c5f4f;
   --color-accent: #e6a94e;
   --color-accent-dark: #d4992e;
-  --color-white: #fdf8f3;
-  --color-off-white: #f9f3ec;
-  --color-cream: #f5ede2;
-  --color-black: #1a1512;
+  --color-background: #fdf8f3;
+  --color-background-muted: #f9f3ec;
+  --color-background-subtle: #f5ede2;
+  --color-foreground: #1a1512;
   --color-text: #2a2420;
   --color-text-secondary: #5a4f47;
   --color-text-muted: #8a7f77;
-  --color-bg: #fdf8f3;
-  --color-bg-subtle: #f5ede2;
-  --color-bg-elevated: #fefcfa;
+  --color-background-elevated: #fefcfa;
   --color-border: #d4c4b0;
   --color-border-medium: #b8a895;
   --color-border-dark: #8a7f77;
@@ -35,7 +33,7 @@
   --color-secondary-darker: #1a3a2f;
   --color-danger: #6d3611;
   --color-danger-dark: #5a2d0e;
-  --color-cream-dark: #f0e5d6;
+  --color-background-hover: #f0e5d6;
 
   /* Spacing */
   --spacing-xs: 0.5rem;
@@ -59,11 +57,11 @@
   --stripe-success: repeating-linear-gradient(45deg, var(--color-success-border), var(--color-success-border) 10px, var(--color-success-dark) 10px, var(--color-success-dark) 20px);
   --stripe-accent: repeating-linear-gradient(45deg, var(--color-accent), var(--color-accent) 10px, var(--color-accent-dark) 10px, var(--color-accent-dark) 20px);
   --stripe-overlay: repeating-linear-gradient(45deg, transparent, transparent 20px, rgb(230 169 78 / 3%) 20px, rgb(230 169 78 / 3%) 40px);
-  --shadow-small: 6px 6px 0 -2px var(--color-white), 6px 6px 0 0 var(--color-border-medium), 0 6px 18px rgb(42 36 32 / 8%);
-  --shadow-medium: 6px 6px 0 -2px var(--color-white), 6px 6px 0 0 var(--color-border-medium), 0 6px 18px rgb(42 36 32 / 12%);
-  --shadow-large: 8px 8px 0 -2px var(--color-white), 8px 8px 0 0 var(--color-border-medium), 0 8px 24px rgb(42 36 32 / 12%);
-  --shadow-hover: 9px 9px 0 -2px var(--color-white), 9px 9px 0 0 var(--color-text-muted), 0 10px 30px rgb(42 36 32 / 15%);
-  --shadow-alert: 4px 4px 0 -2px var(--color-white), 4px 4px 0 0 var(--color-primary);
+  --shadow-small: 6px 6px 0 -2px var(--color-background), 6px 6px 0 0 var(--color-border-medium), 0 6px 18px rgb(42 36 32 / 8%);
+  --shadow-medium: 6px 6px 0 -2px var(--color-background), 6px 6px 0 0 var(--color-border-medium), 0 6px 18px rgb(42 36 32 / 12%);
+  --shadow-large: 8px 8px 0 -2px var(--color-background), 8px 8px 0 0 var(--color-border-medium), 0 8px 24px rgb(42 36 32 / 12%);
+  --shadow-hover: 9px 9px 0 -2px var(--color-background), 9px 9px 0 0 var(--color-text-muted), 0 10px 30px rgb(42 36 32 / 15%);
+  --shadow-alert: 4px 4px 0 -2px var(--color-background), 4px 4px 0 0 var(--color-primary);
   --drop-shadow: drop-shadow(2px 2px 4px rgb(210 105 30 / 20%));
   --drop-shadow-large: drop-shadow(4px 4px 8px rgb(210 105 30 / 20%));
   --gradient-accent: linear-gradient(135deg, rgb(230 169 78 / 12%) 0%, rgb(230 169 78 / 4%) 100%);
@@ -74,11 +72,11 @@
   margin: 4rem auto;
   padding: 4rem 3rem;
   text-align: center;
-  background: var(--color-bg-elevated);
+  background: var(--color-background-elevated);
   border: 4px solid var(--color-border);
   border-radius: 0;
   box-shadow:
-    8px 8px 0 -2px var(--color-white),
+    8px 8px 0 -2px var(--color-background),
     8px 8px 0 0 var(--color-border-medium),
     0 8px 24px rgba(42, 36, 32, 0.1);
   animation: fade-in-up 0.6s ease-out;
@@ -135,7 +133,7 @@
   flex-direction: column;
   align-items: center;
   padding: 0.5rem 0.75rem;
-  background: var(--color-cream);
+  background: var(--color-background-subtle);
   border: 2px solid var(--color-border);
   border-radius: 0;
   flex-shrink: 0;
@@ -143,7 +141,7 @@
 
 /* Base Styles & Layout */
 body {
-  background: var(--color-bg);
+  background: var(--color-background);
   background-image:
     radial-gradient(circle at 20% 50%, rgba(210, 105, 30, 0.03) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(44, 95, 79, 0.03) 0%, transparent 50%);
@@ -188,14 +186,14 @@ body {
   width: 100%;
   border: 3px solid var(--color-border-dark);
   border-radius: 0;
-  background-color: var(--color-bg-subtle);
+  background-color: var(--color-background-subtle);
   box-shadow: inset 0 2px 6px var(--color-shadow-warm);
   appearance: none;
 }
 
 .content-container progress::-webkit-progress-bar {
   border-radius: 0;
-  background-color: var(--color-bg-subtle);
+  background-color: var(--color-background-subtle);
 }
 
 .content-container progress::-webkit-progress-value {
@@ -218,7 +216,7 @@ body {
   margin-bottom: var(--spacing-xs);
   padding: var(--spacing-xs);
   border: 2px solid var(--color-border);
-  background: var(--color-bg-elevated);
+  background: var(--color-background-elevated);
 }
 
 /* Deck-wide progress bar - spans both columns, de-emphasized */
@@ -276,13 +274,13 @@ body {
   margin: var(--spacing-xs) 0 var(--spacing-sm);
   padding: var(--spacing-lg) var(--spacing-md);
   border: 4px solid var(--color-border-dark);
-  background: var(--color-bg-elevated);
+  background: var(--color-background-elevated);
   background-image:
     linear-gradient(0deg, transparent 24%, rgba(42, 36, 32, 0.02) 25%, rgba(42, 36, 32, 0.02) 26%, transparent 27%, transparent 74%, rgba(42, 36, 32, 0.02) 75%, rgba(42, 36, 32, 0.02) 76%, transparent 77%, transparent),
     linear-gradient(90deg, transparent 24%, rgba(42, 36, 32, 0.02) 25%, rgba(42, 36, 32, 0.02) 26%, transparent 27%, transparent 74%, rgba(42, 36, 32, 0.02) 75%, rgba(42, 36, 32, 0.02) 76%, transparent 77%, transparent);
   background-size: 50px 50px;
   box-shadow:
-    8px 8px 0 -2px var(--color-bg),
+    8px 8px 0 -2px var(--color-background),
     8px 8px 0 0 var(--color-border-dark),
     0 4px 12px var(--color-shadow-warm-md);
   color: var(--color-text);
@@ -322,7 +320,7 @@ body {
   right: 12px;
   padding: 4px 10px;
   background: var(--color-accent);
-  color: var(--color-black);
+  color: var(--color-foreground);
   font-size: 11px;
   font-weight: 700;
   font-family: var(--font-mono);
@@ -380,9 +378,9 @@ body {
   width: 100%;
   padding: var(--spacing-sm) var(--spacing-md);
   border: 3px solid var(--color-border-dark);
-  background: var(--color-white);
+  background: var(--color-background);
   box-shadow:
-    4px 4px 0 -2px var(--color-bg),
+    4px 4px 0 -2px var(--color-background),
     4px 4px 0 0 var(--color-border-medium),
     0 2px 8px var(--color-shadow-warm);
   color: var(--color-text);
@@ -416,7 +414,7 @@ body {
   transform: translate(-2px, -2px);
   border-color: var(--color-primary);
   box-shadow:
-    6px 6px 0 -2px var(--color-bg),
+    6px 6px 0 -2px var(--color-background),
     6px 6px 0 0 var(--color-primary-dark),
     0 4px 16px var(--color-shadow-warm-md);
 }
@@ -428,7 +426,7 @@ body {
 .answer-button:active {
   transform: translate(2px, 2px);
   box-shadow:
-    2px 2px 0 -2px var(--color-bg),
+    2px 2px 0 -2px var(--color-background),
     2px 2px 0 0 var(--color-border-dark),
     0 1px 4px var(--color-shadow-warm);
 }
@@ -447,10 +445,10 @@ body {
   justify-content: center;
   min-width: 32px;
   height: 32px;
-  border: 2px solid var(--color-black);
+  border: 2px solid var(--color-foreground);
   background: var(--color-accent);
   box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3);
-  color: var(--color-black);
+  color: var(--color-foreground);
   font-size: 18px;
   font-weight: 700;
   font-family: var(--font-mono);
@@ -472,7 +470,7 @@ body {
   border-color: var(--color-success-border);
   background: var(--color-success-bg);
   box-shadow:
-    4px 4px 0 -2px var(--color-bg),
+    4px 4px 0 -2px var(--color-background),
     4px 4px 0 0 var(--color-success-border),
     0 2px 8px var(--color-shadow-warm);
 }
@@ -480,14 +478,14 @@ body {
 .answer-correct .answer-number {
   border-color: var(--color-success-border);
   background: var(--color-success-border);
-  color: var(--color-white);
+  color: var(--color-background);
 }
 
 .answer-incorrect {
   border-color: var(--color-warning-border);
   background: var(--color-warning-bg);
   box-shadow:
-    4px 4px 0 -2px var(--color-bg),
+    4px 4px 0 -2px var(--color-background),
     4px 4px 0 0 var(--color-warning-border),
     0 2px 8px var(--color-shadow-warm);
   animation: answer-shake 0.4s ease-out;
@@ -510,7 +508,7 @@ body {
 .answer-incorrect .answer-number {
   border-color: var(--color-warning-border);
   background: var(--color-warning-border);
-  color: var(--color-white);
+  color: var(--color-background);
 }
 
 .answer-faded {
@@ -529,9 +527,9 @@ body {
   padding: var(--spacing-md) var(--spacing-2xl);
   transition: all var(--transition);
   border: 3px solid var(--color-border-dark);
-  background: var(--color-white);
+  background: var(--color-background);
   box-shadow:
-    5px 5px 0 -2px var(--color-bg),
+    5px 5px 0 -2px var(--color-background),
     5px 5px 0 0 var(--color-border-dark),
     0 4px 12px var(--color-shadow-warm-md),
     0 8px 30px var(--color-shadow-warm-lg);
@@ -559,9 +557,9 @@ body {
 .next-card-button:hover {
   transform: translateX(-50%) translateY(-2px);
   border-color: var(--color-secondary);
-  background: var(--color-cream);
+  background: var(--color-background-subtle);
   box-shadow:
-    7px 7px 0 -2px var(--color-bg),
+    7px 7px 0 -2px var(--color-background),
     7px 7px 0 0 var(--color-secondary),
     0 6px 20px var(--color-shadow-warm-lg);
 }
@@ -569,7 +567,7 @@ body {
 .next-card-button:active {
   transform: translateX(-50%) translateY(2px);
   box-shadow:
-    3px 3px 0 -2px var(--color-bg),
+    3px 3px 0 -2px var(--color-background),
     3px 3px 0 0 var(--color-border-dark),
     0 2px 8px var(--color-shadow-warm);
 }
@@ -578,7 +576,7 @@ body {
   padding: var(--spacing-xs) var(--spacing-md);
   border: 2px solid var(--color-border-medium);
   background: var(--color-accent);
-  color: var(--color-black);
+  color: var(--color-foreground);
   font-size: 13px;
   font-weight: 700;
   font-family: var(--font-mono);
@@ -612,7 +610,7 @@ body {
 
 .content-container > a:hover {
   border-color: var(--color-border-dark);
-  background: var(--color-off-white);
+  background: var(--color-background-muted);
   color: var(--color-primary);
   transform: translateX(3px);
 }
@@ -643,9 +641,9 @@ body {
   margin: var(--spacing-md) 0 var(--spacing-lg);
   padding: var(--spacing-xl) var(--spacing-lg);
   border: 4px solid var(--color-border-dark);
-  background: var(--color-bg-elevated);
+  background: var(--color-background-elevated);
   box-shadow:
-    8px 8px 0 -2px var(--color-bg),
+    8px 8px 0 -2px var(--color-background),
     8px 8px 0 0 var(--color-border-dark),
     0 4px 12px var(--color-shadow-warm-md);
   text-align: center;
@@ -676,7 +674,7 @@ body {
   transition: all var(--transition);
   border: 3px solid var(--color-border-dark);
   box-shadow:
-    5px 5px 0 -2px var(--color-bg),
+    5px 5px 0 -2px var(--color-background),
     5px 5px 0 0 var(--color-border-dark),
     0 4px 12px var(--color-shadow-warm-md);
   font-size: 17px;
@@ -688,14 +686,14 @@ body {
 
 .session-milestone-primary {
   background: var(--color-accent);
-  color: var(--color-black);
+  color: var(--color-foreground);
 }
 
 .session-milestone-secondary {
   border-color: var(--color-border);
-  background: var(--color-white);
+  background: var(--color-background);
   box-shadow:
-    5px 5px 0 -2px var(--color-bg),
+    5px 5px 0 -2px var(--color-background),
     5px 5px 0 0 var(--color-border-medium),
     0 4px 12px var(--color-shadow-warm-md);
   color: var(--color-text-secondary);
@@ -705,7 +703,7 @@ body {
 .session-milestone-secondary:hover {
   transform: translate(-2px, -2px);
   box-shadow:
-    7px 7px 0 -2px var(--color-bg),
+    7px 7px 0 -2px var(--color-background),
     7px 7px 0 0 var(--color-border-dark),
     0 6px 20px var(--color-shadow-warm-lg);
 }
@@ -714,7 +712,7 @@ body {
 .session-milestone-secondary:active {
   transform: translate(2px, 2px);
   box-shadow:
-    3px 3px 0 -2px var(--color-bg),
+    3px 3px 0 -2px var(--color-background),
     3px 3px 0 0 var(--color-border-dark),
     0 2px 8px var(--color-shadow-warm);
 }
@@ -725,7 +723,7 @@ body {
 
 .session-milestone-secondary:active {
   box-shadow:
-    3px 3px 0 -2px var(--color-bg),
+    3px 3px 0 -2px var(--color-background),
     3px 3px 0 0 var(--color-border),
     0 2px 8px var(--color-shadow-warm);
 }
@@ -755,7 +753,7 @@ body {
     padding: var(--spacing-md) var(--spacing-sm);
     font-size: clamp(22px, 6vw, 30px);
     box-shadow:
-      4px 4px 0 -2px var(--color-bg),
+      4px 4px 0 -2px var(--color-background),
       4px 4px 0 0 var(--color-border-dark);
   }
 
