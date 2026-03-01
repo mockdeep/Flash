@@ -72,7 +72,7 @@
 .deck-card:nth-child(6) { animation-delay: 250ms; }
 
 .deck-card:hover {
-  transform: translate(-3px, -3px);
+  transform: translate(-2px, -2px);
   border-color: var(--color-border-medium);
   box-shadow: var(--shadow-hover);
 }
