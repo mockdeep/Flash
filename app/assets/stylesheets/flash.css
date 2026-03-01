@@ -2,6 +2,8 @@
 
 :root {
   /* Color Palette - Terminal Scholar */
+  --color-primary-channels: 210 105 30;
+  --color-foreground-channels: 42 36 32;
   --color-primary: #d2691e;
   --color-primary-dark: #b8531a;
   --color-primary-light: #f5dcc8;
@@ -19,9 +21,9 @@
   --color-border: #d4c4b0;
   --color-border-medium: #b8a895;
   --color-border-dark: #8a7f77;
-  --color-shadow-warm: rgb(42 36 32 / 8%);
-  --color-shadow-warm-md: rgb(42 36 32 / 12%);
-  --color-shadow-warm-lg: rgb(42 36 32 / 18%);
+  --color-shadow-warm: rgb(var(--color-foreground-channels) / 8%);
+  --color-shadow-warm-md: rgb(var(--color-foreground-channels) / 12%);
+  --color-shadow-warm-lg: rgb(var(--color-foreground-channels) / 18%);
   --color-success-bg: #e8f5e1;
   --color-success-border: #5a8f4a;
   --color-success-dark: #4a7f3a;
@@ -57,13 +59,13 @@
   --stripe-success: repeating-linear-gradient(45deg, var(--color-success-border), var(--color-success-border) 10px, var(--color-success-dark) 10px, var(--color-success-dark) 20px);
   --stripe-accent: repeating-linear-gradient(45deg, var(--color-accent), var(--color-accent) 10px, var(--color-accent-dark) 10px, var(--color-accent-dark) 20px);
   --stripe-overlay: repeating-linear-gradient(45deg, transparent, transparent 20px, rgb(230 169 78 / 3%) 20px, rgb(230 169 78 / 3%) 40px);
-  --shadow-small: 6px 6px 0 -2px var(--color-background), 6px 6px 0 0 var(--color-border-medium), 0 6px 18px rgb(42 36 32 / 8%);
-  --shadow-medium: 6px 6px 0 -2px var(--color-background), 6px 6px 0 0 var(--color-border-medium), 0 6px 18px rgb(42 36 32 / 12%);
-  --shadow-large: 8px 8px 0 -2px var(--color-background), 8px 8px 0 0 var(--color-border-medium), 0 8px 24px rgb(42 36 32 / 12%);
-  --shadow-hover: 9px 9px 0 -2px var(--color-background), 9px 9px 0 0 var(--color-text-muted), 0 10px 30px rgb(42 36 32 / 15%);
+  --shadow-small: 6px 6px 0 -2px var(--color-background), 6px 6px 0 0 var(--color-border-medium), 0 6px 18px rgb(var(--color-foreground-channels) / 8%);
+  --shadow-medium: 6px 6px 0 -2px var(--color-background), 6px 6px 0 0 var(--color-border-medium), 0 6px 18px rgb(var(--color-foreground-channels) / 12%);
+  --shadow-large: 8px 8px 0 -2px var(--color-background), 8px 8px 0 0 var(--color-border-medium), 0 8px 24px rgb(var(--color-foreground-channels) / 12%);
+  --shadow-hover: 9px 9px 0 -2px var(--color-background), 9px 9px 0 0 var(--color-text-muted), 0 10px 30px rgb(var(--color-foreground-channels) / 15%);
   --shadow-alert: 4px 4px 0 -2px var(--color-background), 4px 4px 0 0 var(--color-primary);
-  --drop-shadow: drop-shadow(2px 2px 4px rgb(210 105 30 / 20%));
-  --drop-shadow-large: drop-shadow(4px 4px 8px rgb(210 105 30 / 20%));
+  --drop-shadow: drop-shadow(2px 2px 4px rgb(var(--color-primary-channels) / 25%));
+  --drop-shadow-large: drop-shadow(4px 4px 8px rgb(var(--color-primary-channels) / 25%));
   --gradient-accent: linear-gradient(135deg, rgb(230 169 78 / 12%) 0%, rgb(230 169 78 / 4%) 100%);
 }
 
@@ -78,7 +80,7 @@
   box-shadow:
     8px 8px 0 -2px var(--color-background),
     8px 8px 0 0 var(--color-border-medium),
-    0 8px 24px rgba(42, 36, 32, 0.1);
+    0 8px 24px rgb(var(--color-foreground-channels) / 12%);
   animation: fade-in-up 0.6s ease-out;
 }
 
@@ -123,8 +125,8 @@
 
 .back-link:hover {
   color: var(--color-primary);
-  background: rgba(210, 105, 30, 0.08);
-  border-color: rgba(210, 105, 30, 0.2);
+  background: rgb(var(--color-primary-channels) / 8%);
+  border-color: rgb(var(--color-primary-channels) / 25%);
   transform: translateX(-3px);
 }
 
@@ -143,7 +145,7 @@
 body {
   background: var(--color-background);
   background-image:
-    radial-gradient(circle at 20% 50%, rgba(210, 105, 30, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 20% 50%, rgb(var(--color-primary-channels) / 3%) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(44, 95, 79, 0.03) 0%, transparent 50%);
   font-family: var(--font-body);
 }
@@ -276,8 +278,8 @@ body {
   border: 4px solid var(--color-border-dark);
   background: var(--color-background-elevated);
   background-image:
-    linear-gradient(0deg, transparent 24%, rgba(42, 36, 32, 0.02) 25%, rgba(42, 36, 32, 0.02) 26%, transparent 27%, transparent 74%, rgba(42, 36, 32, 0.02) 75%, rgba(42, 36, 32, 0.02) 76%, transparent 77%, transparent),
-    linear-gradient(90deg, transparent 24%, rgba(42, 36, 32, 0.02) 25%, rgba(42, 36, 32, 0.02) 26%, transparent 27%, transparent 74%, rgba(42, 36, 32, 0.02) 75%, rgba(42, 36, 32, 0.02) 76%, transparent 77%, transparent);
+    linear-gradient(0deg, transparent 24%, rgb(var(--color-foreground-channels) / 2%) 25%, rgb(var(--color-foreground-channels) / 2%) 26%, transparent 27%, transparent 74%, rgb(var(--color-foreground-channels) / 2%) 75%, rgb(var(--color-foreground-channels) / 2%) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgb(var(--color-foreground-channels) / 2%) 25%, rgb(var(--color-foreground-channels) / 2%) 26%, transparent 27%, transparent 74%, rgb(var(--color-foreground-channels) / 2%) 75%, rgb(var(--color-foreground-channels) / 2%) 76%, transparent 77%, transparent);
   background-size: 50px 50px;
   box-shadow:
     8px 8px 0 -2px var(--color-background),
@@ -795,7 +797,7 @@ body {
 .form-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(210, 105, 30, 0.15);
+  box-shadow: 0 0 0 3px rgb(var(--color-primary-channels) / 15%);
 }
 
 .form-input:hover:not(:focus) {

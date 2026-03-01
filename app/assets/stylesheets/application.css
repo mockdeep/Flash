@@ -65,7 +65,7 @@ a:visited {
 a:hover {
   color: var(--color-primary-dark);
   text-decoration-thickness: 3px;
-  background-color: rgba(210, 105, 30, 0.1);
+  background-color: rgb(var(--color-primary-channels) / 8%);
 }
 
 th {
