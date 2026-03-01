@@ -83,10 +83,10 @@
 }
 
 .button--secondary:hover {
-  background: #1f483a;
+  background: var(--color-secondary-dark);
   box-shadow:
     4px 4px 0 -1px var(--color-white),
-    4px 4px 0 0 #1a3a2f,
+    4px 4px 0 0 var(--color-secondary-darker),
     0 4px 12px rgb(44 95 79 / 30%);
   transform: translate(-1px, -1px);
 }
@@ -103,19 +103,19 @@
 .button--danger:visited {
   color: white;
   background: var(--color-primary-darker);
-  border-color: #6d3611;
+  border-color: var(--color-danger);
   box-shadow:
     4px 4px 0 -2px var(--color-white),
-    4px 4px 0 0 #6d3611,
+    4px 4px 0 0 var(--color-danger),
     0 4px 12px rgb(139 69 19 / 25%);
 }
 
 .button--danger:hover {
-  background: #6d3611;
-  border-color: #5a2d0e;
+  background: var(--color-danger);
+  border-color: var(--color-danger-dark);
   box-shadow:
     6px 6px 0 -2px var(--color-white),
-    6px 6px 0 0 #5a2d0e,
+    6px 6px 0 0 var(--color-danger-dark),
     0 6px 16px rgb(139 69 19 / 35%);
   transform: translate(-2px, -2px);
 }
@@ -123,7 +123,7 @@
 .button--danger:active {
   box-shadow:
     2px 2px 0 -2px var(--color-white),
-    2px 2px 0 0 #6d3611,
+    2px 2px 0 0 var(--color-danger),
     0 2px 8px rgb(139 69 19 / 15%);
   transform: translate(2px, 2px);
 }

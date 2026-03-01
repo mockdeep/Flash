@@ -148,7 +148,7 @@
 
 .stat-item:hover {
   transform: translateX(2px);
-  background: #f0e5d6;
+  background: var(--color-cream-dark);
 }
 
 .stat-pending {
@@ -377,7 +377,7 @@
   font-family: var(--font-body);
   font-size: 16px;
   color: var(--color-text);
-  background: white;
+  background: var(--color-white);
   border: 3px solid var(--color-border);
   border-radius: 0;
   transition: all var(--transition);
@@ -451,7 +451,7 @@
   justify-content: center;
   min-height: 180px;
   padding: 2rem;
-  background: white;
+  background: var(--color-white);
   border: 3px dashed var(--color-border);
   border-radius: 0;
   cursor: pointer;
