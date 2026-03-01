@@ -45,7 +45,7 @@ td {
 }
 
 pre {
-  background-color: #eee;
+  background-color: var(--color-cream);
   padding: 10px;
   font-size: 11px;
 }

@@ -81,7 +81,7 @@
 .auth-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  background: #fff;
+  background: var(--color-white);
   box-shadow: 0 0 0 3px rgba(210, 105, 30, 0.15);
 }
 
