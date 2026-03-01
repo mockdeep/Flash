@@ -258,75 +258,8 @@
   line-height: 1.5;
 }
 
-/* Plan Button */
-.plan-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 2rem;
+.pricing-plan .button {
   width: 100%;
-  font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: 700;
-  color: white;
-  text-decoration: none;
-  background: var(--color-primary);
-  border: 3px solid var(--color-primary-dark);
-  border-radius: 0;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    5px 5px 0 -2px var(--color-white),
-    5px 5px 0 0 var(--color-primary-dark),
-    0 4px 12px rgba(210, 105, 30, 0.25);
-  position: relative;
-  overflow: hidden;
-}
-
-.plan-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.plan-button:hover {
-  transform: translate(-2px, -2px);
-  background: var(--color-primary-dark);
-  color: white;
-  text-decoration: none;
-  box-shadow:
-    7px 7px 0 -2px var(--color-white),
-    7px 7px 0 0 var(--color-primary-darker),
-    0 6px 20px rgba(210, 105, 30, 0.35);
-}
-
-.plan-button:hover::before {
-  left: 100%;
-}
-
-.plan-button:active {
-  transform: translate(2px, 2px);
-  box-shadow:
-    3px 3px 0 -2px var(--color-white),
-    3px 3px 0 0 var(--color-primary-dark),
-    0 2px 8px rgba(210, 105, 30, 0.2);
-}
-
-.plan-button-current {
-  background: var(--color-text-muted);
-  border-color: var(--color-text-secondary);
-  cursor: default;
-  pointer-events: none;
-}
-
-.plan-button:focus-visible {
-  outline: 3px solid var(--color-accent);
-  outline-offset: 3px;
 }
 
 /* FAQ Section */
@@ -515,7 +448,7 @@
     text-align: center;
   }
 
-  .plan-button {
+  .pricing-plan .button {
     padding: 1rem 1.5rem;
     font-size: 15px;
   }
@@ -546,8 +479,7 @@
   }
 
   .pricing-plan:hover,
-  .faq-item:hover,
-  .plan-button:hover {
+  .faq-item:hover {
     transform: none;
   }
 }

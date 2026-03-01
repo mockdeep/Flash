@@ -109,7 +109,7 @@ module Views
           "Add to My Decks",
           copy_catalog_path(deck),
           method: :post,
-          class: "btn-copy-deck",
+          class: button_class(:primary),
         )
       end
 
@@ -117,7 +117,7 @@ module Views
         link_to(
           "Log in to Add Deck",
           new_session_path,
-          class: "btn-login-to-copy",
+          class: button_class(:ghost),
         )
       end
     end

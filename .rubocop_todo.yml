@@ -26,6 +26,7 @@ Capybara/ClickLinkOrButtonStyle:
 I18n/GetText/DecorateFunctionMessage:
   Exclude:
     - 'app/controllers/webhooks/creem_controller.rb'
+    - 'app/helpers/css_helper.rb'
     - 'spec/support/capybara/rack_test.rb'
     - 'spec/support/matchers/change_record.rb'
 

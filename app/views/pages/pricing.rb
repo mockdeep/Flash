@@ -49,9 +49,9 @@ module Views
               end
 
               if current_user.logged_in?
-                link_to("Current Plan", decks_path, class: "plan-button plan-button-current")
+                link_to("Current Plan", decks_path, class: button_class(:disabled))
               else
-                link_to("Get Started", new_account_path, class: "plan-button plan-button-primary")
+                link_to("Get Started", new_account_path, class: button_class(:primary))
               end
             end
 
@@ -106,9 +106,9 @@ module Views
               end
 
               if current_user.logged_in?
-                link_to("Subscribe", subscription_path, class: "plan-button plan-button-primary")
+                link_to("Subscribe", subscription_path, class: button_class(:primary))
               else
-                link_to("Sign Up to Subscribe", new_account_path, class: "plan-button plan-button-primary")
+                link_to("Sign Up to Subscribe", new_account_path, class: button_class(:primary))
               end
             end
           end
