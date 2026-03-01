@@ -57,7 +57,7 @@
   font-size: 5rem;
   line-height: 1;
   margin-bottom: 1.5rem;
-  filter: drop-shadow(4px 4px 8px rgba(210, 105, 30, 0.15));
+  filter: var(--drop-shadow-large);
 }
 
 .catalog-empty-title {

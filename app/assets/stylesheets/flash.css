@@ -60,6 +60,8 @@
   --shadow-large: 8px 8px 0 -2px var(--color-white), 8px 8px 0 0 var(--color-border-medium), 0 8px 24px rgb(42 36 32 / 12%);
   --shadow-hover: 9px 9px 0 -2px var(--color-white), 9px 9px 0 0 var(--color-text-muted), 0 10px 30px rgb(42 36 32 / 15%);
   --shadow-alert: 4px 4px 0 -2px var(--color-white), 4px 4px 0 0 var(--color-primary);
+  --drop-shadow: drop-shadow(2px 2px 4px rgb(210 105 30 / 20%));
+  --drop-shadow-large: drop-shadow(4px 4px 8px rgb(210 105 30 / 20%));
 }
 
 /* Base Styles & Layout */

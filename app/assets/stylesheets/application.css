@@ -268,7 +268,7 @@ progress::-moz-progress-bar {
   font-size: 3rem;
   line-height: 1;
   flex-shrink: 0;
-  filter: drop-shadow(2px 2px 4px rgba(210, 105, 30, 0.2));
+  filter: var(--drop-shadow);
 }
 
 .notice-content {
