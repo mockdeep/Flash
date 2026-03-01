@@ -434,7 +434,7 @@
 
 .file-upload-wrapper:hover {
   border-color: var(--color-primary);
-  background: rgba(210, 105, 30, 0.02);
+  background: rgb(var(--color-primary-channels) / 3%);
 }
 
 .file-input {

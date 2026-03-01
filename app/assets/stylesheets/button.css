@@ -29,7 +29,7 @@
   box-shadow:
     4px 4px 0 -2px var(--color-background),
     4px 4px 0 0 var(--color-primary-dark),
-    0 4px 12px rgb(210 105 30 / 25%);
+    0 4px 12px rgb(var(--color-primary-channels) / 25%);
 }
 
 .button--primary:hover {
@@ -37,7 +37,7 @@
   box-shadow:
     6px 6px 0 -2px var(--color-background),
     6px 6px 0 0 var(--color-primary-darker),
-    0 6px 16px rgb(210 105 30 / 35%);
+    0 6px 16px rgb(var(--color-primary-channels) / 35%);
   transform: translate(-2px, -2px);
 }
 
@@ -45,7 +45,7 @@
   box-shadow:
     2px 2px 0 -2px var(--color-background),
     2px 2px 0 0 var(--color-primary-dark),
-    0 2px 8px rgb(210 105 30 / 15%);
+    0 2px 8px rgb(var(--color-primary-channels) / 15%);
   transform: translate(2px, 2px);
 }
 
@@ -137,5 +137,5 @@
   box-shadow:
     4px 4px 0 -2px var(--color-background),
     4px 4px 0 0 var(--color-text-secondary),
-    0 4px 12px rgb(42 36 32 / 12%);
+    0 4px 12px rgb(var(--color-foreground-channels) / 12%);
 }

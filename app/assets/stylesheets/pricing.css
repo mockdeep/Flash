@@ -47,7 +47,7 @@
   box-shadow:
     10px 10px 0 -2px var(--color-background),
     10px 10px 0 0 var(--color-border-medium),
-    0 12px 32px rgba(42, 36, 32, 0.16);
+    0 12px 32px rgb(var(--color-foreground-channels) / 15%);
 }
 
 /* Featured Plan */
@@ -57,14 +57,14 @@
   box-shadow:
     8px 8px 0 -2px var(--color-background),
     8px 8px 0 0 var(--color-primary-dark),
-    0 8px 24px rgba(210, 105, 30, 0.25);
+    0 8px 24px rgb(var(--color-primary-channels) / 25%);
 }
 
 .pricing-plan-featured:hover {
   box-shadow:
     10px 10px 0 -2px var(--color-background),
     10px 10px 0 0 var(--color-primary-dark),
-    0 12px 32px rgba(210, 105, 30, 0.35);
+    0 12px 32px rgb(var(--color-primary-channels) / 35%);
 }
 
 /* Plan Badge */
@@ -96,7 +96,7 @@
 }
 
 .pricing-plan-featured .plan-header {
-  border-bottom-color: rgba(210, 105, 30, 0.3);
+  border-bottom-color: rgb(var(--color-primary-channels) / 35%);
 }
 
 .plan-header::after {
@@ -287,7 +287,7 @@
   box-shadow:
     6px 6px 0 -2px var(--color-background),
     6px 6px 0 0 var(--color-border-medium),
-    0 6px 18px rgba(42, 36, 32, 0.1);
+    0 6px 18px rgb(var(--color-foreground-channels) / 12%);
   transition: all var(--transition);
 }
 
@@ -296,7 +296,7 @@
   box-shadow:
     8px 8px 0 -2px var(--color-background),
     8px 8px 0 0 var(--color-border-medium),
-    0 8px 24px rgba(42, 36, 32, 0.14);
+    0 8px 24px rgb(var(--color-foreground-channels) / 15%);
 }
 
 .faq-question {
@@ -373,7 +373,7 @@
     box-shadow:
       6px 6px 0 -2px var(--color-background),
       6px 6px 0 0 var(--color-primary-dark),
-      0 6px 18px rgba(210, 105, 30, 0.25);
+      0 6px 18px rgb(var(--color-primary-channels) / 25%);
   }
 
   .plan-badge {
@@ -419,7 +419,7 @@
     box-shadow:
       5px 5px 0 -2px var(--color-background),
       5px 5px 0 0 var(--color-border-medium),
-      0 5px 15px rgba(42, 36, 32, 0.1);
+      0 5px 15px rgb(var(--color-foreground-channels) / 12%);
   }
 
   .faq-item:hover {
