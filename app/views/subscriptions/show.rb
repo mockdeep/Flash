@@ -63,14 +63,14 @@ module Views
       def render_subscription_details
         div(class: "card subscription-card") do
           if subscription.active?
-            div(class: "subscription-active-badge") do
-              span(class: "badge-icon") { "✓" }
-              span(class: "badge-text") { "Active Subscriber" }
+            div(class: "subscription-badge") do
+              span(class: "subscription-badge-icon") { "✓" }
+              span(class: "subscription-badge-text") { "Active Subscriber" }
             end
           else
-            div(class: "subscription-canceled-badge") do
-              span(class: "badge-icon") { "✗" }
-              span(class: "badge-text") { "Subscription #{subscription.status.titleize}" }
+            div(class: "subscription-badge subscription-badge--canceled") do
+              span(class: "subscription-badge-icon") { "✗" }
+              span(class: "subscription-badge-text") { "Subscription #{subscription.status.titleize}" }
             end
           end
 
