@@ -656,8 +656,3 @@
 }
 
 /* Focus Styles - Form */
-.form-back-link:focus-visible,
-.csv-sample-link:focus-visible {
-  outline: 3px solid var(--color-accent);
-  outline-offset: 3px;
-}

@@ -358,7 +358,3 @@
 }
 
 /* Focus Styles */
-.catalog-back-link:focus-visible {
-  outline: 3px solid var(--color-accent);
-  outline-offset: 3px;
-}

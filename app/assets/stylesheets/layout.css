@@ -385,7 +385,5 @@
 .nav-link:focus-visible,
 .nav-logout:focus-visible,
 .footer-links a:focus-visible {
-  outline: 3px solid var(--color-accent);
-  outline-offset: 3px;
   border-radius: 0.25rem;
 }

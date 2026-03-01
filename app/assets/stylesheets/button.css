@@ -16,11 +16,6 @@
   transition: all var(--transition);
 }
 
-.button:focus-visible {
-  outline: 3px solid var(--color-accent);
-  outline-offset: 3px;
-}
-
 .button--compact {
   padding: 0.875rem 1.25rem;
   font-size: 15px;
