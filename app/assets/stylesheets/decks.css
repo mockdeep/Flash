@@ -57,7 +57,7 @@
 }
 
 .deck-card {
-  background: var(--color-bg-elevated);
+  background: var(--color-background-elevated);
   border: 4px solid var(--color-border);
   border-radius: 0;
   padding: 1.75rem;
@@ -98,7 +98,7 @@
   gap: 1rem;
   margin-bottom: 1.5rem;
   padding-bottom: 1.25rem;
-  border-bottom: 2px solid var(--color-cream);
+  border-bottom: 2px solid var(--color-background-subtle);
 }
 
 .deck-card-title {
@@ -140,7 +140,7 @@
 
 .stat-item {
   padding: 1rem 0.75rem;
-  background: var(--color-cream);
+  background: var(--color-background-subtle);
   border-left: 4px solid;
   text-align: center;
   transition: all var(--transition);
@@ -148,7 +148,7 @@
 
 .stat-item:hover {
   transform: translateX(2px);
-  background: var(--color-cream-dark);
+  background: var(--color-background-hover);
 }
 
 .stat-pending {
@@ -189,7 +189,7 @@
   font-weight: 600;
   color: var(--color-border-medium);
   font-style: italic;
-  background: var(--color-cream);
+  background: var(--color-background-subtle);
   border: 2px dashed var(--color-border);
   margin-bottom: 1.5rem;
 }
@@ -288,7 +288,7 @@
 }
 
 .form-card {
-  background: var(--color-bg-elevated);
+  background: var(--color-background-elevated);
   border: 4px solid var(--color-border);
   border-radius: 0;
   padding: 2.5rem;
@@ -377,7 +377,7 @@
   font-family: var(--font-body);
   font-size: 16px;
   color: var(--color-text);
-  background: var(--color-white);
+  background: var(--color-background);
   border: 3px solid var(--color-border);
   border-radius: 0;
   transition: all var(--transition);
@@ -451,7 +451,7 @@
   justify-content: center;
   min-height: 180px;
   padding: 2rem;
-  background: var(--color-white);
+  background: var(--color-background);
   border: 3px dashed var(--color-border);
   border-radius: 0;
   cursor: pointer;
@@ -518,7 +518,7 @@
   display: flex;
   gap: 1rem;
   padding-top: 1rem;
-  border-top: 2px solid var(--color-cream);
+  border-top: 2px solid var(--color-background-subtle);
 }
 
 .form-actions .button {
