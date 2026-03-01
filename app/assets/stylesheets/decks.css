@@ -522,16 +522,6 @@
 .csv-sample-link {
   color: var(--color-primary);
   font-weight: 600;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 2px;
-  transition: all var(--transition);
-}
-
-.csv-sample-link:hover {
-  color: var(--color-primary-dark);
-  text-decoration-thickness: 3px;
-  background: rgba(210, 105, 30, 0.1);
 }
 
 /* File Upload */
