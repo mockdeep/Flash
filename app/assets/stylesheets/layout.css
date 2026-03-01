@@ -33,7 +33,7 @@
 
 .logo-icon {
   font-size: 2rem;
-  filter: drop-shadow(2px 2px 4px rgba(210, 105, 30, 0.3));
+  filter: var(--drop-shadow);
   transition: transform var(--transition);
 }
 

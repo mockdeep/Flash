@@ -59,7 +59,7 @@
   font-size: 5rem;
   line-height: 1;
   margin-bottom: 1.5rem;
-  filter: drop-shadow(4px 4px 8px rgba(210, 105, 30, 0.15));
+  filter: var(--drop-shadow-large);
 }
 
 .empty-state-title {
@@ -409,7 +409,7 @@
   font-size: 2rem;
   line-height: 1;
   flex-shrink: 0;
-  filter: drop-shadow(2px 2px 4px rgba(210, 105, 30, 0.2));
+  filter: var(--drop-shadow);
 }
 
 .error-content {
@@ -565,7 +565,7 @@
 .upload-icon {
   font-size: 3rem;
   line-height: 1;
-  filter: drop-shadow(2px 2px 4px rgba(210, 105, 30, 0.15));
+  filter: var(--drop-shadow);
 }
 
 .upload-text {
