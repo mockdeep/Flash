@@ -27,18 +27,18 @@ module Views
       def render_no_subscription
         div(class: "card subscription-card") do
           div(class: "subscription-pricing") do
-            div(class: "pricing-amount") do
-              span(class: "pricing-currency") { "$" }
-              span(class: "pricing-value") { "5" }
-              span(class: "pricing-period") { "/month" }
+            div(class: "price-display") do
+              span(class: "price-display__currency") { "$" }
+              span(class: "price-display__value") { "5" }
+              span(class: "price-display__period") { "/month" }
             end
           end
 
-          div(class: "subscription-notice") do
-            div(class: "notice-icon") { "💛" }
-            div(class: "notice-content") do
-              h3(class: "notice-heading") { "Support Flash" }
-              p do
+          div(class: "accent-box subscription-notice") do
+            div(class: "accent-box__icon") { "💛" }
+            div(class: "accent-box__content") do
+              h3(class: "accent-box__heading") { "Support Flash" }
+              p(class: "accent-box__text") do
                 <<~TEXT
                   There are currently no extra benefits or features included with a
                   subscription. However, if you'd like to show your support for the
