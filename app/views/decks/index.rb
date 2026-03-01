@@ -50,7 +50,7 @@ module Views
       end
 
       def render_deck_card(deck)
-        div(class: "deck-card") do
+        div(class: "card card--striped deck-card") do
           div(class: "deck-card-header") do
             h3(class: "deck-card-title") { deck.name }
             div(class: "card-count") do

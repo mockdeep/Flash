@@ -52,7 +52,7 @@ module Views
       end
 
       def render_deck_card(deck)
-        div(class: "catalog-card") do
+        div(class: "card card--striped catalog-card") do
           render_card_header(deck)
           render_card_meta(deck)
           render_card_actions(deck)

@@ -20,7 +20,7 @@ module Views
             end
           end
 
-          div(class: "form-card") do
+          div(class: "card card--striped form-card") do
             form_with(model: deck, class: "deck-form") do |form|
               errors = deck.errors
               if errors.any?

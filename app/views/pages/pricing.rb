@@ -11,7 +11,7 @@ module Views
 
           div(class: "pricing-plans") do
             # Free plan
-            div(class: "pricing-plan") do
+            div(class: "card pricing-plan") do
               div(class: "plan-header") do
                 h2(class: "plan-name") { "Free" }
                 div(class: "plan-price") do
@@ -56,7 +56,7 @@ module Views
             end
 
             # Supporter plan
-            div(class: "pricing-plan pricing-plan-featured") do
+            div(class: "card pricing-plan pricing-plan-featured") do
               div(class: "plan-badge") { "Support the Project" }
 
               div(class: "plan-header") do
