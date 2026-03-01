@@ -191,79 +191,34 @@ progress::-moz-progress-bar {
   background: var(--color-primary);
 }
 
-.pricing-amount {
-  display: inline-flex;
-  align-items: baseline;
-  font-family: var(--font-display);
-  color: var(--color-text);
-  line-height: 1;
-}
-
-.pricing-currency {
+.subscription-pricing .price-display__currency {
   font-size: 2rem;
-  font-weight: 400;
-  color: var(--color-primary);
-  margin-right: 0.25rem;
 }
 
-.pricing-value {
+.subscription-pricing .price-display__value {
   font-size: 5rem;
-  font-weight: 400;
-  letter-spacing: -0.02em;
 }
 
-.pricing-period {
+.subscription-pricing .price-display__period {
   font-size: 1.5rem;
-  font-weight: 400;
-  color: var(--color-text-muted);
-  margin-left: 0.25rem;
 }
 
 .subscription-notice {
-  display: flex;
   gap: 1.5rem;
   padding: 2rem;
   margin-bottom: 2rem;
-  background: var(--gradient-accent);
-  border-left: 6px solid var(--color-accent);
-  position: relative;
 }
 
-.subscription-notice::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background: var(--stripe-overlay);
-  pointer-events: none;
-}
-
-.notice-icon {
+.subscription-notice .accent-box__icon {
   font-size: 3rem;
-  line-height: 1;
-  flex-shrink: 0;
-  filter: var(--drop-shadow);
 }
 
-.notice-content {
-  flex: 1;
-  position: relative;
-  z-index: 1;
-}
-
-.notice-heading {
-  font-family: var(--font-display);
+.subscription-notice .accent-box__heading {
   font-size: 1.5rem;
-  font-weight: 400;
-  color: var(--color-primary);
   margin: 0 0 0.75rem 0;
 }
 
-.notice-content p {
-  margin: 0;
-  color: var(--color-text-secondary);
+.subscription-notice .accent-box__text {
   font-size: 16px;
   line-height: 1.7;
 }
@@ -414,15 +369,15 @@ progress::-moz-progress-bar {
     padding: 1.5rem 0;
   }
 
-  .pricing-currency {
+  .subscription-pricing .price-display__currency {
     font-size: 1.5rem;
   }
 
-  .pricing-value {
+  .subscription-pricing .price-display__value {
     font-size: 4rem;
   }
 
-  .pricing-period {
+  .subscription-pricing .price-display__period {
     font-size: 1.25rem;
   }
 
@@ -432,7 +387,7 @@ progress::-moz-progress-bar {
     padding: 1.5rem;
   }
 
-  .notice-icon {
+  .subscription-notice .accent-box__icon {
     font-size: 2.5rem;
     text-align: center;
   }

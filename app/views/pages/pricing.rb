@@ -14,10 +14,10 @@ module Views
             div(class: "card pricing-plan") do
               div(class: "plan-header") do
                 h2(class: "plan-name") { "Free" }
-                div(class: "plan-price") do
-                  span(class: "price-currency") { "$" }
-                  span(class: "price-value") { "0" }
-                  span(class: "price-period") { "/month" }
+                div(class: "price-display") do
+                  span(class: "price-display__currency") { "$" }
+                  span(class: "price-display__value") { "0" }
+                  span(class: "price-display__period") { "/month" }
                 end
               end
 
@@ -61,10 +61,10 @@ module Views
 
               div(class: "plan-header") do
                 h2(class: "plan-name") { "Supporter" }
-                div(class: "plan-price") do
-                  span(class: "price-currency") { "$" }
-                  span(class: "price-value") { "5" }
-                  span(class: "price-period") { "/month" }
+                div(class: "price-display") do
+                  span(class: "price-display__currency") { "$" }
+                  span(class: "price-display__value") { "5" }
+                  span(class: "price-display__period") { "/month" }
                 end
               end
 
@@ -76,11 +76,11 @@ module Views
                 end
               end
 
-              div(class: "plan-honesty") do
-                div(class: "honesty-icon") { "💛" }
-                div(class: "honesty-content") do
-                  h3 { "Full transparency" }
-                  p do
+              div(class: "accent-box plan-honesty") do
+                div(class: "accent-box__icon") { "💛" }
+                div(class: "accent-box__content") do
+                  h3(class: "accent-box__heading") { "Full transparency" }
+                  p(class: "accent-box__text") do
                     <<~TEXT
                       There are currently no extra benefits or features included with this plan.
                       Your subscription goes directly toward hosting costs and keeping the service

@@ -1,0 +1,27 @@
+.price-display {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--font-display);
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.price-display__currency {
+  margin-right: 0.25rem;
+  font-size: 1.75rem;
+  font-weight: 400;
+  color: var(--color-primary);
+}
+
+.price-display__value {
+  font-size: 4rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.price-display__period {
+  margin-left: 0.25rem;
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
