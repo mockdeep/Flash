@@ -81,7 +81,7 @@ div.actions {
   background: var(--color-warning-bg);
   color: var(--color-primary-darker);
   font-weight: 600;
-  box-shadow: 4px 4px 0 -2px var(--color-white), 4px 4px 0 0 var(--color-primary);
+  box-shadow: var(--shadow-alert);
 }
 
 .field-with-errors {
@@ -141,24 +141,12 @@ progress::-webkit-progress-bar {
 
 progress::-webkit-progress-value {
   border-radius: 0;
-  background: repeating-linear-gradient(
-    45deg,
-    var(--color-primary),
-    var(--color-primary) 10px,
-    var(--color-primary-dark) 10px,
-    var(--color-primary-dark) 20px
-  );
+  background: var(--stripe-diagonal);
 }
 
 progress::-moz-progress-bar {
   border-radius: 0;
-  background: repeating-linear-gradient(
-    45deg,
-    var(--color-primary),
-    var(--color-primary) 10px,
-    var(--color-primary-dark) 10px,
-    var(--color-primary-dark) 20px
-  );
+  background: var(--stripe-diagonal);
 }
 
 /* Subscription Page */
@@ -183,13 +171,7 @@ progress::-moz-progress-bar {
   display: block;
   width: 80px;
   height: 4px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--color-primary),
-    var(--color-primary) 8px,
-    var(--color-primary-dark) 8px,
-    var(--color-primary-dark) 16px
-  );
+  background: var(--stripe-small);
   margin: 1rem auto 0;
 }
 
@@ -198,10 +180,7 @@ progress::-moz-progress-bar {
   border: 4px solid var(--color-border);
   border-radius: 0;
   padding: 2.5rem;
-  box-shadow:
-    8px 8px 0 -2px var(--color-white),
-    8px 8px 0 0 var(--color-border-medium),
-    0 8px 24px rgba(42, 36, 32, 0.12);
+  box-shadow: var(--shadow-large);
   animation: cardFadeIn 0.5s ease-out;
 }
 
@@ -280,13 +259,7 @@ progress::-moz-progress-bar {
   right: 0;
   bottom: 0;
   left: 0;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 20px,
-    rgba(230, 169, 78, 0.03) 20px,
-    rgba(230, 169, 78, 0.03) 40px
-  );
+  background: var(--stripe-overlay);
   pointer-events: none;
 }
 
@@ -457,10 +430,7 @@ progress::-moz-progress-bar {
 
   .subscription-card {
     padding: 1.5rem;
-    box-shadow:
-      6px 6px 0 -2px var(--color-white),
-      6px 6px 0 0 var(--color-border-medium),
-      0 6px 18px rgba(42, 36, 32, 0.12);
+    box-shadow: var(--shadow-medium);
   }
 
   .subscription-pricing {
