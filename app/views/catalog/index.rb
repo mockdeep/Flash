@@ -79,7 +79,11 @@ module Views
 
       def render_card_actions(deck)
         div(class: "catalog-card-actions") do
-          link_to("Preview", catalog_path(deck), class: "btn-preview")
+          link_to(
+            "Preview",
+            catalog_path(deck),
+            class: button_class(:secondary, :compact),
+          )
         end
       end
     end

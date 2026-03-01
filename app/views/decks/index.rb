@@ -15,8 +15,8 @@ module Views
           div(class: "decks-header") do
             h1(class: "decks-title") { "Your Decks" }
             div(class: "decks-header-actions") do
-              link_to("Browse Catalog", catalog_index_path, class: "btn-browse-catalog")
-              link_to("+ Create New Deck", new_deck_path, class: "btn-create-deck")
+              link_to("Browse Catalog", catalog_index_path, class: button_class(:ghost))
+              link_to("+ Create New Deck", new_deck_path, class: button_class(:primary))
             end
           end
 
@@ -37,7 +37,7 @@ module Views
           p(class: "empty-state-text") do
             "Create your first flashcard deck or browse the catalog to get started."
           end
-          link_to("Create Your First Deck", new_deck_path, class: "btn-empty-state")
+          link_to("Create Your First Deck", new_deck_path, class: button_class(:primary))
         end
       end
 
@@ -68,8 +68,8 @@ module Views
           end
 
           div(class: "deck-card-actions") do
-            link_to("Study", deck_study_path(deck), class: "btn-study")
-            link_to("View Details", deck_path(deck), class: "btn-details")
+            link_to("Study", deck_study_path(deck), class: button_class(:secondary, :compact))
+            link_to("View Details", deck_path(deck), class: button_class(:ghost, :compact))
           end
         end
       end

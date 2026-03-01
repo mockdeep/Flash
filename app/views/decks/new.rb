@@ -71,8 +71,8 @@ module Views
               end
 
               div(class: "form-actions") do
-                link_to("Cancel", decks_path, class: "btn-cancel")
-                form.submit("Create Deck", class: "btn-submit")
+                link_to("Cancel", decks_path, class: button_class(:ghost))
+                form.submit("Create Deck", class: button_class(:primary))
               end
             end
           end

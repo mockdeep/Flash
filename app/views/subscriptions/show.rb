@@ -55,7 +55,7 @@ module Views
           end
 
           form_with(url: subscription_path, method: :post, class: "subscription-form") do |form|
-            form.submit("Subscribe for $5/month", class: "subscription-button")
+            form.submit("Subscribe for $5/month", class: button_class(:primary))
           end
         end
       end
@@ -91,11 +91,11 @@ module Views
 
           if subscription.active?
             form_with(url: subscription_path, method: :delete, class: "subscription-form") do |form|
-              form.submit("Cancel Subscription", class: "subscription-button subscription-button-danger", data: { confirm: "Are you sure you want to cancel your subscription?" })
+              form.submit("Cancel Subscription", class: button_class(:danger), data: { confirm: "Are you sure you want to cancel your subscription?" })
             end
           else
             form_with(url: subscription_path, method: :post, class: "subscription-form") do |form|
-              form.submit("Resubscribe for $5/month", class: "subscription-button")
+              form.submit("Resubscribe for $5/month", class: button_class(:primary))
             end
           end
         end

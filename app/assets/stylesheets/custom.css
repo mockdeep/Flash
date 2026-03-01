@@ -1,5 +1,6 @@
 /* custom CSS goes here */
 @import "./flash.css";
+@import "./button.css";
 @import "./layout.css";
 @import "./welcome.css";
 @import "./decks.css";

@@ -66,7 +66,7 @@ module Views
               end
 
               div(class: "auth-actions") do
-                form.submit("Create Account", class: "auth-submit")
+                form.submit("Create Account", class: button_class(:primary))
               end
             end
 
