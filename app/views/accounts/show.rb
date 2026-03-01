@@ -14,17 +14,7 @@ module Views
         h1 { "My Account" }
 
         form_with(model: user, url: account_path) do |form|
-          errors = user.errors
-          if errors.any?
-            div(class: "error-explanation") do
-              h2 { "#{pluralize(errors.count, "problem")} with your signup:" }
-              ul do
-                errors.full_messages.each do |message|
-                  li { message }
-                end
-              end
-            end
-          end
+          error_explanation
 
           div(class: "field") do
             form.label(:username)
@@ -42,6 +32,27 @@ module Views
         end
 
         button_to("Delete Account", account_path, method: :delete)
+      end
+
+      private
+
+      def error_explanation
+        errors = user.errors
+        return if errors.none?
+
+        div(class: "error-explanation") do
+          div(class: "error-icon") { "\u26A0" }
+          div(class: "error-content") do
+            h2 do
+              "#{pluralize(errors.count, "problem")} with your account:"
+            end
+            ul do
+              errors.full_messages.each do |message|
+                li { message }
+              end
+            end
+          end
+        end
       end
     end
   end
