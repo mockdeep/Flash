@@ -43,7 +43,7 @@ module Views
       def render_card_preview
         preview_cards = deck.cards.ordered.limit(5)
 
-        div(class: "catalog-preview") do
+        div(class: "card card--striped catalog-preview") do
           h2(class: "catalog-preview-title") do
             "Card Preview"
           end

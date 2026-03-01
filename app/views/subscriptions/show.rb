@@ -25,7 +25,7 @@ module Views
       private
 
       def render_no_subscription
-        div(class: "subscription-card") do
+        div(class: "card subscription-card") do
           div(class: "subscription-pricing") do
             div(class: "pricing-amount") do
               span(class: "pricing-currency") { "$" }
@@ -61,7 +61,7 @@ module Views
       end
 
       def render_subscription_details
-        div(class: "subscription-card") do
+        div(class: "card subscription-card") do
           if subscription.active?
             div(class: "subscription-active-badge") do
               span(class: "badge-icon") { "✓" }
