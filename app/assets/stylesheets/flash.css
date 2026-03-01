@@ -776,6 +776,32 @@ body {
   outline-offset: 3px;
 }
 
+.form-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--color-text);
+  background: var(--color-background);
+  border: 3px solid var(--color-border);
+  border-radius: 0;
+  transition: all var(--transition);
+}
+
+.form-input::placeholder {
+  color: var(--color-border-medium);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(210, 105, 30, 0.15);
+}
+
+.form-input:hover:not(:focus) {
+  border-color: var(--color-border-medium);
+}
+
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -30,7 +30,7 @@ module Views
                 form.text_field(
                   :username,
                   required: true,
-                  class: "auth-input",
+                  class: "form-input",
                   placeholder: "your_username",
                 )
               end
@@ -40,7 +40,7 @@ module Views
                 form.email_field(
                   :email,
                   required: true,
-                  class: "auth-input",
+                  class: "form-input",
                   placeholder: "you@example.com",
                 )
               end
@@ -50,7 +50,7 @@ module Views
                 form.password_field(
                   :password,
                   required: true,
-                  class: "auth-input",
+                  class: "form-input",
                   placeholder: "Create a password",
                 )
               end
@@ -60,7 +60,7 @@ module Views
                 form.password_field(
                   :password_confirmation,
                   required: true,
-                  class: "auth-input",
+                  class: "form-input",
                   placeholder: "Confirm your password",
                 )
               end
