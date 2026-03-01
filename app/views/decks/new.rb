@@ -13,7 +13,7 @@ module Views
       def view_template
         div(class: "form-container") do
           div(class: "form-header") do
-            link_to("← Back to Decks", decks_path, class: "form-back-link")
+            link_to("← Back to Decks", decks_path, class: "back-link")
             h1(class: "form-title") { "Create New Deck" }
             p(class: "form-subtitle") do
               "Upload a CSV file with your flashcards to get started learning."

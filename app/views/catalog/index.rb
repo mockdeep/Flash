@@ -34,10 +34,10 @@ module Views
       end
 
       def render_empty_state
-        div(class: "catalog-empty-state") do
-          div(class: "catalog-empty-icon") { "📖" }
-          h2(class: "catalog-empty-title") { "No Public Decks Yet" }
-          p(class: "catalog-empty-text") do
+        div(class: "empty-state") do
+          div(class: "empty-state-icon") { "📖" }
+          h2(class: "empty-state-title") { "No Public Decks Yet" }
+          p(class: "empty-state-text") do
             "Public decks will appear here when they become available."
           end
         end
@@ -62,7 +62,7 @@ module Views
       def render_card_header(deck)
         div(class: "catalog-card-header") do
           h3(class: "catalog-card-title") { deck.name }
-          div(class: "catalog-card-count") do
+          div(class: "card-count") do
             span(class: "count-number") { deck.cards.count }
             span(class: "count-label") { "cards" }
           end

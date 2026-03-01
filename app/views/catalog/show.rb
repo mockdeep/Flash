@@ -29,11 +29,7 @@ module Views
       end
 
       def render_back_link
-        link_to(
-          "Back to Catalog",
-          catalog_index_path,
-          class: "catalog-back-link",
-        )
+        link_to("Back to Catalog", catalog_index_path, class: "back-link")
       end
 
       def render_meta
