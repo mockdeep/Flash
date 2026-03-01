@@ -10,18 +10,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 4rem 2rem 6rem;
-  animation: fadeInUp 0.8s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  animation: fade-in-up 0.8s ease-out;
 }
 
 .welcome-header {
@@ -95,7 +84,7 @@
   position: relative;
   max-width: 1000px;
   margin: 0 auto 5rem;
-  animation: fadeInUp 0.8s ease-out 0.2s both;
+  animation: fade-in-up 0.8s ease-out 0.2s both;
 }
 
 .screenshot-card {
@@ -122,7 +111,7 @@
   gap: 2.5rem;
   max-width: 1000px;
   margin: 0 auto;
-  animation: fadeInUp 0.8s ease-out 0.4s both;
+  animation: fade-in-up 0.8s ease-out 0.4s both;
 }
 
 .feature-card {

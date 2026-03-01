@@ -202,7 +202,7 @@
 }
 
 .footer-section {
-  animation: fadeInUp 0.6s ease-out backwards;
+  animation: fade-in-up 0.6s ease-out backwards;
 }
 
 .footer-section:nth-child(1) { animation-delay: 0ms; }

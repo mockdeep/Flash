@@ -4,18 +4,7 @@
   max-width: 480px;
   margin: 0 auto;
   padding: 3rem 1.5rem;
-  animation: authFadeIn 0.5s ease-out;
-}
-
-@keyframes authFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  animation: fade-in-up 0.5s ease-out;
 }
 
 .auth-title {
