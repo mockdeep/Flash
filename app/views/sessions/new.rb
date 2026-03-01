@@ -21,7 +21,7 @@ module Views
                 form.email_field(
                   :email,
                   required: true,
-                  class: "auth-input",
+                  class: "form-input",
                   placeholder: "you@example.com",
                 )
               end
@@ -31,7 +31,7 @@ module Views
                 form.password_field(
                   :password,
                   required: true,
-                  class: "auth-input",
+                  class: "form-input",
                   placeholder: "Enter your password",
                 )
               end
