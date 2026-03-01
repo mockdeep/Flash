@@ -268,13 +268,7 @@
   display: block;
   width: 120px;
   height: 4px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--color-primary),
-    var(--color-primary) 10px,
-    var(--color-primary-dark) 10px,
-    var(--color-primary-dark) 20px
-  );
+  background: var(--stripe-large);
   margin: 1rem auto 0;
 }
 
