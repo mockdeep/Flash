@@ -36,7 +36,7 @@
   border-radius: 0;
   padding: 2.5rem;
   box-shadow: var(--shadow-large);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -294,7 +294,7 @@
     6px 6px 0 -2px var(--color-white),
     6px 6px 0 0 var(--color-border-medium),
     0 6px 18px rgba(42, 36, 32, 0.1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition);
 }
 
 .faq-item:hover {

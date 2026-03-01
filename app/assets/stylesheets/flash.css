@@ -42,8 +42,7 @@
   --spacing-2xl: 3rem;
 
   /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 250ms ease;
   --transition-slow: 400ms cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Typography */
@@ -318,7 +317,7 @@ body {
 /* Interactive answer button additions */
 .answer-button {
   overflow: hidden;
-  transition: all var(--transition-base);
+  transition: all var(--transition);
   cursor: pointer;
 }
 
@@ -330,7 +329,7 @@ body {
   width: 0;
   height: 100%;
   background: var(--color-primary-light);
-  transition: width var(--transition-base);
+  transition: width var(--transition);
   content: "";
 }
 
@@ -449,7 +448,7 @@ body {
   display: inline-flex;
   align-items: center;
   padding: var(--spacing-md) var(--spacing-2xl);
-  transition: all var(--transition-base);
+  transition: all var(--transition);
   border: 3px solid var(--color-border-dark);
   background: var(--color-white);
   box-shadow:
@@ -529,7 +528,7 @@ body {
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
-  transition: all var(--transition-base);
+  transition: all var(--transition);
 }
 
 .content-container > a:hover {
@@ -541,7 +540,7 @@ body {
 
 .content-container > a::before {
   content: "← ";
-  transition: transform var(--transition-base);
+  transition: transform var(--transition);
   display: inline-block;
 }
 
@@ -595,7 +594,7 @@ body {
 .session-milestone-secondary {
   display: inline-flex;
   padding: var(--spacing-md) var(--spacing-xl);
-  transition: all var(--transition-base);
+  transition: all var(--transition);
   border: 3px solid var(--color-border-dark);
   box-shadow:
     5px 5px 0 -2px var(--color-bg),

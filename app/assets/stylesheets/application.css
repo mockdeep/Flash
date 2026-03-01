@@ -38,7 +38,7 @@ a {
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 2px;
-  transition: all 200ms ease;
+  transition: all var(--transition);
 }
 
 a:visited {
