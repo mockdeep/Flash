@@ -18,6 +18,11 @@
   box-sizing: border-box;
 }
 
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
 body {
   margin: 0;
   padding: 0;
