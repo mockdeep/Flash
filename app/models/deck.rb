@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Deck < ApplicationRecord
-  VISIBILITIES = ["public", "private"].freeze
+  VISIBILITIES = ["public", "private", "demo"].freeze
 
   belongs_to :user
   has_many :cards, dependent: :delete_all
@@ -12,4 +12,5 @@ class Deck < ApplicationRecord
   validates :visibility, inclusion: { in: VISIBILITIES }
 
   scope :publicly_visible, -> { where(visibility: "public") }
+  scope :demo_visible, -> { where(visibility: "demo") }
 end

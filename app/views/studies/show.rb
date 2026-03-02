@@ -3,21 +3,26 @@
 module Views
   module Studies
     class Show < Views::Base
-      attr_accessor :deck, :study, :reviewed, :completed
+      attr_accessor :deck, :study, :reviewed, :completed, :demo
 
-      def initialize(deck:, study:, reviewed:, completed:)
+      def initialize(deck:, study:, reviewed:, completed:, demo: false)
         super()
         self.deck = deck
         self.study = study
         self.reviewed = reviewed
         self.completed = completed
+        self.demo = demo
       end
 
       def view_template
         div(class: "content-container") do
-          link_to("View Deck", deck_path(deck))
-          plain(" | ")
-          link_to("All Decks", decks_path)
+          if demo
+            render(Components::DemoBanner.new)
+          else
+            link_to("View Deck", deck_path(deck))
+            plain(" | ")
+            link_to("All Decks", decks_path)
+          end
 
           h1 { deck.name }
 

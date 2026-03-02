@@ -53,7 +53,10 @@ module Views
                   data: { mobile_nav_target: "menu" },
                 ) do
                   link_to("Catalog", catalog_index_path, class: "nav-link")
-                  if current_user.logged_in?
+                  if current_user.guest?
+                    link_to("Sign Up", new_account_path, class: "nav-link nav-link-secondary")
+                    link_to("Log In", new_session_path, class: "nav-link nav-link-primary")
+                  elsif current_user.logged_in?
                     link_to("Decks", decks_path, class: "nav-link")
                     link_to("Account", account_path, class: "nav-link")
                     link_to("Subscription", subscription_path, class: "nav-link")
@@ -93,7 +96,7 @@ module Views
                     li { link_to("Home", root_path) }
                     li { link_to("Catalog", catalog_index_path) }
                     li { link_to("Pricing", pricing_path) }
-                    if current_user.logged_in?
+                    if current_user.logged_in? && !current_user.guest?
                       li { link_to("My Decks", decks_path) }
                       li { link_to("Account Settings", account_path) }
                     end

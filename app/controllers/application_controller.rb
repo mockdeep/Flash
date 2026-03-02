@@ -10,6 +10,7 @@ class ApplicationController < ActionController::Base
   private
 
   def log_in(user)
+    cleanup_demo_guest unless user.guest?
     session[:user_id] = user.id
     @current_user = user
   end
@@ -25,6 +26,18 @@ class ApplicationController < ActionController::Base
   helper_method :current_user
 
   def authenticate_user
+    return if current_user.logged_in? && !current_user.guest?
+
+    redirect_to(new_session_path)
+  end
+
+  def authenticate_guest
     redirect_to(new_session_path) unless current_user.logged_in?
+  end
+
+  def cleanup_demo_guest
+    guest_id = session.delete(:demo_user_id)
+    session.delete(:demo)
+    User.find_by(id: guest_id).destroy! if guest_id
   end
 end

@@ -94,7 +94,7 @@ RSpec.describe AccountsController do
       end
 
       it "does not update the user" do
-        user = User.create!(valid_create_params[:user])
+        user = create(:user, email: "demo@exampoo.com")
 
         expect { put(account_path, params: valid_update_params) }
           .to not_change_record(user, :email).from("demo@exampoo.com")
@@ -162,7 +162,7 @@ RSpec.describe AccountsController do
       end
 
       it "does not destroy the user" do
-        user = User.create!(valid_create_params[:user])
+        user = create(:user)
 
         expect { delete(account_path) }.to not_delete_record(user)
       end

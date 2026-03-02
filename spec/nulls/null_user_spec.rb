@@ -18,4 +18,16 @@ RSpec.describe NullUser do
       expect(described_class.new.admin?).to be(false)
     end
   end
+
+  describe "#guest?" do
+    it "returns false" do
+      expect(described_class.new.guest?).to be(false)
+    end
+  end
+
+  describe "#destroy!" do
+    it "is a no-op" do
+      expect(described_class.new.destroy!).to be_nil
+    end
+  end
 end

@@ -1,0 +1,21 @@
+.demo-banner {
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  background: linear-gradient(135deg, rgb(var(--color-primary-channels) / 8%) 0%, rgb(var(--color-primary-channels) / 3%) 100%);
+  border: 3px solid var(--color-primary);
+  box-shadow: var(--shadow-alert);
+}
+
+.demo-banner__text {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.demo-banner__link {
+  font-weight: 700;
+  color: var(--color-primary);
+}

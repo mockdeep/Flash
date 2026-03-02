@@ -18,6 +18,15 @@ RSpec.describe StudiesController do
     )
   end
 
+  def submit_demo_answer(deck: Deck.last)
+    card = deck.cards.first
+    answers = ["A", "B", "C", "D"]
+    params = {
+      answer: { card_id: card.id, answer: "wrong", possible_answers: answers },
+    }
+    patch(deck_study_path(deck), params:)
+  end
+
   describe "#show" do
     it "renders the study page", :aggregate_failures do
       create(:card, deck:)
@@ -91,6 +100,43 @@ RSpec.describe StudiesController do
       get(deck_study_path(other_deck))
 
       expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  describe "demo mode" do
+    let(:demo_owner) { create(:user) }
+    let(:demo_deck) { create(:deck, :demo, user: demo_owner) }
+
+    before do
+      create(:card, deck: demo_deck, front: "Q", back: "A")
+      post(demo_path, params: { deck_id: demo_deck.id })
+    end
+
+    it "shows demo banner on the study page" do
+      follow_redirect!
+
+      expect(rendered).to have_css(".demo-banner")
+    end
+
+    it "does not show demo banner after answering" do
+      follow_redirect!
+      submit_demo_answer
+
+      expect(rendered).to have_no_css(".demo-banner")
+    end
+
+    context "when reaching the milestone" do
+      before do
+        100.times { submit_demo_answer }
+      end
+
+      it "shows sign up link" do
+        expect(rendered).to have_link("Sign Up Free")
+      end
+
+      it "does not show done for now link" do
+        expect(rendered).to have_no_link("Done for Now")
+      end
     end
   end
 

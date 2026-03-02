@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class StudiesController < ApplicationController
+  skip_before_action(:authenticate_user)
+  before_action(:authenticate_guest)
+
   def show
     deck = current_user.decks.find(params[:deck_id])
     study = Study.new(deck:)
@@ -37,6 +40,7 @@ class StudiesController < ApplicationController
         **args,
         reviewed: session[:study_reviewed],
         completed: session[:study_completed],
+        demo: session[:demo].present?,
       ),
     )
   end

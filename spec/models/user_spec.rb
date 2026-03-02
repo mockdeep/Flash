@@ -3,6 +3,7 @@
 RSpec.describe User do
   def user_params
     {
+      role: "user",
       username: "demo_user",
       email: "demo@exampoo.com",
       password: "super-secure",
@@ -56,6 +57,11 @@ RSpec.describe User do
       .not_to allow_values(*bad_usernames).for(:username)
   end
 
+  it "validates role inclusion" do
+    expect(described_class.new)
+      .to validate_inclusion_of(:role).in_array(User::ROLES)
+  end
+
   describe ".find_by" do
     it "returns a user record when it exists" do
       user = described_class.create!(user_params)
@@ -88,8 +94,30 @@ RSpec.describe User do
   end
 
   describe "#admin?" do
-    it "returns false" do
+    it "returns false for regular users" do
       expect(described_class.new.admin?).to be(false)
+    end
+
+    it "returns true for admin users" do
+      expect(described_class.new(role: "admin").admin?).to be(true)
+    end
+  end
+
+  describe "#guest?" do
+    it "returns false for regular users" do
+      expect(described_class.new.guest?).to be(false)
+    end
+
+    it "returns true for guest users" do
+      expect(described_class.new(role: "guest").guest?).to be(true)
+    end
+  end
+
+  describe "guest users" do
+    it "is valid with generated email and username" do
+      guest = build(:user, :guest)
+
+      expect(guest).to be_valid
     end
   end
 end

@@ -1,16 +1,17 @@
 # frozen_string_literal: true
 
 RSpec.describe SessionsController do
-  def user_params
-    {
-      username: "demo_user",
+  let(:password) { "super-secure" }
+  let(:user) do
+    create(
+      :user,
       email: "demo@exampoo.com",
-      password: "super-secure",
-      password_confirmation: "super-secure",
-    }
+      password:,
+      password_confirmation: password,
+    )
   end
 
-  def valid_create_params = { session: user_params.slice(:email, :password) }
+  def valid_create_params = { session: { email: user.email, password: } }
 
   def invalid_create_params
     {
@@ -32,16 +33,13 @@ RSpec.describe SessionsController do
   describe "#create" do
     context "when user authenticates" do
       it "sets the user id in the session" do
-        user = User.create!(user_params)
-
         post(session_path, params: valid_create_params)
 
         expect(session[:user_id]).to eq(user.id)
       end
 
       it "redirects to the home page" do
-        User.create!(user_params)
-
+        user
         post(session_path, params: valid_create_params)
 
         expect(response).to redirect_to(root_path)
@@ -50,16 +48,14 @@ RSpec.describe SessionsController do
 
     context "when user does not authenticate" do
       it "flashes an error" do
-        User.create!(user_params)
-
+        user
         post(session_path, params: invalid_create_params)
 
         expect(response.body).to include("Invalid email or password")
       end
 
       it "renders the new template" do
-        User.create!(user_params)
-
+        user
         post(session_path, params: invalid_create_params)
 
         expect(response.body).to include("Log in to")
