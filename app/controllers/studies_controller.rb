@@ -40,7 +40,7 @@ class StudiesController < ApplicationController
         **args,
         reviewed: session[:study_reviewed],
         completed: session[:study_completed],
-        demo: session[:demo].present?,
+        demo: current_user.guest?,
       ),
     )
   end
