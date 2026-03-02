@@ -39,6 +39,7 @@ class Study
     other_cards = deck.cards.distinct(:back).where.not(back: next_card.back)
 
     wrong_answers += other_cards.where(category: next_card.category)
+      .where.not(back: wrong_answers)
       .sample(4 - wrong_answers.length)
       .pluck(:back)
 
