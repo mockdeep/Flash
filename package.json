@@ -16,12 +16,12 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^10.0.1",
-    "@stylistic/eslint-plugin": "^5.7.1",
+    "@stylistic/eslint-plugin": "^5.9.0",
     "@types/hotwired__turbo": "^8.0.6",
     "@types/node": "^25.2.3",
     "@types/rails__actioncable": "^8.0.3",
-    "@typescript-eslint/eslint-plugin": "^8.54.0",
-    "@typescript-eslint/parser": "^8.54.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
     "@vitest/coverage-v8": "^3.1.4",
     "esbuild": "^0.27.3",
     "eslint": "^9.39.3",
@@ -38,7 +38,7 @@
     "stylelint-config-standard": "^40.0.0",
     "stylelint-selector-bem-pattern": "^4.0.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.54.0",
+    "typescript-eslint": "^8.56.0",
     "vitest": "^3.1.4"
   },
   "scripts": {
