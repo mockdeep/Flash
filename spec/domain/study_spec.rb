@@ -75,6 +75,22 @@ RSpec.describe Study do
       expect(study.possible_answers).to include("London")
     end
 
+    context "when wrong answer matches a same-category card" do
+      let(:deck) { create(:deck) }
+      let(:attrs) { { deck:, category: "Geo" } }
+
+      before do
+        create(:card, :active, wrong_answers: ["B"], **attrs)
+        create(:card, back: "B", **attrs)
+      end
+
+      it "does not duplicate the answer" do
+        answers = described_class.new(deck:).possible_answers
+
+        expect(answers.tally.values).to all(eq(1))
+      end
+    end
+
     it "includes cards from other categories when needed" do
       deck = create(:deck)
       create(:card, :active, deck:, back: "Paris", category: "Geography")
