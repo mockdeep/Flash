@@ -36,6 +36,13 @@ RSpec.describe StudiesController do
       expect(rendered).to have_content("reviewed")
     end
 
+    it "does not show the demo banner" do
+      create(:card, deck:)
+      get(deck_study_path(deck))
+
+      expect(rendered).to have_no_css(".demo-banner")
+    end
+
     it "persists session counters across page refreshes" do
       card = create(:card, :active, deck:, back: "Paris")
       submit_answer(card:, answer: "London")
