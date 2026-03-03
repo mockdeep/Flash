@@ -22,6 +22,9 @@ module Views
             csrf_meta_tags
             csp_meta_tag
 
+            link(rel: "icon", href: "/favicon.ico", sizes: "any")
+            link(rel: "icon", href: "/icon.svg", type: "image/svg+xml")
+            link(rel: "apple-touch-icon", href: "/apple-touch-icon.png")
             link(rel: "manifest", href: pwa_manifest_path)
             stylesheet_link_tag("application", media: "all")
             javascript_include_tag("application")
