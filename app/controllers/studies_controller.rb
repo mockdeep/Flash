@@ -22,10 +22,14 @@ class StudiesController < ApplicationController
 
   def reset_counters
     reset_daily_counters
-    return unless params[:reset_session]
+    return unless params[:reset_session] || milestone_reached?
 
     session[:study_reviewed] = 0
     session[:study_completed] = 0
+  end
+
+  def milestone_reached?
+    (session[:study_reviewed] || 0) >= 100
   end
 
   def increment_counters(result)
