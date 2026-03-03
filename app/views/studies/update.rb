@@ -111,7 +111,7 @@ module Views
           class: "next-card-button",
         ) do
           span { "Next Card" }
-          span(class: "hotkey-hint") { "Press Space" }
+          span(class: "hotkey-hint") { "[space]" }
         end
       end
 

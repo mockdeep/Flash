@@ -529,6 +529,7 @@ body {
   transform: translateX(-50%);
   z-index: 50;
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   padding: var(--spacing-md) var(--spacing-2xl);
   transition: all var(--transition);
@@ -545,7 +546,7 @@ body {
   font-family: var(--font-body);
   text-decoration: none;
   cursor: pointer;
-  gap: var(--spacing-md);
+  gap: 2px;
   animation: next-card-appear var(--transition-slow) ease-out;
 }
 
@@ -579,15 +580,11 @@ body {
 }
 
 .hotkey-hint {
-  padding: var(--spacing-xs) var(--spacing-md);
-  border: 2px solid var(--color-border-medium);
-  background: var(--color-accent);
-  color: var(--color-foreground);
-  font-size: 13px;
-  font-weight: 700;
+  color: var(--color-border-dark);
+  font-size: 11px;
+  font-weight: 400;
   font-family: var(--font-mono);
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Typography - Headings and Links */
@@ -771,6 +768,10 @@ body {
   .next-card-button {
     padding: var(--spacing-sm) var(--spacing-lg);
     font-size: 18px;
+  }
+
+  .hotkey-hint {
+    display: none;
   }
 }
 
