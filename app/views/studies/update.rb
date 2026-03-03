@@ -81,6 +81,7 @@ module Views
                 "Done for Now",
                 root_path,
                 class: "session-milestone-secondary",
+                data: { turbo_frame: "_top" },
               )
             end
           end

@@ -85,6 +85,22 @@ RSpec.describe StudiesController do
       end
     end
 
+    context "when returning after reaching milestone" do
+      before do
+        card = create(:card, :active, deck:, back: "Paris")
+        100.times { submit_answer(card:, answer: "London") }
+        get(deck_study_path(deck))
+      end
+
+      it "resets reviewed counter" do
+        expect(rendered).to have_content("0 / 100 reviewed")
+      end
+
+      it "resets completed counter" do
+        expect(rendered).to have_content("0 / 25 completed")
+      end
+    end
+
     context "when completed reaches 25" do
       before do
         cards =
