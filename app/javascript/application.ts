@@ -5,3 +5,6 @@ import "@rails/activestorage";
 import "./controllers/index";
 
 Turbo.session.drive = false;
+
+// eslint-disable-next-line no-void
+void navigator.serviceWorker.register("/service-worker.js");
