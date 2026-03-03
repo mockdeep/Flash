@@ -22,6 +22,7 @@ module Views
             csrf_meta_tags
             csp_meta_tag
 
+            link(rel: "manifest", href: pwa_manifest_path)
             stylesheet_link_tag("application", media: "all")
             javascript_include_tag("application")
           end

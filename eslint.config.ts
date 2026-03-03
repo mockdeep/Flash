@@ -18,6 +18,7 @@ export default defineConfig([
     ignores: [
       ".eslint_todo.ts",
       "app/assets/builds/**",
+      "app/views/pwa/**",
       "coverage/**",
       "public/**",
       "vendor/**",
