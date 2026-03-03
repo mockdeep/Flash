@@ -414,17 +414,19 @@ body {
   content: "";
 }
 
-.answer-button:hover {
-  transform: translate(-2px, -2px);
-  border-color: var(--color-primary);
-  box-shadow:
-    6px 6px 0 -2px var(--color-background),
-    6px 6px 0 0 var(--color-primary-dark),
-    0 4px 16px var(--color-shadow-warm-md);
-}
+@media (hover: hover) {
+  .answer-button:hover {
+    transform: translate(-2px, -2px);
+    border-color: var(--color-primary);
+    box-shadow:
+      6px 6px 0 -2px var(--color-background),
+      6px 6px 0 0 var(--color-primary-dark),
+      0 4px 16px var(--color-shadow-warm-md);
+  }
 
-.answer-button:hover::before {
-  width: 100%;
+  .answer-button:hover::before {
+    width: 100%;
+  }
 }
 
 .answer-button:active {
