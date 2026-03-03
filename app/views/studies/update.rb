@@ -46,6 +46,7 @@ module Views
 
             if reviewed >= 100
               render_milestone
+              span(data: { hotkeys_target: "click", hotkey: " " }, hidden: true)
             else
               render_card_result
             end
