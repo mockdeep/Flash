@@ -32,6 +32,10 @@ class Study
     deck.cards.active.sample
   end
 
+  def complete?
+    next_card.nil?
+  end
+
   def possible_answers
     return [] if next_card.nil?
 

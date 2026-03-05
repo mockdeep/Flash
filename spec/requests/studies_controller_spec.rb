@@ -124,6 +124,13 @@ RSpec.describe StudiesController do
 
       expect(response).to have_http_status(:not_found)
     end
+
+    it "shows deck complete message when all cards are done" do
+      create(:card, :done, deck:)
+      get(deck_study_path(deck))
+
+      expect(rendered).to have_css("h2", text: "Deck Complete!")
+    end
   end
 
   describe "demo mode" do
@@ -261,6 +268,30 @@ RSpec.describe StudiesController do
 
         expect(rendered).to have_css(".answer-correct", text: "Paris")
       end
+    end
+
+    it "prevents updating another user's deck" do
+      other_deck = create(:deck, user: create(:user))
+
+      patch(deck_study_path(other_deck), params: { answer: {} })
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  context "when not authenticated" do
+    before { delete(session_path) }
+
+    it "redirects #show to sign in" do
+      get(deck_study_path(deck))
+
+      expect(response).to redirect_to(new_session_path)
+    end
+
+    it "redirects #update to sign in" do
+      patch(deck_study_path(deck), params: { answer: {} })
+
+      expect(response).to redirect_to(new_session_path)
     end
   end
 end

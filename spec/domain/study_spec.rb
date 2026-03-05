@@ -28,6 +28,44 @@ RSpec.describe Study do
 
       expect(study.next_card).to be_nil
     end
+
+    it "does not activate pending cards when threshold is already met" do
+      deck = create(:deck)
+      create_list(:card, 5, :active, deck:)
+      pending_card = create(:card, :pending, deck:)
+
+      described_class.new(deck:, active_card_threshold: 5)
+
+      expect(pending_card.reload.status).to eq("pending")
+    end
+
+    it "does not return done cards as next card" do
+      deck = create(:deck)
+      create(:card, :done, deck:)
+
+      study = described_class.new(deck:)
+
+      expect(study.next_card).to be_nil
+    end
+  end
+
+  describe "#complete?" do
+    it "returns true when there is no next card" do
+      deck = create(:deck)
+
+      study = described_class.new(deck:)
+
+      expect(study.complete?).to be(true)
+    end
+
+    it "returns false when a next card exists" do
+      deck = create(:deck)
+      create(:card, :active, deck:)
+
+      study = described_class.new(deck:)
+
+      expect(study.complete?).to be(false)
+    end
   end
 
   describe "#possible_answers" do
@@ -89,6 +127,15 @@ RSpec.describe Study do
 
         expect(answers.tally.values).to all(eq(1))
       end
+    end
+
+    it "uses only the first 4 wrong answers from history" do
+      deck = create(:deck)
+      create(:card, :active, deck:, wrong_answers: ["A", "B", "C", "D", "E"])
+
+      study = described_class.new(deck:)
+
+      expect(study.possible_answers).not_to include("E")
     end
 
     it "includes cards from other categories when needed" do

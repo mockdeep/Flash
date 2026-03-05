@@ -18,8 +18,10 @@ Bundler/GemVersion:
 # SupportedStyles: link_or_button, strict
 Capybara/ClickLinkOrButtonStyle:
   Exclude:
+    - 'spec/support/helpers/system_spec_helpers.rb'
     - 'spec/system/account_spec.rb'
     - 'spec/system/sessions_spec.rb'
+
 
 # Offense count: 5
 # This cop supports safe autocorrection (--autocorrect).
@@ -47,8 +49,11 @@ I18n/GetText/DecorateString:
     - 'app/views/subscriptions/show.rb'
     - 'app/views/welcome/index.rb'
     - 'spec/actions/decks/create_spec.rb'
+    - 'app/views/studies/show.rb'
     - 'spec/rails_helper.rb'
     - 'spec/requests/catalog_controller_spec.rb'
+    - 'spec/requests/studies_controller_spec.rb'
+    - 'spec/system/studies_spec.rb'
 
 # Offense count: 28
 I18n/RailsI18n/DecorateString:
@@ -66,8 +71,11 @@ I18n/RailsI18n/DecorateString:
     - 'app/views/subscriptions/show.rb'
     - 'app/views/welcome/index.rb'
     - 'spec/actions/decks/create_spec.rb'
+    - 'app/views/studies/show.rb'
     - 'spec/rails_helper.rb'
     - 'spec/requests/catalog_controller_spec.rb'
+    - 'spec/requests/studies_controller_spec.rb'
+    - 'spec/system/studies_spec.rb'
 
 # Offense count: 57
 # This cop supports safe autocorrection (--autocorrect).
@@ -84,6 +92,7 @@ Layout/LineLength:
     - 'app/views/pages/privacy.rb'
     - 'app/views/pages/terms.rb'
     - 'app/views/sessions/new.rb'
+    - 'app/views/studies/show.rb'
     - 'app/views/subscriptions/show.rb'
     - 'app/views/welcome/index.rb'
 
