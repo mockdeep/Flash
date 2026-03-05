@@ -29,6 +29,18 @@ module Views
           card = study.next_card
 
           turbo_frame_tag("study") do
+            if study.complete?
+              div(class: "accent-box") do
+                div(class: "accent-box__icon") { "🎉" }
+                div(class: "accent-box__content") do
+                  h2(class: "accent-box__heading") { "Deck Complete!" }
+                  p(class: "accent-box__text") { "You've studied all the cards in this deck." }
+                end
+              end
+              link_to("All Decks", decks_path, class: "button button--primary")
+              next
+            end
+
             done_count = deck.cards.done.count
             cards_count = deck.cards.count
 
