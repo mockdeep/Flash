@@ -3,13 +3,12 @@
 module Views
   module Studies
     class Show < Views::Base
-      attr_accessor :deck, :study, :reviewed, :completed, :demo
+      attr_accessor :deck, :study, :completed, :demo
 
-      def initialize(deck:, study:, reviewed:, completed:, demo: false)
+      def initialize(deck:, study:, completed:, demo: false)
         super()
         self.deck = deck
         self.study = study
-        self.reviewed = reviewed
         self.completed = completed
         self.demo = demo
       end
@@ -50,20 +49,10 @@ module Views
                 max: cards_count,
                 class: "progress-deck",
               )
-              completed_classes = "session-progress-bar"
-              if completed == 25
-                completed_classes += " session-progress-bar-complete"
-              end
-              div(class: completed_classes) do
-                progress(value: completed, max: 25, class: "progress-completed")
-                div(class: "progress-label") do
-                  plain("#{completed} / 25 completed")
-                end
-              end
               div(class: "session-progress-bar") do
-                progress(value: reviewed, max: 100, class: "progress-reviewed")
+                progress(value: completed, max: 50, class: "progress-completed")
                 div(class: "progress-label") do
-                  plain("#{reviewed} / 100 reviewed")
+                  plain("#{completed} / 50 completed")
                 end
               end
             end

@@ -213,7 +213,7 @@ body {
 /* Session progress container */
 .session-progress {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: var(--spacing-xs);
   margin-bottom: var(--spacing-xs);
   padding: var(--spacing-xs);
@@ -262,14 +262,6 @@ body {
   background: var(--stripe-success);
 }
 
-/* Reviewed progress bar - gold */
-.content-container .progress-reviewed::-webkit-progress-value {
-  background: var(--stripe-accent);
-}
-
-.content-container .progress-reviewed::-moz-progress-bar {
-  background: var(--stripe-accent);
-}
 
 .card-front {
   position: relative;

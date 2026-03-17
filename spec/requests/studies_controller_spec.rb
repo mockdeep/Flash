@@ -33,7 +33,6 @@ RSpec.describe StudiesController do
       get(deck_study_path(deck))
 
       expect(rendered).to have_content("completed")
-      expect(rendered).to have_content("reviewed")
     end
 
     it "does not show the demo banner" do
@@ -41,14 +40,6 @@ RSpec.describe StudiesController do
       get(deck_study_path(deck))
 
       expect(rendered).to have_no_css(".demo-banner")
-    end
-
-    it "persists session counters across page refreshes" do
-      card = create(:card, :active, deck:, back: "Paris")
-      submit_answer(card:, answer: "London")
-      get(deck_study_path(deck))
-
-      expect(rendered).to have_content("1 / 100 reviewed")
     end
 
     context "when visiting on a new day" do
@@ -60,11 +51,7 @@ RSpec.describe StudiesController do
       end
 
       it "resets completed counter" do
-        expect(rendered).to have_content("0 / 25 completed")
-      end
-
-      it "resets reviewed counter" do
-        expect(rendered).to have_content("0 / 100 reviewed")
+        expect(rendered).to have_content("0 / 50 completed")
       end
     end
 
@@ -76,35 +63,15 @@ RSpec.describe StudiesController do
         get(deck_study_path(deck, reset_session: true))
       end
 
-      it "resets reviewed counter" do
-        expect(rendered).to have_content("0 / 100 reviewed")
-      end
-
       it "resets completed counter" do
-        expect(rendered).to have_content("0 / 25 completed")
+        expect(rendered).to have_content("0 / 50 completed")
       end
     end
 
     context "when returning after reaching milestone" do
       before do
-        card = create(:card, :active, deck:, back: "Paris")
-        100.times { submit_answer(card:, answer: "London") }
-        get(deck_study_path(deck))
-      end
-
-      it "resets reviewed counter" do
-        expect(rendered).to have_content("0 / 100 reviewed")
-      end
-
-      it "resets completed counter" do
-        expect(rendered).to have_content("0 / 25 completed")
-      end
-    end
-
-    context "when completed reaches 25" do
-      before do
         cards =
-          25.times.map do
+          50.times.map do
             create(:card, deck:, back: "Paris", correct_streak: 0)
           end
         create(:card, deck:)
@@ -112,8 +79,8 @@ RSpec.describe StudiesController do
         get(deck_study_path(deck))
       end
 
-      it "adds complete class to completed bar" do
-        expect(rendered).to have_css(".session-progress-bar-complete")
+      it "resets completed counter" do
+        expect(rendered).to have_content("0 / 50 completed")
       end
     end
 
@@ -157,7 +124,22 @@ RSpec.describe StudiesController do
 
     context "when reaching the milestone" do
       before do
-        100.times { submit_demo_answer }
+        guest_deck = Deck.last
+        follow_redirect!
+        guest_deck.cards.first.update!(correct_streak: 0, status: "pending")
+        create_list(:card, 49, deck: guest_deck, back: "A", correct_streak: 0)
+        guest_deck.cards.reload.each do |card|
+          patch(
+            deck_study_path(guest_deck),
+            params: {
+              answer: {
+                card_id: card.id,
+                answer: "A",
+                possible_answers: ["A", "B", "C", "D"],
+              },
+            },
+          )
+        end
       end
 
       it "shows sign up link" do
@@ -171,38 +153,26 @@ RSpec.describe StudiesController do
   end
 
   describe "#update" do
-    it "increments reviewed counter on each answer" do
-      card = create(:card, :active, deck:, back: "Paris")
-      submit_answer(card:, answer: "London")
-      submit_answer(card:, answer: "London")
-
-      expect(rendered).to have_content("2 / 100 reviewed")
-    end
-
     it "increments completed counter when card becomes done" do
       card = create(:card, :active, deck:, back: "Paris", correct_streak: 0)
       submit_answer(card:, answer: "Paris")
 
-      expect(rendered).to have_content("1 / 25 completed")
+      expect(rendered).to have_content("1 / 50 completed")
     end
 
-    it "shows milestone prompt when reviewed reaches 100",
-       :aggregate_failures do
-      card = create(:card, :active, deck:, back: "Paris")
-      100.times { submit_answer(card:, answer: "London") }
-
-      expect(rendered).to have_content("You've reviewed 100 cards")
-      expect(rendered).to have_link("Keep Going")
-      expect(rendered).to have_link("Done for Now")
-    end
-
-    context "when completed reaches 25" do
+    context "when completed reaches 50" do
       before do
         cards =
-          25.times.map do
+          50.times.map do
             create(:card, deck:, back: "Paris", correct_streak: 0)
           end
         cards.each { |card| submit_answer(card:, answer: "Paris") }
+      end
+
+      it "shows milestone prompt", :aggregate_failures do
+        expect(rendered).to have_content("You've completed 50 cards")
+        expect(rendered).to have_link("Keep Going")
+        expect(rendered).to have_link("Done for Now")
       end
 
       it "adds complete class to completed bar" do
