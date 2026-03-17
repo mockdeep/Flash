@@ -11,6 +11,7 @@ class Deck < ApplicationRecord
   validates :name, presence: true, uniqueness: { scope: :user_id }
   validates :visibility, inclusion: { in: VISIBILITIES }
 
+  scope :ordered, -> { order(:name) }
   scope :publicly_visible, -> { where(visibility: "public") }
   scope :demo_visible, -> { where(visibility: "demo") }
 end

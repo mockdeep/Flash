@@ -12,6 +12,15 @@ RSpec.describe Deck do
       .to validate_uniqueness_of(:name).scoped_to(:user_id)
   end
 
+  describe ".ordered" do
+    it "returns decks sorted by name" do
+      zebra = create(:deck, name: "Zebra")
+      alpha = create(:deck, name: "Alpha", user: zebra.user)
+
+      expect(described_class.ordered).to eq([alpha, zebra])
+    end
+  end
+
   describe ".publicly_visible" do
     it "includes public decks" do
       deck = create(:deck, visibility: "public")
