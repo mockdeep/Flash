@@ -3,13 +3,12 @@
 module Views
   module Studies
     class Update < Views::Base
-      attr_accessor :deck, :result, :reviewed, :completed, :demo
+      attr_accessor :deck, :result, :completed, :demo
 
-      def initialize(deck:, result:, reviewed:, completed:, demo: false)
+      def initialize(deck:, result:, completed:, demo: false)
         super()
         self.deck = deck
         self.result = result
-        self.reviewed = reviewed
         self.completed = completed
         self.demo = demo
       end
@@ -27,24 +26,18 @@ module Views
                 class: "progress-deck",
               )
               completed_classes = "session-progress-bar"
-              if completed == 25
+              if completed == 50
                 completed_classes += " session-progress-bar-complete"
               end
               div(class: completed_classes) do
-                progress(value: completed, max: 25, class: "progress-completed")
+                progress(value: completed, max: 50, class: "progress-completed")
                 div(class: "progress-label") do
-                  plain("#{completed} / 25 completed")
-                end
-              end
-              div(class: "session-progress-bar") do
-                progress(value: reviewed, max: 100, class: "progress-reviewed")
-                div(class: "progress-label") do
-                  plain("#{reviewed} / 100 reviewed")
+                  plain("#{completed} / 50 completed")
                 end
               end
             end
 
-            if reviewed >= 100
+            if completed >= 50
               render_milestone
               span(data: { hotkeys_target: "click", hotkey: " " }, hidden: true)
             else
@@ -58,7 +51,7 @@ module Views
 
       def render_milestone
         div(class: "session-milestone") do
-          p { "You've reviewed 100 cards — nice work!" }
+          p { "You've completed 50 cards — nice work!" }
           div(class: "session-milestone-actions") do
             if demo
               link_to(

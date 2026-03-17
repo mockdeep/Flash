@@ -24,17 +24,15 @@ class StudiesController < ApplicationController
     reset_daily_counters
     return unless params[:reset_session] || milestone_reached?
 
-    session[:study_reviewed] = 0
     session[:study_completed] = 0
   end
 
   def milestone_reached?
-    (session[:study_reviewed] || 0) >= 100
+    (session[:study_completed] || 0) >= 50
   end
 
   def increment_counters(result)
     reset_daily_counters
-    session[:study_reviewed] += 1
     session[:study_completed] += 1 if result.card_completed?
   end
 
@@ -42,7 +40,6 @@ class StudiesController < ApplicationController
     render(
       view.new(
         **args,
-        reviewed: session[:study_reviewed],
         completed: session[:study_completed],
         demo: current_user.guest?,
       ),
@@ -53,7 +50,6 @@ class StudiesController < ApplicationController
     return if session[:study_date] == Date.current.to_s
 
     session[:study_date] = Date.current.to_s
-    session[:study_reviewed] = 0
     session[:study_completed] = 0
   end
 
