@@ -64,7 +64,8 @@ export default defineConfig([
       "func-style": ["error", "declaration"],
       "max-len": ["error", 84, {ignoreUrls: true}],
       "no-duplicate-imports": ["error", {allowSeparateTypeImports: true}],
-
+      "no-inline-comments": "off",
+      "no-magic-numbers": "off",
       "no-undefined": "off",
       "one-var": ["error", "never"],
       "perfectionist/sort-objects":
