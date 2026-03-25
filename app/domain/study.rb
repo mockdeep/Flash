@@ -2,7 +2,6 @@
 
 class Study
   ACTIVE_CARD_THRESHOLD = 20
-  CARD_DONE_THRESHOLD = 1
   Result =
     Data.define(
       :correct,
@@ -25,11 +24,7 @@ class Study
   end
 
   def pick_next_card
-    new_cards_count = active_card_threshold - deck.cards.active.count
-    deck.cards.pending.ordered.limit(new_cards_count)
-      .update_all(status: "active")
-
-    deck.cards.active.sample
+    deck.cards.not_done.ordered.limit(active_card_threshold).sample
   end
 
   def complete?
@@ -61,8 +56,7 @@ class Study
     if card.back == answer
       card.correct_count += 1
       card.correct_streak += 1
-      card_completed = card.correct_streak >= CARD_DONE_THRESHOLD
-      card.status = "done" if card_completed
+      card_completed = card.done?
       card.save!
       Result.new(
         correct: true,

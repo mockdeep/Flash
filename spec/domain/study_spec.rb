@@ -2,23 +2,22 @@
 
 RSpec.describe Study do
   describe "#pick_next_card" do
-    it "activates pending cards up to threshold" do
+    it "returns a card when not-done cards exist" do
       deck = create(:deck)
-      create(:card, :pending, deck:)
+      create(:card, deck:)
 
       study = described_class.new(deck:)
 
-      expect(study.next_card.status).to eq("active")
+      expect(study.next_card).to be_a(Card)
     end
 
-    it "limits activation to threshold minus active count" do
+    it "limits cards to threshold" do
       deck = create(:deck)
-      create_list(:card, 3, :active, deck:)
-      create_list(:card, 5, :pending, deck:)
+      create_list(:card, 10, deck:)
 
-      described_class.new(deck:, active_card_threshold: 5)
+      study = described_class.new(deck:, active_card_threshold: 5)
 
-      expect(deck.cards.active.count).to eq(5)
+      expect(deck.cards.not_done.ordered.limit(5)).to include(study.next_card)
     end
 
     it "returns nil when no cards available" do
@@ -29,16 +28,6 @@ RSpec.describe Study do
       expect(study.next_card).to be_nil
     end
 
-    it "does not activate pending cards when threshold is already met" do
-      deck = create(:deck)
-      create_list(:card, 5, :active, deck:)
-      pending_card = create(:card, :pending, deck:)
-
-      described_class.new(deck:, active_card_threshold: 5)
-
-      expect(pending_card.reload.status).to eq("pending")
-    end
-
     it "does not return done cards as next card" do
       deck = create(:deck)
       create(:card, :done, deck:)
@@ -46,6 +35,16 @@ RSpec.describe Study do
       study = described_class.new(deck:)
 
       expect(study.next_card).to be_nil
+    end
+
+    it "does not return cards beyond the threshold" do
+      deck = create(:deck)
+      create_list(:card, 10, deck:)
+
+      study = described_class.new(deck:, active_card_threshold: 5)
+
+      over_threshold = deck.cards.not_done.ordered.offset(5)
+      expect(over_threshold).not_to include(study.next_card)
     end
   end
 
@@ -60,7 +59,7 @@ RSpec.describe Study do
 
     it "returns false when a next card exists" do
       deck = create(:deck)
-      create(:card, :active, deck:)
+      create(:card, deck:)
 
       study = described_class.new(deck:)
 
@@ -78,7 +77,7 @@ RSpec.describe Study do
 
     it "includes the correct answer" do
       deck = create(:deck)
-      create(:card, :active, deck:, back: "Paris")
+      create(:card, deck:, back: "Paris")
 
       study = described_class.new(deck:)
 
@@ -87,7 +86,7 @@ RSpec.describe Study do
 
     it "includes first wrong answer from card history" do
       deck = create(:deck)
-      create(:card, :active, deck:, wrong_answers: ["London", "Berlin"])
+      create(:card, deck:, wrong_answers: ["London", "Berlin"])
 
       study = described_class.new(deck:)
 
@@ -96,7 +95,7 @@ RSpec.describe Study do
 
     it "includes second wrong answer from card history" do
       deck = create(:deck)
-      create(:card, :active, deck:, wrong_answers: ["London", "Berlin"])
+      create(:card, deck:, wrong_answers: ["London", "Berlin"])
 
       study = described_class.new(deck:)
 
@@ -105,7 +104,7 @@ RSpec.describe Study do
 
     it "includes cards from same category" do
       deck = create(:deck)
-      create(:card, :active, deck:, back: "Paris", category: "Geography")
+      create(:card, deck:, back: "Paris", category: "Geography")
       create(:card, deck:, back: "London", category: "Geography")
 
       study = described_class.new(deck:)
@@ -118,7 +117,7 @@ RSpec.describe Study do
       let(:attrs) { { deck:, category: "Geo" } }
 
       before do
-        create(:card, :active, wrong_answers: ["B"], **attrs)
+        create(:card, wrong_answers: ["B"], **attrs)
         create(:card, back: "B", **attrs)
       end
 
@@ -131,7 +130,7 @@ RSpec.describe Study do
 
     it "uses only the first 4 wrong answers from history" do
       deck = create(:deck)
-      create(:card, :active, deck:, wrong_answers: ["A", "B", "C", "D", "E"])
+      create(:card, deck:, wrong_answers: ["A", "B", "C", "D", "E"])
 
       study = described_class.new(deck:)
 
@@ -140,7 +139,7 @@ RSpec.describe Study do
 
     it "includes cards from other categories when needed" do
       deck = create(:deck)
-      create(:card, :active, deck:, back: "Paris", category: "Geography")
+      create(:card, deck:, back: "Paris", category: "Geography")
       create(:card, deck:, back: "Four", category: "Math")
 
       study = described_class.new(deck:)
@@ -153,7 +152,7 @@ RSpec.describe Study do
     context "when answer is correct" do
       it "increments view count" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris", view_count: 0)
+        card = create(:card, deck:, back: "Paris", view_count: 0)
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "Paris")
@@ -163,7 +162,7 @@ RSpec.describe Study do
 
       it "increments correct count" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris", correct_count: 0)
+        card = create(:card, deck:, back: "Paris", correct_count: 0)
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "Paris")
@@ -173,7 +172,7 @@ RSpec.describe Study do
 
       it "increments correct streak" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris", correct_streak: 0)
+        card = create(:card, deck:, back: "Paris", correct_streak: 0)
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "Paris")
@@ -183,27 +182,27 @@ RSpec.describe Study do
 
       it "marks card as done when streak reaches threshold" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris", correct_streak: 0)
+        card = create(:card, deck:, back: "Paris", correct_streak: 0)
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "Paris")
 
-        expect(card.reload.status).to eq("done")
+        expect(card.reload.done?).to be(true)
       end
 
-      it "keeps card active when streak below threshold" do
-        stub_const("Study::CARD_DONE_THRESHOLD", 5)
-        card = create(:card, :active, back: "Paris", correct_streak: 0)
+      it "keeps card not done when streak below threshold" do
+        stub_const("Card::DONE_THRESHOLD", 5)
+        card = create(:card, back: "Paris", correct_streak: 0)
         study = described_class.new(deck: card.deck)
 
         study.answer_card(card_id: card.id, answer: "Paris")
 
-        expect(card.reload.status).to eq("active")
+        expect(card.reload.done?).to be(false)
       end
 
       it "returns card_completed true when streak meets threshold" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris", correct_streak: 0)
+        card = create(:card, deck:, back: "Paris", correct_streak: 0)
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
@@ -212,8 +211,8 @@ RSpec.describe Study do
       end
 
       it "returns card_completed false when streak below threshold" do
-        stub_const("Study::CARD_DONE_THRESHOLD", 5)
-        card = create(:card, :active, back: "Paris", correct_streak: 0)
+        stub_const("Card::DONE_THRESHOLD", 5)
+        card = create(:card, back: "Paris", correct_streak: 0)
         study = described_class.new(deck: card.deck)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
@@ -223,7 +222,7 @@ RSpec.describe Study do
 
       it "returns result with correct true" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris")
+        card = create(:card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
@@ -233,7 +232,7 @@ RSpec.describe Study do
 
       it "returns result with correct answer" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris")
+        card = create(:card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
@@ -243,7 +242,7 @@ RSpec.describe Study do
 
       it "returns result with question" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, front: "Capital?", back: "Paris")
+        card = create(:card, deck:, front: "Capital?", back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
@@ -255,7 +254,7 @@ RSpec.describe Study do
     context "when answer is incorrect" do
       it "increments view count" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris", view_count: 0)
+        card = create(:card, deck:, back: "Paris", view_count: 0)
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "London")
@@ -265,7 +264,7 @@ RSpec.describe Study do
 
       it "resets correct streak" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris", correct_streak: 5)
+        card = create(:card, deck:, back: "Paris", correct_streak: 5)
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "London")
@@ -275,7 +274,7 @@ RSpec.describe Study do
 
       it "adds wrong answer to card" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris")
+        card = create(:card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "London")
@@ -284,7 +283,7 @@ RSpec.describe Study do
       end
 
       it "prepends wrong answer to existing list" do
-        card = create(:card, :active, back: "Paris", wrong_answers: ["Berlin"])
+        card = create(:card, back: "Paris", wrong_answers: ["Berlin"])
         study = described_class.new(deck: card.deck)
 
         study.answer_card(card_id: card.id, answer: "London")
@@ -293,7 +292,7 @@ RSpec.describe Study do
       end
 
       it "removes duplicate wrong answers" do
-        card = create(:card, :active, back: "Paris", wrong_answers: ["London"])
+        card = create(:card, back: "Paris", wrong_answers: ["London"])
         study = described_class.new(deck: card.deck)
 
         study.answer_card(card_id: card.id, answer: "London")
@@ -303,7 +302,7 @@ RSpec.describe Study do
 
       it "returns result with card_completed false" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris")
+        card = create(:card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "London")
@@ -313,7 +312,7 @@ RSpec.describe Study do
 
       it "returns result with correct false" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris")
+        card = create(:card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "London")
@@ -323,7 +322,7 @@ RSpec.describe Study do
 
       it "returns result with correct answer" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, back: "Paris")
+        card = create(:card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "London")
@@ -333,7 +332,7 @@ RSpec.describe Study do
 
       it "returns result with question" do
         deck = create(:deck)
-        card = create(:card, :active, deck:, front: "Capital?", back: "Paris")
+        card = create(:card, deck:, front: "Capital?", back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "London")

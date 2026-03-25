@@ -67,7 +67,6 @@ module Decks
           card = deck.cards.build(front:)
           card.back = data[:back].uniq.join(";")
           card.category = data[:category]
-          card.status = "pending"
           card.attributes.without("id", "created_at", "updated_at")
         end
 

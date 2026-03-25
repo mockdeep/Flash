@@ -44,7 +44,7 @@ RSpec.describe StudiesController do
 
     context "when visiting on a new day" do
       before do
-        card = create(:card, :active, deck:, back: "Paris")
+        card = create(:card, deck:, back: "Paris")
         submit_answer(card:, answer: "London")
         travel_to(1.day.from_now)
         get(deck_study_path(deck))
@@ -57,8 +57,8 @@ RSpec.describe StudiesController do
 
     context "when reset_session param is present" do
       before do
-        card = create(:card, :active, deck:, back: "Paris", correct_streak: 0)
-        create(:card, :active, deck:)
+        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+        create(:card, deck:)
         submit_answer(card:, answer: "Paris")
         get(deck_study_path(deck, reset_session: true))
       end
@@ -126,7 +126,7 @@ RSpec.describe StudiesController do
       before do
         guest_deck = Deck.last
         follow_redirect!
-        guest_deck.cards.first.update!(correct_streak: 0, status: "pending")
+        guest_deck.cards.first.update!(correct_streak: 0)
         create_list(:card, 49, deck: guest_deck, back: "A", correct_streak: 0)
         guest_deck.cards.reload.each do |card|
           patch(
@@ -154,7 +154,7 @@ RSpec.describe StudiesController do
 
   describe "#update" do
     it "increments completed counter when card becomes done" do
-      card = create(:card, :active, deck:, back: "Paris", correct_streak: 0)
+      card = create(:card, deck:, back: "Paris", correct_streak: 0)
       submit_answer(card:, answer: "Paris")
 
       expect(rendered).to have_content("1 / 50 completed")

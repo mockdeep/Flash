@@ -63,15 +63,6 @@ RSpec.describe Catalog::CopyDeck do
       expect(result.record.cards.first.category).to eq("Geo")
     end
 
-    it "sets all copied cards to pending status" do
-      source = build_public_deck
-      create(:card, :active, deck: source, front: "Q1", back: "A1")
-      create(:card, :done, deck: source, front: "Q2", back: "A2")
-      result = described_class.call(user: create(:user), deck: source)
-
-      expect(result.record.cards.pluck(:status).uniq).to eq(["pending"])
-    end
-
     it "zeroes correct_count" do
       source = build_public_deck
       create(:card, deck: source, front: "Q", back: "A", correct_count: 5)

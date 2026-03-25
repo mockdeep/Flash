@@ -7,18 +7,9 @@ FactoryBot.define do
     sequence(:front, 100) { |n| "Card Front #{n}" }
     sequence(:back, 100) { |n| "Card Back #{n}" }
     category { "General" }
-    status { "pending" }
-
-    trait(:active) do
-      status { "active" }
-    end
 
     trait(:done) do
-      status { "done" }
-    end
-
-    trait(:pending) do
-      status { "pending" }
+      correct_streak { Card::DONE_THRESHOLD }
     end
   end
 end
