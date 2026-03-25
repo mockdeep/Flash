@@ -4,7 +4,6 @@ require "rails_helper"
 
 RSpec.describe Card do
   it { is_expected.to belong_to(:deck) }
-  it { is_expected.to validate_inclusion_of(:status).in_array(Card::STATUSES) }
   it { is_expected.to validate_presence_of(:back) }
   it { is_expected.to validate_presence_of(:category) }
   it { is_expected.to validate_presence_of(:correct_count) }
@@ -20,33 +19,23 @@ RSpec.describe Card do
       .to validate_uniqueness_of(:front).scoped_to(:deck_id)
   end
 
-  describe ".active" do
-    it "returns cards with active status" do
-      deck = create(:deck)
-      active_card = create(:card, :active, deck:)
-      create(:card, :pending, deck:)
-
-      expect(deck.cards.active).to eq([active_card])
-    end
-  end
-
   describe ".done" do
-    it "returns cards with done status" do
+    it "returns cards with correct_streak at or above threshold" do
       deck = create(:deck)
       done_card = create(:card, :done, deck:)
-      create(:card, :active, deck:)
+      create(:card, deck:)
 
       expect(deck.cards.done).to eq([done_card])
     end
   end
 
-  describe ".pending" do
-    it "returns cards with pending status" do
+  describe ".not_done" do
+    it "returns cards with correct_streak below threshold" do
       deck = create(:deck)
-      pending_card = create(:card, :pending, deck:)
-      create(:card, :active, deck:)
+      not_done_card = create(:card, deck:)
+      create(:card, :done, deck:)
 
-      expect(deck.cards.pending).to eq([pending_card])
+      expect(deck.cards.not_done).to eq([not_done_card])
     end
   end
 
@@ -57,6 +46,20 @@ RSpec.describe Card do
       card2 = create(:card, deck:)
 
       expect(deck.cards.ordered).to eq([card1, card2])
+    end
+  end
+
+  describe "#done?" do
+    it "returns true when correct_streak meets threshold" do
+      card = build(:card, correct_streak: Card::DONE_THRESHOLD)
+
+      expect(card.done?).to be(true)
+    end
+
+    it "returns false when correct_streak is below threshold" do
+      card = build(:card, correct_streak: 0)
+
+      expect(card.done?).to be(false)
     end
   end
 end

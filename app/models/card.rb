@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
 class Card < ApplicationRecord
+  self.ignored_columns += ["status"]
+
   belongs_to :deck
 
-  STATUSES = ["pending", "active", "done"].freeze
+  DONE_THRESHOLD = 1
 
   validates :deck_id, presence: true
-  validates :status, inclusion: { in: STATUSES }
   validates :front, presence: true, uniqueness: { scope: :deck_id }
   validates :back, presence: true
   validates :category, presence: true
@@ -14,8 +15,9 @@ class Card < ApplicationRecord
   validates :correct_streak, presence: true
   validates :view_count, presence: true
 
-  scope :active, -> { where(status: "active") }
-  scope :done, -> { where(status: "done") }
-  scope :pending, -> { where(status: "pending") }
+  scope :done, -> { where(correct_streak: DONE_THRESHOLD..) }
+  scope :not_done, -> { where(correct_streak: ...DONE_THRESHOLD) }
   scope :ordered, -> { order(:id) }
+
+  def done? = correct_streak >= DONE_THRESHOLD
 end

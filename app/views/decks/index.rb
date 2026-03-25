@@ -75,19 +75,13 @@ module Views
       end
 
       def render_deck_stats(deck)
-        pending_count = deck.cards.pending.count
-        active_count = deck.cards.active.count
+        not_done_count = deck.cards.not_done.count
         done_count = deck.cards.done.count
 
         div(class: "deck-stats") do
           div(class: "stat-item stat-pending") do
-            div(class: "stat-value") { pending_count }
-            div(class: "stat-label") { "Pending" }
-          end
-
-          div(class: "stat-item stat-active") do
-            div(class: "stat-value") { active_count }
-            div(class: "stat-label") { "Active" }
+            div(class: "stat-value") { not_done_count }
+            div(class: "stat-label") { "Remaining" }
           end
 
           div(class: "stat-item stat-done") do

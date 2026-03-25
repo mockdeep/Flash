@@ -40,12 +40,12 @@ RSpec.describe DecksController do
 
     it "shows stats for deck with cards" do
       deck = create(:deck, user: default_user)
-      create(:card, deck:, status: "pending")
+      create(:card, deck:)
       login_as(default_user)
 
       get(decks_path)
 
-      expect(rendered).to have_content("Pending")
+      expect(rendered).to have_content("Remaining")
     end
   end
 

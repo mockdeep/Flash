@@ -20,7 +20,6 @@ module Catalog
           new_card = new_deck.cards.build(front: card.front)
           new_card.back = card.back
           new_card.category = card.category
-          new_card.status = "pending"
           new_card.attributes.without("id", "created_at", "updated_at")
         end
 

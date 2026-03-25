@@ -70,7 +70,7 @@ module Views
                         options)
                       TEXT
                     end
-                    li { "Card status (pending, active, or done)" }
+                    li { "Whether each card has been completed" }
                   end
                 end
               end

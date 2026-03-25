@@ -64,15 +64,6 @@ RSpec.describe Decks::Create do
         expect(result.record.cards.first.category).to eq("Math")
       end
 
-      it "sets card status to pending" do
-        user = create(:user)
-        csv = csv_file("front,back,category\nWhat is 2+2?,4,Math\n")
-
-        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
-
-        expect(result.record.cards.first.status).to eq("pending")
-      end
-
       it "merges duplicate fronts with multiple backs" do
         user = create(:user)
         csv = csv_file("front,back,category\nQ,A1,C\nQ,A2,C\n")
