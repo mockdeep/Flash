@@ -104,6 +104,7 @@
 }
 
 .nav-link-secondary:hover {
+  color: white;
   background: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
   box-shadow: 0 4px 12px rgb(var(--color-primary-channels) / 25%);

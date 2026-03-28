@@ -33,6 +33,7 @@
 }
 
 .button--primary:hover {
+  color: white;
   background: var(--color-primary-dark);
   box-shadow:
     6px 6px 0 -2px var(--color-background),
@@ -83,6 +84,7 @@
 }
 
 .button--secondary:hover {
+  color: white;
   background: var(--color-secondary-dark);
   box-shadow:
     4px 4px 0 -1px var(--color-background),
@@ -111,6 +113,7 @@
 }
 
 .button--danger:hover {
+  color: white;
   background: var(--color-danger);
   border-color: var(--color-danger-dark);
   box-shadow:
