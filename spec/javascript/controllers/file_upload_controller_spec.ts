@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {bootStimulus, getController} from "spec/javascript/support/stimulus";
+import {bootStimulus, getController} from "support/stimulus";
 import FileUploadController from "controllers/file_upload_controller";
 import {assert} from "helpers/assert";
 
