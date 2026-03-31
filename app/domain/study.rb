@@ -4,6 +4,7 @@ class Study
   ACTIVE_CARD_THRESHOLD = 20
   Result =
     Data.define(
+      :card,
       :correct,
       :correct_answer,
       :question,
@@ -59,6 +60,7 @@ class Study
       card_completed = card.done?
       card.save!
       Result.new(
+        card:,
         correct: true,
         correct_answer: card.back,
         question: card.front,
@@ -71,6 +73,7 @@ class Study
       card.correct_streak = 0
       card.save!
       Result.new(
+        card:,
         correct: false,
         correct_answer: card.back,
         question: card.front,

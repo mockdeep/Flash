@@ -6,3 +6,5 @@ rules:
     # https://github.com/simonsmith/stylelint-selector-bem-pattern
     implicitComponents: true
     utilitySelectors: '^\.[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$'
+    ignoreSelectors:
+      - '^body'

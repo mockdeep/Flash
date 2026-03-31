@@ -13,6 +13,7 @@ Rails.application.routes.draw do
   resource :demo, only: [:show, :create], controller: "demo"
   resources :decks, only: [:new, :create, :index, :show] do
     resource :study, only: [:show, :update]
+    resources :cards, only: [:update]
   end
   resource :session, only: [:new, :create, :destroy]
   resource :subscription, only: [:show, :create, :destroy]

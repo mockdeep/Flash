@@ -122,6 +122,13 @@ RSpec.describe StudiesController do
       expect(rendered).to have_no_css(".demo-banner")
     end
 
+    it "does not show the edit card button after answering" do
+      follow_redirect!
+      submit_demo_answer
+
+      expect(rendered).to have_no_button("Edit card")
+    end
+
     context "when reaching the milestone" do
       before do
         guest_deck = Deck.last

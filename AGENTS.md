@@ -191,11 +191,13 @@ end
 
 **CSS Organization:**
 - `application.css` - Base styles, resets, common patterns
+- `catalog.css` - Public deck catalog browsing and preview
+- `decks.css` - Deck listing and form styles
+- `dialog.css` - Modal dialog component styles (`.dialog`, `.dialog__header`, etc.)
+- `edit-card.css` - Edit card trigger button and form layout within the dialog
 - `flash.css` - Study/flashcard specific styles (the core app)
 - `layout.css` - Header, footer, navigation
 - `welcome.css` - Landing page styles
-- `decks.css` - Deck listing and form styles
-- `catalog.css` - Public deck catalog browsing and preview
 
 **Key Principles:**
 - Separate CSS files per major section
@@ -259,6 +261,7 @@ app/
 │   └── base.rb           # Base component with Rails helpers
 ├── controllers/
 │   ├── application_controller.rb
+│   ├── cards_controller.rb
 │   ├── catalog_controller.rb
 │   ├── decks_controller.rb
 │   ├── pages_controller.rb
@@ -284,6 +287,8 @@ app/
 │   ├── pages/
 │   │   ├── privacy.rb
 │   │   └── terms.rb
+│   ├── cards/
+│   │   └── edit_form.rb
 │   ├── studies/
 │   │   ├── show.rb
 │   │   └── update.rb
@@ -293,6 +298,8 @@ app/
     └── stylesheets/
         ├── application.css
         ├── catalog.css
+        ├── dialog.css
+        ├── edit-card.css
         ├── flash.css
         ├── layout.css
         ├── welcome.css
@@ -475,7 +482,6 @@ The app tracks:
 - `correct_count` - Total correct answers
 - `correct_streak` - Current streak
 - `view_count` - Times card has been shown
-- `status` - pending/active/done
 
 Cards progress based on performance and are shown at optimal intervals.
 
