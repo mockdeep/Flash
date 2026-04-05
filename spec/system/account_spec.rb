@@ -8,26 +8,26 @@ RSpec.describe "user account" do
     password_confirmation: password
   )
     visit("/")
-    click_link("Sign Up")
+    click_on("Sign Up")
     fill_in("Username", with: username)
     fill_in("Email", with: email)
     fill_in("Password", with: password)
     fill_in("Confirm Password", with: password_confirmation)
-    click_button("Create Account")
+    click_on("Create Account")
   end
 
   def update_account_with(email:)
-    click_link("Account")
+    click_on("Account")
     fill_in("Email", with: email)
 
-    click_button("Update Account")
+    click_on("Update Account")
   end
 
   def delete_account
-    click_link("Account")
+    click_on("Account")
 
     # accept_confirm("Are you sure? This cannot be undone.") do
-    click_button("Delete Account")
+    click_on("Delete Account")
     # end
   end
 
