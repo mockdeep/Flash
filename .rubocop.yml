@@ -46,6 +46,7 @@ RSpec/MultipleExpectations:
   Exclude:
     - spec/system/**/*.rb
 RSpec/MessageExpectation: { EnforcedStyle: expect }
+RSpec/MultipleMemoizedHelpers: { Max: 0, AllowSubject: false }
 Style/ArrayFirstLast: { Exclude: [Guardfile] }
 Style/MethodCallWithArgsParentheses:
   AllowedMethods:
