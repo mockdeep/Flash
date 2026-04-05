@@ -9,6 +9,7 @@ module Views
       include Phlex::Rails::Helpers::JavascriptIncludeTag
       include Phlex::Rails::Helpers::LinkTo
       include Phlex::Rails::Helpers::ButtonTo
+      include Phlex::Rails::Helpers::LinkToUnlessCurrent
       include Phlex::Rails::Helpers::MailTo
       include Phlex::Rails::Helpers::Flash
 
@@ -58,8 +59,8 @@ module Views
                 ) do
                   link_to("Catalog", catalog_index_path, class: "nav-link")
                   if current_user.guest?
-                    link_to("Sign Up", new_account_path, class: "nav-link nav-link-secondary")
-                    link_to("Log In", new_session_path, class: "nav-link nav-link-primary")
+                    link_to_unless_current("Sign Up", new_account_path, class: "nav-link nav-link-secondary")
+                    link_to_unless_current("Log In", new_session_path, class: "nav-link nav-link-primary")
                   elsif current_user.logged_in?
                     link_to("Decks", decks_path, class: "nav-link")
                     link_to("Account", account_path, class: "nav-link")
@@ -67,8 +68,8 @@ module Views
                     span(class: "nav-user") { current_user.username }
                     button_to("Log Out", session_path, method: :delete, class: "nav-logout")
                   else
-                    link_to("Log In", new_session_path, class: "nav-link nav-link-primary")
-                    link_to("Sign Up", new_account_path, class: "nav-link nav-link-secondary")
+                    link_to_unless_current("Log In", new_session_path, class: "nav-link nav-link-primary")
+                    link_to_unless_current("Sign Up", new_account_path, class: "nav-link nav-link-secondary")
                   end
                 end
               end

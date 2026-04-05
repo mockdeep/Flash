@@ -7,14 +7,14 @@ RSpec.describe "user sessions" do
   def sign_in_with(email:, password:)
     visit("/")
 
-    click_link("Log In")
+    click_on("Log In")
 
     expect(page).to have_text("Welcome Back")
 
     fill_in("Email", with: email)
     fill_in("Password", with: password)
 
-    click_button("Log In")
+    click_on("Log In")
   end
 
   it "allows a user to log into their account" do
@@ -28,7 +28,7 @@ RSpec.describe "user sessions" do
   it "allows a user to log out" do
     sign_in_with(email: user.email, password:)
 
-    click_button("Log Out")
+    click_on("Log Out")
 
     expect(page).to have_link("Log In")
     expect(page).to have_no_text(user.username)
