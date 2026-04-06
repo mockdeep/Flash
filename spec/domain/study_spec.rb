@@ -249,6 +249,16 @@ RSpec.describe Study do
 
         expect(result.question).to eq("Capital?")
       end
+
+      it "returns result with the answered card" do
+        deck = create(:deck)
+        card = create(:card, deck:, back: "Paris")
+        study = described_class.new(deck:)
+
+        result = study.answer_card(card_id: card.id, answer: "Paris")
+
+        expect(result.card).to eq(card)
+      end
     end
 
     context "when answer is incorrect" do
@@ -338,6 +348,16 @@ RSpec.describe Study do
         result = study.answer_card(card_id: card.id, answer: "London")
 
         expect(result.question).to eq("Capital?")
+      end
+
+      it "returns result with the answered card" do
+        deck = create(:deck)
+        card = create(:card, deck:, back: "Paris")
+        study = described_class.new(deck:)
+
+        result = study.answer_card(card_id: card.id, answer: "London")
+
+        expect(result.card).to eq(card)
       end
     end
   end

@@ -1,0 +1,41 @@
+/* Edit Card Dialog */
+.edit-card__front-wrapper {
+  position: relative;
+}
+
+.edit-card__trigger {
+  position: absolute;
+  right: 12px;
+  bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 30px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: color var(--transition);
+}
+
+.edit-card__trigger:hover {
+  color: var(--color-text);
+}
+
+.edit-card__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.edit-card__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding-top: 1.25rem;
+  border-top: 2px solid var(--color-background-subtle);
+}

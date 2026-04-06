@@ -83,28 +83,69 @@ module Views
       end
 
       def render_card_result
-        h2(class: "card-front") { result.question }
+        controller_data = demo ? {} : { controller: "dialog" }
 
-        ol(class: "study-answers-grid") do
-          result.possible_answers.each do |answer|
-            css_class = answer_row_class(answer)
-            li do
-              div(class: "answer-row #{css_class}") do
-                span(class: "answer-number") { answer_badge(answer) }
-                span(class: "answer-text") { answer }
+        div(data: controller_data) do
+          div(class: "edit-card__front-wrapper") do
+            h2(class: "card-front", id: "card-question") { result.question }
+            unless demo
+              button(
+                type: "button",
+                class: "edit-card__trigger",
+                aria: { label: "Edit card" },
+                data: { action: "click->dialog#open" },
+              ) { "✏" }
+            end
+          end
+
+          ol(class: "study-answers-grid") do
+            result.possible_answers.each do |answer|
+              css_class = answer_row_class(answer)
+              li do
+                div(class: "answer-row #{css_class}") do
+                  span(class: "answer-number") { answer_badge(answer) }
+                  answer_id =
+                    ("correct-answer-text" if answer == result.correct_answer)
+                  span(
+                    class: "answer-text",
+                    id: answer_id,
+                  ) { answer }
+                end
               end
             end
           end
-        end
 
-        data = { hotkeys_target: "click", hotkey: " " }
-        link_to(
-          deck_study_path(deck),
-          data:,
-          class: "next-card-button",
-        ) do
-          span { "Next Card" }
-          span(class: "hotkey-hint") { "[space]" }
+          unless demo
+            dialog(
+              class: "dialog",
+              data: {
+                dialog_target: "dialog",
+                action: "click->dialog#closeOnBackdropClick",
+              },
+            ) do
+              div(class: "dialog__header") do
+                h2(class: "dialog__title") { "Edit Card" }
+                button(
+                  type: "button",
+                  class: "dialog__close",
+                  data: { action: "click->dialog#close" },
+                ) { "✕" }
+              end
+              div(class: "dialog__body") do
+                render(Views::Cards::EditForm.new(deck:, card: result.card))
+              end
+            end
+          end
+
+          data = { hotkeys_target: "click", hotkey: " " }
+          link_to(
+            deck_study_path(deck),
+            data:,
+            class: "next-card-button",
+          ) do
+            span { "Next Card" }
+            span(class: "hotkey-hint") { "[space]" }
+          end
         end
       end
 

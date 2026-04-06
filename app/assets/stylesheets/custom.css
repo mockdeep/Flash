@@ -1,5 +1,7 @@
 /* custom CSS goes here */
 @import "./flash.css";
+@import "./dialog.css";
+@import "./edit-card.css";
 @import "./button.css";
 @import "./card.css";
 @import "./price-display.css";
