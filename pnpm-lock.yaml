@@ -489,6 +489,7 @@ packages:
   '@rails/activestorage@8.1.300':
     resolution: {integrity: sha512-AOv3zZrTJjQlzm4L9uzOQtCz6zaM4IqUyux6yzSqmS+PZ8EzwD1F2JAc4LlJNJAv4MSyNYriG+CaCm1QbQTjsA==}
 
+<<<<<<< HEAD
   '@rollup/rollup-android-arm-eabi@4.57.1':
     resolution: {integrity: sha512-A6ehUVSiSaaliTxai040ZpZ2zTevHYbvu/lDoeAteHI8QnaosIzm4qwtezfRg1jOYaUmnzLX1AOD6Z+UJjtifg==}
     cpu: [arm]
@@ -496,6 +497,17 @@ packages:
 
   '@rollup/rollup-android-arm64@4.57.1':
     resolution: {integrity: sha512-dQaAddCY9YgkFHZcFNS/606Exo8vcLHwArFZ7vxXq4rigo2bb494/xKMMwRRQW6ug7Js6yXmBZhSBRuBvCCQ3w==}
+=======
+  '@rails/actioncable@8.1.300':
+    resolution: {integrity: sha512-zOENQsq3NM2jyBY6Z2qtZa3V/R/6OEqA+LGKixQbBMl7kk/J3FXDRcszPe74LsHNgB01jCl/DXu/xA8sHt4I/g==}
+
+  '@rails/activestorage@8.1.300':
+    resolution: {integrity: sha512-AOv3zZrTJjQlzm4L9uzOQtCz6zaM4IqUyux6yzSqmS+PZ8EzwD1F2JAc4LlJNJAv4MSyNYriG+CaCm1QbQTjsA==}
+
+  '@rolldown/binding-android-arm64@1.0.0-rc.9':
+    resolution: {integrity: sha512-lcJL0bN5hpgJfSIz/8PIf02irmyL43P+j1pTCfbD1DbLkmGRuFIA4DD3B3ZOvGqG0XiVvRznbKtN0COQVaKUTg==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+>>>>>>> 153603a (Update all pnpm dependencies (2026-04-06) (#1398))
     cpu: [arm64]
     os: [android]
 
@@ -2764,6 +2776,13 @@ snapshots:
 
   '@rails/actioncable@8.1.300': {}
 
+<<<<<<< HEAD
+=======
+  '@oxc-project/types@0.115.0': {}
+
+  '@rails/actioncable@8.1.300': {}
+
+>>>>>>> 153603a (Update all pnpm dependencies (2026-04-06) (#1398))
   '@rails/activestorage@8.1.300':
     dependencies:
       spark-md5: 3.0.2
@@ -4595,9 +4614,15 @@ snapshots:
 
   stylelint-selector-bem-pattern@4.0.1(stylelint@17.6.0(typescript@6.0.2)):
     dependencies:
+<<<<<<< HEAD
       lodash: 4.17.21
       postcss: 8.5.6
       postcss-bem-linter: 4.0.1(postcss@8.5.6)
+=======
+      lodash: 4.17.23
+      postcss: 8.5.8
+      postcss-bem-linter: 4.0.1(postcss@8.5.8)
+>>>>>>> 153603a (Update all pnpm dependencies (2026-04-06) (#1398))
       stylelint: 17.6.0(typescript@6.0.2)
 
   stylelint@17.6.0(typescript@6.0.2):

@@ -8,8 +8,13 @@
   "version": "0.1.0",
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
+<<<<<<< HEAD
     "@hotwired/turbo": "^8.0.23",
     "@hotwired/turbo-rails": "^8.0.23",
+=======
+    "@hotwired/turbo": "^8.0.21",
+    "@hotwired/turbo-rails": "^8.0.21",
+>>>>>>> 153603a (Update all pnpm dependencies (2026-04-06) (#1398))
     "@rails/actioncable": "^8.1.300",
     "@rails/activestorage": "^8.1.300"
   },
