@@ -47,6 +47,16 @@ RSpec.describe DecksController do
 
       expect(rendered).to have_content("Remaining")
     end
+
+    it "shows filled stars for completed levels" do
+      deck = create(:deck, user: default_user, level: 3)
+      create(:card, deck:)
+      login_as(default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".star--filled", count: 2)
+    end
   end
 
   describe "#show" do

@@ -119,7 +119,7 @@
 /* Deck Stats */
 .deck-stats {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -135,6 +135,20 @@
 .stat-item:hover {
   transform: translateX(2px);
   background: var(--color-background-hover);
+}
+
+.stat-level {
+  border-color: var(--color-accent);
+}
+
+.deck-card-stars {
+  display: flex;
+  gap: 2px;
+  margin-top: 0.25rem;
+}
+
+.deck-card-stars .star {
+  font-size: 1.25rem;
 }
 
 .stat-pending {

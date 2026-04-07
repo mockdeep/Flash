@@ -210,14 +210,17 @@ end
 
 **Core Models:**
 - `User` - Authentication, has many decks. Has `username` (unique, alphanumeric + underscores)
-- `Deck` - Collection of flashcards, belongs to user. Has `visibility` (`"public"` or `"private"`, default `"private"`). Public decks appear in the catalog.
+- `Deck` - Collection of flashcards, belongs to user. Has `visibility` (`"public"` or `"private"`, default `"private"`). Public decks appear in the catalog. Has `level` (integer, default 1 via application, no DB default) representing the current study level.
 - `Card` - Individual flashcard with front/back, belongs to deck
 - `Subscription` - Payment/subscription info, belongs to user
 
-**Card Statuses:**
-- `pending` - Not yet studied
-- `active` - Currently being studied
-- `done` - Mastered (high streak)
+**Card Progress:**
+- A card is "done" at the current level when `correct_streak >= deck.level`
+- Wrong answers reset `correct_streak` to 0
+- When all cards in a deck are done, the deck advances to the next level
+- Level N requires N correct answers in a row per card
+- Streaks are cumulative across levels (no reset on level-up)
+- The `Card` model's `.done(level)` and `.not_done(level)` scopes require a level argument
 
 ### Keyboard Hotkeys
 
@@ -259,6 +262,8 @@ app/
 │       └── client.rb
 ├── components/
 │   └── base.rb           # Base component with Rails helpers
+├── domain/
+│   └── study.rb          # Study engine: card selection, answer processing, level advancement
 ├── controllers/
 │   ├── application_controller.rb
 │   ├── cards_controller.rb
@@ -476,14 +481,14 @@ Decks are created by uploading CSV files with this format:
 - Multiple answers separated by `;`
 - Sample CSV available via environment variable `SAMPLE_CSV_URL`
 
-### Spaced Repetition Algorithm
+### Study Algorithm
 
-The app tracks:
-- `correct_count` - Total correct answers
-- `correct_streak` - Current streak
-- `view_count` - Times card has been shown
-
-Cards progress based on performance and are shown at optimal intervals.
+The study engine (`app/domain/study.rb`) manages card selection and answer processing:
+- Selects from the first 20 not-done cards (at the current deck level), randomized
+- Generates 5 multiple-choice answers (prioritizing previous wrong answers, then same-category cards)
+- On correct answer: increments `correct_count` and `correct_streak`; if the last card at the level is completed, advances `deck.level`
+- On incorrect answer: resets `correct_streak` to 0, records the wrong answer
+- Level advancement happens in `Study#answer_card`, not in the controller
 
 ### Subscription Transparency
 

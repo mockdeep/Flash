@@ -6,6 +6,7 @@ class Deck < ApplicationRecord
   belongs_to :user
   has_many :cards, dependent: :delete_all
 
+  attribute(:level, :integer, default: 1)
   attribute(:visibility, :string, default: "private")
 
   validates :name, presence: true, uniqueness: { scope: :user_id }

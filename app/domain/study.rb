@@ -11,9 +11,11 @@ class Study
       :selected_answer,
       :possible_answers,
       :card_completed,
+      :level_completed,
     ) do
       def correct? = correct
       def card_completed? = card_completed
+      def level_completed? = level_completed
     end
 
   attr_accessor :deck, :next_card, :active_card_threshold
@@ -25,11 +27,7 @@ class Study
   end
 
   def pick_next_card
-    deck.cards.not_done.ordered.limit(active_card_threshold).sample
-  end
-
-  def complete?
-    next_card.nil?
+    deck.cards.not_done(deck.level).ordered.limit(active_card_threshold).sample
   end
 
   def possible_answers
@@ -59,6 +57,8 @@ class Study
       card.correct_streak += 1
       card_completed = card.done?
       card.save!
+      level_completed = card_completed && deck.cards.not_done(deck.level).none?
+      deck.update!(level: deck.level + 1) if level_completed
       Result.new(
         card:,
         correct: true,
@@ -67,6 +67,7 @@ class Study
         selected_answer: answer,
         possible_answers:,
         card_completed:,
+        level_completed:,
       )
     else
       card.wrong_answers.unshift(answer).uniq!
@@ -80,6 +81,7 @@ class Study
         selected_answer: answer,
         possible_answers:,
         card_completed: false,
+        level_completed: false,
       )
     end
   end

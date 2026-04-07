@@ -9,7 +9,14 @@ RSpec.describe "editing a card" do
     card
   end
 
+  def edit_card(field, value)
+    click_on("Edit card")
+    fill_in(field, with: value)
+    click_on("Save")
+  end
+
   def create_card
+    default_deck.update!(level: 2)
     create(
       :card,
       deck: default_deck,
@@ -42,9 +49,8 @@ RSpec.describe "editing a card" do
 
   it "saves changes and updates the card" do
     card = setup_card_study
-    click_on("Edit card")
-    fill_in("Front", with: "UpdatedQuestion")
-    click_on("Save")
+    edit_card("Front", "UpdatedQuestion")
+    expect(page).to have_text("UpdatedQuestion")
 
     expect(card.reload.front).to eq("UpdatedQuestion")
   end
