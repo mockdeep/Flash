@@ -723,6 +723,73 @@ body {
     0 2px 8px var(--color-shadow-warm);
 }
 
+.deck-progress-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.deck-progress-row .progress-deck {
+  flex: 1;
+}
+
+.level-stars {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.star {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.star--filled {
+  color: var(--color-accent);
+}
+
+.star--empty {
+  color: var(--color-border-medium);
+  opacity: 0.35;
+}
+
+.level-label {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.deck-progress-row .level-stars {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.deck-progress-row .star {
+  font-size: 1rem;
+}
+
+.deck-progress-row .level-label {
+  width: auto;
+  margin-left: 4px;
+  font-size: 11px;
+}
+
+.accent-box .level-stars {
+  justify-content: center;
+  margin: 0.5rem 0;
+}
+
+.accent-box .star {
+  font-size: 1.5rem;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .empty-state {

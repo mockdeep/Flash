@@ -9,7 +9,7 @@ FactoryBot.define do
     category { "General" }
 
     trait(:done) do
-      correct_streak { Card::DONE_THRESHOLD }
+      correct_streak { deck.level }
     end
   end
 end

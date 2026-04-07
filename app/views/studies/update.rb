@@ -16,15 +16,23 @@ module Views
       def view_template
         div(class: "content-container") do
           turbo_frame_tag("study") do
-            done_count = deck.cards.done.count
+            if result.level_completed?
+              render_level_complete
+              next
+            end
+
+            done_count = deck.cards.done(deck.level).count
             cards_count = deck.cards.count
 
             div(class: "session-progress") do
-              progress(
-                value: done_count,
-                max: cards_count,
-                class: "progress-deck",
-              )
+              div(class: "deck-progress-row") do
+                render_stars(deck.level - 1)
+                progress(
+                  value: done_count,
+                  max: cards_count,
+                  class: "progress-deck",
+                )
+              end
               completed_classes = "session-progress-bar"
               if completed == 50
                 completed_classes += " session-progress-bar-complete"
@@ -48,6 +56,48 @@ module Views
       end
 
       private
+
+      def render_level_complete
+        completed_level = deck.level - 1
+        div(class: "accent-box") do
+          div(class: "accent-box__icon") { "🎉" }
+          div(class: "accent-box__content") do
+            h2(class: "accent-box__heading") do
+              "Level #{completed_level} Complete!"
+            end
+            render_stars(completed_level)
+            p(class: "accent-box__text") do
+              "You've mastered all the cards at this level."
+            end
+          end
+        end
+        div(class: "session-milestone-actions") do
+          link_to(
+            "Continue to Level #{deck.level}",
+            deck_study_path(deck),
+            class: "session-milestone-primary",
+          )
+          link_to(
+            "All Decks",
+            decks_path,
+            class: "session-milestone-secondary",
+            data: { turbo_frame: "_top" },
+          )
+        end
+      end
+
+      def render_stars(completed_levels)
+        div(class: "level-stars") do
+          3.times do |i|
+            if i < completed_levels
+              span(class: "star star--filled") { "★" }
+            else
+              span(class: "star star--empty") { "★" }
+            end
+          end
+          span(class: "level-label") { "Level #{completed_levels + 1}" }
+        end
+      end
 
       def render_milestone
         div(class: "session-milestone") do

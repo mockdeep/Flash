@@ -28,27 +28,30 @@ module Views
           card = study.next_card
 
           turbo_frame_tag("study") do
-            if study.complete?
+            if deck.cards.none?
               div(class: "accent-box") do
-                div(class: "accent-box__icon") { "🎉" }
+                div(class: "accent-box__icon") { "📚" }
                 div(class: "accent-box__content") do
-                  h2(class: "accent-box__heading") { "Deck Complete!" }
-                  p(class: "accent-box__text") { "You've studied all the cards in this deck." }
+                  h2(class: "accent-box__heading") { "No cards to study" }
+                  p(class: "accent-box__text") { "This deck doesn't have any cards yet." }
                 end
               end
               link_to("All Decks", decks_path, class: "button button--primary")
               next
             end
 
-            done_count = deck.cards.done.count
+            done_count = deck.cards.done(deck.level).count
             cards_count = deck.cards.count
 
             div(class: "session-progress") do
-              progress(
-                value: done_count,
-                max: cards_count,
-                class: "progress-deck",
-              )
+              div(class: "deck-progress-row") do
+                render_stars(deck.level - 1)
+                progress(
+                  value: done_count,
+                  max: cards_count,
+                  class: "progress-deck",
+                )
+              end
               div(class: "session-progress-bar") do
                 progress(value: completed, max: 50, class: "progress-completed")
                 div(class: "progress-label") do
@@ -91,6 +94,21 @@ module Views
             # Claim the space hotkey to prevent scrolling down
             span(data: { hotkeys_target: "click", hotkey: " " }, hidden: true)
           end
+        end
+      end
+
+      private
+
+      def render_stars(completed_levels)
+        div(class: "level-stars") do
+          3.times do |i|
+            if i < completed_levels
+              span(class: "star star--filled") { "★" }
+            else
+              span(class: "star star--empty") { "★" }
+            end
+          end
+          span(class: "level-label") { "Level #{completed_levels + 1}" }
         end
       end
     end

@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 RSpec.describe Study do
+  def answer_card(deck:, card:, answer: card.back)
+    described_class.new(deck:).answer_card(card_id: card.id, answer:)
+  end
+
   describe "#pick_next_card" do
     it "returns a card when not-done cards exist" do
       deck = create(:deck)
@@ -17,7 +21,8 @@ RSpec.describe Study do
 
       study = described_class.new(deck:, active_card_threshold: 5)
 
-      expect(deck.cards.not_done.ordered.limit(5)).to include(study.next_card)
+      cards = deck.cards.not_done(deck.level).ordered.limit(5)
+      expect(cards).to include(study.next_card)
     end
 
     it "returns nil when no cards available" do
@@ -43,27 +48,8 @@ RSpec.describe Study do
 
       study = described_class.new(deck:, active_card_threshold: 5)
 
-      over_threshold = deck.cards.not_done.ordered.offset(5)
+      over_threshold = deck.cards.not_done(deck.level).ordered.offset(5)
       expect(over_threshold).not_to include(study.next_card)
-    end
-  end
-
-  describe "#complete?" do
-    it "returns true when there is no next card" do
-      deck = create(:deck)
-
-      study = described_class.new(deck:)
-
-      expect(study.complete?).to be(true)
-    end
-
-    it "returns false when a next card exists" do
-      deck = create(:deck)
-      create(:card, deck:)
-
-      study = described_class.new(deck:)
-
-      expect(study.complete?).to be(false)
     end
   end
 
@@ -180,28 +166,27 @@ RSpec.describe Study do
         expect(card.reload.correct_streak).to eq(1)
       end
 
-      it "marks card as done when streak reaches threshold" do
-        deck = create(:deck)
-        card = create(:card, deck:, back: "Paris", correct_streak: 0)
-        study = described_class.new(deck:)
-
-        study.answer_card(card_id: card.id, answer: "Paris")
+      it "marks card as done when streak reaches deck level" do
+        deck = create(:deck, level: 1)
+        card = create(:card, deck:, back: "Paris")
+        create(:card, deck:)
+        answer_card(deck:, card:)
 
         expect(card.reload.done?).to be(true)
       end
 
-      it "keeps card not done when streak below threshold" do
-        stub_const("Card::DONE_THRESHOLD", 5)
-        card = create(:card, back: "Paris", correct_streak: 0)
-        study = described_class.new(deck: card.deck)
+      it "keeps card not done when streak below deck level" do
+        deck = create(:deck, level: 5)
+        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+        study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "Paris")
 
         expect(card.reload.done?).to be(false)
       end
 
-      it "returns card_completed true when streak meets threshold" do
-        deck = create(:deck)
+      it "returns card_completed true when streak meets deck level" do
+        deck = create(:deck, level: 1)
         card = create(:card, deck:, back: "Paris", correct_streak: 0)
         study = described_class.new(deck:)
 
@@ -210,14 +195,51 @@ RSpec.describe Study do
         expect(result.card_completed?).to be(true)
       end
 
-      it "returns card_completed false when streak below threshold" do
-        stub_const("Card::DONE_THRESHOLD", 5)
-        card = create(:card, back: "Paris", correct_streak: 0)
-        study = described_class.new(deck: card.deck)
+      it "returns card_completed false when streak below deck level" do
+        deck = create(:deck, level: 5)
+        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+        study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
 
         expect(result.card_completed?).to be(false)
+      end
+
+      it "returns level_completed true when last card is completed" do
+        deck = create(:deck, level: 1)
+        card = create(:card, deck:, back: "Paris")
+        study = described_class.new(deck:)
+
+        result = study.answer_card(card_id: card.id, answer: "Paris")
+
+        expect(result.level_completed?).to be(true)
+      end
+
+      it "advances deck level when last card is completed" do
+        deck = create(:deck, level: 1)
+        card = create(:card, deck:, back: "Paris")
+        answer_card(deck:, card:)
+
+        expect(deck.reload.level).to eq(2)
+      end
+
+      it "returns level_completed false when other cards remain" do
+        deck = create(:deck, level: 1)
+        card = create(:card, deck:, back: "Paris")
+        create(:card, deck:)
+
+        result = answer_card(deck:, card:)
+
+        expect(result.level_completed?).to be(false)
+      end
+
+      it "does not advance deck level when other cards remain" do
+        deck = create(:deck, level: 1)
+        card = create(:card, deck:, back: "Paris")
+        create(:card, deck:)
+        answer_card(deck:, card:)
+
+        expect(deck.reload.level).to eq(1)
       end
 
       it "returns result with correct true" do

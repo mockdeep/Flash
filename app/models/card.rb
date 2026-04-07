@@ -5,8 +5,6 @@ class Card < ApplicationRecord
 
   belongs_to :deck
 
-  DONE_THRESHOLD = 1
-
   validates :deck_id, presence: true
   validates :front, presence: true, uniqueness: { scope: :deck_id }
   validates :back, presence: true
@@ -15,9 +13,9 @@ class Card < ApplicationRecord
   validates :correct_streak, presence: true
   validates :view_count, presence: true
 
-  scope :done, -> { where(correct_streak: DONE_THRESHOLD..) }
-  scope :not_done, -> { where(correct_streak: ...DONE_THRESHOLD) }
+  scope :done, ->(level) { where(correct_streak: level..) }
+  scope :not_done, ->(level) { where(correct_streak: ...level) }
   scope :ordered, -> { order(:id) }
 
-  def done? = correct_streak >= DONE_THRESHOLD
+  def done? = correct_streak >= deck.level
 end

@@ -35,6 +35,14 @@ RSpec.describe StudiesController do
       expect(rendered).to have_content("completed")
     end
 
+    it "shows filled stars for completed levels" do
+      deck.update!(level: 3)
+      create(:card, deck:)
+      get(deck_study_path(deck))
+
+      expect(rendered).to have_css(".star--filled", count: 2)
+    end
+
     it "does not show the demo banner" do
       create(:card, deck:)
       get(deck_study_path(deck))
@@ -92,11 +100,10 @@ RSpec.describe StudiesController do
       expect(response).to have_http_status(:not_found)
     end
 
-    it "shows deck complete message when all cards are done" do
-      create(:card, :done, deck:)
+    it "shows empty deck message when no cards to study" do
       get(deck_study_path(deck))
 
-      expect(rendered).to have_css("h2", text: "Deck Complete!")
+      expect(rendered).to have_css("h2", text: "No cards to study")
     end
   end
 
@@ -135,7 +142,8 @@ RSpec.describe StudiesController do
         follow_redirect!
         guest_deck.cards.first.update!(correct_streak: 0)
         create_list(:card, 49, deck: guest_deck, back: "A", correct_streak: 0)
-        guest_deck.cards.reload.each do |card|
+        create(:card, deck: guest_deck)
+        guest_deck.cards.reload.where(correct_streak: 0).find_each do |card|
           patch(
             deck_study_path(guest_deck),
             params: {
@@ -162,6 +170,7 @@ RSpec.describe StudiesController do
   describe "#update" do
     it "increments completed counter when card becomes done" do
       card = create(:card, deck:, back: "Paris", correct_streak: 0)
+      create(:card, deck:)
       submit_answer(card:, answer: "Paris")
 
       expect(rendered).to have_content("1 / 50 completed")
@@ -173,6 +182,7 @@ RSpec.describe StudiesController do
           50.times.map do
             create(:card, deck:, back: "Paris", correct_streak: 0)
           end
+        create(:card, deck:)
         cards.each { |card| submit_answer(card:, answer: "Paris") }
       end
 
@@ -185,6 +195,20 @@ RSpec.describe StudiesController do
       it "adds complete class to completed bar" do
         expect(rendered).to have_css(".session-progress-bar-complete")
       end
+    end
+
+    it "shows level complete screen when last card is answered" do
+      card = create(:card, deck:, back: "Paris", correct_streak: 0)
+      submit_answer(card:, answer: "Paris")
+
+      expect(rendered).to have_css("h2", text: "Level 1 Complete!")
+    end
+
+    it "advances deck level when last card is completed" do
+      card = create(:card, deck:, back: "Paris", correct_streak: 0)
+
+      expect { submit_answer(card:, answer: "Paris") }
+        .to change_record(deck, :level).from(1).to(2)
     end
 
     context "when answer is correct" do
@@ -204,6 +228,7 @@ RSpec.describe StudiesController do
 
       it "highlights the correct answer" do
         card = create(:card, deck:, back: "Paris")
+        create(:card, deck:)
         submit_answer(card:, answer: "Paris")
 
         expect(rendered).to have_css(".answer-correct", text: "Paris")
@@ -211,6 +236,7 @@ RSpec.describe StudiesController do
 
       it "fades the other answers" do
         card = create(:card, deck:, back: "Paris")
+        create(:card, deck:)
         submit_answer(card:, answer: "Paris")
 
         expect(rendered).to have_css(".answer-faded", text: "London")
