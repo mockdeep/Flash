@@ -10,6 +10,14 @@ function setupDOM(): void {
   `;
 }
 
+function setupSpaceDOM(): void {
+  document.body.innerHTML = `
+    <div data-controller="hotkeys">
+      <button data-hotkeys-target="click" data-hotkey=" ">Space</button>
+    </div>
+  `;
+}
+
 async function setupController(): Promise<void> {
   setupDOM();
 
@@ -69,5 +77,16 @@ describe("handleKeydown", () => {
     controller().handleKeydown(new KeyboardEvent("keydown", {key: "b"}));
 
     expect(clickSpy).not.toHaveBeenCalled();
+  });
+
+  it("clicks the space target when Enter is pressed", async () => {
+    setupSpaceDOM();
+    await bootStimulus("hotkeys", HotkeysController);
+    const clickSpy = vi.spyOn(button(), "click");
+    const ctrl = getController(element(), "hotkeys", HotkeysController);
+
+    ctrl.handleKeydown(new KeyboardEvent("keydown", {key: "Enter"}));
+
+    expect(clickSpy).toHaveBeenCalledWith();
   });
 });

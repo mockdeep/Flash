@@ -2,6 +2,11 @@ import {Controller} from "@hotwired/stimulus";
 
 import {assert} from "helpers/assert";
 
+function resolveKey(key: string): string {
+  if (key === "Enter") { return " "; }
+  return key;
+}
+
 export default class extends Controller {
   static override targets = ["click"];
 
@@ -20,7 +25,8 @@ export default class extends Controller {
   }
 
   handleKeydown(event: KeyboardEvent): void {
-    const clickable = this.indexedClickTargets.get(event.key);
+    const {key} = event;
+    const clickable = this.indexedClickTargets.get(resolveKey(key));
 
     if (clickable) {
       event.preventDefault();
