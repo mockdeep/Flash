@@ -113,6 +113,19 @@ RSpec.describe User do
     end
   end
 
+  describe "#study_goal" do
+    it "defaults to 50" do
+      expect(described_class.new.study_goal).to eq(50)
+    end
+
+    it "validates numericality" do
+      expect(described_class.new)
+        .to validate_numericality_of(:study_goal)
+        .only_integer
+        .is_greater_than_or_equal_to(1)
+    end
+  end
+
   describe "guest users" do
     it "is valid with generated email and username" do
       guest = build(:user, :guest)

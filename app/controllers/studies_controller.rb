@@ -7,7 +7,7 @@ class StudiesController < ApplicationController
   def show
     deck = current_user.decks.find(params[:deck_id])
     study = Study.new(deck:)
-    reset_counters
+    reset_counters(deck.study_goal)
     render_study(Views::Studies::Show, deck:, study:)
   end
 
@@ -20,15 +20,15 @@ class StudiesController < ApplicationController
 
   private
 
-  def reset_counters
+  def reset_counters(study_goal)
     reset_daily_counters
-    return unless params[:reset_session] || milestone_reached?
+    return unless params[:reset_session] || milestone_reached?(study_goal)
 
     session[:study_completed] = 0
   end
 
-  def milestone_reached?
-    (session[:study_completed] || 0) >= 50
+  def milestone_reached?(study_goal)
+    (session[:study_completed] || 0) >= study_goal
   end
 
   def increment_counters(result)
@@ -36,11 +36,13 @@ class StudiesController < ApplicationController
     session[:study_completed] += 1 if result.card_completed?
   end
 
-  def render_study(view, **args)
+  def render_study(view, deck:, **args)
     render(
       view.new(
         **args,
+        deck:,
         completed: session[:study_completed],
+        study_goal: deck.study_goal,
         demo: current_user.guest?,
       ),
     )

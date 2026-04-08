@@ -3,7 +3,7 @@
 module Catalog
   module CopyDeck
     def self.call(user:, deck:)
-      new_deck = Deck.new(name: deck.name, user:)
+      new_deck = Deck.new(name: deck.name, user:, study_goal: user.study_goal)
 
       ActiveRecord::Base.transaction do
         return Result.new(success: false, record: new_deck) unless new_deck.save

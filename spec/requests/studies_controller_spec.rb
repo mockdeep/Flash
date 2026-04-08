@@ -176,10 +176,11 @@ RSpec.describe StudiesController do
       expect(rendered).to have_content("1 / 50 completed")
     end
 
-    context "when completed reaches 50" do
+    context "when completed reaches milestone goal" do
       before do
+        deck.update!(study_goal: 3)
         cards =
-          50.times.map do
+          3.times.map do
             create(:card, deck:, back: "Paris", correct_streak: 0)
           end
         create(:card, deck:)
@@ -187,7 +188,7 @@ RSpec.describe StudiesController do
       end
 
       it "shows milestone prompt", :aggregate_failures do
-        expect(rendered).to have_content("You've completed 50 cards")
+        expect(rendered).to have_content("You've completed 3 cards")
         expect(rendered).to have_link("Keep Going")
         expect(rendered).to have_link("Done for Now")
       end
