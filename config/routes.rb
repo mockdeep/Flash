@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   end
   resource :demo, only: [:show, :create], controller: "demo"
   resources :decks, only: [:new, :create, :index, :show] do
+    resource :milestone, only: [:update]
     resource :study, only: [:show, :update]
     resources :cards, only: [:update]
   end

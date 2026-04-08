@@ -6,6 +6,8 @@ class User < ApplicationRecord
 
   has_secure_password
 
+  attribute(:study_goal, :integer, default: 50)
+
   normalizes :email, with: ->(email) { email.to_s.strip.downcase }
   normalizes :username, with: ->(username) { username.to_s.strip }
 
@@ -15,6 +17,8 @@ class User < ApplicationRecord
             presence: true,
             uniqueness: true,
             format: { with: /\A[a-zA-Z0-9_.]+\z/ }
+  validates :study_goal,
+            numericality: { greater_than_or_equal_to: 1, only_integer: true }
 
   has_many :decks, dependent: :destroy
   has_one :subscription, dependent: :destroy

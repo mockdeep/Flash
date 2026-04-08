@@ -12,6 +12,15 @@ RSpec.describe Deck do
       .to validate_uniqueness_of(:name).scoped_to(:user_id)
   end
 
+  describe "#study_goal" do
+    it "validates numericality" do
+      expect(described_class.new)
+        .to validate_numericality_of(:study_goal)
+        .only_integer
+        .is_greater_than_or_equal_to(1)
+    end
+  end
+
   describe ".ordered" do
     it "returns decks sorted by name" do
       zebra = create(:deck, name: "Zebra")

@@ -3,13 +3,14 @@
 module Views
   module Studies
     class Update < Views::Base
-      attr_accessor :deck, :result, :completed, :demo
+      attr_accessor :deck, :result, :completed, :study_goal, :demo
 
-      def initialize(deck:, result:, completed:, demo: false)
+      def initialize(deck:, result:, completed:, study_goal:, demo: false)
         super()
         self.deck = deck
         self.result = result
         self.completed = completed
+        self.study_goal = study_goal
         self.demo = demo
       end
 
@@ -34,18 +35,29 @@ module Views
                 )
               end
               completed_classes = "session-progress-bar"
-              if completed == 50
+              if completed >= study_goal
                 completed_classes += " session-progress-bar-complete"
               end
-              div(class: completed_classes) do
-                progress(value: completed, max: 50, class: "progress-completed")
+              div(class: completed_classes, data: { controller: "dialog" }) do
+                progress(
+                  value: completed,
+                  max: study_goal,
+                  class: "progress-completed",
+                )
                 div(class: "progress-label") do
-                  plain("#{completed} / 50 completed")
+                  plain("#{completed} / ")
+                  button(
+                    type: "button",
+                    class: "milestone-goal-trigger",
+                    data: { action: "click->dialog#open" },
+                  ) { study_goal.to_s }
+                  plain(" completed")
                 end
+                render(Components::StudyGoalDialog.new(deck:, study_goal:))
               end
             end
 
-            if completed >= 50
+            if completed >= study_goal
               render_milestone
               span(data: { hotkeys_target: "click", hotkey: " " }, hidden: true)
             else
@@ -101,7 +113,7 @@ module Views
 
       def render_milestone
         div(class: "session-milestone") do
-          p { "You've completed 50 cards — nice work!" }
+          p { "You've completed #{study_goal} cards — nice work!" }
           div(class: "session-milestone-actions") do
             if demo
               link_to(

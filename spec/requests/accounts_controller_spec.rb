@@ -127,6 +127,13 @@ RSpec.describe AccountsController do
       end
     end
 
+    it "updates the milestone goal" do
+      login_as(default_user)
+
+      expect { put(account_path, params: { user: { study_goal: 25 } }) }
+        .to change_record(default_user, :study_goal).to(25)
+    end
+
     context "when the user does not successfully update" do
       it "does not update the user" do
         login_as(default_user)

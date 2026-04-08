@@ -253,6 +253,16 @@ body {
   letter-spacing: 0.5px;
 }
 
+.milestone-goal-trigger {
+  background: none;
+  border: none;
+  border-bottom: 1px dashed currentColor;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+}
+
 /* Completed progress bar - green */
 .content-container .progress-completed::-webkit-progress-value {
   background: var(--stripe-success);
@@ -856,6 +866,16 @@ body {
   border: 3px solid var(--color-border);
   border-radius: 0;
   transition: all var(--transition);
+}
+
+.form-input::-webkit-inner-spin-button,
+.form-input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.form-input[type="number"] {
+  appearance: textfield;
 }
 
 .form-input::placeholder {

@@ -4,6 +4,7 @@ FactoryBot.define do
   factory(:deck) do
     sequence(:name, 100) { |n| "Deck #{n}" }
     user { default_user }
+    study_goal { 50 }
 
     trait(:demo) do
       visibility { "demo" }

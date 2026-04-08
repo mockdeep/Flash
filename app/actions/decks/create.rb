@@ -5,7 +5,7 @@ require "csv"
 module Decks
   module Create
     def self.call(user:, name:, cards_csv:)
-      deck = Deck.new(name:)
+      deck = Deck.new(name:, study_goal: user.study_goal)
       csv = CSV.parse(cards_csv.read, headers: true)
 
       error = validate_csv(csv)

@@ -3,13 +3,14 @@
 module Views
   module Studies
     class Show < Views::Base
-      attr_accessor :deck, :study, :completed, :demo
+      attr_accessor :deck, :study, :completed, :study_goal, :demo
 
-      def initialize(deck:, study:, completed:, demo: false)
+      def initialize(deck:, study:, completed:, study_goal:, demo: false)
         super()
         self.deck = deck
         self.study = study
         self.completed = completed
+        self.study_goal = study_goal
         self.demo = demo
       end
 
@@ -43,51 +44,11 @@ module Views
             done_count = deck.cards.done(deck.level).count
             cards_count = deck.cards.count
 
-            div(class: "session-progress") do
-              div(class: "deck-progress-row") do
-                render_stars(deck.level - 1)
-                progress(
-                  value: done_count,
-                  max: cards_count,
-                  class: "progress-deck",
-                )
-              end
-              div(class: "session-progress-bar") do
-                progress(value: completed, max: 50, class: "progress-completed")
-                div(class: "progress-label") do
-                  plain("#{completed} / 50 completed")
-                end
-              end
-            end
+            render_session_progress(done_count, cards_count)
 
             h2(class: "card-front") { card.front }
 
-            answers = study.possible_answers
-            ol(class: "study-answers-grid") do
-              answers.each_with_index do |answer, index|
-                li do
-                  params = {
-                    answer: {
-                      answer:,
-                      card_id: card.id,
-                      possible_answers: answers,
-                    },
-                  }
-                  path = deck_study_path(deck)
-                  data = { hotkeys_target: "click", hotkey: (index + 1).to_s }
-                  button_to(
-                    path,
-                    data:,
-                    params:,
-                    method: :patch,
-                    class: "answer-button",
-                  ) do
-                    span(class: "answer-number") { (index + 1).to_s }
-                    span(class: "answer-text") { answer }
-                  end
-                end
-              end
-            end
+            render_answers(card, study.possible_answers)
 
             p(class: "keyboard-hint") { "Press 1-5 to answer" }
 
@@ -98,6 +59,51 @@ module Views
       end
 
       private
+
+      def render_session_progress(done_count, cards_count)
+        div(class: "session-progress") do
+          div(class: "deck-progress-row") do
+            render_stars(deck.level - 1)
+            progress(value: done_count, max: cards_count, class: "progress-deck")
+          end
+          div(class: "session-progress-bar", data: { controller: "dialog" }) do
+            progress(value: completed, max: study_goal, class: "progress-completed")
+            div(class: "progress-label") do
+              plain("#{completed} / ")
+              button(
+                type: "button",
+                class: "milestone-goal-trigger",
+                data: { action: "click->dialog#open" },
+              ) { study_goal.to_s }
+              plain(" completed")
+            end
+            render(Components::StudyGoalDialog.new(deck:, study_goal:))
+          end
+        end
+      end
+
+      def render_answers(card, answers)
+        ol(class: "study-answers-grid") do
+          answers.each_with_index do |answer, index|
+            li do
+              params = {
+                answer: { answer:, card_id: card.id, possible_answers: answers },
+              }
+              data = { hotkeys_target: "click", hotkey: (index + 1).to_s }
+              button_to(
+                deck_study_path(deck),
+                data:,
+                params:,
+                method: :patch,
+                class: "answer-button",
+              ) do
+                span(class: "answer-number") { (index + 1).to_s }
+                span(class: "answer-text") { answer }
+              end
+            end
+          end
+        end
+      end
 
       def render_stars(completed_levels)
         div(class: "level-stars") do
