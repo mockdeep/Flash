@@ -792,6 +792,10 @@ body {
 
 /* Responsive design */
 @media (max-width: 768px) {
+  .keyboard-hint {
+    display: none;
+  }
+
   .empty-state {
     padding: 3rem 2rem;
     margin: 2rem auto;
