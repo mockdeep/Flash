@@ -78,7 +78,9 @@ module Views
             class: button_class(:ghost, :compact),
             data: { action: "click->dialog#close" },
           ) { "Cancel" }
-          form.submit("Save", class: button_class(:primary, :compact))
+          submit_class = button_class(:primary, :compact)
+          submit_data = { hotkeys_target: "click", hotkey: "ctrl+Enter" }
+          form.submit("Save", class: submit_class, data: submit_data)
         end
       end
     end

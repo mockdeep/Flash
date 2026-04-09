@@ -159,3 +159,68 @@ it("allows hotkeys for elements inside an open dialog", async () => {
 
   expect(clickSpy).toHaveBeenCalledWith();
 });
+
+function setHotkey(hotkey: string): void {
+  controller().clickTargetDisconnected(button());
+  button().dataset.hotkey = hotkey;
+  controller().clickTargetConnected(button());
+}
+
+describe("ctrl-modified hotkeys", () => {
+  it("clicks the target on Ctrl+key", async () => {
+    await setupController();
+    setHotkey("ctrl+Enter");
+    const clickSpy = vi.spyOn(button(), "click");
+    const event = new KeyboardEvent("keydown", {ctrlKey: true, key: "Enter"});
+
+    controller().handleKeydown(event);
+
+    expect(clickSpy).toHaveBeenCalledWith();
+  });
+
+  it("clicks the target on Cmd+key (metaKey)", async () => {
+    await setupController();
+    setHotkey("ctrl+Enter");
+    const clickSpy = vi.spyOn(button(), "click");
+    const event = new KeyboardEvent("keydown", {key: "Enter", metaKey: true});
+
+    controller().handleKeydown(event);
+
+    expect(clickSpy).toHaveBeenCalledWith();
+  });
+
+  it("does not click the target without modifier", async () => {
+    await setupController();
+    setHotkey("ctrl+Enter");
+    const clickSpy = vi.spyOn(button(), "click");
+    const event = new KeyboardEvent("keydown", {key: "Enter"});
+
+    controller().handleKeydown(event);
+
+    expect(clickSpy).not.toHaveBeenCalled();
+  });
+});
+
+it("ctrl-modified hotkeys work from form fields", async () => {
+  await setupController();
+  setHotkey("ctrl+Enter");
+  const clickSpy = vi.spyOn(button(), "click");
+  const field = document.createElement("textarea");
+  element().appendChild(field);
+  const event = new KeyboardEvent("keydown", {ctrlKey: true, key: "Enter"});
+  Object.defineProperty(event, "target", {value: field});
+
+  controller().handleKeydown(event);
+
+  expect(clickSpy).toHaveBeenCalledWith();
+});
+
+it("does not fire regular hotkeys when ctrl is held", async () => {
+  await setupController();
+  const clickSpy = vi.spyOn(button(), "click");
+  const event = new KeyboardEvent("keydown", {ctrlKey: true, key: "a"});
+
+  controller().handleKeydown(event);
+
+  expect(clickSpy).not.toHaveBeenCalled();
+});
