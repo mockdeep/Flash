@@ -155,7 +155,11 @@ module Views
                 type: "button",
                 class: "edit-card__trigger",
                 aria: { label: "Edit card" },
-                data: { action: "click->dialog#open" },
+                data: {
+                  action: "click->dialog#open",
+                  hotkeys_target: "click",
+                  hotkey: "e",
+                },
               ) { "✏" }
             end
           end

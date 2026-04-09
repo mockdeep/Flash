@@ -2,9 +2,19 @@ import {Controller} from "@hotwired/stimulus";
 
 import {assert} from "helpers/assert";
 
+const CTRL_PREFIX = "ctrl+";
+
 function resolveKey(key: string): string {
   if (key === "Enter") { return " "; }
   return key;
+}
+
+function resolveEvent(event: KeyboardEvent): string {
+  const isCtrl = event.ctrlKey || event.metaKey;
+
+  if (isCtrl) { return CTRL_PREFIX + event.key; }
+
+  return resolveKey(event.key);
 }
 
 function isFormField(target: EventTarget | null): boolean {
@@ -39,11 +49,11 @@ export default class extends Controller {
   }
 
   handleKeydown(event: KeyboardEvent): void {
-    if (isFormField(event.target)) { return; }
-
-    const clickable = this.indexedClickTargets.get(resolveKey(event.key));
+    const key = resolveEvent(event);
+    const clickable = this.indexedClickTargets.get(key);
 
     if (!clickable) { return; }
+    if (!key.startsWith(CTRL_PREFIX) && isFormField(event.target)) { return; }
     if (isBehindDialog(clickable)) { return; }
 
     event.preventDefault();
