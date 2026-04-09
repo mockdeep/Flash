@@ -51,16 +51,16 @@ module Views
 
       def render_fields(form)
         div(class: "edit-card__fields") do
-          text_area_field(form, :front, "Front")
+          text_area_field(form, :front, "Front", autofocus: true)
           text_area_field(form, :back, "Back")
           text_field(form, :category, "Category")
         end
       end
 
-      def text_area_field(form, attr, label)
+      def text_area_field(form, attr, label, autofocus: false)
         div(class: "form-field") do
           form.label(attr, label, class: "form-label")
-          form.text_area(attr, class: "form-input", rows: 3)
+          form.text_area(attr, class: "form-input", rows: 3, autofocus:)
         end
       end
 
