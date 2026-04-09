@@ -40,6 +40,14 @@ function button(): HTMLButtonElement {
   return assert(document.querySelector<HTMLButtonElement>(selector));
 }
 
+function appendOpenDialog(): HTMLDialogElement {
+  const dialog = document.createElement("dialog");
+  dialog.setAttribute("open", "");
+  document.body.appendChild(dialog);
+
+  return dialog;
+}
+
 describe("clickTargetConnected", () => {
   it("indexes the connected click target by its hotkey", async () => {
     await setupController();
@@ -60,33 +68,94 @@ describe("clickTargetDisconnected", () => {
   });
 });
 
-describe("handleKeydown", () => {
-  it("clicks the target for the pressed key", async () => {
-    await setupController();
-    const clickSpy = vi.spyOn(button(), "click");
+it("clicks the target for the pressed key", async () => {
+  await setupController();
+  const clickSpy = vi.spyOn(button(), "click");
 
-    controller().handleKeydown(new KeyboardEvent("keydown", {key: "a"}));
+  controller().handleKeydown(new KeyboardEvent("keydown", {key: "a"}));
 
-    expect(clickSpy).toHaveBeenCalledWith();
-  });
+  expect(clickSpy).toHaveBeenCalledWith();
+});
 
-  it("does nothing if there is no target for the pressed key", async () => {
-    await setupController();
-    const clickSpy = vi.spyOn(button(), "click");
+it("does nothing if there is no target for the pressed key", async () => {
+  await setupController();
+  const clickSpy = vi.spyOn(button(), "click");
 
-    controller().handleKeydown(new KeyboardEvent("keydown", {key: "b"}));
+  controller().handleKeydown(new KeyboardEvent("keydown", {key: "b"}));
 
-    expect(clickSpy).not.toHaveBeenCalled();
-  });
+  expect(clickSpy).not.toHaveBeenCalled();
+});
 
-  it("clicks the space target when Enter is pressed", async () => {
-    setupSpaceDOM();
-    await bootStimulus("hotkeys", HotkeysController);
-    const clickSpy = vi.spyOn(button(), "click");
-    const ctrl = getController(element(), "hotkeys", HotkeysController);
+it("clicks the space target when Enter is pressed", async () => {
+  setupSpaceDOM();
+  await bootStimulus("hotkeys", HotkeysController);
+  const clickSpy = vi.spyOn(button(), "click");
+  const ctrl = getController(element(), "hotkeys", HotkeysController);
 
-    ctrl.handleKeydown(new KeyboardEvent("keydown", {key: "Enter"}));
+  ctrl.handleKeydown(new KeyboardEvent("keydown", {key: "Enter"}));
 
-    expect(clickSpy).toHaveBeenCalledWith();
-  });
+  expect(clickSpy).toHaveBeenCalledWith();
+});
+
+it("ignores keypresses originating from <input> elements", async () => {
+  await setupController();
+  const clickSpy = vi.spyOn(button(), "click");
+  const field = document.createElement("input");
+  element().appendChild(field);
+  const event = new KeyboardEvent("keydown", {bubbles: true, key: "a"});
+  Object.defineProperty(event, "target", {value: field});
+
+  controller().handleKeydown(event);
+
+  expect(clickSpy).not.toHaveBeenCalled();
+});
+
+it("ignores keypresses originating from <textarea> elements", async () => {
+  await setupController();
+  const clickSpy = vi.spyOn(button(), "click");
+  const field = document.createElement("textarea");
+  element().appendChild(field);
+  const event = new KeyboardEvent("keydown", {bubbles: true, key: "a"});
+  Object.defineProperty(event, "target", {value: field});
+
+  controller().handleKeydown(event);
+
+  expect(clickSpy).not.toHaveBeenCalled();
+});
+
+it("ignores keypresses originating from <select> elements", async () => {
+  await setupController();
+  const clickSpy = vi.spyOn(button(), "click");
+  const field = document.createElement("select");
+  element().appendChild(field);
+  const event = new KeyboardEvent("keydown", {bubbles: true, key: "a"});
+  Object.defineProperty(event, "target", {value: field});
+
+  controller().handleKeydown(event);
+
+  expect(clickSpy).not.toHaveBeenCalled();
+});
+
+it("ignores hotkeys for elements outside an open dialog", async () => {
+  await setupController();
+  const clickSpy = vi.spyOn(button(), "click");
+  appendOpenDialog();
+
+  controller().handleKeydown(new KeyboardEvent("keydown", {key: "a"}));
+
+  expect(clickSpy).not.toHaveBeenCalled();
+});
+
+it("allows hotkeys for elements inside an open dialog", async () => {
+  await setupController();
+  const dialog = appendOpenDialog();
+  const dialogButton = document.createElement("button");
+  Object.assign(dialogButton.dataset, {hotkey: "b", hotkeysTarget: "click"});
+  dialog.appendChild(dialogButton);
+  controller().clickTargetConnected(dialogButton);
+  const clickSpy = vi.spyOn(dialogButton, "click");
+
+  controller().handleKeydown(new KeyboardEvent("keydown", {key: "b"}));
+
+  expect(clickSpy).toHaveBeenCalledWith();
 });

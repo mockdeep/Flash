@@ -7,6 +7,20 @@ function resolveKey(key: string): string {
   return key;
 }
 
+function isFormField(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement
+  );
+}
+
+function isBehindDialog(element: HTMLElement): boolean {
+  const dialog = document.querySelector("dialog[open]");
+
+  return dialog !== null && !dialog.contains(element);
+}
+
 export default class extends Controller {
   static override targets = ["click"];
 
@@ -25,12 +39,14 @@ export default class extends Controller {
   }
 
   handleKeydown(event: KeyboardEvent): void {
-    const {key} = event;
-    const clickable = this.indexedClickTargets.get(resolveKey(key));
+    if (isFormField(event.target)) { return; }
 
-    if (clickable) {
-      event.preventDefault();
-      clickable.click();
-    }
+    const clickable = this.indexedClickTargets.get(resolveKey(event.key));
+
+    if (!clickable) { return; }
+    if (isBehindDialog(clickable)) { return; }
+
+    event.preventDefault();
+    clickable.click();
   }
 }
