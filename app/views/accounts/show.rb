@@ -12,7 +12,10 @@ module Views
 
       def view_template
         div(class: "form-container") do
-          h1 { "My Account" }
+          h1 do
+            plain("My Account")
+            supporter_badge if user.supporter?
+          end
 
           form_with(model: user, url: account_path) do |form|
             error_explanation

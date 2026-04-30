@@ -44,6 +44,23 @@ RSpec.describe CatalogController do
 
       expect(rendered).to have_content("No Public Decks Yet")
     end
+
+    it "shows a supporter badge next to subscriber-owned decks" do
+      deck = public_deck
+      create(:subscription, user: deck.user)
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_css(".supporter-badge")
+    end
+
+    it "does not show a supporter badge for non-subscriber decks" do
+      public_deck
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_no_css(".supporter-badge")
+    end
   end
 
   describe "#show" do
@@ -104,6 +121,23 @@ RSpec.describe CatalogController do
       get(catalog_path(deck))
 
       expect(rendered).to have_content("by #{deck.user.username}")
+    end
+
+    it "shows a supporter badge when the owner is a subscriber" do
+      deck = public_deck
+      create(:subscription, user: deck.user)
+
+      get(catalog_path(deck))
+
+      expect(rendered).to have_css(".supporter-badge")
+    end
+
+    it "does not show a supporter badge when the owner is not a subscriber" do
+      deck = public_deck
+
+      get(catalog_path(deck))
+
+      expect(rendered).to have_no_css(".supporter-badge")
     end
 
     it "limits preview to 5 cards" do

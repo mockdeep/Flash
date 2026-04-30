@@ -80,6 +80,23 @@ RSpec.describe AccountsController do
 
       expect(response.body).to include("My Account")
     end
+
+    it "shows a supporter badge for subscribers" do
+      create(:subscription, user: default_user)
+      login_as(default_user)
+
+      get(account_path)
+
+      expect(rendered).to have_css(".supporter-badge")
+    end
+
+    it "does not show a supporter badge for non-subscribers" do
+      login_as(default_user)
+
+      get(account_path)
+
+      expect(rendered).to have_no_css(".supporter-badge")
+    end
   end
 
   describe "#update" do

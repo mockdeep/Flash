@@ -492,10 +492,10 @@ The study engine (`app/domain/study.rb`) manages card selection and answer proce
 
 ### Subscription Transparency
 
-**Important:** Be transparent that subscriptions currently offer no extra features. The subscription page prominently displays:
+**Important:** Subscribers get a single cosmetic perk — a supporter heart (`.supporter-badge`) rendered next to their username via `supporter_badge` on `Components::Base`, gated by `User#supporter?`. The subscription and pricing pages should still emphasize that the main reason to subscribe is to help cover hosting costs, not the badge itself:
 - "$5/month" pricing
-- Clear notice that there are no extra benefits
-- Messaging that it's for project support and hosting costs
+- Mention the supporter heart as the included perk
+- Frame the bigger "why" as supporting the project and hosting costs
 - Honest, upfront communication builds trust
 
 ### Mobile Responsiveness

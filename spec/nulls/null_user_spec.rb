@@ -25,6 +25,12 @@ RSpec.describe NullUser do
     end
   end
 
+  describe "#supporter?" do
+    it "returns false" do
+      expect(described_class.new.supporter?).to be(false)
+    end
+  end
+
   describe "#destroy!" do
     it "is a no-op" do
       expect(described_class.new.destroy!).to be_nil

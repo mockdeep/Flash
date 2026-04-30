@@ -36,7 +36,10 @@ module Views
         div(class: "catalog-show-meta") do
           span { "#{deck.cards.count} cards" }
           span(class: "catalog-meta-separator") { "|" }
-          span { "by #{deck.user.username}" }
+          span do
+            plain("by #{deck.user.username}")
+            supporter_badge if deck.user.supporter?
+          end
         end
       end
 

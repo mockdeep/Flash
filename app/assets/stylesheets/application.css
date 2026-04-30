@@ -140,3 +140,26 @@ progress::-moz-progress-bar {
   background: var(--stripe-diagonal);
 }
 
+
+.supporter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.5em;
+  width: 1.6em;
+  height: 1.6em;
+  font-size: 0.7em;
+  line-height: 1;
+  color: var(--color-background);
+  background: var(--color-primary);
+  border: 2px solid var(--color-primary-darker);
+  box-shadow: 3px 3px 0 0 var(--color-accent);
+  vertical-align: 0.15em;
+}
+
+.nav-user .supporter-badge {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-left: 0.4rem;
+  font-size: 0.875rem;
+}
