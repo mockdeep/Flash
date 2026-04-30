@@ -40,10 +40,10 @@ module Views
               h3(class: "accent-box__heading") { "Support Flash" }
               p(class: "accent-box__text") do
                 <<~TEXT
-                  There are currently no extra benefits or features included with a
-                  subscription. However, if you'd like to show your support for the
-                  project and help with hosting costs, a subscription is greatly
-                  appreciated!
+                  Subscribers get a supporter heart that appears next to their
+                  username throughout Flash. The bigger reason to subscribe is to
+                  help cover hosting costs and keep the project running, which
+                  is greatly appreciated!
                 TEXT
               end
             end

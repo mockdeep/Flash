@@ -21,5 +21,9 @@ class NullUser
     false
   end
 
+  def supporter?
+    false
+  end
+
   def destroy!; end
 end

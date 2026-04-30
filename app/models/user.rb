@@ -42,4 +42,8 @@ class User < ApplicationRecord
   def guest?
     role == "guest"
   end
+
+  def supporter?
+    subscription&.active? || false
+  end
 end

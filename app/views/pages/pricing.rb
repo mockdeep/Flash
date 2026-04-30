@@ -71,7 +71,7 @@ module Views
               div(class: "plan-description") do
                 p do
                   <<~TEXT
-                    Help keep Flash running.
+                    Help keep Flash running and get a supporter heart on your profile.
                   TEXT
                 end
               end
@@ -82,9 +82,9 @@ module Views
                   h3(class: "accent-box__heading") { "Full transparency" }
                   p(class: "accent-box__text") do
                     <<~TEXT
-                      There are currently no extra benefits or features included with this plan.
-                      Your subscription goes directly toward hosting costs and keeping the service
-                      running for everyone.
+                      Your subscription gets you a supporter heart that appears next
+                      to your username, but the real reason to subscribe is to help
+                      cover hosting costs and keep Flash running for everyone.
                     TEXT
                   end
                 end
@@ -96,12 +96,12 @@ module Views
                   plain(" All Free plan features")
                 end
                 li do
-                  span(class: "feature-icon") { "💛" }
-                  plain(" Help cover hosting costs")
+                  span(class: "feature-icon") { "♥" }
+                  plain(" Supporter heart on your profile")
                 end
                 li do
                   span(class: "feature-icon") { "💛" }
-                  plain(" Feel good about learning")
+                  plain(" Help cover hosting costs")
                 end
               end
 
@@ -121,8 +121,9 @@ module Views
                 h3(class: "faq-question") { "What do I get with a subscription?" }
                 p(class: "faq-answer") do
                   <<~TEXT
-                    Currently, nothing extra beyond what the free plan offers! Flash is
-                    fully functional without a subscription.
+                    A supporter heart that appears next to your username throughout
+                    Flash, including on the public catalog when you share decks. Aside
+                    from that, the free plan already gives you the full app.
                   TEXT
                 end
               end
@@ -133,7 +134,7 @@ module Views
                   <<~TEXT
                     If Flash helps you learn and you want to ensure it stays available for
                     everyone, your subscription covers hosting costs and helps maintain the
-                    service. Think of it as a voluntary "thank you" that keeps the lights on.
+                    service. The supporter heart is a small thank-you for keeping the lights on.
                   TEXT
                 end
               end

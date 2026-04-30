@@ -72,7 +72,8 @@ module Views
       def render_card_meta(deck)
         div(class: "catalog-card-meta") do
           span(class: "catalog-card-owner") do
-            "by #{deck.user.username}"
+            plain("by #{deck.user.username}")
+            supporter_badge if deck.user.supporter?
           end
         end
       end

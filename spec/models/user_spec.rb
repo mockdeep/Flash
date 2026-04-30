@@ -133,4 +133,33 @@ RSpec.describe User do
       expect(guest).to be_valid
     end
   end
+
+  describe "#supporter?" do
+    it "returns false when the user has no subscription" do
+      user = create(:user)
+
+      expect(user.supporter?).to be(false)
+    end
+
+    it "returns true when the user has an active subscription" do
+      user = create(:user)
+      create(:subscription, user:)
+
+      expect(user.supporter?).to be(true)
+    end
+
+    it "returns false when the user's subscription is canceled" do
+      user = create(:user)
+      create(:subscription, :canceled, user:)
+
+      expect(user.supporter?).to be(false)
+    end
+
+    it "returns false when the user's subscription is past_due" do
+      user = create(:user)
+      create(:subscription, :past_due, user:)
+
+      expect(user.supporter?).to be(false)
+    end
+  end
 end

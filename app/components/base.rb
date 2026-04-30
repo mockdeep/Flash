@@ -13,5 +13,13 @@ module Components
     include Phlex::Rails::Helpers::TurboFrameTag
 
     register_value_helper :current_user
+
+    def supporter_badge
+      span(
+        class: "supporter-badge",
+        title: "Supporter",
+        aria: { label: "Supporter" },
+      ) { "♥" }
+    end
   end
 end
