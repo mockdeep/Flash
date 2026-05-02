@@ -9,24 +9,30 @@ module Decks
       csv = CSV.parse(cards_csv.read, headers: true)
 
       error = validate_csv(csv)
-      if error
-        deck.errors.add(:cards_csv, error)
-        return Result.new(success: false, record: deck)
-      end
+      return failure(deck, error) if error
+
+      deck.distractor_pool = distractors_column?(csv) ? "preset" : "category"
 
       ActiveRecord::Base.transaction do
         deck.user = user
-        return Result.new(success: false, record: deck) unless deck.save
+        return failure(deck) unless deck.save
 
-        cards_data = collect_cards_data(csv)
-        build_and_insert_cards(deck, cards_data)
+        build_and_insert_cards(deck, collect_cards_data(csv))
       end
 
       Result.new(success: true, record: deck)
     end
 
+    def self.failure(deck, error = nil)
+      deck.errors.add(:cards_csv, error) if error
+      Result.new(success: false, record: deck)
+    end
+
     def self.validate_csv(csv)
-      validate_csv_headers(csv) || validate_csv_rows(csv)
+      validate_csv_headers(csv) ||
+        validate_csv_rows(csv) ||
+        validate_unique_fronts(csv) ||
+        validate_distractors_present(csv)
     end
 
     def self.validate_csv_headers(csv)
@@ -48,25 +54,56 @@ module Decks
       nil
     end
 
-    def self.collect_cards_data(csv)
-      cards_data = {}
-      csv.each do |row|
-        front = row["front"].squish
-        back = row["back"].squish
-        category = row["category"].to_s.squish
+    def self.validate_unique_fronts(csv)
+      fronts = csv.map { |row| row["front"].squish }
+      duplicates = fronts.tally.select { |_, count| count > 1 }.keys
+      return if duplicates.empty?
 
-        cards_data[front] ||= { back: [], category: }
-        cards_data[front][:back] += back.split(";").map(&:squish)
+      "duplicate 'front' values: #{duplicates.join(", ")}"
+    end
+
+    def self.validate_distractors_present(csv)
+      return unless distractors_column?(csv)
+
+      csv.each_with_index do |row, index|
+        next if parse_distractors(row).any?
+
+        return "row #{index + 1} is missing a 'distractors' value"
       end
-      cards_data
+
+      nil
+    end
+
+    def self.distractors_column?(csv)
+      csv.headers.include?("distractors")
+    end
+
+    def self.parse_distractors(row)
+      row["distractors"].to_s.split(";").map(&:squish).reject(&:empty?)
+    end
+
+    def self.collect_cards_data(csv)
+      with_distractors = distractors_column?(csv)
+
+      csv.map do |row|
+        {
+          front: row["front"].squish,
+          back: row["back"].squish,
+          category: row["category"].to_s.squish,
+          distractors: with_distractors ? parse_distractors(row) : [],
+        }
+      end
     end
 
     def self.build_and_insert_cards(deck, cards_data)
       cards_attributes =
-        cards_data.map do |front, data|
-          card = deck.cards.build(front:)
-          card.back = data[:back].uniq.join(";")
-          card.category = data[:category]
+        cards_data.map do |data|
+          card = deck.cards.build(
+            front: data[:front],
+            back: data[:back],
+            category: data[:category],
+            distractors: data[:distractors],
+          )
           card.attributes.without("id", "created_at", "updated_at")
         end
 

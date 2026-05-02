@@ -132,6 +132,38 @@ RSpec.describe Study do
 
       expect(study.possible_answers).to include("Four")
     end
+
+    context "when deck distractor_pool is 'preset'" do
+      it "uses only the card's own distractors" do
+        deck = create(:deck, distractor_pool: "preset")
+        create(:card, deck:, back: "Paris", distractors: ["London", "Berlin"])
+        create(:card, :done, deck:, back: "Madrid")
+
+        answers = described_class.new(deck:).possible_answers
+
+        expect(answers).to contain_exactly("Paris", "London", "Berlin")
+      end
+
+      it "shows fewer than 4 wrong choices when card has fewer distractors" do
+        deck = create(:deck, distractor_pool: "preset")
+        create(:card, deck:, back: "Paris", distractors: ["London"])
+        create(:card, :done, deck:, back: "Madrid", category: "Geography")
+
+        answers = described_class.new(deck:).possible_answers
+
+        expect(answers).not_to include("Madrid")
+      end
+
+      it "shows only the correct answer when card has no distractors" do
+        deck = create(:deck, distractor_pool: "preset")
+        create(:card, deck:, back: "Paris", distractors: [])
+        create(:card, :done, deck:, back: "Madrid")
+
+        answers = described_class.new(deck:).possible_answers
+
+        expect(answers).to eq(["Paris"])
+      end
+    end
   end
 
   describe "#answer_card" do

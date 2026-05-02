@@ -34,17 +34,20 @@ class Study
     return [] if next_card.nil?
 
     distractors = next_card.distractors.first(4)
-    other_cards = deck.cards.distinct(:back).where.not(back: next_card.back)
 
-    distractors += other_cards.where(category: next_card.category)
-      .where.not(back: distractors)
-      .sample(4 - distractors.length)
-      .pluck(:back)
+    if deck.distractor_pool == "category"
+      other_cards = deck.cards.distinct(:back).where.not(back: next_card.back)
 
-    distractors += other_cards
-      .where.not(back: distractors)
-      .sample(4 - distractors.length)
-      .pluck(:back)
+      distractors += other_cards.where(category: next_card.category)
+        .where.not(back: distractors)
+        .sample(4 - distractors.length)
+        .pluck(:back)
+
+      distractors += other_cards
+        .where.not(back: distractors)
+        .sample(4 - distractors.length)
+        .pluck(:back)
+    end
 
     [*distractors, next_card.back].shuffle
   end

@@ -127,5 +127,30 @@ RSpec.describe Catalog::CopyDeck do
 
       expect(result.record.cards.count).to eq(0)
     end
+
+    it "copies distractor_pool from the source deck" do
+      source = build_public_deck
+      source.update!(distractor_pool: "preset")
+      result = described_class.call(user: create(:user), deck: source)
+
+      expect(result.record.distractor_pool).to eq("preset")
+    end
+
+    it "copies card distractors when source pool is preset" do
+      source = build_public_deck
+      source.update!(distractor_pool: "preset")
+      create(:card, deck: source, front: "Q", back: "A", distractors: ["W"])
+      result = described_class.call(user: create(:user), deck: source)
+
+      expect(result.record.cards.first.distractors).to eq(["W"])
+    end
+
+    it "does not copy card distractors when source pool is category" do
+      source = build_public_deck
+      create(:card, deck: source, front: "Q", back: "A", distractors: ["W"])
+      result = described_class.call(user: create(:user), deck: source)
+
+      expect(result.record.cards.first.distractors).to eq([])
+    end
   end
 end
