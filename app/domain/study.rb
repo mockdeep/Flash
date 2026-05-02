@@ -33,20 +33,20 @@ class Study
   def possible_answers
     return [] if next_card.nil?
 
-    wrong_answers = next_card.wrong_answers.first(4)
+    distractors = next_card.distractors.first(4)
     other_cards = deck.cards.distinct(:back).where.not(back: next_card.back)
 
-    wrong_answers += other_cards.where(category: next_card.category)
-      .where.not(back: wrong_answers)
-      .sample(4 - wrong_answers.length)
+    distractors += other_cards.where(category: next_card.category)
+      .where.not(back: distractors)
+      .sample(4 - distractors.length)
       .pluck(:back)
 
-    wrong_answers += other_cards
-      .where.not(back: wrong_answers)
-      .sample(4 - wrong_answers.length)
+    distractors += other_cards
+      .where.not(back: distractors)
+      .sample(4 - distractors.length)
       .pluck(:back)
 
-    [*wrong_answers, next_card.back].shuffle
+    [*distractors, next_card.back].shuffle
   end
 
   def answer_card(card_id:, answer:, possible_answers: [])
@@ -70,7 +70,7 @@ class Study
         level_completed:,
       )
     else
-      card.wrong_answers.unshift(answer).uniq!
+      card.distractors.unshift(answer).uniq!
       card.correct_streak = 0
       card.save!
       Result.new(

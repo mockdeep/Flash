@@ -22,7 +22,7 @@ RSpec.describe "editing a card" do
       deck: default_deck,
       front: "Original question",
       back: "Correct answer",
-      wrong_answers: ["Wrong 1", "Wrong 2", "Wrong 3", "Wrong 4"],
+      distractors: ["Wrong 1", "Wrong 2", "Wrong 3", "Wrong 4"],
     )
   end
 
