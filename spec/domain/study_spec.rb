@@ -72,7 +72,7 @@ RSpec.describe Study do
 
     it "includes first wrong answer from card history" do
       deck = create(:deck)
-      create(:card, deck:, wrong_answers: ["London", "Berlin"])
+      create(:card, deck:, distractors: ["London", "Berlin"])
 
       study = described_class.new(deck:)
 
@@ -81,7 +81,7 @@ RSpec.describe Study do
 
     it "includes second wrong answer from card history" do
       deck = create(:deck)
-      create(:card, deck:, wrong_answers: ["London", "Berlin"])
+      create(:card, deck:, distractors: ["London", "Berlin"])
 
       study = described_class.new(deck:)
 
@@ -103,7 +103,7 @@ RSpec.describe Study do
       let(:attrs) { { deck:, category: "Geo" } }
 
       before do
-        create(:card, wrong_answers: ["B"], **attrs)
+        create(:card, distractors: ["B"], **attrs)
         create(:card, back: "B", **attrs)
       end
 
@@ -116,7 +116,7 @@ RSpec.describe Study do
 
     it "uses only the first 4 wrong answers from history" do
       deck = create(:deck)
-      create(:card, deck:, wrong_answers: ["A", "B", "C", "D", "E"])
+      create(:card, deck:, distractors: ["A", "B", "C", "D", "E"])
 
       study = described_class.new(deck:)
 
@@ -311,25 +311,25 @@ RSpec.describe Study do
 
         study.answer_card(card_id: card.id, answer: "London")
 
-        expect(card.reload.wrong_answers).to eq(["London"])
+        expect(card.reload.distractors).to eq(["London"])
       end
 
       it "prepends wrong answer to existing list" do
-        card = create(:card, back: "Paris", wrong_answers: ["Berlin"])
+        card = create(:card, back: "Paris", distractors: ["Berlin"])
         study = described_class.new(deck: card.deck)
 
         study.answer_card(card_id: card.id, answer: "London")
 
-        expect(card.reload.wrong_answers).to eq(["London", "Berlin"])
+        expect(card.reload.distractors).to eq(["London", "Berlin"])
       end
 
       it "removes duplicate wrong answers" do
-        card = create(:card, back: "Paris", wrong_answers: ["London"])
+        card = create(:card, back: "Paris", distractors: ["London"])
         study = described_class.new(deck: card.deck)
 
         study.answer_card(card_id: card.id, answer: "London")
 
-        expect(card.reload.wrong_answers).to eq(["London"])
+        expect(card.reload.distractors).to eq(["London"])
       end
 
       it "returns result with card_completed false" do
