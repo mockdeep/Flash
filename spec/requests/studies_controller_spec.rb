@@ -256,7 +256,7 @@ RSpec.describe StudiesController do
         card = create(:card, deck:, back: "Paris")
 
         expect { submit_answer(card:, answer: "London") }
-          .to change_record(card, :wrong_answers).from([]).to(["London"])
+          .to change_record(card, :distractors).from([]).to(["London"])
       end
 
       it "marks the wrong answer" do
