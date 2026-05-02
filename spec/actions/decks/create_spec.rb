@@ -64,25 +64,7 @@ RSpec.describe Decks::Create do
         expect(result.record.cards.first.category).to eq("Math")
       end
 
-      it "merges duplicate fronts with multiple backs" do
-        user = create(:user)
-        csv = csv_file("front,back,category\nQ,A1,C\nQ,A2,C\n")
-
-        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
-
-        expect(result.record.cards.first.back).to eq("A1;A2")
-      end
-
-      it "keeps single card for duplicate fronts" do
-        user = create(:user)
-        csv = csv_file("front,back,category\nQ,A1,C\nQ,A2,C\n")
-
-        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
-
-        expect(result.record.cards.count).to eq(1)
-      end
-
-      it "splits semicolon-separated answers" do
+      it "preserves semicolons in back values" do
         user = create(:user)
         csv = csv_file("front,back,category\nColors?,Red;Blue,Art\n")
 
@@ -91,13 +73,56 @@ RSpec.describe Decks::Create do
         expect(result.record.cards.first.back).to eq("Red;Blue")
       end
 
-      it "removes duplicate answers" do
+      it "defaults distractor_pool to 'category'" do
         user = create(:user)
-        csv = csv_file("front,back,category\nQ,A,C\nQ,A,C\n")
+        csv = csv_file("front,back,category\nQ,A,C\n")
 
         result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
 
-        expect(result.record.cards.first.back).to eq("A")
+        expect(result.record.distractor_pool).to eq("category")
+      end
+    end
+
+    context "when CSV has a distractors column" do
+      it "stores distractors on the card" do
+        user = create(:user)
+        csv = csv_file("front,back,category,distractors\nQ,A,C,W1;W2;W3\n")
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.record.cards.first.distractors).to eq(["W1", "W2", "W3"])
+      end
+
+      it "sets distractor_pool to 'preset'" do
+        user = create(:user)
+        csv = csv_file("front,back,category,distractors\nQ,A,C,W1;W2\n")
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.record.distractor_pool).to eq("preset")
+      end
+
+      it "trims whitespace from distractors" do
+        user = create(:user)
+        csv = csv_file("front,back,category,distractors\nQ,A,C,  W1 ; W2  \n")
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.record.cards.first.distractors).to eq(["W1", "W2"])
+      end
+
+      it "rejects when a row has an empty distractors value" do
+        user = create(:user)
+        body = "Q1,A1,C1,W1;W2\nQ2,A2,C2,\n"
+        csv = csv_file("front,back,category,distractors\n#{body}")
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.success?).to be(false)
+      end
+
+      it "includes error about the row missing distractors" do
+        user = create(:user)
+        csv = csv_file("front,back,category,distractors\nQ,A,C,W\nQ2,A,C,\n")
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+        expect(result.record.errors[:cards_csv])
+          .to include("row 2 is missing a 'distractors' value")
       end
     end
 
@@ -206,6 +231,25 @@ RSpec.describe Decks::Create do
 
         expect { described_class.call(user:, name: "Test", cards_csv:) }
           .not_to change(Deck, :count)
+      end
+
+      it "rejects when there are duplicate front values" do
+        user = create(:user)
+        csv = csv_file("front,back,category\nQ,A1,C\nQ,A2,C\n")
+
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.success?).to be(false)
+      end
+
+      it "includes error listing the duplicate fronts" do
+        user = create(:user)
+        csv = csv_file("front,back,category\nQ,A1,C\nQ,A2,C\n")
+
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.record.errors[:cards_csv])
+          .to include("duplicate 'front' values: Q")
       end
     end
 

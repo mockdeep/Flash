@@ -3,7 +3,7 @@
 module Catalog
   module CopyDeck
     def self.call(user:, deck:)
-      new_deck = Deck.new(name: deck.name, user:, study_goal: user.study_goal)
+      new_deck = build_new_deck(user:, source: deck)
 
       ActiveRecord::Base.transaction do
         return Result.new(success: false, record: new_deck) unless new_deck.save
@@ -14,16 +14,31 @@ module Catalog
       Result.new(success: true, record: new_deck)
     end
 
+    def self.build_new_deck(user:, source:)
+      Deck.new(
+        name: source.name,
+        user:,
+        study_goal: user.study_goal,
+        distractor_pool: source.distractor_pool,
+      )
+    end
+
     def self.build_and_insert_cards(new_deck, source_deck)
+      copy_distractors = source_deck.distractor_pool == "preset"
       cards_attributes =
         source_deck.cards.map do |card|
-          new_card = new_deck.cards.build(front: card.front)
-          new_card.back = card.back
-          new_card.category = card.category
-          new_card.attributes.without("id", "created_at", "updated_at")
+          build_card_attributes(new_deck, card, copy_distractors:)
         end
 
       Card.insert_all(cards_attributes) if cards_attributes.any?
+    end
+
+    def self.build_card_attributes(new_deck, card, copy_distractors:)
+      new_card = new_deck.cards.build(front: card.front)
+      new_card.back = card.back
+      new_card.category = card.category
+      new_card.distractors = card.distractors if copy_distractors
+      new_card.attributes.without("id", "created_at", "updated_at")
     end
 
     class Result

@@ -2,6 +2,7 @@
 
 class Deck < ApplicationRecord
   VISIBILITIES = ["public", "private", "demo"].freeze
+  DISTRACTOR_POOLS = ["category", "preset"].freeze
 
   belongs_to :user
   has_many :cards, dependent: :delete_all
@@ -11,6 +12,7 @@ class Deck < ApplicationRecord
 
   validates :name, presence: true, uniqueness: { scope: :user_id }
   validates :visibility, inclusion: { in: VISIBILITIES }
+  validates :distractor_pool, inclusion: { in: DISTRACTOR_POOLS }
   validates :study_goal,
             numericality: { greater_than_or_equal_to: 1, only_integer: true }
 

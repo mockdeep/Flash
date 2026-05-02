@@ -51,8 +51,9 @@ module Views
                     strong { "CSV Format Requirements" }
                   end
                   ul(class: "csv-requirements") do
-                    li { "Columns: front, back, and category" }
-                    li { "Use ';' to separate multiple back answers" }
+                    li { "Required columns: front, back, and category" }
+                    li { "Optional column: distractors" }
+                    li { "Use ';' to separate multiple back answers or distractors" }
                     li do
                       plain("Need an example? Download a sample ")
                       link_options = { target: "_blank", rel: "noopener", class: "csv-sample-link" }
