@@ -26,7 +26,11 @@ module Views
               Components::SessionProgress.new(deck:, completed:, study_goal:),
             )
 
-            render_card_result
+            if result.correct?
+              render_card_result
+            else
+              render_retry
+            end
           end
         end
       end
@@ -97,18 +101,7 @@ module Views
 
           ol(class: "study-answers-grid") do
             result.possible_answers.each do |answer|
-              css_class = answer_row_class(answer)
-              li do
-                div(class: "answer-row #{css_class}") do
-                  span(class: "answer-number") { answer_badge(answer) }
-                  answer_id =
-                    ("correct-answer-text" if answer == result.correct_answer)
-                  span(
-                    class: "answer-text",
-                    id: answer_id,
-                  ) { answer }
-                end
-              end
+              render_answered_row(answer)
             end
           end
 
@@ -146,23 +139,63 @@ module Views
         end
       end
 
-      def answer_row_class(answer)
-        if answer == result.correct_answer
-          "answer-correct"
-        elsif answer == result.selected_answer
-          "answer-incorrect"
-        else
-          "answer-faded"
+      def render_retry
+        h2(class: "card-front") { result.question }
+
+        ol(class: "study-answers-grid study-answers-grid--retry") do
+          result.possible_answers.each_with_index do |answer, index|
+            li do
+              if result.wrong_answers.include?(answer)
+                render_eliminated_answer(answer)
+              else
+                render_answer_button(answer, index)
+              end
+            end
+          end
+        end
+
+        p(class: "keyboard-hint") { "Press 1-5 to answer" }
+        span(data: { hotkeys_target: "click", hotkey: " " }, hidden: true)
+      end
+
+      def render_answered_row(answer)
+        correct = answer == result.correct_answer
+        css_class = correct ? "answer-correct" : "answer-faded"
+        li do
+          div(class: "answer-row #{css_class}") do
+            span(class: "answer-number") { correct ? "✓" : "" }
+            answer_id = ("correct-answer-text" if correct)
+            span(class: "answer-text", id: answer_id) { answer }
+          end
         end
       end
 
-      def answer_badge(answer)
-        if answer == result.correct_answer
-          "✓"
-        elsif answer == result.selected_answer
-          "✗"
-        else
-          ""
+      def render_eliminated_answer(answer)
+        div(class: "answer-row answer-incorrect") do
+          span(class: "answer-number") { "✗" }
+          span(class: "answer-text") { answer }
+        end
+      end
+
+      def render_answer_button(answer, index)
+        params = {
+          answer: {
+            answer:,
+            card_id: result.card.id,
+            possible_answers: result.possible_answers,
+            wrong_answers: result.wrong_answers,
+          },
+        }
+        data = { hotkeys_target: "click", hotkey: (index + 1).to_s }
+        button_to(
+          deck_study_path(deck),
+          data:,
+          params:,
+          method: :patch,
+          class: "answer-button",
+        ) do
+          span(class: "answer-number") { (index + 1).to_s }
+          span(class: "answer-text") { answer }
         end
       end
     end

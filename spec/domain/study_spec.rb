@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe Study do
-  def answer_card(deck:, card:, answer: card.back)
-    described_class.new(deck:).answer_card(card_id: card.id, answer:)
+  def answer_card(deck:, card:, answer: card.back, wrong_answers: [])
+    described_class.new(deck:)
+      .answer_card(card_id: card.id, answer:, wrong_answers:)
   end
 
   describe "#pick_next_card" do
@@ -315,6 +316,63 @@ RSpec.describe Study do
       end
     end
 
+    context "when answer is correct after prior wrong guesses" do
+      it "does not increment view count" do
+        deck = create(:deck)
+        card = create(:card, deck:, back: "Paris", view_count: 3)
+
+        answer_card(deck:, card:, wrong_answers: ["London"])
+
+        expect(card.reload.view_count).to eq(3)
+      end
+
+      it "does not increment correct count" do
+        deck = create(:deck)
+        card = create(:card, deck:, back: "Paris", correct_count: 0)
+
+        answer_card(deck:, card:, wrong_answers: ["London"])
+
+        expect(card.reload.correct_count).to eq(0)
+      end
+
+      it "does not advance correct streak" do
+        deck = create(:deck)
+        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+
+        answer_card(deck:, card:, wrong_answers: ["London"])
+
+        expect(card.reload.correct_streak).to eq(0)
+      end
+
+      it "does not mark card_completed" do
+        deck = create(:deck, level: 1)
+        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+
+        result = answer_card(deck:, card:, wrong_answers: ["London"])
+
+        expect(result.card_completed?).to be(false)
+      end
+
+      it "returns result with correct true" do
+        deck = create(:deck)
+        card = create(:card, deck:, back: "Paris")
+
+        result = answer_card(deck:, card:, wrong_answers: ["London"])
+
+        expect(result.correct?).to be(true)
+      end
+
+      it "returns result with prior wrong answers" do
+        deck = create(:deck)
+        card = create(:card, deck:, back: "Paris")
+        wrongs = ["London", "Berlin"]
+
+        result = answer_card(deck:, card:, wrong_answers: wrongs)
+
+        expect(result.wrong_answers).to eq(wrongs)
+      end
+    end
+
     context "when answer is incorrect" do
       it "increments view count" do
         deck = create(:deck)
@@ -322,6 +380,14 @@ RSpec.describe Study do
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "London")
+
+        expect(card.reload.view_count).to eq(1)
+      end
+
+      it "does not increment view count on subsequent wrong guesses" do
+        card = create(:card, back: "Paris", view_count: 1)
+
+        answer_card(deck: card.deck, card:, answer: "X", wrong_answers: ["Y"])
 
         expect(card.reload.view_count).to eq(1)
       end
@@ -412,6 +478,16 @@ RSpec.describe Study do
         result = study.answer_card(card_id: card.id, answer: "London")
 
         expect(result.card).to eq(card)
+      end
+
+      it "appends new wrong answer to the result's wrong_answers" do
+        card = create(:card, back: "Paris")
+
+        result = answer_card(
+          deck: card.deck, card:, answer: "Berlin", wrong_answers: ["London"],
+        )
+
+        expect(result.wrong_answers).to eq(["London", "Berlin"])
       end
     end
   end
