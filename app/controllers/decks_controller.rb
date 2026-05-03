@@ -12,7 +12,7 @@ class DecksController < ApplicationController
   end
 
   def new
-    render(Views::Decks::New.new(deck: Deck.new))
+    render(Views::Decks::New.new(deck: TextDeck.new))
   end
 
   def create

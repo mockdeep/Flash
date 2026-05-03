@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_02_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_03_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -21,22 +21,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_000001) do
     t.integer "correct_streak", default: 0, null: false
     t.datetime "created_at", null: false
     t.bigint "deck_id", null: false
+    t.jsonb "distractors", default: [], null: false
     t.string "front", null: false
+    t.string "type", null: false
     t.datetime "updated_at", null: false
     t.integer "view_count", default: 0, null: false
-    t.jsonb "distractors", default: [], null: false
     t.index ["deck_id", "front"], name: "index_cards_on_deck_id_and_front", unique: true
+    t.index ["type"], name: "index_cards_on_type"
   end
 
   create_table "decks", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "distractor_pool", null: false
     t.integer "level", null: false
-    t.integer "study_goal", null: false
     t.string "name", null: false
+    t.integer "study_goal", null: false
+    t.string "type", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.string "visibility", default: "private", null: false
+    t.index ["type"], name: "index_decks_on_type"
     t.index ["user_id", "name"], name: "index_decks_on_user_id_and_name", unique: true
     t.index ["visibility"], name: "index_decks_on_visibility"
   end
@@ -57,9 +61,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_000001) do
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
-    t.integer "study_goal", null: false
     t.string "password_digest", null: false
     t.string "role", null: false
+    t.integer "study_goal", null: false
     t.datetime "updated_at", null: false
     t.string "username", null: false
     t.index ["email"], name: "index_users_on_email", unique: true

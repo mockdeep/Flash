@@ -15,7 +15,7 @@ module Catalog
     end
 
     def self.build_new_deck(user:, source:)
-      Deck.new(
+      source.class.new(
         name: source.name,
         user:,
         study_goal: user.study_goal,
@@ -34,7 +34,7 @@ module Catalog
     end
 
     def self.build_card_attributes(new_deck, card, copy_distractors:)
-      new_card = new_deck.cards.build(front: card.front)
+      new_card = card.class.new(deck: new_deck, front: card.front)
       new_card.back = card.back
       new_card.category = card.category
       new_card.distractors = card.distractors if copy_distractors
