@@ -14,6 +14,7 @@ export default defineConfig({
       {find: /^controllers\//u, replacement: appPath("controllers")},
       {find: /^helpers\//u, replacement: appPath("helpers")},
       {find: /^javascript\//u, replacement: appPath("")},
+      {find: /^music\//u, replacement: appPath("music")},
       {find: /^spec\//u, replacement: `${path.resolve(root, "spec")}/`},
       {
         find: /^support\//u,

@@ -28,6 +28,7 @@ const config: Linter.Config[] = [
   {
     files: [
       "spec/javascript/helpers/assert_spec.ts",
+      "spec/javascript/music/note_utils_spec.ts",
     ],
     rules: {
       "vitest/prefer-describe-function-title": "off",
@@ -37,6 +38,8 @@ const config: Linter.Config[] = [
   {
     files: [
       "app/javascript/controllers/hotkeys_controller.ts",
+      "app/javascript/music/note_utils.ts",
+      "app/javascript/music/pitch_detector.ts",
       "spec/javascript/application_spec.ts",
       "spec/javascript/channels/consumer_spec.ts",
       "spec/javascript/controllers/deck_type_controller_spec.ts",
@@ -45,6 +48,8 @@ const config: Linter.Config[] = [
       "spec/javascript/controllers/hotkeys_controller_spec.ts",
       "spec/javascript/controllers/mobile_nav_controller_spec.ts",
       "spec/javascript/helpers/assert_spec.ts",
+      "spec/javascript/music/pitch_detector_spec.ts",
+      "spec/javascript/music/reference_player_spec.ts",
       "spec/javascript/setup.ts",
       "spec/javascript/support/stimulus.ts",
     ],
