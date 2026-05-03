@@ -21,6 +21,11 @@ class Study
 
   attr_accessor :deck, :next_card, :active_card_threshold
 
+  def self.for(deck:, **)
+    klass = deck.music? ? MusicStudy : self
+    klass.new(deck:, **)
+  end
+
   def initialize(deck:, active_card_threshold: ACTIVE_CARD_THRESHOLD)
     self.active_card_threshold = active_card_threshold
     self.deck = deck

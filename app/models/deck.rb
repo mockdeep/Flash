@@ -19,4 +19,6 @@ class Deck < ApplicationRecord
   scope :ordered, -> { order(:name) }
   scope :publicly_visible, -> { where(visibility: "public") }
   scope :demo_visible, -> { where(visibility: "demo") }
+
+  def music? = false
 end

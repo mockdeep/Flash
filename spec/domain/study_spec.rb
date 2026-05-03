@@ -6,6 +6,29 @@ RSpec.describe Study do
       .answer_card(card_id: card.id, answer:, wrong_answers:)
   end
 
+  describe ".for" do
+    it "returns a Study for a text deck" do
+      deck = create(:deck)
+
+      expect(described_class.for(deck:)).to be_an_instance_of(described_class)
+    end
+
+    it "returns a MusicStudy for a music deck" do
+      deck = create(:music_deck)
+
+      expect(described_class.for(deck:)).to be_an_instance_of(MusicStudy)
+    end
+
+    it "passes through additional options" do
+      deck = create(:deck)
+      create_list(:card, 3, deck:)
+
+      study = described_class.for(deck:, active_card_threshold: 2)
+
+      expect(study.active_card_threshold).to eq(2)
+    end
+  end
+
   describe "#pick_next_card" do
     it "returns a card when not-done cards exist" do
       deck = create(:deck)

@@ -17,9 +17,16 @@ module FactoryCache
     @deck = FactoryBot.create(:deck)
   end
 
+  def music_deck
+    return @music_deck if @music_deck&.persisted?
+
+    @music_deck = FactoryBot.create(:music_deck)
+  end
+
   def reset
     @user = nil
     @deck = nil
+    @music_deck = nil
   end
 end
 
@@ -37,6 +44,10 @@ module FactoryBot
     module Methods
       def default_deck
         FactoryCache.deck
+      end
+
+      def default_music_deck
+        FactoryCache.music_deck
       end
 
       def default_user
