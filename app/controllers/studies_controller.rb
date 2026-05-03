@@ -6,14 +6,14 @@ class StudiesController < ApplicationController
 
   def show
     deck = current_user.decks.find(params[:deck_id])
-    study = Study.new(deck:)
+    study = Study.for(deck:)
     reset_counters
     render_study(Views::Studies::Show, deck:, study:)
   end
 
   def update
     deck = current_user.decks.find(params[:deck_id])
-    result = Study.new(deck:).answer_card(**answer_params)
+    result = Study.for(deck:).answer_card(**answer_params)
     increment_counters(result)
     render_study(Views::Studies::Update, deck:, result:)
   end

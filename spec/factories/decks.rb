@@ -11,4 +11,11 @@ FactoryBot.define do
       visibility { "demo" }
     end
   end
+
+  factory(:music_deck, class: "MusicDeck") do
+    sequence(:name, 100) { |n| "Music Deck #{n}" }
+    user { default_user }
+    study_goal { 50 }
+    distractor_pool { "none" }
+  end
 end
