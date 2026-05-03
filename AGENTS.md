@@ -210,9 +210,15 @@ end
 
 **Core Models:**
 - `User` - Authentication, has many decks. Has `username` (unique, alphanumeric + underscores)
-- `Deck` - Collection of flashcards, belongs to user. Has `visibility` (`"public"` or `"private"`, default `"private"`). Public decks appear in the catalog. Has `level` (integer, default 1 via application, no DB default) representing the current study level.
-- `Card` - Individual flashcard with front/back, belongs to deck
+- `Deck` (STI base) - Collection of flashcards, belongs to user. Has `visibility` (`"public"`, `"private"`, `"demo"`), `level` (default 1, current study level), `distractor_pool` (`"category"`, `"preset"`, or `"none"`).
+- `Card` (STI base) - Individual flashcard, belongs to deck
 - `Subscription` - Payment/subscription info, belongs to user
+
+**STI subclasses:**
+- `TextDeck < Deck` / `TextCard < Card` — the original "question/answer" flashcard flow with multiple-choice study. Validates `back` and `category` presence.
+- `MusicDeck < Deck` / `MusicCard < Card` — microphone-driven music study. `MusicCard` validates `back` against `MusicCard::SEQUENCE_REGEXP` (note sequences like `E3` or `C4,E4,G4`). `MusicDeck` defaults `distractor_pool` to `"none"`.
+
+**STI convention — `model_name` override:** every Deck/Card subclass overrides `self.model_name` to return the parent's so `form_with(model: text_deck)` keeps routing to `decks_path` (not `text_decks_path`). Apply this to any new STI subclass.
 
 **Card Progress:**
 - A card is "done" at the current level when `correct_streak >= deck.level`
@@ -256,38 +262,47 @@ Uses **Creem** (creem.io) for subscription payments:
 app/
 ├── actions/             # Service objects for complex operations
 │   ├── catalog/
-│   │   └── copy_deck.rb  # Duplicates a public deck into a user's account
+│   │   └── copy_deck.rb     # Duplicates a public deck into a user's account
+│   ├── decks/
+│   │   ├── create.rb        # Text deck CSV import
+│   │   └── create_music.rb  # Music deck CSV import (note-sequence backs)
 │   └── creem/
 │       ├── cancel_subscription.rb
 │       └── client.rb
 ├── components/
-│   └── base.rb           # Base component with Rails helpers
+│   ├── base.rb                    # Base component (supporter_badge, music_badge helpers)
+│   └── music_csv_instructions.rb  # CSV format help block for music decks
 ├── domain/
-│   └── study.rb          # Study engine: card selection, answer processing, level advancement
+│   ├── study.rb         # Study engine; `Study.for(deck:)` dispatches by deck type
+│   └── music_study.rb   # MusicStudy < Study; overrides `possible_answers` to []
 ├── controllers/
 │   ├── application_controller.rb
 │   ├── cards_controller.rb
 │   ├── catalog_controller.rb
-│   ├── decks_controller.rb
+│   ├── decks_controller.rb     # `#create` dispatches Decks::Create vs Decks::CreateMusic on :deck_type
 │   ├── pages_controller.rb
 │   └── subscriptions_controller.rb
 ├── models/
 │   ├── user.rb
-│   ├── deck.rb
-│   ├── card.rb
+│   ├── deck.rb          # STI base
+│   ├── text_deck.rb     # STI subclass — overrides model_name
+│   ├── music_deck.rb    # STI subclass — defaults distractor_pool to "none"
+│   ├── card.rb          # STI base
+│   ├── text_card.rb     # STI subclass — validates back + category presence
+│   ├── music_card.rb    # STI subclass — validates back against SEQUENCE_REGEXP
 │   └── subscription.rb
 ├── views/
 │   ├── base.rb           # Base view class
 │   ├── layouts/
 │   │   └── application.rb
 │   ├── catalog/
-│   │   ├── index.rb      # Public deck grid
-│   │   └── show.rb       # Deck preview + copy action
+│   │   ├── index.rb      # Public deck grid (mic badge for music decks)
+│   │   └── show.rb       # Deck preview + copy action (mic badge in header)
 │   ├── welcome/
 │   │   └── index.rb
 │   ├── decks/
 │   │   ├── index.rb
-│   │   ├── new.rb
+│   │   ├── new.rb        # Includes deck-type toggle (text vs music)
 │   │   └── show.rb
 │   ├── pages/
 │   │   ├── privacy.rb
@@ -299,6 +314,17 @@ app/
 │   │   └── update.rb
 │   └── subscriptions/
 │       └── show.rb
+├── javascript/
+│   ├── controllers/
+│   │   ├── deck_type_controller.ts  # Toggles CSV instructions block on creation form
+│   │   ├── dialog_controller.ts
+│   │   ├── file_upload_controller.ts
+│   │   ├── hotkeys_controller.ts
+│   │   └── mobile_nav_controller.ts
+│   └── music/
+│       ├── note_utils.ts        # Note ↔ frequency, sequence parsing
+│       ├── pitch_detector.ts    # YIN-style pitch detection from Float32Array samples
+│       └── reference_player.ts  # Web Audio sine playback for note sequences
 └── assets/
     └── stylesheets/
         ├── application.css
@@ -309,6 +335,10 @@ app/
         ├── layout.css
         ├── welcome.css
         └── decks.css
+
+db/
+└── seeds/
+    └── music_decks.rb   # Seeds starter music decks (called from db/seeds.rb)
 ```
 
 ### Actions
@@ -476,10 +506,37 @@ Users can browse and copy public decks at `/catalog`:
 
 ### CSV Import
 
-Decks are created by uploading CSV files with this format:
-- Columns: `front`, `back`, `category`
+Decks are created by uploading CSV files. The deck-creation form has a "Deck Type" toggle (text vs music) that picks the importer.
+
+**Text decks (`Decks::Create`):**
+- Columns: `front`, `back`, `category` (`distractors` optional)
 - Multiple answers separated by `;`
 - Sample CSV available via environment variable `SAMPLE_CSV_URL`
+
+**Music decks (`Decks::CreateMusic`):** see Music Decks section below.
+
+### Music Decks
+
+Microphone-driven music study (target: guitar / ukulele). Public music decks appear in the catalog with a 🎤 badge (rendered via `Components::Base#music_badge`).
+
+**Card data model:**
+- `front` = label, **hidden during attempt**, revealed on success (e.g. `"C Major Chord"`)
+- `back` = comma-separated note sequence — both played as the audio reference and what the user must play back (e.g. `"C4,E4,G4"`). Validated against `MusicCard::SEQUENCE_REGEXP` (sharps only, octaves 1–8).
+
+**CSV format:** same headers as text decks (`front,back,category`). Multi-note backs **must be quoted** (`"C4,E4,G4"`) so commas don't split the cell. Music CSVs reject space-separated notes — the format is one canonical comma-only shape.
+
+**Domain dispatch:** `Study.for(deck:)` returns `MusicStudy` for music decks (overrides `possible_answers` to `[]`). The base `Study#answer_card` works for music as-is — the JS POSTs `answer = card.back` so the existing `card.back == answer` comparison is the right check.
+
+**Study UI:** the in-browser music-study experience (mic capture, sequence state machine, Phlex view) is on its own track and not yet shipped. Currently `StudiesController` renders the text study view for all deck types; music decks exist in the catalog and creation flow but the play experience for them is not wired up yet.
+
+**JS modules** (under `app/javascript/music/`) — pure, framework-free, 100% Vitest coverage:
+- `note_utils.ts` — `noteToFrequency("A4") → 440`, `frequencyToNote(440) → {note: "A4", cents: 0}`, `parseSequence("C4,E4,G4") → ["C4", "E4", "G4"]`. Equal-temperament from MIDI; sharps only, no flats.
+- `pitch_detector.ts` — `detectPitch(samples, sampleRate, options?) → Hz | null`. Simplified YIN (cumulative-mean-normalized difference function + first-below-threshold + local-min walk). No parabolic interpolation — accuracy is sufficient for the ±50¢ tolerance, and skipping it keeps branch coverage tractable. Defaults: threshold 0.15, search range 60–2000 Hz.
+- `reference_player.ts` — `playSequence(ctx, notes, options?) → Promise<void>`. Schedules sine oscillators on an injected `AudioContextLike` (narrow structural interface so jsdom mocks satisfy the type without `as` casts). Defaults: 500ms note + 100ms gap.
+
+**Mic & audio constraints (for the upcoming Stimulus integration):**
+- `getUserMedia` and `AudioContext` require HTTPS. Rails dev (`bin/dev`) defaults to plain HTTP — use a self-signed cert or staging.
+- `AudioContext` autoplay policy: create/resume inside a user-gesture handler, never on page load.
 
 ### Study Algorithm
 

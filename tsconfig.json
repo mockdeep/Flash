@@ -9,6 +9,7 @@
       "controllers/*": ["./app/javascript/controllers/*"],
       "helpers/*": ["./app/javascript/helpers/*"],
       "javascript/*": ["./app/javascript/*"],
+      "music/*": ["./app/javascript/music/*"],
       "support/*": ["./spec/javascript/support/*"]
     },
     "noUncheckedSideEffectImports": true,
