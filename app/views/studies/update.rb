@@ -22,47 +22,11 @@ module Views
               next
             end
 
-            done_count = deck.cards.done(deck.level).count
-            cards_count = deck.cards.count
+            render(
+              Components::SessionProgress.new(deck:, completed:, study_goal:),
+            )
 
-            div(class: "session-progress") do
-              div(class: "deck-progress-row") do
-                render_stars(deck.level - 1)
-                progress(
-                  value: done_count,
-                  max: cards_count,
-                  class: "progress-deck",
-                )
-              end
-              completed_classes = "session-progress-bar"
-              if completed >= study_goal
-                completed_classes += " session-progress-bar-complete"
-              end
-              div(class: completed_classes, data: { controller: "dialog" }) do
-                progress(
-                  value: completed,
-                  max: study_goal,
-                  class: "progress-completed",
-                )
-                div(class: "progress-label") do
-                  plain("#{completed} / ")
-                  button(
-                    type: "button",
-                    class: "milestone-goal-trigger",
-                    data: { action: "click->dialog#open" },
-                  ) { study_goal.to_s }
-                  plain(" completed")
-                end
-                render(Components::StudyGoalDialog.new(deck:, study_goal:))
-              end
-            end
-
-            if completed >= study_goal
-              render_milestone
-              span(data: { hotkeys_target: "click", hotkey: " " }, hidden: true)
-            else
-              render_card_result
-            end
+            render_card_result
           end
         end
       end
@@ -108,39 +72,6 @@ module Views
             end
           end
           span(class: "level-label") { "Level #{completed_levels + 1}" }
-        end
-      end
-
-      def render_milestone
-        div(class: "session-milestone") do
-          p { "You've completed #{study_goal} cards — nice work!" }
-          div(class: "session-milestone-actions") do
-            if demo
-              link_to(
-                "Sign Up Free",
-                new_account_path,
-                class: "session-milestone-primary",
-                data: { turbo_frame: "_top" },
-              )
-              link_to(
-                "Keep Going",
-                deck_study_path(deck, reset_session: true),
-                class: "session-milestone-secondary",
-              )
-            else
-              link_to(
-                "Keep Going",
-                deck_study_path(deck, reset_session: true),
-                class: "session-milestone-primary",
-              )
-              link_to(
-                "Done for Now",
-                root_path,
-                class: "session-milestone-secondary",
-                data: { turbo_frame: "_top" },
-              )
-            end
-          end
         end
       end
 

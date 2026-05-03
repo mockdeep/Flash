@@ -26,8 +26,6 @@ module Views
 
           h1 { deck.name }
 
-          card = study.next_card
-
           turbo_frame_tag("study") do
             if deck.cards.none?
               div(class: "accent-box") do
@@ -41,16 +39,21 @@ module Views
               next
             end
 
-            done_count = deck.cards.done(deck.level).count
-            cards_count = deck.cards.count
+            render(
+              Components::SessionProgress.new(deck:, completed:, study_goal:),
+            )
 
-            render_session_progress(done_count, cards_count)
+            if completed >= study_goal
+              render(Components::SessionMilestone.new(deck:, study_goal:, demo:))
+            else
+              card = study.next_card
 
-            h2(class: "card-front") { card.front }
+              h2(class: "card-front") { card.front }
 
-            render_answers(card, study.possible_answers)
+              render_answers(card, study.possible_answers)
 
-            p(class: "keyboard-hint") { "Press 1-5 to answer" }
+              p(class: "keyboard-hint") { "Press 1-5 to answer" }
+            end
 
             # Claim the space hotkey to prevent scrolling down
             span(data: { hotkeys_target: "click", hotkey: " " }, hidden: true)
@@ -59,28 +62,6 @@ module Views
       end
 
       private
-
-      def render_session_progress(done_count, cards_count)
-        div(class: "session-progress") do
-          div(class: "deck-progress-row") do
-            render_stars(deck.level - 1)
-            progress(value: done_count, max: cards_count, class: "progress-deck")
-          end
-          div(class: "session-progress-bar", data: { controller: "dialog" }) do
-            progress(value: completed, max: study_goal, class: "progress-completed")
-            div(class: "progress-label") do
-              plain("#{completed} / ")
-              button(
-                type: "button",
-                class: "milestone-goal-trigger",
-                data: { action: "click->dialog#open" },
-              ) { study_goal.to_s }
-              plain(" completed")
-            end
-            render(Components::StudyGoalDialog.new(deck:, study_goal:))
-          end
-        end
-      end
 
       def render_answers(card, answers)
         ol(class: "study-answers-grid") do
@@ -102,19 +83,6 @@ module Views
               end
             end
           end
-        end
-      end
-
-      def render_stars(completed_levels)
-        div(class: "level-stars") do
-          3.times do |i|
-            if i < completed_levels
-              span(class: "star star--filled") { "★" }
-            else
-              span(class: "star star--empty") { "★" }
-            end
-          end
-          span(class: "level-label") { "Level #{completed_levels + 1}" }
         end
       end
     end
