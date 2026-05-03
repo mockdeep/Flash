@@ -2,7 +2,7 @@
 
 class Deck < ApplicationRecord
   VISIBILITIES = ["public", "private", "demo"].freeze
-  DISTRACTOR_POOLS = ["category", "preset"].freeze
+  DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
 
   belongs_to :user
   has_many :cards, dependent: :delete_all

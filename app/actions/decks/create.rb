@@ -5,7 +5,7 @@ require "csv"
 module Decks
   module Create
     def self.call(user:, name:, cards_csv:)
-      deck = Deck.new(name:, study_goal: user.study_goal)
+      deck = TextDeck.new(name:, study_goal: user.study_goal)
       csv = CSV.parse(cards_csv.read, headers: true)
 
       error = validate_csv(csv)
@@ -98,7 +98,8 @@ module Decks
     def self.build_and_insert_cards(deck, cards_data)
       cards_attributes =
         cards_data.map do |data|
-          card = deck.cards.build(
+          card = TextCard.new(
+            deck:,
             front: data[:front],
             back: data[:back],
             category: data[:category],

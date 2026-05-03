@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 FactoryBot.define do
-  factory(:card) do
+  factory(:card, class: "TextCard") do
     deck { default_deck }
 
     sequence(:front, 100) { |n| "Card Front #{n}" }
