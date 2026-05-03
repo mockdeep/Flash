@@ -87,8 +87,16 @@ RSpec.describe StudiesController do
         get(deck_study_path(deck))
       end
 
-      it "resets completed counter" do
-        expect(rendered).to have_content("0 / 50 completed")
+      it "shows milestone heading" do
+        expect(rendered).to have_content("You've completed 50 cards")
+      end
+
+      it "shows keep going link" do
+        expect(rendered).to have_link("Keep Going")
+      end
+
+      it "shows done for now link" do
+        expect(rendered).to have_link("Done for Now")
       end
     end
 
@@ -155,6 +163,7 @@ RSpec.describe StudiesController do
             },
           )
         end
+        get(deck_study_path(guest_deck))
       end
 
       it "shows sign up link" do
@@ -187,14 +196,22 @@ RSpec.describe StudiesController do
         cards.each { |card| submit_answer(card:, answer: "Paris") }
       end
 
-      it "shows milestone prompt", :aggregate_failures do
-        expect(rendered).to have_content("You've completed 3 cards")
-        expect(rendered).to have_link("Keep Going")
-        expect(rendered).to have_link("Done for Now")
+      it "does not show the milestone prompt" do
+        expect(rendered).to have_no_content("You've completed 3 cards")
+      end
+
+      it "shows the next card link" do
+        expect(rendered).to have_link("Next Card")
       end
 
       it "adds complete class to completed bar" do
         expect(rendered).to have_css(".session-progress-bar-complete")
+      end
+
+      it "shows milestone prompt after pressing next" do
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_content("You've completed 3 cards")
       end
     end
 
