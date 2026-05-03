@@ -6,6 +6,9 @@
 
 import {application} from "./application";
 
+import DeckTypeController from "./deck_type_controller";
+application.register("deck-type", DeckTypeController);
+
 import DialogController from "./dialog_controller";
 application.register("dialog", DialogController);
 

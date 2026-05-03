@@ -98,13 +98,7 @@ module Decks
     def self.build_and_insert_cards(deck, cards_data)
       cards_attributes =
         cards_data.map do |data|
-          card = TextCard.new(
-            deck:,
-            front: data[:front],
-            back: data[:back],
-            category: data[:category],
-            distractors: data[:distractors],
-          )
+          card = TextCard.new(deck:, **data)
           card.attributes.without("id", "created_at", "updated_at")
         end
 

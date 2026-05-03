@@ -61,6 +61,23 @@ RSpec.describe CatalogController do
 
       expect(rendered).to have_no_css(".supporter-badge")
     end
+
+    it "shows a music badge for music decks" do
+      owner = create(:user)
+      create(:music_deck, user: owner, visibility: "public")
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_css(".music-badge")
+    end
+
+    it "does not show a music badge for text decks" do
+      public_deck
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_no_css(".music-badge")
+    end
   end
 
   describe "#show" do
@@ -138,6 +155,22 @@ RSpec.describe CatalogController do
       get(catalog_path(deck))
 
       expect(rendered).to have_no_css(".supporter-badge")
+    end
+
+    it "shows a music badge for music decks" do
+      deck = create(:music_deck, user: create(:user), visibility: "public")
+
+      get(catalog_path(deck))
+
+      expect(rendered).to have_css(".music-badge")
+    end
+
+    it "does not show a music badge for text decks" do
+      deck = public_deck
+
+      get(catalog_path(deck))
+
+      expect(rendered).to have_no_css(".music-badge")
     end
 
     it "limits preview to 5 cards" do

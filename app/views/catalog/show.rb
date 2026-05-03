@@ -23,7 +23,10 @@ module Views
       def render_header
         div(class: "catalog-show-header") do
           render_back_link
-          h1(class: "catalog-show-title") { deck.name }
+          h1(class: "catalog-show-title") do
+            plain(deck.name)
+            music_badge if deck.music?
+          end
           render_meta
         end
       end
@@ -47,9 +50,7 @@ module Views
         preview_cards = deck.cards.ordered.limit(5)
 
         div(class: "card card--striped catalog-preview") do
-          h2(class: "catalog-preview-title") do
-            "Card Preview"
-          end
+          h2(class: "catalog-preview-title") { "Card Preview" }
 
           if preview_cards.empty?
             render_preview_empty
@@ -61,9 +62,7 @@ module Views
       end
 
       def render_preview_empty
-        p(class: "catalog-preview-empty") do
-          "This deck has no cards yet."
-        end
+        p(class: "catalog-preview-empty") { "This deck has no cards yet." }
       end
 
       def render_preview_table(preview_cards)

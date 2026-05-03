@@ -21,5 +21,13 @@ module Components
         aria: { label: "Supporter" },
       ) { "♥" }
     end
+
+    def music_badge
+      span(
+        class: "music-badge",
+        title: "Microphone required",
+        aria: { label: "Microphone required" },
+      ) { "🎤" }
+    end
   end
 end
