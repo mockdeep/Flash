@@ -119,13 +119,10 @@ RSpec.describe DecksController do
   end
 
   describe "#create" do
-    def deck_params(name:, csv_file:)
-      {
-        deck: {
-          name:,
-          cards_csv: csv_file,
-        },
-      }
+    def deck_params(name:, csv_file:, deck_type: nil)
+      attrs = { name:, cards_csv: csv_file }
+      attrs[:deck_type] = deck_type if deck_type
+      { deck: attrs }
     end
 
     context "when deck creation succeeds" do
@@ -165,6 +162,37 @@ RSpec.describe DecksController do
         post(decks_path, params: deck_params(name: "", csv_file: csv))
 
         expect(flash.now[:error]).to eq("Name can't be blank")
+      end
+    end
+
+    context "when deck_type is 'music'" do
+      def post_music_deck(name: "Music Test")
+        csv = fixture_file_upload("decks/music.csv", "text/csv")
+        login_as(default_user)
+        post(
+          decks_path,
+          params: deck_params(name:, csv_file: csv, deck_type: "music"),
+        )
+      end
+
+      it "creates a MusicDeck" do
+        expect { post_music_deck }.to change(MusicDeck, :count).by(1)
+      end
+
+      it "does not create a TextDeck" do
+        expect { post_music_deck }.not_to change(TextDeck, :count)
+      end
+
+      it "redirects to decks index" do
+        post_music_deck
+
+        expect(response).to redirect_to(decks_path)
+      end
+
+      it "re-renders the form when validation fails" do
+        post_music_deck(name: "")
+
+        expect(rendered).to have_content("Create New Deck")
       end
     end
   end

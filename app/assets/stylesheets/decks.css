@@ -407,6 +407,24 @@
   font-weight: 600;
 }
 
+/* Deck type toggle */
+.deck-type-toggle {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.deck-type-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-right: 1.5rem;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
 /* File Upload */
 .file-upload-wrapper {
   position: relative;

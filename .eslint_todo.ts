@@ -39,6 +39,7 @@ const config: Linter.Config[] = [
       "app/javascript/controllers/hotkeys_controller.ts",
       "spec/javascript/application_spec.ts",
       "spec/javascript/channels/consumer_spec.ts",
+      "spec/javascript/controllers/deck_type_controller_spec.ts",
       "spec/javascript/controllers/dialog_controller_spec.ts",
       "spec/javascript/controllers/file_upload_controller_spec.ts",
       "spec/javascript/controllers/hotkeys_controller_spec.ts",

@@ -42,31 +42,47 @@ module Views
                 form.text_field(:name, required: true, class: "form-input", placeholder: "e.g., Spanish Vocabulary, Chemistry Formulas")
               end
 
-              div(class: "form-field") do
-                form.label(:cards_csv, "Flashcards CSV File", class: "form-label")
-
-                div(class: "csv-instructions") do
-                  div(class: "csv-instructions-header") do
-                    span(class: "csv-icon") { "📄" }
-                    strong { "CSV Format Requirements" }
+              div(data: { controller: "deck-type" }) do
+                fieldset(class: "form-field deck-type-toggle") do
+                  legend(class: "form-label") { "Deck Type" }
+                  label(class: "deck-type-option") do
+                    form.radio_button(:deck_type, "text", checked: true, data: { deck_type_target: "radio", action: "change->deck-type#update" })
+                    plain(" Text / Flashcard")
                   end
-                  ul(class: "csv-requirements") do
-                    li { "Required columns: front, back, and category" }
-                    li { "Optional column: distractors" }
-                    li { "Use ';' to separate multiple back answers or distractors" }
-                    li do
-                      plain("Need an example? Download a sample ")
-                      link_options = { target: "_blank", rel: "noopener", class: "csv-sample-link" }
-                      link_to("Spanish CSV file here", csv_url, **link_options)
-                    end
+                  label(class: "deck-type-option") do
+                    form.radio_button(:deck_type, "music", data: { deck_type_target: "radio", action: "change->deck-type#update" })
+                    plain(" Music (microphone required)")
                   end
                 end
 
-                div(class: "file-upload-wrapper", data: { controller: "file-upload" }) do
-                  form.file_field(:cards_csv, required: true, class: "file-input", accept: ".csv", data: { file_upload_target: "input", action: "file-upload#select" })
-                  div(class: "file-upload-label") do
-                    span(class: "upload-icon", data: { file_upload_target: "icon" }) { "📤" }
-                    span(class: "upload-text", data: { file_upload_target: "text" }) { "Choose CSV file or drag here" }
+                div(class: "form-field") do
+                  form.label(:cards_csv, "Flashcards CSV File", class: "form-label")
+
+                  div(class: "csv-instructions", data: { deck_type_target: "textInstructions" }) do
+                    div(class: "csv-instructions-header") do
+                      span(class: "csv-icon") { "📄" }
+                      strong { "CSV Format Requirements" }
+                    end
+                    ul(class: "csv-requirements") do
+                      li { "Required columns: front, back, and category" }
+                      li { "Optional column: distractors" }
+                      li { "Use ';' to separate multiple back answers or distractors" }
+                      li do
+                        plain("Need an example? Download a sample ")
+                        link_options = { target: "_blank", rel: "noopener", class: "csv-sample-link" }
+                        link_to("Spanish CSV file here", csv_url, **link_options)
+                      end
+                    end
+                  end
+
+                  render(Components::MusicCsvInstructions.new)
+
+                  div(class: "file-upload-wrapper", data: { controller: "file-upload" }) do
+                    form.file_field(:cards_csv, required: true, class: "file-input", accept: ".csv", data: { file_upload_target: "input", action: "file-upload#select" })
+                    div(class: "file-upload-label") do
+                      span(class: "upload-icon", data: { file_upload_target: "icon" }) { "📤" }
+                      span(class: "upload-text", data: { file_upload_target: "text" }) { "Choose CSV file or drag here" }
+                    end
                   end
                 end
               end

@@ -16,23 +16,35 @@ class DecksController < ApplicationController
   end
 
   def create
-    result = Decks::Create.call(**deck_params, user: current_user)
-    if result.success?
-      flash[:success] = "Deck created successfully"
-      redirect_to(decks_path)
-    else
-      flash.now[:error] = error_messages(result.record)
-      render(Views::Decks::New.new(deck: result.record))
-    end
+    result = create_action.call(**create_params, user: current_user)
+    result.success? ? deck_created : deck_create_failed(result.record)
   end
 
   private
+
+  def create_action
+    deck_params[:deck_type] == "music" ? Decks::CreateMusic : Decks::Create
+  end
+
+  def create_params
+    deck_params.except(:deck_type)
+  end
+
+  def deck_created
+    flash[:success] = "Deck created successfully"
+    redirect_to(decks_path)
+  end
+
+  def deck_create_failed(record)
+    flash.now[:error] = error_messages(record)
+    render(Views::Decks::New.new(deck: record))
+  end
 
   def error_messages(record)
     record.errors.full_messages.join(", ")
   end
 
   def deck_params
-    params.expect(deck: [:name, :cards_csv]).to_h.symbolize_keys
+    params.expect(deck: [:name, :cards_csv, :deck_type]).to_h.symbolize_keys
   end
 end
