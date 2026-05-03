@@ -52,7 +52,12 @@ class StudiesController < ApplicationController
   end
 
   def answer_params
-    params.expect(answer: [:card_id, :answer, { possible_answers: [] }])
-      .to_h.symbolize_keys
+    params.expect(
+      answer: [
+        :card_id,
+        :answer,
+        { possible_answers: [], wrong_answers: [] },
+      ],
+    ).to_h.symbolize_keys
   end
 end
