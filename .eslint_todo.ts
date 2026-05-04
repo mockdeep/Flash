@@ -41,6 +41,7 @@ const config: Linter.Config[] = [
   {
     files: [
       "spec/javascript/controllers/music_study_controller_spec.ts",
+      "spec/javascript/controllers/music_study_controller_ticks_spec.ts",
     ],
     rules: {
       "vitest/no-hooks": "off",
@@ -62,6 +63,7 @@ const config: Linter.Config[] = [
       "spec/javascript/controllers/hotkeys_controller_spec.ts",
       "spec/javascript/controllers/mobile_nav_controller_spec.ts",
       "spec/javascript/controllers/music_study_controller_spec.ts",
+      "spec/javascript/controllers/music_study_controller_ticks_spec.ts",
       "spec/javascript/helpers/assert_spec.ts",
       "spec/javascript/music/pitch_detector_spec.ts",
       "spec/javascript/music/reference_player_spec.ts",

@@ -6,6 +6,7 @@ interface Candidate {
 }
 
 interface SessionState {
+  attemptCount: number;
   candidate: Candidate | null;
   nextIndex: number;
   notes: string[];
@@ -23,7 +24,7 @@ interface StepInput {
   toleranceCents: number;
 }
 
-type StepEvent = "advanced" | "completed" | "noop" | "reset";
+type StepEvent = "advanced" | "completed" | "needs_replay" | "noop" | "reset";
 
 interface StepResult {
   event: StepEvent;
@@ -31,7 +32,7 @@ interface StepResult {
 }
 
 function initialState(notes: string[]): SessionState {
-  return {candidate: null, nextIndex: 0, notes};
+  return {attemptCount: 0, candidate: null, nextIndex: 0, notes};
 }
 
 function clearCandidate(state: SessionState): StepResult {
@@ -53,27 +54,46 @@ function startCandidate(
   };
 }
 
+function nextIndexAfter(state: SessionState, matched: boolean): number {
+  if (matched) {
+    return state.nextIndex + 1;
+  }
+
+  return 0;
+}
+
+function advanceEvent(matched: boolean): StepEvent {
+  if (matched) {
+    return "advanced";
+  }
+
+  return "reset";
+}
+
 function classifyHeldNote(
   state: SessionState,
   detectedNote: string,
 ): StepResult {
   const expected = assert(state.notes[state.nextIndex]);
-  if (detectedNote !== expected) {
+  const matched = detectedNote === expected;
+  const nextIndex = nextIndexAfter(state, matched);
+  const attemptCount = state.attemptCount + 1;
+  if (nextIndex >= state.notes.length) {
     return {
-      event: "reset",
-      state: {...state, candidate: null, nextIndex: 0},
+      event: "completed",
+      state: {...state, attemptCount, candidate: null, nextIndex},
     };
   }
-  const newIndex = state.nextIndex + 1;
-  const isComplete = newIndex >= state.notes.length;
-  let event: StepEvent = "advanced";
-  if (isComplete) {
-    event = "completed";
+  if (attemptCount >= state.notes.length) {
+    return {
+      event: "needs_replay",
+      state: {...state, attemptCount: 0, candidate: null, nextIndex: 0},
+    };
   }
 
   return {
-    event,
-    state: {...state, candidate: null, nextIndex: newIndex},
+    event: advanceEvent(matched),
+    state: {...state, attemptCount, candidate: null, nextIndex},
   };
 }
 

@@ -151,11 +151,17 @@ export default class extends Controller<HTMLElement> {
   }
 
   private applyEvent(event: StepEvent): void {
-    if (event === "advanced" || event === "reset") {
+    if (event === "advanced" || event === "reset" || event === "needs_replay") {
       this.renderProgress();
     }
     if (event === "reset") {
       this.statusTarget.textContent = "Wrong note — start from the top";
+    }
+    if (event === "needs_replay") {
+      this.statusTarget.textContent = "Listen again…";
+      this.play().catch(() => {
+        return null;
+      });
     }
     if (event === "completed") {
       this.submit();
