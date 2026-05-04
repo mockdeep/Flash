@@ -882,8 +882,13 @@ packages:
       eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
       typescript: '>=4.8.4 <6.1.0'
 
+<<<<<<< HEAD
   '@typescript-eslint/types@8.56.1':
     resolution: {integrity: sha512-dbMkdIUkIkchgGDIv7KLUpa0Mda4IYjo4IAMJUZ+3xNoUXxMsk9YtKpTHSChRS85o+H9ftm51gsK1dZReY9CVw==}
+=======
+  '@typescript-eslint/types@8.57.0':
+    resolution: {integrity: sha512-dTLI8PEXhjUC7B9Kre+u0XznO696BhXcTlOn0/6kf1fHaQW8+VjJAVHJ3eTI14ZapTxdkOmc80HblPQLaEeJdg==}
+>>>>>>> 11d3f48 (Update all pnpm dependencies (2026-05-04) (#1412))
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@typescript-eslint/types@8.58.2':
@@ -2125,8 +2130,13 @@ packages:
     resolution: {integrity: sha512-qif0+jGGZoLWdHey3UFHHWP0H7Gbmsk8T5VEqyYFbWqPr1XqvLGBbk/sl8V5exGmcYJklJOhOQq1pV9IcsiFag==}
     engines: {node: ^10 || ^12 || >=14}
 
+<<<<<<< HEAD
   postcss@8.5.6:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
+=======
+  postcss@8.5.8:
+    resolution: {integrity: sha512-OW/rX8O/jXnm82Ey1k44pObPtdblfiuWnrd8X7GJ7emImCOstunGbXUpp7HdBrFQX6rJzn3sPT397Wp5aCwCHg==}
+>>>>>>> 11d3f48 (Update all pnpm dependencies (2026-05-04) (#1412))
     engines: {node: ^10 || ^12 || >=14}
 
   prelude-ls@1.2.1:
@@ -3229,7 +3239,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+<<<<<<< HEAD
   '@typescript-eslint/types@8.56.1': {}
+=======
+  '@typescript-eslint/types@8.57.0': {}
+>>>>>>> 11d3f48 (Update all pnpm dependencies (2026-05-04) (#1412))
 
   '@typescript-eslint/types@8.58.2': {}
 
@@ -3258,7 +3272,11 @@ snapshots:
       '@typescript-eslint/visitor-keys': 8.59.1
       debug: 4.4.3
       minimatch: 10.2.4
+<<<<<<< HEAD
       semver: 7.7.3
+=======
+      semver: 7.7.4
+>>>>>>> 11d3f48 (Update all pnpm dependencies (2026-05-04) (#1412))
       tinyglobby: 0.2.15
       ts-api-utils: 2.5.0(typescript@6.0.3)
       typescript: 6.0.3
@@ -4626,7 +4644,11 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
+<<<<<<< HEAD
   postcss@8.5.6:
+=======
+  postcss@8.5.8:
+>>>>>>> 11d3f48 (Update all pnpm dependencies (2026-05-04) (#1412))
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1
@@ -4891,9 +4913,15 @@ snapshots:
 
   stylelint-selector-bem-pattern@4.0.1(stylelint@17.9.1(typescript@6.0.3)):
     dependencies:
+<<<<<<< HEAD
       lodash: 4.17.21
       postcss: 8.5.6
       postcss-bem-linter: 4.0.1(postcss@8.5.6)
+=======
+      lodash: 4.17.23
+      postcss: 8.5.8
+      postcss-bem-linter: 4.0.1(postcss@8.5.8)
+>>>>>>> 11d3f48 (Update all pnpm dependencies (2026-05-04) (#1412))
       stylelint: 17.9.1(typescript@6.0.3)
 
   stylelint@17.9.1(typescript@6.0.3):
@@ -5105,7 +5133,11 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.13
+<<<<<<< HEAD
       rollup: 4.57.1
+=======
+      rolldown: 1.0.0-rc.9
+>>>>>>> 11d3f48 (Update all pnpm dependencies (2026-05-04) (#1412))
       tinyglobby: 0.2.15
     optionalDependencies:
       '@types/node': 25.6.0
