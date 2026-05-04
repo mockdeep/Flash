@@ -17,5 +17,9 @@ FactoryBot.define do
     user { default_user }
     study_goal { 50 }
     distractor_pool { "none" }
+
+    trait(:demo) do
+      visibility { "demo" }
+    end
   end
 end

@@ -20,3 +20,6 @@ application.register("hotkeys", HotkeysController);
 
 import MobileNavController from "./mobile_nav_controller";
 application.register("mobile-nav", MobileNavController);
+
+import MusicStudyController from "./music_study_controller";
+application.register("music-study", MusicStudyController);

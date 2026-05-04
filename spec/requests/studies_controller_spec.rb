@@ -362,6 +362,120 @@ RSpec.describe StudiesController do
     end
   end
 
+  describe "for a music deck" do
+    let(:music_deck) { create(:music_deck) }
+
+    it "renders the mic-driven study UI on #show" do
+      create(:music_card, deck: music_deck, back: "C4")
+
+      get(deck_study_path(music_deck))
+
+      expect(rendered).to have_css("[data-controller='music-study']")
+    end
+
+    it "exposes the card sequence to Stimulus on #show" do
+      create(:music_card, deck: music_deck, back: "C4,E4,G4")
+
+      get(deck_study_path(music_deck))
+
+      expect(rendered)
+        .to have_css("[data-music-study-sequence-value='C4,E4,G4']")
+    end
+
+    def submit_music_answer(card, answer: card.back)
+      patch(
+        deck_study_path(music_deck),
+        params: { answer: { card_id: card.id, answer: } },
+      )
+    end
+
+    it "renders the music-result UI after a correct answer" do
+      card = create(:music_card, deck: music_deck, back: "C4")
+      create(:music_card, deck: music_deck, back: "E4")
+
+      submit_music_answer(card)
+
+      expect(rendered).to have_css(".music-study--result")
+    end
+
+    it "marks the outcome as correct after a correct answer" do
+      card = create(:music_card, deck: music_deck, back: "C4")
+      create(:music_card, deck: music_deck, back: "E4")
+
+      submit_music_answer(card)
+
+      expect(rendered).to have_css(".music-study__outcome--correct")
+    end
+
+    it "shows the empty-state message when the deck has no cards" do
+      get(deck_study_path(music_deck))
+
+      expect(rendered).to have_css("h2", text: "No cards to study")
+    end
+
+    context "when completed reaches the milestone goal" do
+      before do
+        music_deck.update!(study_goal: 1)
+        card = create(:music_card, deck: music_deck, back: "C4")
+        create(:music_card, deck: music_deck, back: "E4")
+        submit_music_answer(card)
+        get(deck_study_path(music_deck))
+      end
+
+      it "shows the milestone prompt" do
+        expect(rendered).to have_content("You've completed 1 cards")
+      end
+    end
+
+    it "shows the level-complete UI when the last card is answered" do
+      card = create(:music_card, deck: music_deck, back: "C4")
+
+      submit_music_answer(card)
+
+      expect(rendered).to have_css("h2", text: "Level 1 Complete!")
+    end
+
+    it "links to the next level from the level-complete UI" do
+      card = create(:music_card, deck: music_deck, back: "C4")
+
+      submit_music_answer(card)
+
+      expect(rendered).to have_link("Continue to Level 2")
+    end
+
+    it "marks the outcome as incorrect after a wrong answer" do
+      card = create(:music_card, deck: music_deck, back: "C4")
+      create(:music_card, deck: music_deck, back: "E4")
+
+      submit_music_answer(card, answer: "D4")
+
+      expect(rendered).to have_css(".music-study__outcome--incorrect")
+    end
+
+    context "when in demo mode" do
+      let(:demo_owner) { create(:user) }
+      let(:demo_music_deck) { create(:music_deck, :demo, user: demo_owner) }
+
+      before do
+        create(:music_card, deck: demo_music_deck, back: "C4")
+        post(demo_path, params: { deck_id: demo_music_deck.id })
+        follow_redirect!
+      end
+
+      it "shows the demo banner" do
+        expect(rendered).to have_css(".demo-banner")
+      end
+    end
+
+    it "still renders the multiple-choice UI for non-music decks" do
+      create(:card, deck:)
+
+      get(deck_study_path(deck))
+
+      expect(rendered).to have_css(".study-answers-grid")
+    end
+  end
+
   context "when not authenticated" do
     before { delete(session_path) }
 

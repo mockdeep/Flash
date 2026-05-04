@@ -1,0 +1,62 @@
+/* Music Study */
+.music-study {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 2rem 0;
+}
+
+.music-study__head {
+  text-align: center;
+}
+
+.music-study__hint {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+
+.music-study__placeholder {
+  font-size: 4rem;
+  color: var(--color-text-muted);
+}
+
+.music-study__status {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.music-study__progress {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.5rem;
+  color: var(--color-accent);
+}
+
+.music-study__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.music-study__sequence {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+}
+
+.music-study__outcome {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.music-study__outcome--correct {
+  color: var(--color-success, #2a9d2a);
+}
+
+.music-study__outcome--incorrect {
+  color: var(--color-error, #c92a2a);
+}
