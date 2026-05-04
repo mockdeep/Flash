@@ -15,14 +15,14 @@ RSpec.describe DemoController do
       demo_deck
       get(demo_path)
 
-      expect(rendered).to have_content(demo_deck.name)
+      expect(rendered).to have_text(demo_deck.name)
     end
 
     it "does not list private decks" do
       private_deck = create(:deck, user: owner, visibility: "private")
       get(demo_path)
 
-      expect(rendered).to have_no_content(private_deck.name)
+      expect(rendered).to have_no_text(private_deck.name)
     end
 
     it "renders empty state when no demo decks exist" do

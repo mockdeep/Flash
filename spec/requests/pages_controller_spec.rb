@@ -7,7 +7,7 @@ RSpec.describe PagesController do
     it "renders the pricing page" do
       get(pricing_path)
 
-      expect(rendered).to have_content("Pricing")
+      expect(rendered).to have_text("Pricing")
     end
 
     it "shows 'Current Plan' link for logged-in users" do
@@ -15,7 +15,7 @@ RSpec.describe PagesController do
 
       get(pricing_path)
 
-      expect(rendered).to have_content("Current Plan")
+      expect(rendered).to have_text("Current Plan")
     end
 
     it "shows 'Subscribe' link for logged-in users" do
@@ -23,7 +23,7 @@ RSpec.describe PagesController do
 
       get(pricing_path)
 
-      expect(rendered).to have_content("Subscribe")
+      expect(rendered).to have_text("Subscribe")
     end
   end
 
@@ -31,7 +31,7 @@ RSpec.describe PagesController do
     it "renders the privacy page" do
       get(privacy_path)
 
-      expect(rendered).to have_content("Privacy Policy")
+      expect(rendered).to have_text("Privacy Policy")
     end
   end
 
@@ -39,7 +39,7 @@ RSpec.describe PagesController do
     it "renders the terms page" do
       get(terms_path)
 
-      expect(rendered).to have_content("Terms of Service")
+      expect(rendered).to have_text("Terms of Service")
     end
   end
 end

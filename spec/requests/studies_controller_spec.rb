@@ -32,7 +32,7 @@ RSpec.describe StudiesController do
       create(:card, deck:)
       get(deck_study_path(deck))
 
-      expect(rendered).to have_content("completed")
+      expect(rendered).to have_text("completed")
     end
 
     it "shows filled stars for completed levels" do
@@ -59,7 +59,7 @@ RSpec.describe StudiesController do
       end
 
       it "resets completed counter" do
-        expect(rendered).to have_content("0 / 50 completed")
+        expect(rendered).to have_text("0 / 50 completed")
       end
     end
 
@@ -72,7 +72,7 @@ RSpec.describe StudiesController do
       end
 
       it "resets completed counter" do
-        expect(rendered).to have_content("0 / 50 completed")
+        expect(rendered).to have_text("0 / 50 completed")
       end
     end
 
@@ -88,7 +88,7 @@ RSpec.describe StudiesController do
       end
 
       it "shows milestone heading" do
-        expect(rendered).to have_content("You've completed 50 cards")
+        expect(rendered).to have_text("You've completed 50 cards")
       end
 
       it "shows keep going link" do
@@ -182,7 +182,7 @@ RSpec.describe StudiesController do
       create(:card, deck:)
       submit_answer(card:, answer: "Paris")
 
-      expect(rendered).to have_content("1 / 50 completed")
+      expect(rendered).to have_text("1 / 50 completed")
     end
 
     context "when completed reaches milestone goal" do
@@ -197,7 +197,7 @@ RSpec.describe StudiesController do
       end
 
       it "does not show the milestone prompt" do
-        expect(rendered).to have_no_content("You've completed 3 cards")
+        expect(rendered).to have_no_text("You've completed 3 cards")
       end
 
       it "shows the next card link" do
@@ -211,7 +211,7 @@ RSpec.describe StudiesController do
       it "shows milestone prompt after pressing next" do
         get(deck_study_path(deck))
 
-        expect(rendered).to have_content("You've completed 3 cards")
+        expect(rendered).to have_text("You've completed 3 cards")
       end
     end
 
@@ -423,7 +423,7 @@ RSpec.describe StudiesController do
       end
 
       it "shows the milestone prompt" do
-        expect(rendered).to have_content("You've completed 1 cards")
+        expect(rendered).to have_text("You've completed 1 cards")
       end
     end
 
