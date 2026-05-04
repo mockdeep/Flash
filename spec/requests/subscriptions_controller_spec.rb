@@ -31,7 +31,7 @@ RSpec.describe SubscriptionsController do
 
       get(subscription_path)
 
-      expect(rendered).to have_content("Subscription")
+      expect(rendered).to have_text("Subscription")
     end
 
     it "shows no subscription message when user has no subscription" do
@@ -39,7 +39,7 @@ RSpec.describe SubscriptionsController do
 
       get(subscription_path)
 
-      expect(rendered).to have_content("don't have an active subscription")
+      expect(rendered).to have_text("don't have an active subscription")
     end
 
     it "shows active subscriber badge when user has subscription" do
@@ -48,7 +48,7 @@ RSpec.describe SubscriptionsController do
 
       get(subscription_path)
 
-      expect(rendered).to have_content("Active Subscriber")
+      expect(rendered).to have_text("Active Subscriber")
     end
 
     it "shows subscription status" do
@@ -57,7 +57,7 @@ RSpec.describe SubscriptionsController do
 
       get(subscription_path)
 
-      expect(rendered).to have_content("Active")
+      expect(rendered).to have_text("Active")
     end
 
     it "shows plan name" do
@@ -66,7 +66,7 @@ RSpec.describe SubscriptionsController do
 
       get(subscription_path)
 
-      expect(rendered).to have_content("Monthly Plan")
+      expect(rendered).to have_text("Monthly Plan")
     end
 
     it "shows next billing date when period end is set" do
@@ -75,7 +75,7 @@ RSpec.describe SubscriptionsController do
 
       get(subscription_path)
 
-      expect(rendered).to have_content("February 15, 2026")
+      expect(rendered).to have_text("February 15, 2026")
     end
 
     it "does not show billing date when period end is not set" do
@@ -84,7 +84,7 @@ RSpec.describe SubscriptionsController do
 
       get(subscription_path)
 
-      expect(rendered).to have_no_content("Next billing date")
+      expect(rendered).to have_no_text("Next billing date")
     end
 
     it "shows cancel form for active subscription" do
@@ -120,7 +120,7 @@ RSpec.describe SubscriptionsController do
 
       get(subscription_path)
 
-      expect(rendered).to have_content("Subscription Canceled")
+      expect(rendered).to have_text("Subscription Canceled")
     end
 
     it "does not show billing date for canceled subscription" do
@@ -130,7 +130,7 @@ RSpec.describe SubscriptionsController do
 
       get(subscription_path)
 
-      expect(rendered).to have_no_content("Next billing date")
+      expect(rendered).to have_no_text("Next billing date")
     end
   end
 

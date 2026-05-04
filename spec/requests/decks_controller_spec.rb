@@ -7,7 +7,7 @@ RSpec.describe DecksController do
 
       get(decks_path)
 
-      expect(rendered).to have_content("No Decks Yet")
+      expect(rendered).to have_text("No Decks Yet")
     end
 
     it "renders decks grid when user has decks" do
@@ -16,7 +16,7 @@ RSpec.describe DecksController do
 
       get(decks_path)
 
-      expect(rendered).to have_content("My Test Deck")
+      expect(rendered).to have_text("My Test Deck")
     end
 
     it "shows card count for each deck" do
@@ -26,7 +26,7 @@ RSpec.describe DecksController do
 
       get(decks_path)
 
-      expect(rendered).to have_content("1")
+      expect(rendered).to have_text("1")
     end
 
     it "shows 'No cards yet' for empty deck" do
@@ -35,7 +35,7 @@ RSpec.describe DecksController do
 
       get(decks_path)
 
-      expect(rendered).to have_content("No cards yet")
+      expect(rendered).to have_text("No cards yet")
     end
 
     it "shows stats for deck with cards" do
@@ -45,7 +45,7 @@ RSpec.describe DecksController do
 
       get(decks_path)
 
-      expect(rendered).to have_content("Remaining")
+      expect(rendered).to have_text("Remaining")
     end
 
     it "shows filled stars for completed levels" do
@@ -66,7 +66,7 @@ RSpec.describe DecksController do
 
       get(deck_path(deck))
 
-      expect(rendered).to have_content(deck.name)
+      expect(rendered).to have_text(deck.name)
     end
 
     it "shows empty message when deck has no cards" do
@@ -75,7 +75,7 @@ RSpec.describe DecksController do
 
       get(deck_path(deck))
 
-      expect(rendered).to have_content("no cards yet")
+      expect(rendered).to have_text("no cards yet")
     end
 
     it "shows card table when deck has cards" do
@@ -85,7 +85,7 @@ RSpec.describe DecksController do
 
       get(deck_path(deck))
 
-      expect(rendered).to have_content("Test Front")
+      expect(rendered).to have_text("Test Front")
     end
 
     it "shows study link when deck has cards" do
@@ -95,7 +95,7 @@ RSpec.describe DecksController do
 
       get(deck_path(deck))
 
-      expect(rendered).to have_content("Study Deck")
+      expect(rendered).to have_text("Study Deck")
     end
 
     it "prevents viewing another user's deck" do
@@ -114,7 +114,7 @@ RSpec.describe DecksController do
 
       get(new_deck_path)
 
-      expect(rendered).to have_content("Create New Deck")
+      expect(rendered).to have_text("Create New Deck")
     end
   end
 
@@ -152,7 +152,7 @@ RSpec.describe DecksController do
 
         post(decks_path, params: deck_params(name: "", csv_file: csv))
 
-        expect(rendered).to have_content("Create New Deck")
+        expect(rendered).to have_text("Create New Deck")
       end
 
       it "sets error flash message" do
@@ -192,7 +192,7 @@ RSpec.describe DecksController do
       it "re-renders the form when validation fails" do
         post_music_deck(name: "")
 
-        expect(rendered).to have_content("Create New Deck")
+        expect(rendered).to have_text("Create New Deck")
       end
     end
   end
