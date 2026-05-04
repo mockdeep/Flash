@@ -8,17 +8,25 @@ class StudiesController < ApplicationController
     deck = current_user.decks.find(params[:deck_id])
     study = Study.for(deck:)
     reset_counters
-    render_study(Views::Studies::Show, deck:, study:)
+    render_study(show_view_class(deck), deck:, study:)
   end
 
   def update
     deck = current_user.decks.find(params[:deck_id])
     result = Study.for(deck:).answer_card(**answer_params)
     increment_counters(result)
-    render_study(Views::Studies::Update, deck:, result:)
+    render_study(update_view_class(deck), deck:, result:)
   end
 
   private
+
+  def show_view_class(deck)
+    deck.music? ? Views::Studies::MusicShow : Views::Studies::Show
+  end
+
+  def update_view_class(deck)
+    deck.music? ? Views::Studies::MusicUpdate : Views::Studies::Update
+  end
 
   def reset_counters
     reset_daily_counters

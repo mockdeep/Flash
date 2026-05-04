@@ -316,15 +316,17 @@ app/
 │       └── show.rb
 ├── javascript/
 │   ├── controllers/
-│   │   ├── deck_type_controller.ts  # Toggles CSV instructions block on creation form
+│   │   ├── deck_type_controller.ts    # Toggles CSV instructions block on creation form
 │   │   ├── dialog_controller.ts
 │   │   ├── file_upload_controller.ts
 │   │   ├── hotkeys_controller.ts
-│   │   └── mobile_nav_controller.ts
+│   │   ├── mobile_nav_controller.ts
+│   │   └── music_study_controller.ts  # Mic capture + RAF loop + sequence-state-machine glue
 │   └── music/
-│       ├── note_utils.ts        # Note ↔ frequency, sequence parsing
-│       ├── pitch_detector.ts    # YIN-style pitch detection from Float32Array samples
-│       └── reference_player.ts  # Web Audio sine playback for note sequences
+│       ├── note_utils.ts         # Note ↔ frequency, sequence parsing
+│       ├── pitch_detector.ts     # YIN-style pitch detection from Float32Array samples
+│       ├── reference_player.ts   # Web Audio sine playback for note sequences
+│       └── sequence_session.ts   # Pure state machine: hold-to-classify, advance/reset/complete
 └── assets/
     └── stylesheets/
         ├── application.css
@@ -527,16 +529,19 @@ Microphone-driven music study (target: guitar / ukulele). Public music decks app
 
 **Domain dispatch:** `Study.for(deck:)` returns `MusicStudy` for music decks (overrides `possible_answers` to `[]`). The base `Study#answer_card` works for music as-is — the JS POSTs `answer = card.back` so the existing `card.back == answer` comparison is the right check.
 
-**Study UI:** the in-browser music-study experience (mic capture, sequence state machine, Phlex view) is on its own track and not yet shipped. Currently `StudiesController` renders the text study view for all deck types; music decks exist in the catalog and creation flow but the play experience for them is not wired up yet.
+**Study UI:** `StudiesController#show`/`#update` dispatches to `Views::Studies::MusicShow`/`MusicUpdate` (vs `Show`/`Update`) when `deck.music?`. The MusicShow view renders `Components::MusicCardBody`, which is the mic-driven widget — Start Microphone gate, Play Reference button, hidden card front, progress counter, and a hidden form the JS POSTs through on completion.
 
 **JS modules** (under `app/javascript/music/`) — pure, framework-free, 100% Vitest coverage:
 - `note_utils.ts` — `noteToFrequency("A4") → 440`, `frequencyToNote(440) → {note: "A4", cents: 0}`, `parseSequence("C4,E4,G4") → ["C4", "E4", "G4"]`. Equal-temperament from MIDI; sharps only, no flats.
 - `pitch_detector.ts` — `detectPitch(samples, sampleRate, options?) → Hz | null`. Simplified YIN (cumulative-mean-normalized difference function + first-below-threshold + local-min walk). No parabolic interpolation — accuracy is sufficient for the ±50¢ tolerance, and skipping it keeps branch coverage tractable. Defaults: threshold 0.15, search range 60–2000 Hz.
-- `reference_player.ts` — `playSequence(ctx, notes, options?) → Promise<void>`. Schedules sine oscillators on an injected `AudioContextLike` (narrow structural interface so jsdom mocks satisfy the type without `as` casts). Defaults: 500ms note + 100ms gap.
+- `reference_player.ts` — `playSequence(ctx, notes, options?) → Promise<void>`. Schedules sine oscillators on an injected `AudioContextLike` (narrow structural interface using **method shorthand** so real DOM `AudioContext` is bivariantly compatible — see the file's eslint-disable comment for why this matters).
+- `sequence_session.ts` — `step(state, input) → {state, event}`. Pure state machine that consumes one detected pitch per frame, holds candidate notes for `holdMs` ms before classifying as right/wrong, and emits `advanced` / `completed` / `reset` / `noop` events.
 
-**Mic & audio constraints (for the upcoming Stimulus integration):**
-- `getUserMedia` and `AudioContext` require HTTPS. Rails dev (`bin/dev`) defaults to plain HTTP — use a self-signed cert or staging.
-- `AudioContext` autoplay policy: create/resume inside a user-gesture handler, never on page load.
+**Stimulus controller:** `app/javascript/controllers/music_study_controller.ts` is the thin glue layer — `getUserMedia`, `AudioContext`, `AnalyserNode`, RAF loop, calling into `sequence_session.step` per frame, and `form.requestSubmit()` on completion. Spec mocks are in `spec/javascript/support/music_study_harness.ts`.
+
+**Mic & audio constraints:**
+- `getUserMedia` and `AudioContext` require HTTPS. Rails dev (`bin/dev`) defaults to plain HTTP — use a self-signed cert or staging to actually exercise the mic flow.
+- `AudioContext` autoplay policy: create/resume inside a user-gesture handler. The controller honors this by gating creation behind the explicit "Start Microphone" button.
 
 ### Study Algorithm
 
