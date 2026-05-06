@@ -14,17 +14,20 @@ class CatalogController < ApplicationController
 
   def copy
     result = Catalog::CopyDeck.call(user: current_user, deck: public_deck)
-
-    if result.success?
-      flash[:success] = "Deck copied successfully"
-      redirect_to(decks_path)
-    else
-      flash.now[:error] = error_messages(result.record)
-      render(Views::Catalog::Show.new(deck: public_deck))
-    end
+    result.success? ? deck_copied : deck_copy_failed(result.record)
   end
 
   private
+
+  def deck_copied
+    flash[:success] = t(".success")
+    redirect_to(decks_path)
+  end
+
+  def deck_copy_failed(record)
+    flash.now[:error] = error_messages(record)
+    render(Views::Catalog::Show.new(deck: public_deck))
+  end
 
   def public_deck
     Deck.publicly_visible.find(params[:id])

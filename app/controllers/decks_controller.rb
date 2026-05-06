@@ -31,7 +31,7 @@ class DecksController < ApplicationController
   end
 
   def deck_created
-    flash[:success] = "Deck created successfully"
+    flash[:success] = t(".success")
     redirect_to(decks_path)
   end
 
