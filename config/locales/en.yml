@@ -30,4 +30,28 @@
 # available at https://guides.rubyonrails.org/i18n.html.
 
 en:
-  hello: "Hello world"
+  accounts:
+    create:
+      success: "Account created successfully"
+      error: "There was a problem setting up your account"
+    update:
+      success: "Account updated successfully"
+      error: "There was a problem updating your account"
+    destroy:
+      success: "Account permanently deleted"
+  catalog:
+    copy:
+      success: "Deck copied successfully"
+  decks:
+    create:
+      success: "Deck created successfully"
+  sessions:
+    create:
+      error: "Invalid email or password"
+  subscriptions:
+    create:
+      error: "Unable to create checkout session"
+    destroy:
+      success: "Subscription canceled successfully"
+      error: "Unable to cancel subscription"
+      missing: "No active subscription found"

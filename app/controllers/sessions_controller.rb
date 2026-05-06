@@ -13,7 +13,7 @@ class SessionsController < ApplicationController
       log_in(user)
       redirect_to(root_path)
     else
-      flash.now[:error] = "Invalid email or password"
+      flash.now[:error] = t(".error")
       render(Views::Sessions::New.new)
     end
   end

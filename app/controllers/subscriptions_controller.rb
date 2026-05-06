@@ -13,28 +13,28 @@ class SubscriptionsController < ApplicationController
     if result.success?
       redirect_to(result.checkout_url, allow_other_host: true)
     else
-      flash[:error] = "Unable to create checkout session"
+      flash[:error] = t(".error")
       redirect_to(subscription_path)
     end
   end
 
   def destroy
     subscription = current_user.subscription
-
     if subscription.blank?
-      flash[:error] = "No active subscription found"
-      redirect_to(subscription_path)
-      return
-    end
-
-    result = Creem::CancelSubscription.call(subscription:)
-
-    if result.success?
-      flash[:success] = "Subscription canceled successfully"
+      flash[:error] = t(".missing")
     else
-      flash[:error] = "Unable to cancel subscription"
+      flash_cancellation(Creem::CancelSubscription.call(subscription:))
     end
-
     redirect_to(subscription_path)
+  end
+
+  private
+
+  def flash_cancellation(result)
+    if result.success?
+      flash[:success] = t(".success")
+    else
+      flash[:error] = t(".error")
+    end
   end
 end
