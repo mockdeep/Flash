@@ -11,31 +11,12 @@ module Views
 
       def view_template
         turbo_frame_tag("card_edit_form") do
-          render_errors if @card.errors.any?
+          render(Components::ErrorExplanation.new(errors: @card.errors))
           render_form
         end
       end
 
       private
-
-      def render_errors
-        div(class: "error-explanation") do
-          div(class: "error-icon") { "⚠" }
-          render_error_content
-        end
-      end
-
-      def render_error_content
-        div(class: "error-content") do
-          count = @card.errors.count
-          h2 { "#{pluralize(count, "problem")} with your card:" }
-          ul do
-            @card.errors.full_messages.each do |msg|
-              li { msg }
-            end
-          end
-        end
-      end
 
       def render_form
         form_with(
