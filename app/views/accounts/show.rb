@@ -17,17 +17,20 @@ module Views
             supporter_badge if user.supporter?
           end
 
-          form_with(model: user, url: account_path) do |form|
-            error_explanation
-            render_fields(form)
-            render_actions(form)
-          end
-
+          render_form
           button_to("Delete Account", account_path, method: :delete)
         end
       end
 
       private
+
+      def render_form
+        form_with(model: user, url: account_path) do |form|
+          render(Components::ErrorExplanation.new(errors: user.errors))
+          render_fields(form)
+          render_actions(form)
+        end
+      end
 
       def render_fields(form)
         div(class: "form-field") do
@@ -54,25 +57,6 @@ module Views
       def render_actions(form)
         div(class: "actions") do
           form.submit("Update Account", class: button_class(:primary))
-        end
-      end
-
-      def error_explanation
-        errors = user.errors
-        return if errors.none?
-
-        div(class: "error-explanation") do
-          div(class: "error-icon") { "\u26A0" }
-          div(class: "error-content") do
-            h2 do
-              "#{pluralize(errors.count, "problem")} with your account:"
-            end
-            ul do
-              errors.full_messages.each do |message|
-                li { message }
-              end
-            end
-          end
         end
       end
     end

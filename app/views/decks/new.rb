@@ -22,20 +22,7 @@ module Views
 
           div(class: "card card--striped form-card") do
             form_with(model: deck, class: "deck-form") do |form|
-              errors = deck.errors
-              if errors.any?
-                div(class: "error-explanation") do
-                  div(class: "error-icon") { "⚠" }
-                  div(class: "error-content") do
-                    h2 { "#{pluralize(errors.count, "problem")} with your deck:" }
-                    ul do
-                      errors.full_messages.each do |message|
-                        li { message }
-                      end
-                    end
-                  end
-                end
-              end
+              render(Components::ErrorExplanation.new(errors: deck.errors))
 
               div(class: "form-field") do
                 form.label(:name, "Deck Name", class: "form-label")

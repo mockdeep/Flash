@@ -22,7 +22,7 @@ module Views
           p(class: "auth-subtitle") { "Start mastering any subject today" }
 
           div(class: "auth-card") do
-            render_errors
+            render(Components::ErrorExplanation.new(errors: user.errors))
 
             form_with(model: user, url: account_path, class: "auth-form") do |form|
               div(class: "auth-form-field") do
@@ -74,27 +74,6 @@ module Views
               p(class: "auth-footer-text") do
                 plain("Already have an account? ")
                 link_to("Log in", new_session_path, class: "auth-footer-link")
-              end
-            end
-          end
-        end
-      end
-
-      private
-
-      def render_errors
-        errors = user.errors
-        return if errors.none?
-
-        div(class: "auth-error") do
-          div(class: "auth-error-icon") { "⚠" }
-          div(class: "auth-error-content") do
-            h2(class: "auth-error-heading") do
-              "#{pluralize(errors.count, "problem")} with your signup:"
-            end
-            ul(class: "auth-error-list") do
-              errors.full_messages.each do |message|
-                li { message }
               end
             end
           end
