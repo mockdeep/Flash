@@ -13,6 +13,7 @@ Bundler/GemVersion:
   Exclude:
     - 'Gemfile'
 
+<<<<<<< HEAD
 # Offense count: 2
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: link_or_button, strict
@@ -112,6 +113,9 @@ Lint/NumberConversion:
     - 'app/actions/creem/client.rb'
 
 # Offense count: 17
+=======
+# Offense count: 3
+>>>>>>> 58b372a (Rubocop: fix EmptyLineAfterMagicComment lints (#1416))
 # Configuration parameters: AllowedMethods, AllowedPatterns, CountRepeatedAttributes, Max.
 Metrics/AbcSize:
   Exclude:
