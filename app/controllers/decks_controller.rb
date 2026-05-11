@@ -6,7 +6,7 @@ class DecksController < ApplicationController
   end
 
   def show
-    deck = current_user.decks.find(params[:id])
+    deck = current_user.decks.find(params.expect(:id))
 
     render(Views::Decks::Show.new(deck:))
   end

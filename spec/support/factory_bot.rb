@@ -6,21 +6,31 @@ module FactoryCache
   extend self
 
   def user
+    return FactoryBot.create(:user) if @disabled
     return @user if @user&.persisted?
 
     @user = FactoryBot.create(:user)
   end
 
   def deck
+    return FactoryBot.create(:deck) if @disabled
     return @deck if @deck&.persisted?
 
     @deck = FactoryBot.create(:deck)
   end
 
   def music_deck
+    return FactoryBot.create(:music_deck) if @disabled
     return @music_deck if @music_deck&.persisted?
 
     @music_deck = FactoryBot.create(:music_deck)
+  end
+
+  def disable
+    @disabled = true
+    yield
+  ensure
+    @disabled = false
   end
 
   def reset

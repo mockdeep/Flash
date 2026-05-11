@@ -30,7 +30,7 @@ class CatalogController < ApplicationController
   end
 
   def public_deck
-    Deck.publicly_visible.find(params[:id])
+    Deck.publicly_visible.find(params.expect(:id))
   end
 
   def error_messages(record)
