@@ -2,8 +2,8 @@
 
 class CardsController < ApplicationController
   def update
-    deck = current_user.decks.find(params[:deck_id])
-    card = deck.cards.find(params[:id])
+    deck = current_user.decks.find(params.expect(:deck_id))
+    card = deck.cards.find(params.expect(:id))
 
     if card.update(card_params)
       render(turbo_stream: success_streams(card:, deck:))

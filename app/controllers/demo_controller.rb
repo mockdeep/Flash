@@ -17,7 +17,7 @@ class DemoController < ApplicationController
   private
 
   def start_demo
-    deck = Deck.demo_visible.find(params[:deck_id])
+    deck = Deck.demo_visible.find(params.expect(:deck_id))
     Demo::CreateGuestUser.call(deck:)
   end
 
