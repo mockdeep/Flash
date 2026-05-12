@@ -3,9 +3,8 @@
 require "rails_helper"
 
 RSpec.describe MusicStudy do
-  def answer_card(deck:, card:, answer: card.back, wrong_answers: [])
-    described_class.new(deck:)
-      .answer_card(card_id: card.id, answer:, wrong_answers:)
+  def answer_card(deck:, card:, answer: card.back)
+    described_class.new(deck:).answer_card(card_id: card.id, answer:)
   end
 
   describe "#possible_answers" do
@@ -33,15 +32,6 @@ RSpec.describe MusicStudy do
       card = create(:music_card, deck:, back: "C4", correct_streak: 3)
 
       answer_card(deck:, card:, answer: "D4")
-
-      expect(card.reload.correct_streak).to eq(0)
-    end
-
-    it "leaves streak unchanged on a correct retry" do
-      deck = create(:music_deck)
-      card = create(:music_card, deck:, back: "C4")
-
-      answer_card(deck:, card:, wrong_answers: ["D4"])
 
       expect(card.reload.correct_streak).to eq(0)
     end

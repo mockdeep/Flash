@@ -10,7 +10,6 @@ class Study
       :question,
       :selected_answer,
       :possible_answers,
-      :wrong_answers,
       :card_completed,
       :level_completed,
     ) do
@@ -58,24 +57,16 @@ class Study
     [*distractors, next_card.back].shuffle
   end
 
-  def answer_card(card_id:, answer:, possible_answers: [], wrong_answers: [])
+  def answer_card(card_id:, answer:, possible_answers: [])
     card = deck.cards.find(card_id)
-    first_attempt = wrong_answers.empty?
-
+    card.view_count += 1
     if card.back == answer
-      if first_attempt
-        card.view_count += 1
-        card.correct_count += 1
-        card.correct_streak += 1
-        card_completed = card.done?
-        card.save!
-        level_completed =
-          card_completed && deck.cards.not_done(deck.level).none?
-        deck.update!(level: deck.level + 1) if level_completed
-      else
-        card_completed = false
-        level_completed = false
-      end
+      card.correct_count += 1
+      card.correct_streak += 1
+      card_completed = card.done?
+      card.save!
+      level_completed = card_completed && deck.cards.not_done(deck.level).none?
+      deck.update!(level: deck.level + 1) if level_completed
       Result.new(
         card:,
         correct: true,
@@ -83,12 +74,10 @@ class Study
         question: card.front,
         selected_answer: answer,
         possible_answers:,
-        wrong_answers:,
         card_completed:,
         level_completed:,
       )
     else
-      card.view_count += 1 if first_attempt
       card.distractors.unshift(answer).uniq!
       card.correct_streak = 0
       card.save!
@@ -99,7 +88,6 @@ class Study
         question: card.front,
         selected_answer: answer,
         possible_answers:,
-        wrong_answers: wrong_answers + [answer],
         card_completed: false,
         level_completed: false,
       )
