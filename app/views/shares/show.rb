@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Views
-  module Catalog
+  module Shares
     class Show < Views::Base
       attr_accessor :deck
 
@@ -22,7 +22,6 @@ module Views
 
       def render_header
         div(class: "catalog-show-header") do
-          render_back_link
           h1(class: "catalog-show-title") do
             plain(deck.name)
             music_badge if deck.music?
@@ -31,16 +30,12 @@ module Views
         end
       end
 
-      def render_back_link
-        link_to("Back to Catalog", catalog_index_path, class: "back-link")
-      end
-
       def render_meta
         div(class: "catalog-show-meta") do
           span { "#{deck.cards.count} cards" }
           span(class: "catalog-meta-separator") { "|" }
           span do
-            plain("by #{deck.user.username}")
+            plain("shared by #{deck.user.username}")
             supporter_badge if deck.user.supporter?
           end
         end
@@ -63,7 +58,7 @@ module Views
       def render_copy_button
         button_to(
           "Add to My Decks",
-          copy_catalog_path(deck),
+          copy_shared_deck_path(deck.share_token),
           method: :post,
           class: button_class(:primary),
         )

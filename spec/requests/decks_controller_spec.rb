@@ -106,6 +106,35 @@ RSpec.describe DecksController do
 
       expect(response).to have_http_status(:not_found)
     end
+
+    it "shows a share button when the deck is not shared" do
+      deck = create(:deck, user: default_user)
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_button("Share Link")
+    end
+
+    it "shows a revoke button when the deck is shared" do
+      deck = create(:deck, user: default_user)
+      deck.generate_share_token!
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_text("Revoke Link")
+    end
+
+    it "shows the share URL when the deck is shared" do
+      deck = create(:deck, user: default_user).tap(&:generate_share_token!)
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered)
+        .to have_field(type: "text", with: shared_deck_url(deck.share_token))
+    end
   end
 
   describe "#new" do

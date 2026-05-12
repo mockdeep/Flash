@@ -167,7 +167,6 @@ Metrics/MethodLength:
     - 'app/domain/study.rb'
     - 'app/views/accounts/new.rb'
     - 'app/views/accounts/show.rb'
-    - 'app/views/catalog/show.rb'
     - 'app/views/decks/index.rb'
     - 'app/views/decks/new.rb'
     - 'app/views/decks/show.rb'
