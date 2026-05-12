@@ -283,73 +283,19 @@ RSpec.describe StudiesController do
         expect(rendered).to have_css(".answer-incorrect", text: "London")
       end
 
-      it "does not reveal the correct answer" do
+      it "reveals the correct answer" do
         card = create(:card, deck:, back: "Paris")
         submit_answer(card:, answer: "London")
 
-        expect(rendered).to have_no_css(".answer-correct")
+        expect(rendered).to have_css(".answer-correct", text: "Paris")
       end
 
-      it "leaves remaining answers as clickable buttons" do
-        card = create(:card, deck:, back: "Paris")
-        submit_answer(card:, answer: "London")
-
-        expect(rendered).to have_button("Paris")
-      end
-
-      it "does not show the next card link" do
-        card = create(:card, deck:, back: "Paris")
-        submit_answer(card:, answer: "London")
-
-        expect(rendered).to have_no_link("Next Card")
-      end
-    end
-
-    context "when retrying after a wrong guess" do
-      let(:choices) { ["Paris", "London", "Berlin", "Rome"] }
-
-      def submit_retry(card:, answer:, wrong_answers:)
-        attrs = { card_id: card.id, answer:, possible_answers: choices }
-        attrs[:wrong_answers] = wrong_answers
-        patch(deck_study_path(deck), params: { answer: attrs })
-      end
-
-      it "does not advance the streak when eventually correct" do
-        card = create(:card, deck:, back: "Paris", correct_streak: 0)
-
-        submit_retry(card:, answer: "Paris", wrong_answers: ["London"])
-
-        expect(card.reload.correct_streak).to eq(0)
-      end
-
-      it "does not increment correct count when eventually correct" do
-        card = create(:card, deck:, back: "Paris", correct_count: 0)
-
-        submit_retry(card:, answer: "Paris", wrong_answers: ["London"])
-
-        expect(card.reload.correct_count).to eq(0)
-      end
-
-      it "shows next card link when eventually correct" do
+      it "shows the next card link" do
         card = create(:card, deck:, back: "Paris")
         create(:card, deck:)
-        submit_retry(card:, answer: "Paris", wrong_answers: ["London"])
+        submit_answer(card:, answer: "London")
 
         expect(rendered).to have_link("Next Card")
-      end
-
-      it "marks the latest wrong answer on subsequent wrong guess" do
-        card = create(:card, deck:, back: "Paris")
-        submit_retry(card:, answer: "Berlin", wrong_answers: ["London"])
-
-        expect(rendered).to have_css(".answer-incorrect", text: "Berlin")
-      end
-
-      it "keeps prior wrong answer marked on subsequent wrong guess" do
-        card = create(:card, deck:, back: "Paris")
-        submit_retry(card:, answer: "Berlin", wrong_answers: ["London"])
-
-        expect(rendered).to have_css(".answer-incorrect", text: "London")
       end
     end
 
