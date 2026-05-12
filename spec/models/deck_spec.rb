@@ -69,4 +69,48 @@ RSpec.describe Deck do
       expect(described_class.demo_visible).not_to include(deck)
     end
   end
+
+  describe "#shared?" do
+    it "is false when share_token is nil" do
+      deck = create(:deck, share_token: nil)
+
+      expect(deck.shared?).to be(false)
+    end
+
+    it "is true when share_token is present" do
+      deck = create(:deck, share_token: "abc123")
+
+      expect(deck.shared?).to be(true)
+    end
+  end
+
+  describe "#generate_share_token!" do
+    it "sets a non-blank share_token" do
+      deck = create(:deck, share_token: nil)
+
+      deck.generate_share_token!
+
+      expect(deck.share_token).to be_present
+    end
+
+    it "generates a different token each call" do
+      deck = create(:deck, share_token: nil)
+
+      deck.generate_share_token!
+      first_token = deck.share_token
+      deck.generate_share_token!
+
+      expect(deck.share_token).not_to eq(first_token)
+    end
+  end
+
+  describe "#revoke_share_token!" do
+    it "clears the share_token" do
+      deck = create(:deck, share_token: "abc123")
+
+      deck.revoke_share_token!
+
+      expect(deck.share_token).to be_nil
+    end
+  end
 end

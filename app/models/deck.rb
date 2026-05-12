@@ -21,4 +21,14 @@ class Deck < ApplicationRecord
   scope :demo_visible, -> { where(visibility: "demo") }
 
   def music? = false
+
+  def shared? = share_token.present?
+
+  def generate_share_token!
+    update!(share_token: SecureRandom.urlsafe_base64(16))
+  end
+
+  def revoke_share_token!
+    update!(share_token: nil)
+  end
 end

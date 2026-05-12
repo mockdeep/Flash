@@ -191,8 +191,8 @@ end
 
 **CSS Organization:**
 - `application.css` - Base styles, resets, common patterns
-- `catalog.css` - Public deck catalog browsing and preview
-- `decks.css` - Deck listing and form styles
+- `catalog.css` - Public deck catalog browsing and preview (`.catalog-show-*` also reused by the share-link preview at `/shared/:token`)
+- `decks.css` - Deck listing, deck form, and deck-show page (incl. `.deck-share-*` block)
 - `dialog.css` - Modal dialog component styles (`.dialog`, `.dialog__header`, etc.)
 - `edit-card.css` - Edit card trigger button and form layout within the dialog
 - `flash.css` - Study/flashcard specific styles (the core app)
@@ -271,6 +271,7 @@ app/
 │       └── client.rb
 ├── components/
 │   ├── base.rb                    # Base component (supporter_badge, music_badge helpers)
+│   ├── card_preview.rb            # 5-card preview block (shared by catalog and share preview)
 │   └── music_csv_instructions.rb  # CSV format help block for music decks
 ├── domain/
 │   ├── study.rb         # Study engine; `Study.for(deck:)` dispatches by deck type
@@ -281,6 +282,7 @@ app/
 │   ├── catalog_controller.rb
 │   ├── decks_controller.rb     # `#create` dispatches Decks::Create vs Decks::CreateMusic on :deck_type
 │   ├── pages_controller.rb
+│   ├── shares_controller.rb    # Owner toggle (create/destroy via :deck_id) + public preview/copy (show/copy via :token)
 │   └── subscriptions_controller.rb
 ├── models/
 │   ├── user.rb
@@ -303,7 +305,9 @@ app/
 │   ├── decks/
 │   │   ├── index.rb
 │   │   ├── new.rb        # Includes deck-type toggle (text vs music)
-│   │   └── show.rb
+│   │   └── show.rb       # Includes share-link section (generate / show URL / revoke)
+│   ├── shares/
+│   │   └── show.rb       # Public share-link preview (attributed to owner)
 │   ├── pages/
 │   │   ├── privacy.rb
 │   │   └── terms.rb
@@ -316,6 +320,7 @@ app/
 │       └── show.rb
 ├── javascript/
 │   ├── controllers/
+│   │   ├── clipboard_controller.ts    # Copies an input value to the clipboard on click
 │   │   ├── deck_type_controller.ts    # Toggles CSV instructions block on creation form
 │   │   ├── dialog_controller.ts
 │   │   ├── file_upload_controller.ts
@@ -505,6 +510,15 @@ Users can browse and copy public decks at `/catalog`:
 - **Copy**: `POST /catalog/:id/copy` — duplicates deck + cards into current user's account (auth required)
 - Deck visibility is controlled by `deck.visibility` (`"public"` / `"private"`)
 - Visibility is currently set via Rails console; there is no UI for changing it yet
+
+### Deck Sharing (revocable link)
+
+Private decks can be shared with a friend via a revocable token. The `decks.share_token` column is nullable and uniquely indexed; presence = link active.
+- **Generate / revoke**: owner POSTs to `/decks/:deck_id/share` (sets a fresh `urlsafe_base64(16)` token) or DELETEs to revoke. Both handled by `SharesController#create` / `#destroy`; backed by `Deck#generate_share_token!` / `#revoke_share_token!` / `#shared?` on the model.
+- **Public preview**: `GET /shared/:token` → `SharesController#show` renders `Views::Shares::Show` with no auth (`skip_before_action :authenticate_user, only: [:show]`). Attributes the deck to its owner ("shared by [username]"). Returns 404 if the token doesn't match a current deck (revocation just nullifies the column).
+- **Add to my decks**: `POST /shared/:token/copy` → `SharesController#copy` reuses `Catalog::CopyDeck` to fork the deck into `current_user`'s account.
+- **Share UI on deck show page** uses a Stimulus `clipboard` controller for copy-to-clipboard on the share-link input.
+- Sharing is orthogonal to `visibility` — a `"private"` deck can have a token without being listed in the catalog.
 
 ### CSV Import
 

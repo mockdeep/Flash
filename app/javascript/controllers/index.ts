@@ -6,6 +6,9 @@
 
 import {application} from "./application";
 
+import ClipboardController from "./clipboard_controller";
+application.register("clipboard", ClipboardController);
+
 import DeckTypeController from "./deck_type_controller";
 application.register("deck-type", DeckTypeController);
 

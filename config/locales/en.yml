@@ -30,6 +30,9 @@
 # available at https://guides.rubyonrails.org/i18n.html.
 
 en:
+  components:
+    card_preview:
+      empty: "This deck has no cards yet."
   accounts:
     create:
       success: "Account created successfully"
@@ -45,6 +48,13 @@ en:
   decks:
     create:
       success: "Deck created successfully"
+  shares:
+    copy:
+      success: "Deck copied successfully"
+    create:
+      success: "Share link created"
+    destroy:
+      success: "Share link revoked"
   sessions:
     create:
       error: "Invalid email or password"

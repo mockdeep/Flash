@@ -13,9 +13,13 @@ Rails.application.routes.draw do
   resource :demo, only: [:show, :create], controller: "demo"
   resources :decks, only: [:new, :create, :index, :show] do
     resource :milestone, only: [:update]
+    resource :share, only: [:create, :destroy], controller: "shares"
     resource :study, only: [:show, :update]
     resources :cards, only: [:update]
   end
+
+  get "shared/:token", to: "shares#show", as: :shared_deck
+  post "shared/:token/copy", to: "shares#copy", as: :copy_shared_deck
   resource :session, only: [:new, :create, :destroy]
   resource :subscription, only: [:show, :create, :destroy]
 
