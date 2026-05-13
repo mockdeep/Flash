@@ -17,14 +17,19 @@ RSpec.describe Study do
 
       expect(described_class.for(deck:)).to be_an_instance_of(MusicStudy)
     end
+  end
 
-    it "passes through additional options" do
-      deck = create(:deck)
-      create_list(:card, 3, deck:)
+  describe "#active_card_threshold" do
+    it "returns the base threshold at level 1" do
+      deck = create(:deck, level: 1)
 
-      study = described_class.for(deck:, active_card_threshold: 2)
+      expect(described_class.new(deck:).active_card_threshold).to eq(20)
+    end
 
-      expect(study.active_card_threshold).to eq(2)
+    it "doubles with each level" do
+      deck = create(:deck, level: 3)
+
+      expect(described_class.new(deck:).active_card_threshold).to eq(80)
     end
   end
 
@@ -39,13 +44,12 @@ RSpec.describe Study do
     end
 
     it "limits cards to threshold" do
-      deck = create(:deck)
+      stub_const("Study::ACTIVE_CARD_THRESHOLD", 5)
+      deck = create(:deck, level: 1)
       create_list(:card, 10, deck:)
+      card = described_class.new(deck:).next_card
 
-      study = described_class.new(deck:, active_card_threshold: 5)
-
-      cards = deck.cards.not_done(deck.level).ordered.limit(5)
-      expect(cards).to include(study.next_card)
+      expect(deck.cards.not_done(1).ordered.limit(5)).to include(card)
     end
 
     it "returns nil when no cards available" do
@@ -66,13 +70,12 @@ RSpec.describe Study do
     end
 
     it "does not return cards beyond the threshold" do
-      deck = create(:deck)
+      stub_const("Study::ACTIVE_CARD_THRESHOLD", 5)
+      deck = create(:deck, level: 1)
       create_list(:card, 10, deck:)
+      card = described_class.new(deck:).next_card
 
-      study = described_class.new(deck:, active_card_threshold: 5)
-
-      over_threshold = deck.cards.not_done(deck.level).ordered.offset(5)
-      expect(over_threshold).not_to include(study.next_card)
+      expect(deck.cards.not_done(1).ordered.offset(5)).not_to include(card)
     end
   end
 
