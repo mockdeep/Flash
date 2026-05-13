@@ -117,6 +117,22 @@ describe("filter matching", () => {
     expect(matchTexts()).toStrictEqual(["cat", "candy", "caterpillar"]);
   });
 
+  it("counts unmatched words toward remaining characters", async () => {
+    const controller = await boot([
+      "to live in an apartment",
+      "to live in a house",
+      "to live",
+    ]);
+
+    await typeAndFilter(controller, "to live");
+
+    expect(matchTexts()).toStrictEqual([
+      "to live",
+      "to live in a house",
+      "to live in an apartment",
+    ]);
+  });
+
   it("matches against any word in a phrase", async () => {
     const controller = await boot(["the quick brown fox", "lazy dog"]);
 
