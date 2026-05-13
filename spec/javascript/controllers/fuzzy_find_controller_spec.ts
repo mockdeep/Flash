@@ -135,6 +135,52 @@ describe("filter matching", () => {
   });
 });
 
+describe("filter multi-word matching", () => {
+  it("matches consecutive words when the query has whitespace", async () => {
+    const controller = await boot(["last name", "first name", "lastly"]);
+
+    await typeAndFilter(controller, "last name");
+
+    expect(matchTexts()).toStrictEqual(["last name"]);
+  });
+
+  it("matches consecutive word prefixes inside a phrase", async () => {
+    const controller = await boot([
+      "the quick brown fox",
+      "quick fox",
+      "brown bear",
+    ]);
+
+    await typeAndFilter(controller, "qu br");
+
+    expect(matchTexts()).toStrictEqual(["the quick brown fox"]);
+  });
+
+  it("does not match when query words are out of order", async () => {
+    const controller = await boot(["the quick brown fox"]);
+
+    await typeAndFilter(controller, "br qu");
+
+    expect(matchTexts()).toStrictEqual([]);
+  });
+
+  it("collapses internal whitespace when splitting the query", async () => {
+    const controller = await boot(["last name"]);
+
+    await typeAndFilter(controller, "last   name");
+
+    expect(matchTexts()).toStrictEqual(["last name"]);
+  });
+
+  it("does not match when the answer is shorter than the query", async () => {
+    const controller = await boot(["short"]);
+
+    await typeAndFilter(controller, "short answer");
+
+    expect(matchTexts()).toStrictEqual([]);
+  });
+});
+
 describe("filter normalization", () => {
   it("matches case-insensitively", async () => {
     const controller = await boot(["Paris"]);

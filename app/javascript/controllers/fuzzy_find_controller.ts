@@ -14,27 +14,57 @@ function normalize(text: string): string {
     toLowerCase();
 }
 
-function findPrefixMatch(answer: string, prefix: string): number | null {
-  for (const word of normalize(answer).split(/\s+/u)) {
-    if (word.startsWith(prefix)) {
-      return word.length - prefix.length;
-    }
+function remainingAt(
+  answerWords: string[],
+  queryWords: string[],
+  start: number,
+): number | null {
+  let remaining = 0;
+  for (const [offset, queryWord] of queryWords.entries()) {
+    const word = answerWords[start + offset];
+    if (word === undefined) { return null; }
+    if (!word.startsWith(queryWord)) { return null; }
+    remaining += word.length - queryWord.length;
+  }
+
+  return remaining;
+}
+
+function findPrefixMatch(
+  answerWords: string[],
+  queryWords: string[],
+): number | null {
+  for (let start = 0; start < answerWords.length; start += 1) {
+    const remaining = remainingAt(answerWords, queryWords, start);
+    if (remaining !== null) { return remaining; }
   }
 
   return null;
 }
 
+function tryMatch(answer: string, queryWords: string[]): Match | null {
+  const answerWords = normalize(answer).split(/\s+/u);
+  const remaining = findPrefixMatch(answerWords, queryWords);
+  if (remaining === null) { return null; }
+
+  return {answer, remaining};
+}
+
+function collectMatches(answers: string[], queryWords: string[]): Match[] {
+  const matches: Match[] = [];
+  for (const answer of answers) {
+    const match = tryMatch(answer, queryWords);
+    if (match !== null) { matches.push(match); }
+  }
+
+  return matches;
+}
+
 function matchAnswers(answers: string[], rawQuery: string): Match[] {
   const query = normalize(rawQuery.trim());
   if (query.length === 0) { return []; }
-
-  const matches: Match[] = [];
-  for (const answer of answers) {
-    const remaining = findPrefixMatch(answer, query);
-    if (remaining !== null) {
-      matches.push({answer, remaining});
-    }
-  }
+  const queryWords = query.split(/\s+/u);
+  const matches = collectMatches(answers, queryWords);
   matches.sort((left, right) => {
     return left.remaining - right.remaining;
   });
