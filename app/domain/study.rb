@@ -19,17 +19,20 @@ class Study
       def level_completed? = level_completed
     end
 
-  attr_accessor :deck, :next_card, :active_card_threshold
+  attr_accessor :deck, :next_card
 
-  def self.for(deck:, **)
+  def self.for(deck:)
     klass = deck.music? ? MusicStudy : self
-    klass.new(deck:, **)
+    klass.new(deck:)
   end
 
-  def initialize(deck:, active_card_threshold: ACTIVE_CARD_THRESHOLD)
-    self.active_card_threshold = active_card_threshold
+  def initialize(deck:)
     self.deck = deck
     self.next_card = pick_next_card
+  end
+
+  def active_card_threshold
+    (2**(deck.level - 1)) * ACTIVE_CARD_THRESHOLD
   end
 
   def pick_next_card
