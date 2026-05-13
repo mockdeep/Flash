@@ -18,6 +18,9 @@ application.register("dialog", DialogController);
 import FileUploadController from "./file_upload_controller";
 application.register("file-upload", FileUploadController);
 
+import FuzzyFindController from "./fuzzy_find_controller";
+application.register("fuzzy-find", FuzzyFindController);
+
 import HotkeysController from "./hotkeys_controller";
 application.register("hotkeys", HotkeysController);
 

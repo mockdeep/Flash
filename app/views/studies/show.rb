@@ -50,9 +50,7 @@ module Views
 
               h2(class: "card-front") { card.front }
 
-              render_answers(card, study.possible_answers)
-
-              p(class: "keyboard-hint") { "Press 1-5 to answer" }
+              render_active_card(card)
             end
 
             # Claim the space hotkey to prevent scrolling down
@@ -62,6 +60,16 @@ module Views
       end
 
       private
+
+      def render_active_card(card)
+        answers = study.possible_answers
+        if study.presentation_mode == :fuzzy_find
+          render(Components::FuzzyFindAnswers.new(deck:, card:, answers:))
+        else
+          render_answers(card, answers)
+          p(class: "keyboard-hint") { "Press 1-5 to answer" }
+        end
+      end
 
       def render_answers(card, answers)
         ol(class: "study-answers-grid") do

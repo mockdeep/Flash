@@ -892,6 +892,17 @@ body {
   border-color: var(--color-border-medium);
 }
 
+.fuzzy-find__input {
+  margin-bottom: var(--spacing-sm);
+}
+
+.fuzzy-find__no-matches {
+  margin: var(--spacing-sm) 0;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  text-align: center;
+}
+
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   *,

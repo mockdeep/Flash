@@ -76,6 +76,27 @@ RSpec.describe Study do
     end
   end
 
+  describe "#presentation_mode" do
+    it "returns :multiple_choice below the fuzzy find level" do
+      deck = create(:deck, level: described_class::FUZZY_FIND_LEVEL - 1)
+
+      expect(described_class.new(deck:).presentation_mode)
+        .to eq(:multiple_choice)
+    end
+
+    it "returns :fuzzy_find at the fuzzy find level" do
+      deck = create(:deck, level: described_class::FUZZY_FIND_LEVEL)
+
+      expect(described_class.new(deck:).presentation_mode).to eq(:fuzzy_find)
+    end
+
+    it "returns :fuzzy_find above the fuzzy find level" do
+      deck = create(:deck, level: described_class::FUZZY_FIND_LEVEL + 1)
+
+      expect(described_class.new(deck:).presentation_mode).to eq(:fuzzy_find)
+    end
+  end
+
   describe "#possible_answers" do
     it "returns empty array when no next card" do
       deck = create(:deck)
@@ -154,6 +175,30 @@ RSpec.describe Study do
       study = described_class.new(deck:)
 
       expect(study.possible_answers).to include("Four")
+    end
+
+    context "when in fuzzy find mode" do
+      let(:level) { Study::FUZZY_FIND_LEVEL }
+
+      it "returns all back values for cards in the deck" do
+        deck = create(:deck, level:)
+        create(:card, deck:, back: "Paris", correct_streak: level - 1)
+        create(:card, :done, deck:, back: "London")
+
+        answers = described_class.new(deck:).possible_answers
+
+        expect(answers).to contain_exactly("Paris", "London")
+      end
+
+      it "deduplicates repeated back values" do
+        deck = create(:deck, level:)
+        create(:card, deck:, back: "Paris", correct_streak: level - 1)
+        create(:card, :done, deck:, back: "Paris")
+
+        answers = described_class.new(deck:).possible_answers
+
+        expect(answers).to eq(["Paris"])
+      end
     end
 
     context "when deck distractor_pool is 'preset'" do
@@ -336,6 +381,16 @@ RSpec.describe Study do
 
         expect(result.card).to eq(card)
       end
+
+      it "includes the correct answer in result possible_answers" do
+        deck = create(:deck)
+        card = create(:card, deck:, back: "Paris")
+        study = described_class.new(deck:)
+
+        result = study.answer_card(card_id: card.id, answer: "Paris")
+
+        expect(result.possible_answers).to include("Paris")
+      end
     end
 
     context "when answer is incorrect" do
@@ -435,6 +490,13 @@ RSpec.describe Study do
         result = study.answer_card(card_id: card.id, answer: "London")
 
         expect(result.card).to eq(card)
+      end
+
+      it "includes the correct answer in result possible_answers" do
+        card = create(:card, back: "Paris")
+        result = answer_card(deck: card.deck, card:, answer: "London")
+
+        expect(result.possible_answers).to include("Paris")
       end
     end
   end
