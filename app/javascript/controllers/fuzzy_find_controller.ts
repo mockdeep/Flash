@@ -1,0 +1,128 @@
+import {Controller} from "@hotwired/stimulus";
+
+const MAX_RESULTS = 5;
+
+interface Match {
+  answer: string;
+  remaining: number;
+}
+
+function normalize(text: string): string {
+  return text.
+    normalize("NFD").
+    replace(/\p{Diacritic}/gu, "").
+    toLowerCase();
+}
+
+function findPrefixMatch(answer: string, prefix: string): number | null {
+  for (const word of normalize(answer).split(/\s+/u)) {
+    if (word.startsWith(prefix)) {
+      return word.length - prefix.length;
+    }
+  }
+
+  return null;
+}
+
+function matchAnswers(answers: string[], rawQuery: string): Match[] {
+  const query = normalize(rawQuery.trim());
+  if (query.length === 0) { return []; }
+
+  const matches: Match[] = [];
+  for (const answer of answers) {
+    const remaining = findPrefixMatch(answer, query);
+    if (remaining !== null) {
+      matches.push({answer, remaining});
+    }
+  }
+  matches.sort((left, right) => {
+    return left.remaining - right.remaining;
+  });
+
+  return matches.slice(0, MAX_RESULTS);
+}
+
+export default class extends Controller<HTMLElement> {
+  static override targets = [
+    "input",
+    "results",
+    "noMatches",
+    "form",
+    "answerInput",
+    "possibleAnswerInput",
+  ];
+
+  static override values = {
+    answers: Array,
+  };
+
+  declare inputTarget: HTMLInputElement;
+
+  declare resultsTarget: HTMLElement;
+
+  declare noMatchesTarget: HTMLElement;
+
+  declare formTarget: HTMLFormElement;
+
+  declare answerInputTarget: HTMLInputElement;
+
+  declare possibleAnswerInputTarget: HTMLInputElement;
+
+  declare answersValue: string[];
+
+  private currentMatches: string[] = [];
+
+  filter(): void {
+    const matches = matchAnswers(this.answersValue, this.inputTarget.value);
+    this.currentMatches = matches.map((match) => {
+      return match.answer;
+    });
+    this.renderMatches();
+  }
+
+  submitTop(event: KeyboardEvent): void {
+    event.preventDefault();
+    const top = this.currentMatches[0];
+    if (top === undefined) { return; }
+    this.submitWith(top);
+  }
+
+  private submitWith(answer: string): void {
+    this.answerInputTarget.value = answer;
+    this.possibleAnswerInputTarget.value = answer;
+    this.formTarget.requestSubmit();
+  }
+
+  private renderMatches(): void {
+    this.resultsTarget.replaceChildren();
+    const empty = this.inputTarget.value.trim().length === 0;
+    this.noMatchesTarget.hidden = this.currentMatches.length > 0 || empty;
+
+    this.currentMatches.forEach((answer) => {
+      this.resultsTarget.appendChild(this.buildMatchItem(answer));
+    });
+  }
+
+  private buildMatchItem(answer: string): HTMLLIElement {
+    const li = document.createElement("li");
+    li.appendChild(this.buildMatchButton(answer));
+
+    return li;
+  }
+
+  private buildMatchButton(answer: string): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "answer-button";
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      this.submitWith(answer);
+    });
+    const text = document.createElement("span");
+    text.className = "answer-text";
+    text.textContent = answer;
+    button.appendChild(text);
+
+    return button;
+  }
+}

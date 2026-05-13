@@ -2,6 +2,7 @@
 
 class Study
   ACTIVE_CARD_THRESHOLD = 20
+  FUZZY_FIND_LEVEL = 3
   Result =
     Data.define(
       :card,
@@ -35,9 +36,60 @@ class Study
     deck.cards.not_done(deck.level).ordered.limit(active_card_threshold).sample
   end
 
+  def presentation_mode
+    deck.level >= FUZZY_FIND_LEVEL ? :fuzzy_find : :multiple_choice
+  end
+
   def possible_answers
     return [] if next_card.nil?
 
+    case presentation_mode
+    when :fuzzy_find then deck.cards.distinct.pluck(:back)
+    else multiple_choice_answers
+    end
+  end
+
+  def answer_card(card_id:, answer:, possible_answers: [])
+    card = deck.cards.find(card_id)
+    card.view_count += 1
+    result_answers = [*possible_answers, card.back].uniq
+    if card.back == answer
+      card.correct_count += 1
+      card.correct_streak += 1
+      card_completed = card.done?
+      card.save!
+      level_completed = card_completed && deck.cards.not_done(deck.level).none?
+      deck.update!(level: deck.level + 1) if level_completed
+      Result.new(
+        card:,
+        correct: true,
+        correct_answer: card.back,
+        question: card.front,
+        selected_answer: answer,
+        possible_answers: result_answers,
+        card_completed:,
+        level_completed:,
+      )
+    else
+      card.distractors.unshift(answer).uniq!
+      card.correct_streak = 0
+      card.save!
+      Result.new(
+        card:,
+        correct: false,
+        correct_answer: card.back,
+        question: card.front,
+        selected_answer: answer,
+        possible_answers: result_answers,
+        card_completed: false,
+        level_completed: false,
+      )
+    end
+  end
+
+  private
+
+  def multiple_choice_answers
     distractors = next_card.distractors.first(4)
 
     if deck.distractor_pool == "category"
@@ -55,42 +107,5 @@ class Study
     end
 
     [*distractors, next_card.back].shuffle
-  end
-
-  def answer_card(card_id:, answer:, possible_answers: [])
-    card = deck.cards.find(card_id)
-    card.view_count += 1
-    if card.back == answer
-      card.correct_count += 1
-      card.correct_streak += 1
-      card_completed = card.done?
-      card.save!
-      level_completed = card_completed && deck.cards.not_done(deck.level).none?
-      deck.update!(level: deck.level + 1) if level_completed
-      Result.new(
-        card:,
-        correct: true,
-        correct_answer: card.back,
-        question: card.front,
-        selected_answer: answer,
-        possible_answers:,
-        card_completed:,
-        level_completed:,
-      )
-    else
-      card.distractors.unshift(answer).uniq!
-      card.correct_streak = 0
-      card.save!
-      Result.new(
-        card:,
-        correct: false,
-        correct_answer: card.back,
-        question: card.front,
-        selected_answer: answer,
-        possible_answers:,
-        card_completed: false,
-        level_completed: false,
-      )
-    end
   end
 end

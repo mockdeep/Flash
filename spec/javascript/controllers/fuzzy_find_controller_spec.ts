@@ -1,0 +1,228 @@
+import {describe, expect, it, vi} from "vitest";
+import {bootStimulus, getController} from "support/stimulus";
+import FuzzyFindController from "controllers/fuzzy_find_controller";
+import {assert} from "helpers/assert";
+
+const rootSel = "[data-controller='fuzzy-find']";
+const inputSel = "[data-fuzzy-find-target='input']";
+const resultsSel = "[data-fuzzy-find-target='results']";
+const noMatchesSel = "[data-fuzzy-find-target='noMatches']";
+const answerInputSel = "[data-fuzzy-find-target='answerInput']";
+const possibleSel = "[data-fuzzy-find-target='possibleAnswerInput']";
+const matchButtonSel = "button.answer-button";
+
+type SubmitFn = (submitter?: HTMLElement | null) => void;
+
+function setupDOM(answers: string[]): void {
+  document.body.innerHTML = `
+    <div data-controller="fuzzy-find">
+      <form data-fuzzy-find-target="form">
+        <input type="hidden" data-fuzzy-find-target="answerInput">
+        <input type="hidden" data-fuzzy-find-target="possibleAnswerInput">
+      </form>
+      <input type="text" data-fuzzy-find-target="input">
+      <ol data-fuzzy-find-target="results"></ol>
+      <p data-fuzzy-find-target="noMatches" hidden></p>
+    </div>
+  `;
+  const root = assert(document.querySelector<HTMLElement>(rootSel));
+  root.dataset.fuzzyFindAnswersValue = JSON.stringify(answers);
+}
+
+async function boot(answers: string[]): Promise<FuzzyFindController> {
+  setupDOM(answers);
+  await bootStimulus("fuzzy-find", FuzzyFindController);
+  const root = assert(document.querySelector<HTMLElement>(rootSel));
+
+  return getController(root, "fuzzy-find", FuzzyFindController);
+}
+
+function inputEl(): HTMLInputElement {
+  return assert(document.querySelector<HTMLInputElement>(inputSel));
+}
+
+function resultsEl(): HTMLElement {
+  return assert(document.querySelector<HTMLElement>(resultsSel));
+}
+
+function noMatchesEl(): HTMLElement {
+  return assert(document.querySelector<HTMLElement>(noMatchesSel));
+}
+
+function answerInputEl(): HTMLInputElement {
+  return assert(document.querySelector<HTMLInputElement>(answerInputSel));
+}
+
+function possibleAnswerInputEl(): HTMLInputElement {
+  return assert(document.querySelector<HTMLInputElement>(possibleSel));
+}
+
+function formEl(): HTMLFormElement {
+  return assert(document.querySelector<HTMLFormElement>("form"));
+}
+
+function matchTexts(): string[] {
+  return [...resultsEl().querySelectorAll("button")].map((button) => {
+    return assert(button.textContent);
+  });
+}
+
+function stubSubmit(): SubmitFn {
+  const stub = vi.fn<SubmitFn>();
+  formEl().requestSubmit = stub;
+
+  return stub;
+}
+
+function topMatchButton(): HTMLButtonElement {
+  const button = resultsEl().querySelector<HTMLButtonElement>(matchButtonSel);
+
+  return assert(button);
+}
+
+async function typeAndFilter(
+  controller: FuzzyFindController,
+  value: string,
+): Promise<void> {
+  inputEl().value = value;
+  controller.filter();
+  await Promise.resolve();
+}
+
+describe("filter with no input", () => {
+  it("shows nothing when input is empty", async () => {
+    const controller = await boot(["Paris", "London"]);
+
+    await typeAndFilter(controller, "");
+
+    expect(matchTexts()).toStrictEqual([]);
+    expect(noMatchesEl().hidden).toBe(true);
+  });
+});
+
+describe("filter matching", () => {
+  it("shows matching answers when input has a prefix", async () => {
+    const controller = await boot(["Paris", "London", "Berlin"]);
+
+    await typeAndFilter(controller, "pa");
+
+    expect(matchTexts()).toStrictEqual(["Paris"]);
+  });
+
+  it("orders matches by fewest remaining characters first", async () => {
+    const controller = await boot(["caterpillar", "cat", "candy"]);
+
+    await typeAndFilter(controller, "ca");
+
+    expect(matchTexts()).toStrictEqual(["cat", "candy", "caterpillar"]);
+  });
+
+  it("matches against any word in a phrase", async () => {
+    const controller = await boot(["the quick brown fox", "lazy dog"]);
+
+    await typeAndFilter(controller, "qu");
+
+    expect(matchTexts()).toStrictEqual(["the quick brown fox"]);
+  });
+
+  it("caps results at five entries", async () => {
+    const answers = ["aa", "ab", "ac", "ad", "ae", "af", "ag"];
+    const controller = await boot(answers);
+
+    await typeAndFilter(controller, "a");
+
+    expect(matchTexts()).toHaveLength(5);
+  });
+});
+
+describe("filter normalization", () => {
+  it("matches case-insensitively", async () => {
+    const controller = await boot(["Paris"]);
+
+    await typeAndFilter(controller, "PAR");
+
+    expect(matchTexts()).toStrictEqual(["Paris"]);
+  });
+
+  it("matches accent-insensitively", async () => {
+    const controller = await boot(["café", "carrot"]);
+
+    await typeAndFilter(controller, "caf");
+
+    expect(matchTexts()).toStrictEqual(["café"]);
+  });
+
+  it("treats typed accents as base letters", async () => {
+    const controller = await boot(["café"]);
+
+    await typeAndFilter(controller, "café");
+
+    expect(matchTexts()).toStrictEqual(["café"]);
+  });
+});
+
+describe("filter no-matches state", () => {
+  it("shows the no-matches message when nothing matches", async () => {
+    const controller = await boot(["Paris"]);
+
+    await typeAndFilter(controller, "xyz");
+
+    expect(matchTexts()).toStrictEqual([]);
+    expect(noMatchesEl().hidden).toBe(false);
+  });
+
+  it("hides the no-matches message when input clears", async () => {
+    const controller = await boot(["Paris"]);
+    await typeAndFilter(controller, "xyz");
+
+    await typeAndFilter(controller, "");
+
+    expect(noMatchesEl().hidden).toBe(true);
+  });
+});
+
+describe("selectMatch", () => {
+  it("submits the form with the clicked match", async () => {
+    const controller = await boot(["Paris", "London"]);
+    await typeAndFilter(controller, "p");
+    const submit = stubSubmit();
+
+    topMatchButton().click();
+
+    expect(submit).toHaveBeenCalledWith();
+    expect(answerInputEl().value).toBe("Paris");
+  });
+});
+
+describe("submitTop", () => {
+  it("submits the form with the top-ranked match", async () => {
+    const controller = await boot(["caterpillar", "cat"]);
+    await typeAndFilter(controller, "ca");
+    const submit = stubSubmit();
+
+    controller.submitTop(new KeyboardEvent("keydown", {key: "Enter"}));
+
+    expect(submit).toHaveBeenCalledWith();
+    expect(answerInputEl().value).toBe("cat");
+  });
+
+  it("does nothing when there are no matches", async () => {
+    const controller = await boot(["Paris"]);
+    await typeAndFilter(controller, "xyz");
+    const submit = stubSubmit();
+
+    controller.submitTop(new KeyboardEvent("keydown", {key: "Enter"}));
+
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("populates possible_answers with the submitted answer", async () => {
+    const controller = await boot(["Paris"]);
+    await typeAndFilter(controller, "p");
+    stubSubmit();
+
+    controller.submitTop(new KeyboardEvent("keydown", {key: "Enter"}));
+
+    expect(possibleAnswerInputEl().value).toBe("Paris");
+  });
+});
