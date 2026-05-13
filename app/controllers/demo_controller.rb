@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 class DemoController < ApplicationController
+  include DemoSession
+
   skip_before_action(:authenticate_user)
 
   def show
-    @decks = Deck.demo_visible
+    @decks = Deck.publicly_visible.ordered
     render(Views::Demo::Show.new(decks: @decks))
   end
 
@@ -17,13 +19,7 @@ class DemoController < ApplicationController
   private
 
   def start_demo
-    deck = Deck.demo_visible.find(params.expect(:deck_id))
+    deck = Deck.publicly_visible.find(params.expect(:deck_id))
     Demo::CreateGuestUser.call(deck:)
-  end
-
-  def save_demo_session(result)
-    log_in(result.user)
-    session[:demo_user_id] = result.user.id
-    session[:demo] = true
   end
 end

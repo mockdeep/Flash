@@ -152,5 +152,23 @@ RSpec.describe Catalog::CopyDeck do
 
       expect(result.record.cards.first.distractors).to eq([])
     end
+
+    it "caps copied cards when card_limit is set" do
+      source = build_public_deck
+      3.times { |i| create(:card, deck: source, front: "Q#{i}", back: "A#{i}") }
+      user = create(:user)
+      result = described_class.call(user:, deck: source, card_limit: 2)
+
+      expect(result.record.cards.count).to eq(2)
+    end
+
+    it "copies all cards when card_limit exceeds card count" do
+      source = build_public_deck
+      create(:card, deck: source, front: "Q", back: "A")
+      user = create(:user)
+      result = described_class.call(user:, deck: source, card_limit: 10)
+
+      expect(result.record.cards.count).to eq(1)
+    end
   end
 end

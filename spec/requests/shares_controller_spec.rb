@@ -112,12 +112,12 @@ RSpec.describe SharesController do
       expect(rendered).to have_text("and 1 more cards...")
     end
 
-    it "shows login prompt for unauthenticated visitors" do
+    it "shows try button for unauthenticated visitors" do
       deck = shared_deck
 
       get(shared_deck_path(deck.share_token))
 
-      expect(rendered).to have_text("Log in to Add Deck")
+      expect(rendered).to have_text("Try This Deck")
     end
 
     it "shows copy button for authenticated users" do
@@ -141,6 +141,69 @@ RSpec.describe SharesController do
       deck.revoke_share_token!
 
       get(shared_deck_path(token))
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  describe "#try" do
+    it "creates a guest user without authentication" do
+      deck = shared_deck
+      create(:card, deck:, front: "Q", back: "A")
+
+      expect { post(try_shared_deck_path(deck.share_token)) }
+        .to change(User, :count).by(1)
+    end
+
+    it "assigns the guest role to the new user" do
+      deck = shared_deck
+      create(:card, deck:, front: "Q", back: "A")
+
+      post(try_shared_deck_path(deck.share_token))
+
+      expect(User.last.role).to eq("guest")
+    end
+
+    it "copies the shared deck to the guest user" do
+      deck = shared_deck
+      create(:card, deck:, front: "Q", back: "A")
+
+      post(try_shared_deck_path(deck.share_token))
+
+      expect(User.last.decks.first.name).to eq(deck.name)
+    end
+
+    it "redirects to the study page" do
+      deck = shared_deck
+      create(:card, deck:, front: "Q", back: "A")
+
+      post(try_shared_deck_path(deck.share_token))
+
+      expect(response).to redirect_to(deck_study_path(Deck.last))
+    end
+
+    it "sets the demo session flag" do
+      deck = shared_deck
+      create(:card, deck:, front: "Q", back: "A")
+      post(try_shared_deck_path(deck.share_token))
+
+      follow_redirect!
+
+      expect(rendered).to have_css(".demo-banner")
+    end
+
+    it "caps the copied cards at Demo::CreateGuestUser::CARD_LIMIT" do
+      stub_const("Demo::CreateGuestUser::CARD_LIMIT", 2)
+      deck = shared_deck
+      3.times { |i| create(:card, deck:, front: "Q#{i}", back: "A#{i}") }
+
+      post(try_shared_deck_path(deck.share_token))
+
+      expect(Deck.last.cards.count).to eq(2)
+    end
+
+    it "returns not found for an unknown token" do
+      post(try_shared_deck_path("does-not-exist"))
 
       expect(response).to have_http_status(:not_found)
     end

@@ -2,7 +2,7 @@
 
 RSpec.describe DemoController do
   let(:owner) { create(:user) }
-  let(:demo_deck) { create(:deck, :demo, user: owner) }
+  let(:demo_deck) { create(:deck, user: owner, visibility: "public") }
 
   describe "#show" do
     it "renders the demo page without authentication" do
@@ -11,7 +11,7 @@ RSpec.describe DemoController do
       expect(response).to have_http_status(:ok)
     end
 
-    it "lists demo decks" do
+    it "lists public decks" do
       demo_deck
       get(demo_path)
 
@@ -25,7 +25,7 @@ RSpec.describe DemoController do
       expect(rendered).to have_no_text(private_deck.name)
     end
 
-    it "renders empty state when no demo decks exist" do
+    it "renders empty state when no public decks exist" do
       get(demo_path)
 
       expect(rendered).to have_css(

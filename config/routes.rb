@@ -20,6 +20,7 @@ Rails.application.routes.draw do
 
   get "shared/:token", to: "shares#show", as: :shared_deck
   post "shared/:token/copy", to: "shares#copy", as: :copy_shared_deck
+  post "shared/:token/try", to: "shares#try", as: :try_shared_deck
   resource :session, only: [:new, :create, :destroy]
   resource :subscription, only: [:show, :create, :destroy]
 

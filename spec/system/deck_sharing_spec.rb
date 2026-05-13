@@ -58,7 +58,17 @@ RSpec.describe "deck sharing" do
     visit(shared_deck_path(deck.share_token))
 
     expect(page).to have_text("shared by #{deck.user.username}")
-    expect(page).to have_link("Log in to Add Deck")
+    expect(page).to have_button("Try This Deck")
+  end
+
+  it "lets an unauthenticated visitor try a shared deck as a guest" do
+    deck = owner_deck.tap(&:generate_share_token!)
+    visit(shared_deck_path(deck.share_token))
+
+    click_on("Try This Deck")
+
+    expect(page).to have_css(".demo-banner")
+    expect(User.last.role).to eq("guest")
   end
 
   it "lets a signed-in visitor add a shared deck to their account" do

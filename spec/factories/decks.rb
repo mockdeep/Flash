@@ -6,10 +6,6 @@ FactoryBot.define do
     user { default_user }
     study_goal { 50 }
     distractor_pool { "category" }
-
-    trait(:demo) do
-      visibility { "demo" }
-    end
   end
 
   factory(:music_deck, class: "MusicDeck") do
@@ -17,9 +13,5 @@ FactoryBot.define do
     user { default_user }
     study_goal { 50 }
     distractor_pool { "none" }
-
-    trait(:demo) do
-      visibility { "demo" }
-    end
   end
 end

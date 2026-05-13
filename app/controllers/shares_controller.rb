@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 class SharesController < ApplicationController
-  skip_before_action(:authenticate_user, only: [:show])
+  include DemoSession
+
+  skip_before_action(:authenticate_user, only: [:show, :try])
 
   def show
     render(Views::Shares::Show.new(deck: shared_deck))
@@ -10,6 +12,12 @@ class SharesController < ApplicationController
   def copy
     result = Catalog::CopyDeck.call(user: current_user, deck: shared_deck)
     result.success? ? deck_copied : deck_copy_failed(result.record)
+  end
+
+  def try
+    result = Demo::CreateGuestUser.call(deck: shared_deck)
+    save_demo_session(result)
+    redirect_to(deck_study_path(result.deck))
   end
 
   def create
