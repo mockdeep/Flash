@@ -14,38 +14,41 @@ function normalize(text: string): string {
     toLowerCase();
 }
 
-function remainingAt(
+function matchesAt(
   answerWords: string[],
   queryWords: string[],
   start: number,
-): number | null {
-  let remaining = 0;
+): boolean {
   for (const [offset, queryWord] of queryWords.entries()) {
     const word = answerWords[start + offset];
-    if (word === undefined) { return null; }
-    if (!word.startsWith(queryWord)) { return null; }
-    remaining += word.length - queryWord.length;
+    if (word === undefined) { return false; }
+    if (!word.startsWith(queryWord)) { return false; }
   }
 
-  return remaining;
+  return true;
 }
 
-function findPrefixMatch(
+function hasPrefixMatch(
   answerWords: string[],
   queryWords: string[],
-): number | null {
+): boolean {
   for (let start = 0; start < answerWords.length; start += 1) {
-    const remaining = remainingAt(answerWords, queryWords, start);
-    if (remaining !== null) { return remaining; }
+    if (matchesAt(answerWords, queryWords, start)) { return true; }
   }
 
-  return null;
+  return false;
+}
+
+function totalChars(words: string[]): number {
+  return words.reduce((sum, word) => {
+    return sum + word.length;
+  }, 0);
 }
 
 function tryMatch(answer: string, queryWords: string[]): Match | null {
   const answerWords = normalize(answer).split(/\s+/u);
-  const remaining = findPrefixMatch(answerWords, queryWords);
-  if (remaining === null) { return null; }
+  if (!hasPrefixMatch(answerWords, queryWords)) { return null; }
+  const remaining = totalChars(answerWords) - totalChars(queryWords);
 
   return {answer, remaining};
 }
