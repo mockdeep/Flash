@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Deck < ApplicationRecord
-  VISIBILITIES = ["public", "private", "demo"].freeze
+  VISIBILITIES = ["public", "private"].freeze
   DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
 
   belongs_to :user
@@ -18,7 +18,6 @@ class Deck < ApplicationRecord
 
   scope :ordered, -> { order(:name) }
   scope :publicly_visible, -> { where(visibility: "public") }
-  scope :demo_visible, -> { where(visibility: "demo") }
 
   def music? = false
 

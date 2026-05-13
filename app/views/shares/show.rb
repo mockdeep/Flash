@@ -50,7 +50,7 @@ module Views
           if current_user.logged_in?
             render_copy_button
           else
-            render_login_link
+            render_try_button
           end
         end
       end
@@ -64,11 +64,12 @@ module Views
         )
       end
 
-      def render_login_link
-        link_to(
-          "Log in to Add Deck",
-          new_session_path,
-          class: button_class(:ghost),
+      def render_try_button
+        button_to(
+          "Try This Deck",
+          try_shared_deck_path(deck.share_token),
+          method: :post,
+          class: button_class(:primary),
         )
       end
     end

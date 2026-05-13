@@ -29,7 +29,7 @@ module Views
           h1(class: "catalog-title") { "Try Flash — No Account Needed" }
           p(class: "catalog-subtitle") do
             "Pick a deck below and start studying immediately. " \
-              "Full spaced-repetition experience, zero sign-up required."
+              "Demos include the first 100 cards — no sign-up required."
           end
         end
       end

@@ -2,13 +2,13 @@
 
 module Catalog
   module CopyDeck
-    def self.call(user:, deck:)
+    def self.call(user:, deck:, card_limit: nil)
       new_deck = build_new_deck(user:, source: deck)
 
       ActiveRecord::Base.transaction do
         return Result.new(success: false, record: new_deck) unless new_deck.save
 
-        build_and_insert_cards(new_deck, deck)
+        build_and_insert_cards(new_deck, deck, card_limit:)
       end
 
       Result.new(success: true, record: new_deck)
@@ -23,14 +23,20 @@ module Catalog
       )
     end
 
-    def self.build_and_insert_cards(new_deck, source_deck)
+    def self.build_and_insert_cards(new_deck, source_deck, card_limit:)
       copy_distractors = source_deck.distractor_pool == "preset"
       cards_attributes =
-        source_deck.cards.map do |card|
+        source_cards(source_deck, card_limit).map do |card|
           build_card_attributes(new_deck, card, copy_distractors:)
         end
 
       Card.insert_all(cards_attributes) if cards_attributes.any?
+    end
+
+    def self.source_cards(source_deck, card_limit)
+      return source_deck.cards unless card_limit
+
+      source_deck.cards.order(:id).limit(card_limit)
     end
 
     def self.build_card_attributes(new_deck, card, copy_distractors:)

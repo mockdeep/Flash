@@ -117,7 +117,7 @@ RSpec.describe StudiesController do
 
   describe "demo mode" do
     let(:demo_owner) { create(:user) }
-    let(:demo_deck) { create(:deck, :demo, user: demo_owner) }
+    let(:demo_deck) { create(:deck, user: demo_owner, visibility: "public") }
 
     before do
       create(:card, deck: demo_deck, front: "Q", back: "A")
@@ -400,7 +400,9 @@ RSpec.describe StudiesController do
 
     context "when in demo mode" do
       let(:demo_owner) { create(:user) }
-      let(:demo_music_deck) { create(:music_deck, :demo, user: demo_owner) }
+      let(:demo_music_deck) do
+        create(:music_deck, user: demo_owner, visibility: "public")
+      end
 
       before do
         create(:music_card, deck: demo_music_deck, back: "C4")
