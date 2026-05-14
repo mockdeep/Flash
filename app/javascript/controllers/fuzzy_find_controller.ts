@@ -2,16 +2,33 @@ import {Controller} from "@hotwired/stimulus";
 
 const MAX_RESULTS = 5;
 
+const ATOMIC_LATIN_SUBSTITUTIONS = new Map<string, string>([
+  ["æ", "ae"],
+  ["đ", "d"],
+  ["ð", "d"],
+  ["ħ", "h"],
+  ["ł", "l"],
+  ["ø", "oe"],
+  ["œ", "oe"],
+  ["ß", "ss"],
+  ["þ", "th"],
+]);
+
 interface Match {
   answer: string;
   remaining: number;
 }
 
 function normalize(text: string): string {
-  return text.
+  let result = text.
     normalize("NFD").
     replace(/\p{Diacritic}/gu, "").
     toLowerCase();
+  for (const [from, to] of ATOMIC_LATIN_SUBSTITUTIONS) {
+    result = result.split(from).join(to);
+  }
+
+  return result;
 }
 
 function matchesAt(

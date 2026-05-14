@@ -223,6 +223,42 @@ describe("filter normalization", () => {
   });
 });
 
+describe("filter atomic Latin substitution", () => {
+  it.each([
+    ["Straße", "strasse"],
+    ["Þór", "thor"],
+    ["nære", "naere"],
+    ["øl", "oel"],
+    ["sœur", "soeur"],
+    ["eðli", "edli"],
+    ["đak", "dak"],
+    ["łódź", "lodz"],
+    ["ħamiem", "hamiem"],
+  ])("matches %s when typing %s", async (answer, input) => {
+    const controller = await boot([answer]);
+    await typeAndFilter(controller, input);
+
+    expect(matchTexts()).toStrictEqual([answer]);
+  });
+
+  it.each([
+    "Straße",
+    "Þór",
+    "nære",
+    "øl",
+    "sœur",
+    "eðli",
+    "đak",
+    "łódź",
+    "ħamiem",
+  ])("matches %s when typing it directly", async (answer) => {
+    const controller = await boot([answer]);
+    await typeAndFilter(controller, answer);
+
+    expect(matchTexts()).toStrictEqual([answer]);
+  });
+});
+
 describe("filter no-matches state", () => {
   it("shows the no-matches message when nothing matches", async () => {
     const controller = await boot(["Paris"]);
