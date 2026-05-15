@@ -44,6 +44,7 @@ module Seeds
       MusicDeck.find_or_create_by!(name:, user: owner) do |d|
         d.visibility = "public"
         d.study_goal = owner.study_goal
+        d.ordered = false
       end
     end
 

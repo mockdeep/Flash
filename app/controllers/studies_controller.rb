@@ -13,7 +13,7 @@ class StudiesController < ApplicationController
 
   def update
     deck = current_user.decks.find(params.expect(:deck_id))
-    result = Study.for(deck:).answer_card(**answer_params)
+    result = Study.for(deck:).record_answer(params)
     increment_counters(result)
     render_study(update_view_class(deck), deck:, result:)
   end
@@ -57,10 +57,5 @@ class StudiesController < ApplicationController
 
     session[:study_date] = Date.current.to_s
     session[:study_completed] = 0
-  end
-
-  def answer_params
-    params.expect(answer: [:card_id, :answer, { possible_answers: [] }])
-      .to_h.symbolize_keys
   end
 end

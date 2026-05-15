@@ -27,7 +27,11 @@ module Components
         li { "Required columns: front, back" }
         li { "Optional column: category" }
         render_field_items
-        li { "Octaves are strict; only sharps are supported (no flats)" }
+        li { "One note per row; octaves are strict, only sharps (no flats)" }
+        li do
+          plain("For ordered melodies and scales, ")
+          plain("row order in the CSV defines the sequence.")
+        end
       end
     end
 
@@ -35,13 +39,12 @@ module Components
       li do
         strong { "front" }
         plain(": a label revealed after the user gets it right ")
-        plain('(e.g., "A3 Note", "C Major Chord")')
+        plain('(e.g., "A3 Note", "Open E string")')
       end
       li do
         strong { "back" }
-        plain(': comma-separated notes (e.g., A3 or "C4,E4,G4")')
+        plain(": a single note (e.g., A3, C#4)")
       end
-      li { "Wrap multi-note backs in quotes so commas don't split the cell" }
     end
   end
 end

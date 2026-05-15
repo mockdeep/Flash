@@ -309,7 +309,15 @@ RSpec.describe StudiesController do
   end
 
   describe "for a music deck" do
-    let(:music_deck) { create(:music_deck) }
+    let(:music_deck) { create(:music_deck, ordered: true) }
+
+    def submit_music_window(answer:)
+      window = MusicStudy.new(deck: music_deck.reload).next_window
+      patch(
+        deck_study_path(music_deck),
+        params: { answer: { card_ids: window.map(&:id), answer: } },
+      )
+    end
 
     it "renders the mic-driven study UI on #show" do
       create(:music_card, deck: music_deck, back: "C4")
@@ -319,36 +327,33 @@ RSpec.describe StudiesController do
       expect(rendered).to have_css("[data-controller='music-study']")
     end
 
-    it "exposes the card sequence to Stimulus on #show" do
-      create(:music_card, deck: music_deck, back: "C4,E4,G4")
-
+    it "exposes the joined card window to Stimulus on #show" do
+      music_deck.update!(level: 3)
+      seed_notes(music_deck, ["C4", "E4", "G4"])
       get(deck_study_path(music_deck))
 
       expect(rendered)
         .to have_css("[data-music-study-sequence-value='C4,E4,G4']")
     end
 
-    def submit_music_answer(card, answer: card.back)
-      patch(
-        deck_study_path(music_deck),
-        params: { answer: { card_id: card.id, answer: } },
-      )
+    def seed_notes(deck, notes)
+      notes.each { |n| create(:music_card, deck:, back: n) }
     end
 
     it "renders the music-result UI after a correct answer" do
-      card = create(:music_card, deck: music_deck, back: "C4")
+      create(:music_card, deck: music_deck, back: "C4")
       create(:music_card, deck: music_deck, back: "E4")
 
-      submit_music_answer(card)
+      submit_music_window(answer: "C4")
 
       expect(rendered).to have_css(".music-study--result")
     end
 
     it "marks the outcome as correct after a correct answer" do
-      card = create(:music_card, deck: music_deck, back: "C4")
+      create(:music_card, deck: music_deck, back: "C4")
       create(:music_card, deck: music_deck, back: "E4")
 
-      submit_music_answer(card)
+      submit_music_window(answer: "C4")
 
       expect(rendered).to have_css(".music-study__outcome--correct")
     end
@@ -362,9 +367,9 @@ RSpec.describe StudiesController do
     context "when completed reaches the milestone goal" do
       before do
         music_deck.update!(study_goal: 1)
-        card = create(:music_card, deck: music_deck, back: "C4")
+        create(:music_card, deck: music_deck, back: "C4")
         create(:music_card, deck: music_deck, back: "E4")
-        submit_music_answer(card)
+        submit_music_window(answer: "C4")
         get(deck_study_path(music_deck))
       end
 
@@ -374,26 +379,26 @@ RSpec.describe StudiesController do
     end
 
     it "shows the level-complete UI when the last card is answered" do
-      card = create(:music_card, deck: music_deck, back: "C4")
+      create(:music_card, deck: music_deck, back: "C4")
 
-      submit_music_answer(card)
+      submit_music_window(answer: "C4")
 
       expect(rendered).to have_css("h2", text: "Level 1 Complete!")
     end
 
     it "links to the next level from the level-complete UI" do
-      card = create(:music_card, deck: music_deck, back: "C4")
+      create(:music_card, deck: music_deck, back: "C4")
 
-      submit_music_answer(card)
+      submit_music_window(answer: "C4")
 
       expect(rendered).to have_link("Continue to Level 2")
     end
 
     it "marks the outcome as incorrect after a wrong answer" do
-      card = create(:music_card, deck: music_deck, back: "C4")
+      create(:music_card, deck: music_deck, back: "C4")
       create(:music_card, deck: music_deck, back: "E4")
 
-      submit_music_answer(card, answer: "D4")
+      submit_music_window(answer: "D4")
 
       expect(rendered).to have_css(".music-study__outcome--incorrect")
     end

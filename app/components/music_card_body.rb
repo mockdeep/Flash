@@ -2,12 +2,12 @@
 
 module Components
   class MusicCardBody < Components::Base
-    attr_accessor :deck, :card
+    attr_accessor :deck, :cards
 
-    def initialize(deck:, card:)
+    def initialize(deck:, cards:)
       super()
       self.deck = deck
-      self.card = card
+      self.cards = cards
     end
 
     def view_template
@@ -23,7 +23,11 @@ module Components
     private
 
     def root_data
-      { controller: "music-study", music_study_sequence_value: card.back }
+      { controller: "music-study", music_study_sequence_value: sequence_value }
+    end
+
+    def sequence_value
+      cards.map(&:back).join(",")
     end
 
     def render_card_head
@@ -91,7 +95,9 @@ module Components
     end
 
     def render_form_fields(form)
-      form.hidden_field("answer[card_id]", value: card.id)
+      cards.each do |card|
+        form.hidden_field("answer[card_ids][]", value: card.id)
+      end
       form.hidden_field(
         "answer[answer]",
         data: { music_study_target: "answerInput" },

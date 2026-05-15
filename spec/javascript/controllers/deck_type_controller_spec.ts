@@ -5,10 +5,14 @@ import {assert} from "helpers/assert";
 
 const textSel = "[data-deck-type-target='textInstructions']";
 const musicSel = "[data-deck-type-target='musicInstructions']";
+const settingsSel = "[data-deck-type-target='musicSettings']";
 const rootSel = "[data-controller='deck-type']";
 
 type RadioValue = "text" | "music";
-type InstructionsName = "textInstructions" | "musicInstructions";
+type InstructionsName =
+  "textInstructions" |
+  "musicInstructions" |
+  "musicSettings";
 
 function buildRadio(value: RadioValue, checked: boolean): HTMLInputElement {
   const input = document.createElement("input");
@@ -40,6 +44,7 @@ function setupDOM(): void {
   root.appendChild(buildRadio("music", false));
   root.appendChild(buildInstructions("textInstructions", false));
   root.appendChild(buildInstructions("musicInstructions", true));
+  root.appendChild(buildInstructions("musicSettings", true));
 
   document.body.replaceChildren(root);
 }
@@ -66,6 +71,10 @@ function musicInstructions(): HTMLElement {
   return assert(document.querySelector<HTMLElement>(musicSel));
 }
 
+function musicSettings(): HTMLElement {
+  return assert(document.querySelector<HTMLElement>(settingsSel));
+}
+
 function radio(value: RadioValue): HTMLInputElement {
   const sel = `input[name="deck[deck_type]"][value="${value}"]`;
 
@@ -83,6 +92,12 @@ describe("connect with text selected", () => {
     await setupController();
 
     expect(musicInstructions().hidden).toBe(true);
+  });
+
+  it("hides the music settings", async () => {
+    await setupController();
+
+    expect(musicSettings().hidden).toBe(true);
   });
 });
 
@@ -105,6 +120,16 @@ describe("update after selecting music", () => {
     controller().update();
 
     expect(musicInstructions().hidden).toBe(false);
+  });
+
+  it("shows the music settings", async () => {
+    await setupController();
+    radio("text").checked = false;
+    radio("music").checked = true;
+
+    controller().update();
+
+    expect(musicSettings().hidden).toBe(false);
   });
 });
 

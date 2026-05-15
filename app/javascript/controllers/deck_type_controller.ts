@@ -1,13 +1,20 @@
 import {Controller} from "@hotwired/stimulus";
 
 export default class extends Controller {
-  static override targets = ["radio", "textInstructions", "musicInstructions"];
+  static override targets = [
+    "radio",
+    "textInstructions",
+    "musicInstructions",
+    "musicSettings",
+  ];
 
   radioTargets!: HTMLInputElement[];
 
   textInstructionsTarget!: HTMLElement;
 
   musicInstructionsTarget!: HTMLElement;
+
+  musicSettingsTarget!: HTMLElement;
 
   override connect(): void {
     this.update();
@@ -20,5 +27,6 @@ export default class extends Controller {
 
     this.textInstructionsTarget.hidden = isMusic;
     this.musicInstructionsTarget.hidden = !isMusic;
+    this.musicSettingsTarget.hidden = !isMusic;
   }
 }
