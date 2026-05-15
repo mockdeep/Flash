@@ -16,10 +16,10 @@ RSpec.describe MusicCard do
       expect(card).to be_valid
     end
 
-    it "accepts a comma-separated sequence" do
+    it "rejects a comma-separated sequence" do
       card = build(:music_card, back: "C4,E4,G4")
 
-      expect(card).to be_valid
+      expect(card).not_to be_valid
     end
 
     it "rejects a bare letter without an octave" do

@@ -4,8 +4,8 @@ require "csv"
 
 module Decks
   module CreateMusic
-    def self.call(user:, name:, cards_csv:)
-      deck = MusicDeck.new(name:, study_goal: user.study_goal)
+    def self.call(user:, name:, cards_csv:, ordered: false)
+      deck = MusicDeck.new(name:, ordered:, study_goal: user.study_goal)
       csv = CSV.parse(cards_csv.read, headers: true)
 
       error = validate_csv(csv)
@@ -54,9 +54,9 @@ module Decks
       if front.blank? || back.blank?
         return "row #{index + 1} is missing a 'front' or 'back' value"
       end
-      return if back.match?(MusicCard::SEQUENCE_REGEXP)
+      return if back.match?(MusicCard::NOTE_REGEXP)
 
-      "row #{index + 1}: '#{back}' is not a valid note sequence"
+      "row #{index + 1}: '#{back}' is not a valid note"
     end
 
     def self.validate_unique_fronts(csv)

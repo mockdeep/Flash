@@ -43,6 +43,12 @@ class Study
     deck.level >= FUZZY_FIND_LEVEL ? :fuzzy_find : :multiple_choice
   end
 
+  def record_answer(params)
+    permitted =
+      params.expect(answer: [:card_id, :answer, { possible_answers: [] }])
+    answer_card(**permitted.to_h.symbolize_keys)
+  end
+
   def possible_answers
     return [] if next_card.nil?
 

@@ -57,7 +57,7 @@ module Views
         if completed >= study_goal
           render(Components::SessionMilestone.new(deck:, study_goal:, demo:))
         else
-          render(Components::MusicCardBody.new(deck:, card: study.next_card))
+          render(Components::MusicCardBody.new(deck:, cards: study.next_window))
         end
       end
 

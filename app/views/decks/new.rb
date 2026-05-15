@@ -42,6 +42,18 @@ module Views
                   end
                 end
 
+                fieldset(class: "form-field deck-type-toggle", data: { deck_type_target: "musicSettings" }, hidden: true) do
+                  legend(class: "form-label") { "Music Style" }
+                  label(class: "deck-type-option") do
+                    form.radio_button(:ordered, "true", checked: true)
+                    plain(" Ordered melody or scale")
+                  end
+                  label(class: "deck-type-option") do
+                    form.radio_button(:ordered, "false")
+                    plain(" Unordered note pool")
+                  end
+                end
+
                 div(class: "form-field") do
                   form.label(:cards_csv, "Flashcards CSV File", class: "form-label")
 

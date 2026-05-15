@@ -45,6 +45,7 @@ class DecksController < ApplicationController
   end
 
   def deck_params
-    params.expect(deck: [:name, :cards_csv, :deck_type]).to_h.symbolize_keys
+    params.expect(deck: [:name, :cards_csv, :deck_type, :ordered])
+      .to_h.symbolize_keys
   end
 end

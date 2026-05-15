@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_12_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_14_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -35,16 +35,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_000000) do
     t.string "distractor_pool", null: false
     t.integer "level", null: false
     t.string "name", null: false
+    t.boolean "ordered", default: false, null: false
+    t.bigint "path_id"
+    t.integer "path_position"
     t.string "share_token"
     t.integer "study_goal", null: false
     t.string "type", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.string "visibility", default: "private", null: false
+    t.index ["path_id", "path_position"], name: "index_decks_on_path_id_and_path_position", unique: true
+    t.index ["path_id"], name: "index_decks_on_path_id"
     t.index ["share_token"], name: "index_decks_on_share_token", unique: true
     t.index ["type"], name: "index_decks_on_type"
     t.index ["user_id", "name"], name: "index_decks_on_user_id_and_name", unique: true
     t.index ["visibility"], name: "index_decks_on_visibility"
+  end
+
+  create_table "paths", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "name"], name: "index_paths_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_paths_on_user_id"
   end
 
   create_table "subscriptions", force: :cascade do |t|
@@ -74,6 +88,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_000000) do
   end
 
   add_foreign_key "cards", "decks"
+  add_foreign_key "decks", "paths"
   add_foreign_key "decks", "users"
+  add_foreign_key "paths", "users"
   add_foreign_key "subscriptions", "users"
 end
