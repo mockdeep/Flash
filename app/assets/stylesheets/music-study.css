@@ -60,3 +60,12 @@
 .music-study__outcome--incorrect {
   color: var(--color-error, #c92a2a);
 }
+
+.music-study__wrong-note {
+  max-width: 24rem;
+}
+
+.music-study__wrong-note-text {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.25rem;
+}

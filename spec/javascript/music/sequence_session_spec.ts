@@ -51,7 +51,7 @@ describe("step when the sequence is already complete", () => {
 });
 
 describe("step with no pitch detected", () => {
-  it("returns the same state when there is no candidate", () => {
+  it("returns the same state and a null detected when no candidate", () => {
     const state = initialState(["C4"]);
     const input = makeInput({detected: null});
 
@@ -59,6 +59,7 @@ describe("step with no pitch detected", () => {
 
     expect(result.event).toBe("noop");
     expect(result.state).toBe(state);
+    expect(result.detected).toBeNull();
   });
 
   it("clears the candidate when one was being held", () => {
@@ -144,6 +145,7 @@ describe("step when a held note classifies as the expected note", () => {
     expect(result.event).toBe("advanced");
     expect(result.state.nextIndex).toBe(1);
     expect(result.state.candidate).toBeNull();
+    expect(result.detected).toBe("C4");
   });
 
   it("emits 'completed' when the last note is reached", () => {
@@ -228,7 +230,7 @@ describe("completed takes priority over needs_replay", () => {
 });
 
 describe("step when a held note is wrong", () => {
-  it("resets progress to the start of the sequence", () => {
+  it("resets progress and surfaces the detected note", () => {
     const partway: SessionState = {
       attemptCount: 1,
       candidate: {note: "D4", since: 0},
@@ -243,6 +245,7 @@ describe("step when a held note is wrong", () => {
     expect(result.event).toBe("reset");
     expect(result.state.nextIndex).toBe(0);
     expect(result.state.candidate).toBeNull();
+    expect(result.detected).toBe("D4");
   });
 });
 

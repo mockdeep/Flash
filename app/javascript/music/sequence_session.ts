@@ -27,6 +27,7 @@ interface StepInput {
 type StepEvent = "advanced" | "completed" | "needs_replay" | "noop" | "reset";
 
 interface StepResult {
+  detected: string | null;
   event: StepEvent;
   state: SessionState;
 }
@@ -37,10 +38,10 @@ function initialState(notes: string[]): SessionState {
 
 function clearCandidate(state: SessionState): StepResult {
   if (state.candidate === null) {
-    return {event: "noop", state};
+    return {detected: null, event: "noop", state};
   }
 
-  return {event: "noop", state: {...state, candidate: null}};
+  return {detected: null, event: "noop", state: {...state, candidate: null}};
 }
 
 function startCandidate(
@@ -49,6 +50,7 @@ function startCandidate(
   now: number,
 ): StepResult {
   return {
+    detected: null,
     event: "noop",
     state: {...state, candidate: {note, since: now}},
   };
@@ -80,18 +82,21 @@ function classifyHeldNote(
   const attemptCount = state.attemptCount + 1;
   if (nextIndex >= state.notes.length) {
     return {
+      detected: detectedNote,
       event: "completed",
       state: {...state, attemptCount, candidate: null, nextIndex},
     };
   }
   if (attemptCount >= state.notes.length) {
     return {
+      detected: detectedNote,
       event: "needs_replay",
       state: {...state, attemptCount: 0, candidate: null, nextIndex: 0},
     };
   }
 
   return {
+    detected: detectedNote,
     event: advanceEvent(matched),
     state: {...state, attemptCount, candidate: null, nextIndex},
   };
@@ -104,7 +109,7 @@ function isInTolerance(input: StepInput): boolean {
 
 function step(state: SessionState, input: StepInput): StepResult {
   if (state.nextIndex >= state.notes.length) {
-    return {event: "noop", state};
+    return {detected: null, event: "noop", state};
   }
   if (!isInTolerance(input)) {
     return clearCandidate(state);
@@ -114,7 +119,7 @@ function step(state: SessionState, input: StepInput): StepResult {
     return startCandidate(state, note, input.now);
   }
   if (input.now - state.candidate.since < input.holdMs) {
-    return {event: "noop", state};
+    return {detected: null, event: "noop", state};
   }
 
   return classifyHeldNote(state, note);
