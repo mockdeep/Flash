@@ -61,11 +61,19 @@
   color: var(--color-error, #c92a2a);
 }
 
-.music-study__wrong-note {
+.music-study__attempts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 0.5rem);
+  width: 100%;
   max-width: 24rem;
 }
 
-.music-study__wrong-note-text {
+.music-study__attempt-text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
   font-family: var(--font-mono, monospace);
   font-size: 1.25rem;
+  line-height: 1.5;
 }

@@ -1,4 +1,5 @@
 import type {SessionState, StepEvent, StepInput} from "music/sequence_session";
+import {BADGES, buildSpan, clearTimer} from "./music_study_helpers";
 import {Controller} from "@hotwired/stimulus";
 import {assert as ensure} from "helpers/assert";
 import {detectPitch} from "music/pitch_detector";
@@ -10,6 +11,7 @@ const TOLERANCE_CENTS = 50;
 const HOLD_MS = 150;
 const FFT_SIZE = 4096;
 const REPLAY_DELAY_MS = 1000;
+const COMPLETE_DELAY_MS = 1000;
 
 /* Persists across Turbo frame swaps; resets on full page load. */
 let micActivated = false;
@@ -23,12 +25,11 @@ export {resetMicActivatedForTests};
 export default class extends Controller<HTMLElement> {
   static override targets = [
     "answerInput",
+    "attempts",
     "form",
     "progress",
     "startButton",
     "status",
-    "wrongNote",
-    "wrongNoteText",
   ];
 
   static override values = {
@@ -37,6 +38,8 @@ export default class extends Controller<HTMLElement> {
 
   declare answerInputTarget: HTMLInputElement;
 
+  declare attemptsTarget: HTMLElement;
+
   declare formTarget: HTMLFormElement;
 
   declare progressTarget: HTMLElement;
@@ -44,10 +47,6 @@ export default class extends Controller<HTMLElement> {
   declare startButtonTarget: HTMLButtonElement;
 
   declare statusTarget: HTMLElement;
-
-  declare wrongNoteTarget: HTMLElement;
-
-  declare wrongNoteTextTarget: HTMLElement;
 
   declare sequenceValue: string;
 
@@ -62,6 +61,8 @@ export default class extends Controller<HTMLElement> {
   private rafHandle = 0;
 
   private replayTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
+
+  private completeTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
 
   private playing = false;
 
@@ -189,35 +190,38 @@ export default class extends Controller<HTMLElement> {
     if (event === "reset") {
       this.handleReset(detected);
     } else if (event === "advanced") {
-      this.handleAdvanced();
+      this.handleAdvanced(detected);
     } else if (event === "needs_replay") {
       this.handleNeedsReplay(detected);
     } else if (event === "completed") {
-      this.handleCompleted();
+      this.handleCompleted(detected);
     }
   }
 
   private handleReset(detected: string | null): void {
     this.renderProgress();
     this.statusTarget.textContent = "Wrong note — start from the top";
-    this.showWrongNote(ensure(detected));
+    this.prependAttempt(ensure(detected), "incorrect");
   }
 
-  private handleAdvanced(): void {
+  private handleAdvanced(detected: string | null): void {
     this.renderProgress();
-    this.hideWrongNote();
+    this.prependAttempt(ensure(detected), "correct");
   }
 
   private handleNeedsReplay(detected: string | null): void {
     this.renderProgress();
     this.statusTarget.textContent = "Listen again…";
-    this.showWrongNote(ensure(detected));
+    this.prependAttempt(ensure(detected), "incorrect");
     this.scheduleReplay();
   }
 
-  private handleCompleted(): void {
-    this.hideWrongNote();
-    this.submit();
+  private handleCompleted(detected: string | null): void {
+    this.prependAttempt(ensure(detected), "correct");
+    this.completeTimeoutHandle = setTimeout(() => {
+      this.completeTimeoutHandle = null;
+      this.submit();
+    }, COMPLETE_DELAY_MS);
   }
 
   private scheduleReplay(): void {
@@ -230,25 +234,12 @@ export default class extends Controller<HTMLElement> {
     }, REPLAY_DELAY_MS);
   }
 
-  private cancelReplay(): void {
-    if (this.replayTimeoutHandle !== null) {
-      clearTimeout(this.replayTimeoutHandle);
-      this.replayTimeoutHandle = null;
-    }
-  }
-
-  private showWrongNote(note: string): void {
-    this.wrongNoteTextTarget.textContent = note;
-    this.wrongNoteTarget.classList.remove("answer-incorrect");
-    this.wrongNoteTarget.hidden = false;
-
-    /* Force a reflow so the shake animation replays on each wrong note. */
-    this.wrongNoteTarget.getBoundingClientRect();
-    this.wrongNoteTarget.classList.add("answer-incorrect");
-  }
-
-  private hideWrongNote(): void {
-    this.wrongNoteTarget.hidden = true;
+  private prependAttempt(note: string, kind: "correct" | "incorrect"): void {
+    const row = document.createElement("div");
+    row.classList.add("answer-row", `answer-${kind}`, "music-study__attempt");
+    row.appendChild(buildSpan("answer-number", BADGES[kind]));
+    row.appendChild(buildSpan("music-study__attempt-text", note));
+    this.attemptsTarget.prepend(row);
   }
 
   private renderProgress(): void {
@@ -264,18 +255,15 @@ export default class extends Controller<HTMLElement> {
   }
 
   private stopMic(): void {
-    this.cancelReplay();
-    this.cancelTick();
-    this.stopStream();
-    this.closeContext();
-    this.analyser = null;
-  }
-
-  private cancelTick(): void {
+    this.replayTimeoutHandle = clearTimer(this.replayTimeoutHandle);
+    this.completeTimeoutHandle = clearTimer(this.completeTimeoutHandle);
     if (this.rafHandle !== 0) {
       cancelAnimationFrame(this.rafHandle);
       this.rafHandle = 0;
     }
+    this.stopStream();
+    this.closeContext();
+    this.analyser = null;
   }
 
   private stopStream(): void {
