@@ -161,13 +161,13 @@ RSpec.describe Study do
       end
     end
 
-    it "uses only the first 4 wrong answers from history" do
+    it "samples at most 4 wrong answers from the card's distractors" do
       deck = create(:deck)
       create(:card, deck:, distractors: ["A", "B", "C", "D", "E"])
 
       study = described_class.new(deck:)
 
-      expect(study.possible_answers).not_to include("E")
+      expect(study.possible_answers.size).to eq(5)
     end
 
     it "includes cards from other categories when needed" do
