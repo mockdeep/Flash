@@ -8,6 +8,7 @@ import {playSequence} from "music/reference_player";
 const TOLERANCE_CENTS = 50;
 const HOLD_MS = 150;
 const FFT_SIZE = 4096;
+const REPLAY_DELAY_MS = 1000;
 
 /*
  * Tracks whether the user has activated the mic in this document. Survives
@@ -56,6 +57,8 @@ export default class extends Controller<HTMLElement> {
   private analyser: AnalyserNode | null = null;
 
   private rafHandle = 0;
+
+  private replayTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
 
   private playing = false;
 
@@ -188,12 +191,27 @@ export default class extends Controller<HTMLElement> {
     }
     if (event === "needs_replay") {
       this.statusTarget.textContent = "Listen again…";
-      this.play().catch(() => {
-        return null;
-      });
+      this.scheduleReplay();
     }
     if (event === "completed") {
       this.submit();
+    }
+  }
+
+  private scheduleReplay(): void {
+    this.playing = true;
+    this.replayTimeoutHandle = setTimeout(() => {
+      this.replayTimeoutHandle = null;
+      this.play().catch(() => {
+        return null;
+      });
+    }, REPLAY_DELAY_MS);
+  }
+
+  private cancelReplay(): void {
+    if (this.replayTimeoutHandle !== null) {
+      clearTimeout(this.replayTimeoutHandle);
+      this.replayTimeoutHandle = null;
     }
   }
 
@@ -210,22 +228,35 @@ export default class extends Controller<HTMLElement> {
   }
 
   private stopMic(): void {
+    this.cancelReplay();
+    this.cancelTick();
+    this.stopStream();
+    this.closeContext();
+    this.analyser = null;
+  }
+
+  private cancelTick(): void {
     if (this.rafHandle !== 0) {
       cancelAnimationFrame(this.rafHandle);
       this.rafHandle = 0;
     }
+  }
+
+  private stopStream(): void {
     if (this.mediaStream !== null) {
       this.mediaStream.getTracks().forEach((track) => {
         track.stop();
       });
       this.mediaStream = null;
     }
+  }
+
+  private closeContext(): void {
     if (this.audioContext !== null) {
       this.audioContext.close().catch(() => {
         return null;
       });
       this.audioContext = null;
     }
-    this.analyser = null;
   }
 }

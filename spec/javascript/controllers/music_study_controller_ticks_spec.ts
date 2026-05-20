@@ -128,12 +128,12 @@ describe("ticks where a wrong note is held", () => {
   });
 });
 
-describe("auto-replay when attempts are exhausted", () => {
-  function exhaust(spec: Spec): void {
-    holdNote(spec.harness, 587.33, 0);
-    holdNote(spec.harness, 587.33, 600);
-  }
+function exhaust(spec: Spec): void {
+  holdNote(spec.harness, 587.33, 0);
+  holdNote(spec.harness, 587.33, 600);
+}
 
+describe("immediate response when attempts are exhausted", () => {
   it("sets the 'Listen again…' status text", async () => {
     vi.mocked(playSequence).mockResolvedValue(undefined);
     const spec = await started("A4,C5");
@@ -143,23 +143,75 @@ describe("auto-replay when attempts are exhausted", () => {
     expect(musicTarget("status").textContent).toBe("Listen again…");
   });
 
-  it("re-invokes playSequence with the same notes", async () => {
+  it("ignores detected pitches during the replay delay", async () => {
+    vi.useFakeTimers({toFake: ["setTimeout", "clearTimeout"]});
     vi.mocked(playSequence).mockResolvedValue(undefined);
     const spec = await started("A4,C5");
 
     exhaust(spec);
-    const ctx = assert(spec.harness.audioContexts[0]);
+    holdNote(spec.harness, 440, 1200);
+    const progress = musicTarget("progress").textContent;
+    vi.useRealTimers();
 
-    expect(playSequence).toHaveBeenCalledWith(ctx, ["A4", "C5"]);
+    expect(progress).toBe("0 / 2");
+  });
+});
+
+describe("delayed replay when attempts are exhausted", () => {
+  it("does not replay until the delay elapses", async () => {
+    vi.useFakeTimers({toFake: ["setTimeout", "clearTimeout"]});
+    vi.mocked(playSequence).mockResolvedValue(undefined);
+    const spec = await started("A4,C5");
+
+    exhaust(spec);
+    vi.advanceTimersByTime(999);
+    const callsBefore = vi.mocked(playSequence).mock.calls.length;
+    vi.useRealTimers();
+
+    expect(callsBefore).toBe(1);
+  });
+
+  it("re-invokes playSequence with the same notes", async () => {
+    vi.useFakeTimers({toFake: ["setTimeout", "clearTimeout"]});
+    vi.mocked(playSequence).mockResolvedValue(undefined);
+    const spec = await started("A4,C5");
+
+    exhaust(spec);
+    vi.advanceTimersByTime(1000);
+    const ctx = assert(spec.harness.audioContexts[0]);
+    const {calls} = vi.mocked(playSequence).mock;
+    vi.useRealTimers();
+
+    expect(calls).toContainEqual([ctx, ["A4", "C5"]]);
+    expect(calls).toHaveLength(2);
   });
 
   it("swallows errors from a failed auto-replay", async () => {
+    vi.useFakeTimers({toFake: ["setTimeout", "clearTimeout"]});
     vi.mocked(playSequence).mockRejectedValue(new Error("audio failed"));
     const spec = await started("A4,C5");
 
     exhaust(spec);
-    await new Promise((resolve) => { setTimeout(resolve, 0); });
+    vi.advanceTimersByTime(1000);
+    await Promise.resolve();
+    vi.useRealTimers();
 
     expect(spec.controller).toBeDefined();
+  });
+});
+
+describe("disconnect while a replay is pending", () => {
+  it("cancels the scheduled replay", async () => {
+    vi.useFakeTimers({toFake: ["setTimeout", "clearTimeout"]});
+    vi.mocked(playSequence).mockResolvedValue(undefined);
+    const spec = await started("A4,C5");
+
+    exhaust(spec);
+    spec.controller.disconnect();
+    vi.advanceTimersByTime(1000);
+    const totalCalls = vi.mocked(playSequence).mock.calls.length;
+    vi.useRealTimers();
+
+    expect(totalCalls).toBe(1);
   });
 });
