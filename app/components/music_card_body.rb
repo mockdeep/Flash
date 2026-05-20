@@ -53,7 +53,6 @@ module Components
     def render_controls
       div(class: "music-study__controls") do
         render_start_button
-        render_play_button
       end
     end
 
@@ -66,22 +65,6 @@ module Components
           action: "click->music-study#startMic",
         },
       ) { "Begin" }
-    end
-
-    def render_play_button
-      button(
-        type: "button",
-        class: "button button--secondary",
-        hidden: true,
-        data: play_button_data,
-      ) { "▶ Play Reference" }
-    end
-
-    def play_button_data
-      {
-        music_study_target: "playButton",
-        action: "click->music-study#play",
-      }
     end
 
     def render_form

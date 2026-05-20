@@ -51,6 +51,7 @@ async function withHeldPlayback(spec: Spec, body: () => void): Promise<void> {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.clearAllMocks();
   resetMicActivatedForTests();
 });
 
