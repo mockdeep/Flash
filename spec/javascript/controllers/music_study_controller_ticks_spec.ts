@@ -2,7 +2,9 @@ import type {detectPitch as DetectPitch} from "music/pitch_detector";
 import type {playSequence as PlaySequence} from "music/reference_player";
 import {describe, expect, it, vi} from "vitest";
 import type {MusicSpec} from "support/music_study_harness";
-import MusicStudyController from "controllers/music_study_controller";
+import MusicStudyController, {
+  resetMicActivatedForTests,
+} from "controllers/music_study_controller";
 import {assert} from "helpers/assert";
 import {detectPitch} from "music/pitch_detector";
 import {playSequence} from "music/reference_player";
@@ -49,6 +51,7 @@ async function withHeldPlayback(spec: Spec, body: () => void): Promise<void> {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  resetMicActivatedForTests();
 });
 
 describe("ticks fired while reference playback is in progress", () => {

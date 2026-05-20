@@ -2,7 +2,9 @@ import type {detectPitch as DetectPitch} from "music/pitch_detector";
 import type {playSequence as PlaySequence} from "music/reference_player";
 import {describe, expect, it, vi} from "vitest";
 import type {MusicSpec} from "support/music_study_harness";
-import MusicStudyController from "controllers/music_study_controller";
+import MusicStudyController, {
+  resetMicActivatedForTests,
+} from "controllers/music_study_controller";
 import {assert} from "helpers/assert";
 import {playSequence} from "music/reference_player";
 import {bootMusicStudy, musicTarget} from "support/music_study_harness";
@@ -38,6 +40,7 @@ async function denied(): Promise<Spec> {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  resetMicActivatedForTests();
 });
 
 describe("connect", () => {
@@ -180,5 +183,56 @@ describe("disconnect before the mic has been started", () => {
     spec.controller.disconnect();
 
     expect(spec.harness.raf.cancel).not.toHaveBeenCalled();
+  });
+});
+
+describe("connect after the mic has been activated in the document", () => {
+  async function reconnect(): Promise<Spec> {
+    const spec = await started("C4");
+    spec.controller.disconnect();
+    musicTarget("startButton").hidden = false;
+    spec.harness.getUserMedia.mockClear();
+    spec.controller.connect();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    return spec;
+  }
+
+  it("auto-requests the mic without a button click", async () => {
+    const spec = await reconnect();
+
+    expect(spec.harness.getUserMedia).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the start button hidden", async () => {
+    await reconnect();
+
+    expect(musicTarget("startButton").hidden).toBe(true);
+  });
+});
+
+describe("denied permission after a previous activation", () => {
+  it("re-shows the start button so the user can try again", async () => {
+    await started("C4");
+    const spec = await boot("C4");
+    spec.harness.getUserMedia.mockRejectedValueOnce(new Error("denied"));
+    await spec.controller.startMic();
+
+    expect(musicTarget("startButton").hidden).toBe(false);
+  });
+});
+
+describe("auto-start on connect when startMic itself rejects", () => {
+  it("swallows the rejection rather than raising", async () => {
+    const spec = await started("C4");
+    spec.controller.disconnect();
+    vi.spyOn(spec.controller, "startMic").
+      mockRejectedValueOnce(new Error("boom"));
+
+    spec.controller.connect();
+    await new Promise((resolve) => { setTimeout(resolve, 0); });
+
+    expect(spec.controller).toBeDefined();
   });
 });

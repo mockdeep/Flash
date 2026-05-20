@@ -39,7 +39,7 @@ module Components
 
     def render_status
       p(class: "music-study__status", data: { music_study_target: "status" }) do
-        "Press Start Microphone to begin"
+        "Press Begin to start"
       end
     end
 
@@ -65,7 +65,7 @@ module Components
           music_study_target: "startButton",
           action: "click->music-study#startMic",
         },
-      ) { "Start Microphone" }
+      ) { "Begin" }
     end
 
     def render_play_button

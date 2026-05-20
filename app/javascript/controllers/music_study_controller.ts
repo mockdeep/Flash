@@ -9,6 +9,19 @@ const TOLERANCE_CENTS = 50;
 const HOLD_MS = 150;
 const FFT_SIZE = 4096;
 
+/*
+ * Tracks whether the user has activated the mic in this document. Survives
+ * Turbo frame swaps between cards; resets on a full page load (which is when
+ * a new user gesture is needed anyway to satisfy AudioContext autoplay).
+ */
+let micActivated = false;
+
+function resetMicActivatedForTests(): void {
+  micActivated = false;
+}
+
+export {resetMicActivatedForTests};
+
 export default class extends Controller<HTMLElement> {
   static override targets = [
     "answerInput",
@@ -60,6 +73,12 @@ export default class extends Controller<HTMLElement> {
   override connect(): void {
     this.sessionState = initialState(parseSequence(this.sequenceValue));
     this.renderProgress();
+    if (micActivated) {
+      this.startButtonTarget.hidden = true;
+      this.startMic().catch(() => {
+        return null;
+      });
+    }
   }
 
   override disconnect(): void {
@@ -71,15 +90,11 @@ export default class extends Controller<HTMLElement> {
       this.mediaStream =
         await navigator.mediaDevices.getUserMedia({audio: this.micConstraints});
     } catch {
-      this.statusTarget.textContent = "Microphone access denied";
+      this.handleMicDenied();
 
       return;
     }
-    this.attachAnalyser(this.mediaStream);
-    this.startButtonTarget.hidden = true;
-    this.playButtonTarget.hidden = false;
-    this.statusTarget.textContent = "Mic ready — press Play to hear the note";
-    this.scheduleTick();
+    this.handleMicGranted(this.mediaStream);
   }
 
   async play(): Promise<void> {
@@ -95,6 +110,21 @@ export default class extends Controller<HTMLElement> {
       this.playing = false;
     }
     this.statusTarget.textContent = "Now play it back!";
+  }
+
+  private handleMicDenied(): void {
+    this.statusTarget.textContent = "Microphone access denied";
+    this.startButtonTarget.hidden = false;
+    micActivated = false;
+  }
+
+  private handleMicGranted(stream: MediaStream): void {
+    micActivated = true;
+    this.attachAnalyser(stream);
+    this.startButtonTarget.hidden = true;
+    this.playButtonTarget.hidden = false;
+    this.statusTarget.textContent = "Mic ready — press Play to hear the note";
+    this.scheduleTick();
   }
 
   private attachAnalyser(stream: MediaStream): void {
