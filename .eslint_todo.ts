@@ -46,6 +46,7 @@ const config: Linter.Config[] = [
   // Offense count: 2
   {
     files: [
+      "spec/javascript/controllers/music_study_controller_inactivity_spec.ts",
       "spec/javascript/controllers/music_study_controller_spec.ts",
       "spec/javascript/controllers/music_study_controller_ticks_spec.ts",
     ],
