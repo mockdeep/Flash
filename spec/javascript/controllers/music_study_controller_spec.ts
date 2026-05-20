@@ -253,3 +253,4 @@ describe("auto-start on connect when startMic itself rejects", () => {
     expect(spec.controller).toBeDefined();
   });
 });
+

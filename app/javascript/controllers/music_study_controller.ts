@@ -1,5 +1,10 @@
 import type {SessionState, StepEvent, StepInput} from "music/sequence_session";
-import {BADGES, buildSpan, clearTimer} from "./music_study_helpers";
+import {
+  bindInactivity,
+  clearTimer,
+  prependAttempt,
+  renderProgress,
+} from "./music_study_helpers";
 import {Controller} from "@hotwired/stimulus";
 import {assert as ensure} from "helpers/assert";
 import {detectPitch} from "music/pitch_detector";
@@ -66,6 +71,10 @@ export default class extends Controller<HTMLElement> {
 
   private playing = false;
 
+  private pausedForInactive = false;
+
+  private unbindInactivity: (() => void) | null = null;
+
   private readonly buffer = new Float32Array(FFT_SIZE);
 
   private readonly micConstraints: MediaTrackConstraints = {
@@ -76,29 +85,31 @@ export default class extends Controller<HTMLElement> {
 
   override connect(): void {
     this.sessionState = initialState(parseSequence(this.sequenceValue));
-    this.renderProgress();
+    renderProgress(this.progressTarget, this.sessionState);
+    this.unbindInactivity = bindInactivity(
+      () => { this.pauseForInactive(); },
+      () => { this.resumeFromInactive(); },
+    );
     if (micActivated) {
       this.startButtonTarget.hidden = true;
-      this.startMic().catch(() => {
-        return null;
-      });
+      this.startMic().catch(() => { return null; });
     }
   }
 
   override disconnect(): void {
+    if (this.unbindInactivity !== null) {
+      this.unbindInactivity();
+      this.unbindInactivity = null;
+    }
     this.stopMic();
   }
 
   async startMic(): Promise<void> {
-    try {
-      this.mediaStream =
-        await navigator.mediaDevices.getUserMedia({audio: this.micConstraints});
-    } catch {
-      this.handleMicDenied();
+    await this.acquireMic({playReference: true});
+  }
 
-      return;
-    }
-    this.handleMicGranted(this.mediaStream);
+  async resumeMic(): Promise<void> {
+    await this.acquireMic({playReference: false});
   }
 
   async play(): Promise<void> {
@@ -106,7 +117,7 @@ export default class extends Controller<HTMLElement> {
       return;
     }
     this.sessionState = initialState(this.sessionState.notes);
-    this.renderProgress();
+    renderProgress(this.progressTarget, this.sessionState);
     this.playing = true;
     try {
       await playSequence(this.audioContext, this.sessionState.notes);
@@ -116,21 +127,47 @@ export default class extends Controller<HTMLElement> {
     this.statusTarget.textContent = "Now play it back!";
   }
 
+  private async acquireMic(opts: {playReference: boolean}): Promise<void> {
+    const stream = await navigator.mediaDevices.
+      getUserMedia({audio: this.micConstraints}).
+      catch(() => { return null; });
+    if (stream === null) {
+      this.handleMicDenied();
+    } else {
+      this.handleMicGranted(stream, opts.playReference);
+    }
+  }
+
+  private handleMicGranted(stream: MediaStream, playReference: boolean): void {
+    this.mediaStream = stream;
+    micActivated = true;
+    this.attachAnalyser(stream);
+    this.startButtonTarget.hidden = true;
+    this.scheduleTick();
+    if (playReference) {
+      this.statusTarget.textContent = "Listen…";
+      this.play().catch(() => { return null; });
+    }
+  }
+
+  private pauseForInactive(): void {
+    if (this.analyser === null) { return; }
+    const {nextIndex, notes} = this.sessionState;
+    if (nextIndex >= notes.length) { return; }
+    this.pausedForInactive = true;
+    this.stopMic();
+  }
+
+  private resumeFromInactive(): void {
+    if (!this.pausedForInactive) { return; }
+    this.pausedForInactive = false;
+    this.resumeMic().catch(() => { return null; });
+  }
+
   private handleMicDenied(): void {
     this.statusTarget.textContent = "Microphone access denied";
     this.startButtonTarget.hidden = false;
     micActivated = false;
-  }
-
-  private handleMicGranted(stream: MediaStream): void {
-    micActivated = true;
-    this.attachAnalyser(stream);
-    this.startButtonTarget.hidden = true;
-    this.statusTarget.textContent = "Listen…";
-    this.scheduleTick();
-    this.play().catch(() => {
-      return null;
-    });
   }
 
   private attachAnalyser(stream: MediaStream): void {
@@ -199,25 +236,25 @@ export default class extends Controller<HTMLElement> {
   }
 
   private handleReset(detected: string | null): void {
-    this.renderProgress();
+    renderProgress(this.progressTarget, this.sessionState);
     this.statusTarget.textContent = "Wrong note — start from the top";
-    this.prependAttempt(ensure(detected), "incorrect");
+    prependAttempt(this.attemptsTarget, ensure(detected), "incorrect");
   }
 
   private handleAdvanced(detected: string | null): void {
-    this.renderProgress();
-    this.prependAttempt(ensure(detected), "correct");
+    renderProgress(this.progressTarget, this.sessionState);
+    prependAttempt(this.attemptsTarget, ensure(detected), "correct");
   }
 
   private handleNeedsReplay(detected: string | null): void {
-    this.renderProgress();
+    renderProgress(this.progressTarget, this.sessionState);
     this.statusTarget.textContent = "Listen again…";
-    this.prependAttempt(ensure(detected), "incorrect");
+    prependAttempt(this.attemptsTarget, ensure(detected), "incorrect");
     this.scheduleReplay();
   }
 
   private handleCompleted(detected: string | null): void {
-    this.prependAttempt(ensure(detected), "correct");
+    prependAttempt(this.attemptsTarget, ensure(detected), "correct");
     this.completeTimeoutHandle = setTimeout(() => {
       this.completeTimeoutHandle = null;
       this.submit();
@@ -228,24 +265,8 @@ export default class extends Controller<HTMLElement> {
     this.playing = true;
     this.replayTimeoutHandle = setTimeout(() => {
       this.replayTimeoutHandle = null;
-      this.play().catch(() => {
-        return null;
-      });
+      this.play().catch(() => { return null; });
     }, REPLAY_DELAY_MS);
-  }
-
-  private prependAttempt(note: string, kind: "correct" | "incorrect"): void {
-    const row = document.createElement("div");
-    row.classList.add("answer-row", `answer-${kind}`, "music-study__attempt");
-    row.appendChild(buildSpan("answer-number", BADGES[kind]));
-    row.appendChild(buildSpan("music-study__attempt-text", note));
-    this.attemptsTarget.prepend(row);
-  }
-
-  private renderProgress(): void {
-    const total = this.sessionState.notes.length;
-    const done = this.sessionState.nextIndex;
-    this.progressTarget.textContent = `${done} / ${total}`;
   }
 
   private submit(): void {
@@ -261,25 +282,17 @@ export default class extends Controller<HTMLElement> {
       cancelAnimationFrame(this.rafHandle);
       this.rafHandle = 0;
     }
-    this.stopStream();
+    if (this.mediaStream !== null) {
+      this.mediaStream.getTracks().forEach((track) => { track.stop(); });
+      this.mediaStream = null;
+    }
     this.closeContext();
     this.analyser = null;
   }
 
-  private stopStream(): void {
-    if (this.mediaStream !== null) {
-      this.mediaStream.getTracks().forEach((track) => {
-        track.stop();
-      });
-      this.mediaStream = null;
-    }
-  }
-
   private closeContext(): void {
     if (this.audioContext !== null) {
-      this.audioContext.close().catch(() => {
-        return null;
-      });
+      this.audioContext.close().catch(() => { return null; });
       this.audioContext = null;
     }
   }
