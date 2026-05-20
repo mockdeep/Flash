@@ -91,17 +91,39 @@ describe("ticks that advance through the sequence", () => {
 
     expect(musicTarget("progress").textContent).toBe("1 / 2");
   });
+});
 
-  it("submits the form once the last note is detected", async () => {
-    const spec = await started("A4,C5");
-    holdNote(spec.harness, 440, 0);
-    const submitSpy =
-      vi.spyOn(musicForm("form"), "requestSubmit").mockReturnValue();
+async function primeCompletion(): Promise<Spec> {
+  vi.useFakeTimers({toFake: ["setTimeout", "clearTimeout"]});
+  const spec = await started("A4,C5");
+  holdNote(spec.harness, 440, 0);
 
+  return spec;
+}
+
+describe("submitting the form on completion", () => {
+  it("fires one second after the last note", async () => {
+    const spec = await primeCompletion();
+    const spy = vi.spyOn(musicForm("form"), "requestSubmit").mockReturnValue();
     holdNote(spec.harness, 523.25, 600);
+    vi.advanceTimersByTime(1000);
+    const calls = spy.mock.calls.length;
+    vi.useRealTimers();
 
-    expect(submitSpy).toHaveBeenCalledTimes(1);
+    expect(calls).toBe(1);
     expect(musicInput("answerInput").value).toBe("A4,C5");
+  });
+
+  it("is cancelled when the controller disconnects", async () => {
+    const spec = await primeCompletion();
+    const spy = vi.spyOn(musicForm("form"), "requestSubmit").mockReturnValue();
+    holdNote(spec.harness, 523.25, 600);
+    spec.controller.disconnect();
+    vi.advanceTimersByTime(1000);
+    const calls = spy.mock.calls.length;
+    vi.useRealTimers();
+
+    expect(calls).toBe(0);
   });
 });
 
@@ -126,13 +148,6 @@ describe("ticks where a wrong note is held", () => {
     expect(musicTarget("status").textContent).
       toBe("Wrong note — start from the top");
   });
-
-  it("reveals the wrong-note row with the detected note glyph", async () => {
-    await holdWrong();
-
-    expect(musicTarget("wrongNote").hidden).toBe(false);
-    expect(musicTarget("wrongNoteText").textContent).toBe("D5");
-  });
 });
 
 function exhaust(spec: Spec): void {
@@ -140,23 +155,57 @@ function exhaust(spec: Spec): void {
   holdNote(spec.harness, 587.33, 600);
 }
 
-describe("wrong-note row visibility on subsequent events", () => {
-  it("hides after the user advances correctly", async () => {
+function attemptRows(): HTMLDivElement[] {
+  const sel = "[data-music-study-target='attempts'] .answer-row";
+
+  return Array.from(document.querySelectorAll<HTMLDivElement>(sel));
+}
+
+describe("attempts list", () => {
+  it("prepends an incorrect row with the detected note on reset", async () => {
+    const spec = await started("A4,C5,E5");
+    holdNote(spec.harness, 440, 0);
+    holdNote(spec.harness, 587.33, 600);
+
+    const rows = attemptRows();
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.classList.contains("answer-incorrect")).toBe(true);
+    expect(rows[0]?.textContent).toBe("✗D5");
+  });
+
+  it("prepends a correct row when the user advances", async () => {
+    const spec = await started("A4,C5,E5,G5");
+    holdNote(spec.harness, 440, 0);
+
+    const rows = attemptRows();
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.classList.contains("answer-correct")).toBe(true);
+    expect(rows[0]?.textContent).toBe("✓A4");
+  });
+
+  it("stacks attempts in reverse chronological order", async () => {
     const spec = await started("A4,C5,E5,G5");
     holdNote(spec.harness, 440, 0);
     holdNote(spec.harness, 587.33, 600);
     holdNote(spec.harness, 440, 1200);
 
-    expect(musicTarget("wrongNote").hidden).toBe(true);
+    const text = attemptRows().map((row) => { return row.textContent; });
+
+    expect(text).toStrictEqual(["✓A4", "✗D5", "✓A4"]);
   });
 
-  it("keeps the wrong note visible when attempts are exhausted", async () => {
+  it("appends an incorrect row when attempts are exhausted", async () => {
     vi.mocked(playSequence).mockResolvedValue(undefined);
     const spec = await started("A4,C5");
     exhaust(spec);
 
-    expect(musicTarget("wrongNote").hidden).toBe(false);
-    expect(musicTarget("wrongNoteText").textContent).toBe("D5");
+    const rows = attemptRows();
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.classList.contains("answer-incorrect")).toBe(true);
+    expect(rows[0]?.textContent).toBe("✗D5");
   });
 });
 

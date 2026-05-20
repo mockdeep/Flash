@@ -170,10 +170,7 @@ function setupMusicDOM(sequence: string): void {
          data-music-study-sequence-value="${sequence}">
       <p data-music-study-target="status">Press Begin to start</p>
       <p data-music-study-target="progress"></p>
-      <div data-music-study-target="wrongNote" hidden>
-        <span>✗</span>
-        <span data-music-study-target="wrongNoteText"></span>
-      </div>
+      <div data-music-study-target="attempts"></div>
       <button data-music-study-target="startButton"
               data-action="music-study#startMic">Begin</button>
       <form data-music-study-target="form" action="/decks/1/study">
