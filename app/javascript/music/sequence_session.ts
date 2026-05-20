@@ -7,7 +7,9 @@ interface Candidate {
 
 interface SessionState {
   attemptCount: number;
+  awaitingRelease: boolean;
   candidate: Candidate | null;
+  lastClassifiedNote: string | null;
   nextIndex: number;
   notes: string[];
 }
@@ -33,7 +35,14 @@ interface StepResult {
 }
 
 function initialState(notes: string[]): SessionState {
-  return {attemptCount: 0, candidate: null, nextIndex: 0, notes};
+  return {
+    attemptCount: 0,
+    awaitingRelease: false,
+    candidate: null,
+    lastClassifiedNote: null,
+    nextIndex: 0,
+    notes,
+  };
 }
 
 function clearCandidate(state: SessionState): StepResult {
@@ -84,21 +93,41 @@ function classifyHeldNote(
     return {
       detected: detectedNote,
       event: "completed",
-      state: {...state, attemptCount, candidate: null, nextIndex},
+      state: {
+        ...state,
+        attemptCount,
+        candidate: null,
+        lastClassifiedNote: detectedNote,
+        nextIndex,
+      },
     };
   }
   if (attemptCount >= state.notes.length) {
     return {
       detected: detectedNote,
       event: "needs_replay",
-      state: {...state, attemptCount: 0, candidate: null, nextIndex: 0},
+      state: {
+        ...state,
+        attemptCount: 0,
+        awaitingRelease: true,
+        candidate: null,
+        lastClassifiedNote: detectedNote,
+        nextIndex: 0,
+      },
     };
   }
 
   return {
     detected: detectedNote,
     event: advanceEvent(matched),
-    state: {...state, attemptCount, candidate: null, nextIndex},
+    state: {
+      ...state,
+      attemptCount,
+      awaitingRelease: true,
+      candidate: null,
+      lastClassifiedNote: detectedNote,
+      nextIndex,
+    },
   };
 }
 
@@ -107,10 +136,24 @@ function isInTolerance(input: StepInput): boolean {
     Math.abs(input.detected.cents) <= input.toleranceCents;
 }
 
-function step(state: SessionState, input: StepInput): StepResult {
-  if (state.nextIndex >= state.notes.length) {
-    return {detected: null, event: "noop", state};
-  }
+function isSustainingLastClassified(
+  state: SessionState,
+  input: StepInput,
+): boolean {
+  return isInTolerance(input) &&
+    input.detected?.note === state.lastClassifiedNote;
+}
+
+function releaseGate(state: SessionState): SessionState {
+  return {
+    ...state,
+    awaitingRelease: false,
+    candidate: null,
+    lastClassifiedNote: null,
+  };
+}
+
+function processTone(state: SessionState, input: StepInput): StepResult {
   if (!isInTolerance(input)) {
     return clearCandidate(state);
   }
@@ -123,6 +166,21 @@ function step(state: SessionState, input: StepInput): StepResult {
   }
 
   return classifyHeldNote(state, note);
+}
+
+function step(state: SessionState, input: StepInput): StepResult {
+  if (state.nextIndex >= state.notes.length) {
+    return {detected: null, event: "noop", state};
+  }
+  let active = state;
+  if (active.awaitingRelease) {
+    if (isSustainingLastClassified(active, input)) {
+      return {detected: null, event: "noop", state};
+    }
+    active = releaseGate(active);
+  }
+
+  return processTone(active, input);
 }
 
 export {initialState, step};

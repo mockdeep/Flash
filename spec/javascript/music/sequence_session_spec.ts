@@ -29,7 +29,9 @@ describe("initialState", () => {
 
     expect(state).toStrictEqual({
       attemptCount: 0,
+      awaitingRelease: false,
       candidate: null,
+      lastClassifiedNote: null,
       nextIndex: 0,
       notes: ["C4", "E4"],
     });
@@ -38,9 +40,7 @@ describe("initialState", () => {
 
 describe("step when the sequence is already complete", () => {
   it("returns noop without altering state", () => {
-    const state = {
-      attemptCount: 0, candidate: null, nextIndex: 1, notes: ["C4"],
-    };
+    const state = {...initialState(["C4"]), nextIndex: 1};
     const input = makeInput({detected: {cents: 0, note: "C4"}, now: 200});
 
     const result = step(state, input);
@@ -174,6 +174,10 @@ function holdPitchOnce(
   return {event, state: nextState};
 }
 
+function releaseAt(state: SessionState, now: number): SessionState {
+  return step(state, makeInput({detected: null, now})).state;
+}
+
 function runAttempts(
   notes: string[],
   pitch: string,
@@ -181,6 +185,9 @@ function runAttempts(
   let state = initialState(notes);
   const events: string[] = [];
   for (let attempt = 0; attempt < notes.length; attempt += 1) {
+    if (attempt > 0) {
+      state = releaseAt(state, attempt * 400 - 50);
+    }
     const result = holdPitchOnce(state, pitch, attempt * 400);
     ({state} = result);
     events.push(result.event);
@@ -223,6 +230,7 @@ describe("completed takes priority over needs_replay", () => {
   it("emits completed when the Nth attack matches the final note", () => {
     let state = initialState(["C4", "E4"]);
     ({state} = holdPitchOnce(state, "C4", 0));
+    state = releaseAt(state, 350);
     const final = holdPitchOnce(state, "E4", 400);
 
     expect(final.event).toBe("completed");
@@ -233,7 +241,9 @@ describe("step when a held note is wrong", () => {
   it("resets progress and surfaces the detected note", () => {
     const partway: SessionState = {
       attemptCount: 1,
+      awaitingRelease: false,
       candidate: {note: "D4", since: 0},
+      lastClassifiedNote: null,
       nextIndex: 1,
       notes: ["C4", "E4", "G4"],
     };
