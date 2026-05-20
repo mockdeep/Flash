@@ -208,11 +208,13 @@ function fireFrames(harness: MusicHarness, count: number): void {
 }
 
 function holdNote(harness: MusicHarness, hz: number, when: number): void {
-  vi.mocked(detectPitch).mockReturnValueOnce(hz);
+  vi.mocked(detectPitch).mockReturnValue(hz);
   harness.now.value = when;
   fireFrames(harness, 1);
-  vi.mocked(detectPitch).mockReturnValueOnce(hz);
   harness.now.value = when + 300;
+  fireFrames(harness, 1);
+  vi.mocked(detectPitch).mockReturnValue(null);
+  harness.now.value = when + 350;
   fireFrames(harness, 1);
 }
 
