@@ -99,7 +99,7 @@ class Study
   private
 
   def multiple_choice_answers
-    distractors = next_card.distractors.first(4)
+    distractors = next_card.distractors.sample(4)
 
     if deck.distractor_pool == "category"
       other_cards = deck.cards.distinct(:back).where.not(back: next_card.back)
