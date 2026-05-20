@@ -126,12 +126,39 @@ describe("ticks where a wrong note is held", () => {
     expect(musicTarget("status").textContent).
       toBe("Wrong note — start from the top");
   });
+
+  it("reveals the wrong-note row with the detected note glyph", async () => {
+    await holdWrong();
+
+    expect(musicTarget("wrongNote").hidden).toBe(false);
+    expect(musicTarget("wrongNoteText").textContent).toBe("D5");
+  });
 });
 
 function exhaust(spec: Spec): void {
   holdNote(spec.harness, 587.33, 0);
   holdNote(spec.harness, 587.33, 600);
 }
+
+describe("wrong-note row visibility on subsequent events", () => {
+  it("hides after the user advances correctly", async () => {
+    const spec = await started("A4,C5,E5,G5");
+    holdNote(spec.harness, 440, 0);
+    holdNote(spec.harness, 587.33, 600);
+    holdNote(spec.harness, 440, 1200);
+
+    expect(musicTarget("wrongNote").hidden).toBe(true);
+  });
+
+  it("keeps the wrong note visible when attempts are exhausted", async () => {
+    vi.mocked(playSequence).mockResolvedValue(undefined);
+    const spec = await started("A4,C5");
+    exhaust(spec);
+
+    expect(musicTarget("wrongNote").hidden).toBe(false);
+    expect(musicTarget("wrongNoteText").textContent).toBe("D5");
+  });
+});
 
 describe("immediate response when attempts are exhausted", () => {
   it("sets the 'Listen again…' status text", async () => {

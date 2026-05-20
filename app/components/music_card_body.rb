@@ -15,6 +15,7 @@ module Components
         render_card_head
         render_status
         render_progress
+        render_wrong_note
         render_controls
         render_form
       end
@@ -48,6 +49,20 @@ module Components
         class: "music-study__progress",
         data: { music_study_target: "progress" },
       )
+    end
+
+    def render_wrong_note
+      div(
+        class: "answer-row answer-incorrect music-study__wrong-note",
+        hidden: true,
+        data: { music_study_target: "wrongNote" },
+      ) do
+        span(class: "answer-number") { "✗" }
+        span(
+          class: "answer-text",
+          data: { music_study_target: "wrongNoteText" },
+        )
+      end
     end
 
     def render_controls
