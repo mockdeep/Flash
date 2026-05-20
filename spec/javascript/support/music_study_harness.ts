@@ -168,12 +168,10 @@ function setupMusicDOM(sequence: string): void {
   document.body.innerHTML = `
     <div data-controller="music-study"
          data-music-study-sequence-value="${sequence}">
-      <p data-music-study-target="status">Press Start to begin</p>
+      <p data-music-study-target="status">Press Begin to start</p>
       <p data-music-study-target="progress"></p>
       <button data-music-study-target="startButton"
-              data-action="music-study#startMic">Start</button>
-      <button data-music-study-target="playButton" hidden
-              data-action="music-study#play">Play</button>
+              data-action="music-study#startMic">Begin</button>
       <form data-music-study-target="form" action="/decks/1/study">
         <input type="hidden" name="answer[answer]"
                data-music-study-target="answerInput">

@@ -40,6 +40,7 @@ async function denied(): Promise<Spec> {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.clearAllMocks();
   resetMicActivatedForTests();
 });
 
@@ -81,17 +82,33 @@ describe("startMic when access is granted", () => {
     expect(ctx.source.connect).toHaveBeenCalledWith(ctx.analyser);
   });
 
-  it("hides the start button and reveals the play button", async () => {
+  it("hides the start button", async () => {
     await started();
 
     expect(musicTarget("startButton").hidden).toBe(true);
-    expect(musicTarget("playButton").hidden).toBe(false);
   });
 
   it("schedules the first animation frame", async () => {
     const spec = await started();
 
     expect(spec.harness.raf.request).toHaveBeenCalledTimes(1);
+  });
+
+  it("auto-plays the reference sequence", async () => {
+    const spec = await started("C4,E4");
+    const ctx = assert(spec.harness.audioContexts[0]);
+
+    expect(playSequence).toHaveBeenCalledWith(ctx, ["C4", "E4"]);
+  });
+
+  it("sets the listening status while the reference plays", async () => {
+    vi.mocked(playSequence).mockReturnValueOnce(new Promise<void>(() => {
+      // Never resolves so we can observe the in-flight status.
+    }));
+
+    await started();
+
+    expect(musicTarget("status").textContent).toBe("Listen…");
   });
 });
 

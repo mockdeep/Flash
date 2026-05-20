@@ -26,7 +26,6 @@ export default class extends Controller<HTMLElement> {
   static override targets = [
     "answerInput",
     "form",
-    "playButton",
     "progress",
     "startButton",
     "status",
@@ -39,8 +38,6 @@ export default class extends Controller<HTMLElement> {
   declare answerInputTarget: HTMLInputElement;
 
   declare formTarget: HTMLFormElement;
-
-  declare playButtonTarget: HTMLButtonElement;
 
   declare progressTarget: HTMLElement;
 
@@ -122,9 +119,11 @@ export default class extends Controller<HTMLElement> {
     micActivated = true;
     this.attachAnalyser(stream);
     this.startButtonTarget.hidden = true;
-    this.playButtonTarget.hidden = false;
-    this.statusTarget.textContent = "Mic ready — press Play to hear the note";
+    this.statusTarget.textContent = "Listen…";
     this.scheduleTick();
+    this.play().catch(() => {
+      return null;
+    });
   }
 
   private attachAnalyser(stream: MediaStream): void {
