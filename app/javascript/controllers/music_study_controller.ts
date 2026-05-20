@@ -1,5 +1,6 @@
 import type {SessionState, StepEvent, StepInput} from "music/sequence_session";
 import {Controller} from "@hotwired/stimulus";
+import {assert as ensure} from "helpers/assert";
 import {detectPitch} from "music/pitch_detector";
 import {frequencyToNote, parseSequence} from "music/note_utils";
 import {initialState, step} from "music/sequence_session";
@@ -10,11 +11,7 @@ const HOLD_MS = 150;
 const FFT_SIZE = 4096;
 const REPLAY_DELAY_MS = 1000;
 
-/*
- * Tracks whether the user has activated the mic in this document. Survives
- * Turbo frame swaps between cards; resets on a full page load (which is when
- * a new user gesture is needed anyway to satisfy AudioContext autoplay).
- */
+/* Persists across Turbo frame swaps; resets on full page load. */
 let micActivated = false;
 
 function resetMicActivatedForTests(): void {
@@ -30,6 +27,8 @@ export default class extends Controller<HTMLElement> {
     "progress",
     "startButton",
     "status",
+    "wrongNote",
+    "wrongNoteText",
   ];
 
   static override values = {
@@ -45,6 +44,10 @@ export default class extends Controller<HTMLElement> {
   declare startButtonTarget: HTMLButtonElement;
 
   declare statusTarget: HTMLElement;
+
+  declare wrongNoteTarget: HTMLElement;
+
+  declare wrongNoteTextTarget: HTMLElement;
 
   declare sequenceValue: string;
 
@@ -176,26 +179,45 @@ export default class extends Controller<HTMLElement> {
   private processFrame(analyser: AnalyserNode, ctx: AudioContext): void {
     const result = step(this.sessionState, this.buildStepInput(analyser, ctx));
     this.sessionState = result.state;
-    this.applyEvent(result.event);
+    this.applyEvent(result.event, result.detected);
     if (result.event !== "completed") {
       this.scheduleTick();
     }
   }
 
-  private applyEvent(event: StepEvent): void {
-    if (event === "advanced" || event === "reset" || event === "needs_replay") {
-      this.renderProgress();
-    }
+  private applyEvent(event: StepEvent, detected: string | null): void {
     if (event === "reset") {
-      this.statusTarget.textContent = "Wrong note — start from the top";
+      this.handleReset(detected);
+    } else if (event === "advanced") {
+      this.handleAdvanced();
+    } else if (event === "needs_replay") {
+      this.handleNeedsReplay(detected);
+    } else if (event === "completed") {
+      this.handleCompleted();
     }
-    if (event === "needs_replay") {
-      this.statusTarget.textContent = "Listen again…";
-      this.scheduleReplay();
-    }
-    if (event === "completed") {
-      this.submit();
-    }
+  }
+
+  private handleReset(detected: string | null): void {
+    this.renderProgress();
+    this.statusTarget.textContent = "Wrong note — start from the top";
+    this.showWrongNote(ensure(detected));
+  }
+
+  private handleAdvanced(): void {
+    this.renderProgress();
+    this.hideWrongNote();
+  }
+
+  private handleNeedsReplay(detected: string | null): void {
+    this.renderProgress();
+    this.statusTarget.textContent = "Listen again…";
+    this.showWrongNote(ensure(detected));
+    this.scheduleReplay();
+  }
+
+  private handleCompleted(): void {
+    this.hideWrongNote();
+    this.submit();
   }
 
   private scheduleReplay(): void {
@@ -213,6 +235,20 @@ export default class extends Controller<HTMLElement> {
       clearTimeout(this.replayTimeoutHandle);
       this.replayTimeoutHandle = null;
     }
+  }
+
+  private showWrongNote(note: string): void {
+    this.wrongNoteTextTarget.textContent = note;
+    this.wrongNoteTarget.classList.remove("answer-incorrect");
+    this.wrongNoteTarget.hidden = false;
+
+    /* Force a reflow so the shake animation replays on each wrong note. */
+    this.wrongNoteTarget.getBoundingClientRect();
+    this.wrongNoteTarget.classList.add("answer-incorrect");
+  }
+
+  private hideWrongNote(): void {
+    this.wrongNoteTarget.hidden = true;
   }
 
   private renderProgress(): void {
