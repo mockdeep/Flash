@@ -6,6 +6,9 @@
 
 import {application} from "./application";
 
+import AutoAdvanceController from "./auto_advance_controller";
+application.register("auto-advance", AutoAdvanceController);
+
 import ClipboardController from "./clipboard_controller";
 application.register("clipboard", ClipboardController);
 

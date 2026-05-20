@@ -83,12 +83,22 @@ module Views
       end
 
       def render_card_result
-        div(class: "music-study music-study--result") do
+        div(
+          class: "music-study music-study--result",
+          data: result_data,
+        ) do
           h2(class: "card-front", id: "card-question") { result.question }
           p(class: "music-study__sequence") { result.correct_answer }
           render_outcome
-          render_next_button
         end
+      end
+
+      def result_data
+        {
+          controller: "auto-advance",
+          auto_advance_frame_value: "study",
+          auto_advance_url_value: deck_study_path(deck),
+        }
       end
 
       def render_outcome
@@ -100,17 +110,6 @@ module Views
           p(class: "music-study__outcome music-study__outcome--incorrect") do
             "✗ Try again"
           end
-        end
-      end
-
-      def render_next_button
-        link_to(
-          deck_study_path(deck),
-          data: { hotkeys_target: "click", hotkey: " " },
-          class: "next-card-button",
-        ) do
-          span { "Next Card" }
-          span(class: "hotkey-hint") { "[space]" }
         end
       end
     end
