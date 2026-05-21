@@ -66,11 +66,6 @@ module Views
                       li { "Required columns: front, back, and category" }
                       li { "Optional column: distractors" }
                       li { "Use ';' to separate multiple back answers or distractors" }
-                      li do
-                        plain("Need an example? Download a sample ")
-                        link_options = { target: "_blank", rel: "noopener", class: "csv-sample-link" }
-                        link_to("Spanish CSV file here", csv_url, **link_options)
-                      end
                     end
                   end
 
@@ -93,12 +88,6 @@ module Views
             end
           end
         end
-      end
-
-      private
-
-      def csv_url
-        ENV.fetch("SAMPLE_CSV_URL", nil)
       end
     end
   end
