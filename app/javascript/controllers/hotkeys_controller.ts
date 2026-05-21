@@ -3,18 +3,17 @@ import {Controller} from "@hotwired/stimulus";
 import {assert} from "helpers/assert";
 
 const CTRL_PREFIX = "ctrl+";
-
-function resolveKey(key: string): string {
-  if (key === "Enter") { return " "; }
-  return key;
-}
+const ALT_PREFIX = "alt+";
 
 function resolveEvent(event: KeyboardEvent): string {
-  const isCtrl = event.ctrlKey || event.metaKey;
+  const hasCtrl = event.ctrlKey || event.metaKey;
+  let {key} = event;
 
-  if (isCtrl) { return CTRL_PREFIX + event.key; }
+  if (!hasCtrl && !event.altKey && key === "Enter") { key = " "; }
+  if (event.altKey) { key = ALT_PREFIX + key; }
+  if (hasCtrl) { key = CTRL_PREFIX + key; }
 
-  return resolveKey(event.key);
+  return key;
 }
 
 function isFormField(target: EventTarget | null): boolean {
