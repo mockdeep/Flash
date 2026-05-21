@@ -224,3 +224,28 @@ it("does not fire regular hotkeys when ctrl is held", async () => {
 
   expect(clickSpy).not.toHaveBeenCalled();
 });
+
+it("does not fire regular hotkeys when alt is held", async () => {
+  await setupController();
+  const clickSpy = vi.spyOn(button(), "click");
+  const event = new KeyboardEvent("keydown", {altKey: true, key: "a"});
+
+  controller().handleKeydown(event);
+
+  expect(clickSpy).not.toHaveBeenCalled();
+});
+
+it("does not fire ctrl-modified hotkeys when alt is also held", async () => {
+  await setupController();
+  setHotkey("ctrl+Enter");
+  const clickSpy = vi.spyOn(button(), "click");
+  const event = new KeyboardEvent("keydown", {
+    altKey: true,
+    ctrlKey: true,
+    key: "Enter",
+  });
+
+  controller().handleKeydown(event);
+
+  expect(clickSpy).not.toHaveBeenCalled();
+});
