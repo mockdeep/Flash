@@ -48,7 +48,7 @@ module Views
             else
               card = study.next_card
 
-              h2(class: "card-front") { card.front }
+              render(Components::CardFront.new(deck:, text: card.front))
 
               render_active_card(card)
             end

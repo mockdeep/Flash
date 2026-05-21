@@ -87,10 +87,15 @@ module Views
           class: "music-study music-study--result",
           data: result_data,
         ) do
-          h2(class: "card-front", id: "card-question") { result.question }
+          render_card_front
           p(class: "music-study__sequence") { result.correct_answer }
           render_outcome
         end
+      end
+
+      def render_card_front
+        args = { deck:, text: result.question, id: "card-question" }
+        render(Components::CardFront.new(**args))
       end
 
       def result_data
