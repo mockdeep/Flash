@@ -767,6 +767,8 @@ body {
 .session-milestone-primary,
 .session-milestone-secondary {
   display: inline-flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-xl);
   transition: all var(--transition);
   border: 3px solid var(--color-border-dark);
