@@ -39,19 +39,21 @@ module Components
 
     def keep_going_link(css_class)
       link_to(
-        "Keep Going",
         deck_study_path(@deck, reset_session: true),
         class: css_class,
-      )
+        data: { hotkeys_target: "click", hotkey: " " },
+      ) do
+        span { "Keep Going" }
+        span(class: "hotkey-hint") { "[space]" }
+      end
     end
 
     def done_for_now_link
-      link_to(
-        "Done for Now",
-        root_path,
-        class: "session-milestone-secondary",
-        data: { turbo_frame: "_top" },
-      )
+      data = { turbo_frame: "_top", hotkeys_target: "click", hotkey: "Escape" }
+      link_to(root_path, class: "session-milestone-secondary", data:) do
+        span { "Done for Now" }
+        span(class: "hotkey-hint") { "[esc]" }
+      end
     end
   end
 end
