@@ -80,7 +80,8 @@ module Views
 
         div(data: controller_data) do
           div(class: "edit-card__front-wrapper") do
-            h2(class: "card-front", id: "card-question") { result.question }
+            args = { deck:, text: result.question, id: "card-question" }
+            render(Components::CardFront.new(**args))
             unless demo
               button(
                 type: "button",
