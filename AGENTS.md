@@ -389,7 +389,6 @@ Environment variables are managed through `.env` files:
 Common variables:
 - `CREEM_API_KEY` - Creem payment API key
 - `CREEM_WEBHOOK_SECRET` - Secret for validating Creem webhooks
-- `SAMPLE_CSV_URL` - URL to sample CSV file for deck import
 
 **Important:** Never commit `.env.local` or any file containing real API keys.
 
@@ -527,7 +526,6 @@ Decks are created by uploading CSV files. The deck-creation form has a "Deck Typ
 **Text decks (`Decks::Create`):**
 - Columns: `front`, `back`, `category` (`distractors` optional)
 - Multiple answers separated by `;`
-- Sample CSV available via environment variable `SAMPLE_CSV_URL`
 
 **Music decks (`Decks::CreateMusic`):** see Music Decks section below.
 

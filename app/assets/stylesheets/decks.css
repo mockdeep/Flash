@@ -402,11 +402,6 @@
   margin-bottom: 0;
 }
 
-.csv-sample-link {
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
 /* Deck type toggle */
 .deck-type-toggle {
   border: 0;
