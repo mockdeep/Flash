@@ -9,15 +9,14 @@ module Components
       ["xl", "Extra large"],
     ].freeze
 
-    def initialize(deck:, text:, id: nil)
+    def initialize(text:, id: nil)
       super()
-      @deck = deck
       @text = text
       @id = id
     end
 
     def view_template
-      div(class: "card-front-wrapper", data: wrapper_data) do
+      div(class: "card-front-wrapper") do
         h2(class: "card-front", id: @id) { @text }
         render_menu_toggle
         render_menu
@@ -26,22 +25,6 @@ module Components
     end
 
     private
-
-    def wrapper_data
-      {
-        controller: "card-size",
-        card_size_deck_id_value: @deck.id,
-        size: "m",
-        action: wrapper_actions,
-      }
-    end
-
-    def wrapper_actions
-      [
-        "click@window->card-size#handleDocClick",
-        "keydown@window->card-size#handleEsc",
-      ].join(" ")
-    end
 
     def render_menu_toggle
       button(
@@ -53,7 +36,7 @@ module Components
     end
 
     def menu_toggle_data
-      { card_size_target: "toggle", action: "click->card-size#toggleMenu" }
+      { text_size_target: "toggle", action: "click->text-size#toggleMenu" }
     end
 
     def render_menu
@@ -61,7 +44,7 @@ module Components
         class: "card-front__menu",
         hidden: true,
         role: "menu",
-        data: { card_size_target: "menu" },
+        data: { text_size_target: "menu" },
       ) do
         p(class: "card-front__menu-label") { "Text size" }
         SIZES.each { |code, label| render_option(code, label) }
@@ -83,9 +66,9 @@ module Components
 
     def option_data(code)
       {
-        card_size_target: "option",
+        text_size_target: "option",
         size: code,
-        action: "click->card-size#setSize",
+        action: "click->text-size#setSize",
       }
     end
 
@@ -98,7 +81,7 @@ module Components
       {
         hotkeys_target: "click",
         hotkey: key,
-        action: "click->card-size##{action}",
+        action: "click->text-size##{action}",
       }
     end
   end

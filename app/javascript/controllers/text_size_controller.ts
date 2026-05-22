@@ -12,7 +12,7 @@ function isSize(value: string | null | undefined): value is Size {
 }
 
 function storageKey(deckId: string): string {
-  return `card-size:${deckId}`;
+  return `text-size:${deckId}`;
 }
 
 function loadSize(deckId: string): Size {

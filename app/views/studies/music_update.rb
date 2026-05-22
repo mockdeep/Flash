@@ -3,6 +3,8 @@
 module Views
   module Studies
     class MusicUpdate < Views::Base
+      include TextSizeData
+
       LEVEL_BODY = "You've mastered all the cards at this level."
 
       attr_accessor :deck, :result, :completed, :study_goal, :demo
@@ -18,7 +20,11 @@ module Views
 
       def view_template
         div(class: "content-container") do
-          turbo_frame_tag("study") { render_frame }
+          turbo_frame_tag(
+            "study",
+            class: "study-frame",
+            data: text_size_data,
+          ) { render_frame }
         end
       end
 
@@ -45,16 +51,12 @@ module Views
       def render_level_box(completed_level)
         div(class: "accent-box") do
           div(class: "accent-box__icon") { "🎉" }
-          render_level_box_content(completed_level)
-        end
-      end
-
-      def render_level_box_content(completed_level)
-        div(class: "accent-box__content") do
-          h2(class: "accent-box__heading") do
-            "Level #{completed_level} Complete!"
+          div(class: "accent-box__content") do
+            h2(class: "accent-box__heading") do
+              "Level #{completed_level} Complete!"
+            end
+            p(class: "accent-box__text") { LEVEL_BODY }
           end
-          p(class: "accent-box__text") { LEVEL_BODY }
         end
       end
 
@@ -94,7 +96,7 @@ module Views
       end
 
       def render_card_front
-        args = { deck:, text: result.question, id: "card-question" }
+        args = { text: result.question, id: "card-question" }
         render(Components::CardFront.new(**args))
       end
 

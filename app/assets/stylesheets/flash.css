@@ -322,9 +322,9 @@ body {
   position: relative;
 }
 
-.card-front-wrapper[data-size="s"]  .card-front { font-size: clamp(18px, 3.5vw, 24px); }
-.card-front-wrapper[data-size="l"]  .card-front { font-size: clamp(28px, 6vw, 44px); }
-.card-front-wrapper[data-size="xl"] .card-front { font-size: clamp(36px, 8vw, 60px); }
+.study-frame[data-size="s"]  .card-front { font-size: clamp(18px, 3.5vw, 24px); }
+.study-frame[data-size="l"]  .card-front { font-size: clamp(28px, 6vw, 44px); }
+.study-frame[data-size="xl"] .card-front { font-size: clamp(36px, 8vw, 60px); }
 
 .card-front__menu-toggle {
   position: absolute;
@@ -604,6 +604,10 @@ body {
   text-decoration: line-through;
   opacity: 0.7;
 }
+
+.study-frame[data-size="s"]  .answer-text { font-size: 15px; }
+.study-frame[data-size="l"]  .answer-text { font-size: 20px; }
+.study-frame[data-size="xl"] .answer-text { font-size: 24px; }
 
 .answer-incorrect .answer-number {
   border-color: var(--color-warning-border);
@@ -928,9 +932,9 @@ body {
       4px 4px 0 0 var(--color-border-dark);
   }
 
-  .card-front-wrapper[data-size="s"]  .card-front { font-size: clamp(18px, 4.5vw, 24px); }
-  .card-front-wrapper[data-size="l"]  .card-front { font-size: clamp(28px, 8vw, 44px); }
-  .card-front-wrapper[data-size="xl"] .card-front { font-size: clamp(36px, 10vw, 60px); }
+  .study-frame[data-size="s"]  .card-front { font-size: clamp(18px, 4.5vw, 24px); }
+  .study-frame[data-size="l"]  .card-front { font-size: clamp(28px, 8vw, 44px); }
+  .study-frame[data-size="xl"] .card-front { font-size: clamp(36px, 10vw, 60px); }
 
   .answer-button,
   .answer-row {
