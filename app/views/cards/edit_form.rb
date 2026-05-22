@@ -3,6 +3,8 @@
 module Views
   module Cards
     class EditForm < Components::Base
+      FORM_ID = "card_edit_form_form"
+
       def initialize(deck:, card:)
         super()
         @deck = deck
@@ -13,20 +15,16 @@ module Views
         turbo_frame_tag("card_edit_form") do
           render(Components::ErrorExplanation.new(errors: @card.errors))
           render_form
+          render_actions
         end
       end
 
       private
 
       def render_form
-        form_with(
-          model: [@deck, @card],
-          data: {
-            action: "turbo:submit-end->dialog#closeOnSuccess",
-          },
-        ) do |f|
+        data = { action: "turbo:submit-end->dialog#closeOnSuccess" }
+        form_with(model: [@deck, @card], id: FORM_ID, data:) do |f|
           render_fields(f)
-          render_actions(f)
         end
       end
 
@@ -77,17 +75,45 @@ module Views
         end
       end
 
-      def render_actions(form)
+      def render_actions
         div(class: "edit-card__actions") do
-          button(
-            type: "button",
-            class: button_class(:ghost, :compact),
-            data: { action: "click->dialog#close" },
-          ) { "Cancel" }
-          submit_class = button_class(:primary, :compact)
-          submit_data = { hotkeys_target: "click", hotkey: "ctrl+Enter" }
-          form.submit("Save", class: submit_class, data: submit_data)
+          render_delete_button
+          div(class: "edit-card__actions-group") do
+            render_cancel_button
+            render_save_button
+          end
         end
+      end
+
+      def render_delete_button
+        button_to(
+          "Delete",
+          deck_card_path(@deck, @card),
+          method: :delete,
+          class: button_class(:danger, :compact),
+          form: { data: delete_form_data },
+        )
+      end
+
+      def delete_form_data
+        { turbo_frame: "study", turbo_confirm: t("cards.destroy.confirm") }
+      end
+
+      def render_cancel_button
+        button(
+          type: "button",
+          class: button_class(:ghost, :compact),
+          data: { action: "click->dialog#close" },
+        ) { "Cancel" }
+      end
+
+      def render_save_button
+        button(
+          type: "submit",
+          form: FORM_ID,
+          class: button_class(:primary, :compact),
+          data: { hotkeys_target: "click", hotkey: "ctrl+Enter" },
+        ) { "Save" }
       end
     end
   end

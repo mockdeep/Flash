@@ -12,6 +12,13 @@ class CardsController < ApplicationController
     end
   end
 
+  def destroy
+    deck = current_user.decks.find(params.expect(:deck_id))
+    deck.cards.find(params.expect(:id)).destroy!
+    flash[:success] = t(".success")
+    redirect_to(deck_study_path(deck))
+  end
+
   private
 
   def update_succeeded(deck, card)

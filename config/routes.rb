@@ -17,7 +17,7 @@ Rails.application.routes.draw do
     resource :replacement, only: [:new, :create], controller: "replacements"
     resource :share, only: [:create, :destroy], controller: "shares"
     resource :study, only: [:show, :update]
-    resources :cards, only: [:update]
+    resources :cards, only: [:update, :destroy]
     resources :suggestions, only: [:index] do
       post :accept, on: :member
       post :reject, on: :member
