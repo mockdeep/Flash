@@ -42,7 +42,7 @@ module Views
                   end
                 end
 
-                fieldset(class: "form-field deck-type-toggle", data: { deck_type_target: "musicSettings" }, hidden: true) do
+                fieldset(class: "form-field deck-type-toggle", data: { deck_type_target: "musicSettings" }, hidden: true, disabled: true) do
                   legend(class: "form-label") { "Music Style" }
                   label(class: "deck-type-option") do
                     form.radio_button(:ordered, "true", checked: true)

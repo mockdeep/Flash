@@ -19,6 +19,16 @@ RSpec.describe "creating a music deck" do
     click_on("Create Deck")
   end
 
+  def submit_text_form(name:)
+    fill_in("Deck Name", with: name)
+    attach_file(
+      "Flashcards CSV File",
+      "spec/fixtures/files/decks/basic.csv",
+      make_visible: true,
+    )
+    click_on("Create Deck")
+  end
+
   it "hides the Music Style fieldset when Text is selected" do
     visit_new_deck
 
@@ -52,5 +62,12 @@ RSpec.describe "creating a music deck" do
     submit_music_form(name: "Open Strings", style: "Unordered note pool")
 
     expect(MusicDeck.find_by(name: "Open Strings")&.ordered?).to be(false)
+  end
+
+  it "creates a text deck" do
+    visit_new_deck
+    submit_text_form(name: "Basic")
+
+    expect(TextDeck.find_by(name: "Basic")).to be_present
   end
 end
