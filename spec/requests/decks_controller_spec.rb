@@ -268,6 +268,66 @@ RSpec.describe DecksController do
     end
   end
 
+  describe "#destroy" do
+    it "deletes the deck" do
+      deck = create(:deck, user: default_user)
+      login_as(default_user)
+
+      expect { delete(deck_path(deck)) }.to change(Deck, :count).by(-1)
+    end
+
+    it "deletes the deck's cards" do
+      deck = create(:deck, user: default_user)
+      create(:card, deck:)
+      login_as(default_user)
+
+      expect { delete(deck_path(deck)) }.to change(Card, :count).by(-1)
+    end
+
+    it "deletes the deck's incoming suggestions" do
+      deck = create(:deck, user: default_user)
+      create(:card_suggestion, card: create(:card, deck:))
+      login_as(default_user)
+
+      expect { delete(deck_path(deck)) }
+        .to change(CardSuggestion, :count).by(-1)
+    end
+
+    it "redirects to the decks index" do
+      deck = create(:deck, user: default_user)
+      login_as(default_user)
+
+      delete(deck_path(deck))
+
+      expect(response).to redirect_to(decks_path)
+    end
+
+    it "sets a success flash" do
+      deck = create(:deck, user: default_user)
+      login_as(default_user)
+
+      delete(deck_path(deck))
+
+      expect(flash[:success]).to eq("Deck deleted")
+    end
+
+    it "prevents deleting another user's deck" do
+      other_deck = create(:deck, user: create(:user))
+      login_as(default_user)
+
+      delete(deck_path(other_deck))
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "does not delete another user's deck" do
+      other_deck = create(:deck, user: create(:user))
+      login_as(default_user)
+
+      expect { delete(deck_path(other_deck)) }.not_to change(Deck, :count)
+    end
+  end
+
   describe "#new" do
     it "renders the new deck form" do
       login_as(default_user)

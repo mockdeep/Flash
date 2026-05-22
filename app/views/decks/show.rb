@@ -26,6 +26,7 @@ module Views
         render_replace_link if deck.is_a?(TextDeck)
 
         render_cards_table if deck.cards.any?
+        render_delete_button
       end
 
       private
@@ -106,14 +107,23 @@ module Views
         end
       end
 
+      def render_delete_button
+        button_to(
+          "Delete Deck",
+          deck_path(deck),
+          method: :delete,
+          class: button_class(:danger, :compact),
+          form: { data: { turbo_confirm: t("decks.destroy.confirm") } },
+        )
+      end
+
       def render_revoke_button
-        confirm = "Revoke the share link? Anyone using it will lose access."
         button_to(
           "Revoke Link",
           deck_share_path(deck),
           method: :delete,
           class: button_class(:ghost, :compact),
-          form: { data: { turbo_confirm: confirm } },
+          form: { data: { turbo_confirm: t("shares.destroy.confirm") } },
         )
       end
     end
