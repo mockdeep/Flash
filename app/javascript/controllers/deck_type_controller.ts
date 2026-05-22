@@ -14,7 +14,7 @@ export default class extends Controller {
 
   musicInstructionsTarget!: HTMLElement;
 
-  musicSettingsTarget!: HTMLElement;
+  musicSettingsTarget!: HTMLFieldSetElement;
 
   override connect(): void {
     this.update();
@@ -28,5 +28,6 @@ export default class extends Controller {
     this.textInstructionsTarget.hidden = isMusic;
     this.musicInstructionsTarget.hidden = !isMusic;
     this.musicSettingsTarget.hidden = !isMusic;
+    this.musicSettingsTarget.disabled = !isMusic;
   }
 }
