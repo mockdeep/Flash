@@ -52,7 +52,7 @@
   transition: all var(--transition);
 }
 
-.music-badge {
+.badge {
   display: inline-block;
   margin-left: 0.5rem;
   font-size: 0.7em;

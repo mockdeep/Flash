@@ -92,7 +92,7 @@ RSpec.describe SharesController do
 
       get(shared_deck_path(deck.share_token))
 
-      expect(rendered).to have_css(".music-badge")
+      expect(rendered).to have_css("[title='Microphone required']")
     end
 
     it "does not show a music badge for text decks" do
@@ -100,7 +100,7 @@ RSpec.describe SharesController do
 
       get(shared_deck_path(deck.share_token))
 
-      expect(rendered).to have_no_css(".music-badge")
+      expect(rendered).to have_no_css("[title='Microphone required']")
     end
 
     it "limits preview to 5 cards" do
