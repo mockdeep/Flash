@@ -135,6 +135,24 @@ RSpec.describe DecksController do
       expect(rendered)
         .to have_field(type: "text", with: shared_deck_url(deck.share_token))
     end
+
+    it "shows the Replace cards link for a text deck" do
+      deck = create(:deck, user: default_user)
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_link("Replace cards")
+    end
+
+    it "does not show the Replace cards link for a music deck" do
+      deck = create(:music_deck, user: default_user)
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_no_link("Replace cards")
+    end
   end
 
   describe "#new" do

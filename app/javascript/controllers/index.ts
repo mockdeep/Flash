@@ -15,6 +15,9 @@ application.register("card-size", CardSizeController);
 import ClipboardController from "./clipboard_controller";
 application.register("clipboard", ClipboardController);
 
+import ConfirmSubmitController from "./confirm_submit_controller";
+application.register("confirm-submit", ConfirmSubmitController);
+
 import DeckTypeController from "./deck_type_controller";
 application.register("deck-type", DeckTypeController);
 
