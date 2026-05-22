@@ -21,22 +21,23 @@ class Study
 
   attr_accessor :deck, :next_card
 
-  def self.for(deck:)
+  def self.for(deck:, exclude_card_id: nil)
     klass = deck.music? ? MusicStudy : self
-    klass.new(deck:)
+    klass.new(deck:, exclude_card_id:)
   end
 
-  def initialize(deck:)
+  def initialize(deck:, exclude_card_id: nil)
     self.deck = deck
-    self.next_card = pick_next_card
+    self.next_card = pick_next_card(exclude_card_id:)
   end
 
   def active_card_threshold
     (2**(deck.level - 1)) * ACTIVE_CARD_THRESHOLD
   end
 
-  def pick_next_card
-    deck.cards.not_done(deck.level).ordered.limit(active_card_threshold).sample
+  def pick_next_card(exclude_card_id:)
+    pool = deck.cards.not_done(deck.level).ordered.limit(active_card_threshold)
+    pool.where.not(id: exclude_card_id).sample || pool.sample
   end
 
   def presentation_mode

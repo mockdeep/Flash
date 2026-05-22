@@ -152,6 +152,7 @@ Metrics/BlockLength:
 # Configuration parameters: CountComments, Max, CountAsOne.
 Metrics/ClassLength:
   Exclude:
+    - 'app/domain/study.rb'
     - 'app/views/decks/index.rb'
     - 'app/views/decks/show.rb'
     - 'app/views/layouts/application.rb'

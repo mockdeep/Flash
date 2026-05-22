@@ -3,12 +3,12 @@
 class MusicStudy < Study
   attr_accessor :next_window
 
-  def initialize(deck:)
+  def initialize(deck:, exclude_card_id: nil)
     super
     self.next_window = pick_window
   end
 
-  def pick_next_card = nil
+  def pick_next_card(**) = nil
 
   def possible_answers = []
 

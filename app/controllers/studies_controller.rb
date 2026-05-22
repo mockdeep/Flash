@@ -6,7 +6,7 @@ class StudiesController < ApplicationController
 
   def show
     deck = current_user.decks.find(params.expect(:deck_id))
-    study = Study.for(deck:)
+    study = Study.for(deck:, exclude_card_id: params[:exclude])
     reset_counters
     render_study(show_view_class(deck), deck:, study:)
   end
