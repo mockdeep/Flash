@@ -57,17 +57,8 @@ module Views
                 div(class: "form-field") do
                   form.label(:cards_csv, "Flashcards CSV File", class: "form-label")
 
-                  div(class: "csv-instructions", data: { deck_type_target: "textInstructions" }) do
-                    div(class: "csv-instructions-header") do
-                      span(class: "csv-icon") { "📄" }
-                      strong { "CSV Format Requirements" }
-                    end
-                    ul(class: "csv-requirements") do
-                      li { "Required columns: front, back, and category" }
-                      li { "Optional column: distractors" }
-                      li { "Use ';' to separate multiple back answers or distractors" }
-                    end
-                  end
+                  instructions_data = { deck_type_target: "textInstructions" }
+                  render(Components::TextCsvInstructions.new(data: instructions_data))
 
                   render(Components::MusicCsvInstructions.new)
 

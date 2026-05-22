@@ -13,6 +13,7 @@ Rails.application.routes.draw do
   resource :demo, only: [:show, :create], controller: "demo"
   resources :decks, only: [:new, :create, :index, :show] do
     resource :milestone, only: [:update]
+    resource :replacement, only: [:new, :create], controller: "replacements"
     resource :share, only: [:create, :destroy], controller: "shares"
     resource :study, only: [:show, :update]
     resources :cards, only: [:update]

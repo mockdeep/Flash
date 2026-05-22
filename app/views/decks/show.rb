@@ -22,11 +22,20 @@ module Views
         end
 
         render_share_section
+        render_replace_link if deck.is_a?(TextDeck)
 
         render_cards_table if deck.cards.any?
       end
 
       private
+
+      def render_replace_link
+        link_to(
+          "Replace cards",
+          new_deck_replacement_path(deck),
+          class: button_class(:secondary, :compact),
+        )
+      end
 
       def render_cards_table
         table do
