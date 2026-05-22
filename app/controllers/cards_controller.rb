@@ -6,19 +6,44 @@ class CardsController < ApplicationController
     card = deck.cards.find(params.expect(:id))
 
     if card.update(card_params)
-      render(turbo_stream: success_streams(card:, deck:))
+      update_succeeded(deck, card)
     else
-      render(
-        Views::Cards::EditForm.new(deck:, card:),
-        status: :unprocessable_content,
-      )
+      update_failed(deck, card)
     end
   end
 
   private
 
+  def update_succeeded(deck, card)
+    create_catalog_suggestion(card) if suggest_to_catalog?
+    render(turbo_stream: success_streams(card:, deck:))
+  end
+
+  def update_failed(deck, card)
+    render(
+      Views::Cards::EditForm.new(deck:, card:),
+      status: :unprocessable_content,
+    )
+  end
+
   def card_params
     params.expect(card: [:front, :back, :category])
+  end
+
+  def suggest_to_catalog?
+    params.dig(:card, :suggest_to_catalog).to_s == "1"
+  end
+
+  def create_catalog_suggestion(card)
+    return unless card.suggestable_to_catalog?
+
+    CardSuggestion.create!(
+      card: card.source_card,
+      user: current_user,
+      front: card.front,
+      back: card.back,
+      category: card.category,
+    )
   end
 
   def success_streams(card:, deck:)

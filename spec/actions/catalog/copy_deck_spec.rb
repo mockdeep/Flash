@@ -170,5 +170,13 @@ RSpec.describe Catalog::CopyDeck do
 
       expect(result.record.cards.count).to eq(1)
     end
+
+    it "links each copied card back to its source card" do
+      source = build_public_deck
+      source_card = create(:card, deck: source, front: "Q", back: "A")
+      result = described_class.call(user: create(:user), deck: source)
+
+      expect(result.record.cards.first.source_card_id).to eq(source_card.id)
+    end
   end
 end

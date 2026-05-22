@@ -21,6 +21,7 @@ class User < ApplicationRecord
             numericality: { greater_than_or_equal_to: 1, only_integer: true }
 
   has_many :decks, dependent: :destroy
+  has_many :card_suggestions, dependent: :destroy
   has_one :subscription, dependent: :destroy
 
   def self.find_by(args)
