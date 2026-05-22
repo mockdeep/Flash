@@ -59,6 +59,14 @@ en:
       success: "Share link created"
     destroy:
       success: "Share link revoked"
+  suggestions:
+    accept:
+      success: "Suggestion applied to the card"
+      confirm: "Replace the catalog card with this suggestion?"
+    reject:
+      success: "Suggestion rejected"
+    index:
+      empty: "No pending suggestions for this deck."
   sessions:
     create:
       error: "Invalid email or password"

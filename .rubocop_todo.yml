@@ -146,6 +146,7 @@ Metrics/BlockLength:
     - 'app/views/studies/update.rb'
     - 'app/views/subscriptions/show.rb'
     - 'app/views/welcome/index.rb'
+    - 'config/routes.rb'
 
 # Offense count: 5
 # Configuration parameters: CountComments, Max, CountAsOne.
