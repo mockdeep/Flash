@@ -12,7 +12,7 @@ import {
   selectEvent,
   STORAGE_KEY,
   toggle,
-} from "support/card_size_harness";
+} from "support/text_size_harness";
 
 describe("connect with empty storage", () => {
   it("applies the medium default to the wrapper", async () => {

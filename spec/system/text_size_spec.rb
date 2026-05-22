@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe "card-front text size" do
+RSpec.describe "study text size" do
   def visit_study_page
     deck = create(:deck, user: default_user)
     create_list(:card, 5, deck:)
@@ -23,7 +23,7 @@ RSpec.describe "card-front text size" do
 
     pick_size("l")
 
-    expect(page).to have_css(".card-front-wrapper[data-size='l']")
+    expect(page).to have_css(".study-frame[data-size='l']")
   end
 
   it "increments the size when the ] hotkey is pressed" do
@@ -31,7 +31,7 @@ RSpec.describe "card-front text size" do
 
     find("body").send_keys("]")
 
-    expect(page).to have_css(".card-front-wrapper[data-size='l']")
+    expect(page).to have_css(".study-frame[data-size='l']")
   end
 
   it "persists the selected size across page reloads" do
@@ -41,6 +41,6 @@ RSpec.describe "card-front text size" do
 
     visit(deck_study_path(deck))
 
-    expect(page).to have_css(".card-front-wrapper[data-size='xl']")
+    expect(page).to have_css(".study-frame[data-size='xl']")
   end
 end

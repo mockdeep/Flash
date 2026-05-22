@@ -1,5 +1,5 @@
 import {bootStimulus, getController} from "support/stimulus";
-import CardSizeController from "controllers/card_size_controller";
+import TextSizeController from "controllers/text_size_controller";
 import {assert as ensure} from "helpers/assert";
 
 type Size = "s" | "m" | "l" | "xl";
@@ -7,15 +7,15 @@ type EventTargetName = "target" | "currentTarget";
 
 const SIZES: readonly Size[] = ["s", "m", "l", "xl"];
 const DECK_ID = "42";
-const STORAGE_KEY = `card-size:${DECK_ID}`;
-const ROOT_SEL = "[data-controller='card-size']";
-const MENU_SEL = "[data-card-size-target='menu']";
-const TOGGLE_SEL = "[data-card-size-target='toggle']";
+const STORAGE_KEY = `text-size:${DECK_ID}`;
+const ROOT_SEL = "[data-controller='text-size']";
+const MENU_SEL = "[data-text-size-target='menu']";
+const TOGGLE_SEL = "[data-text-size-target='toggle']";
 
 function buildToggle(): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";
-  button.dataset.cardSizeTarget = "toggle";
+  button.dataset.textSizeTarget = "toggle";
   button.setAttribute("aria-expanded", "false");
 
   return button;
@@ -23,7 +23,7 @@ function buildToggle(): HTMLButtonElement {
 
 function buildMenu(): HTMLElement {
   const div = document.createElement("div");
-  div.dataset.cardSizeTarget = "menu";
+  div.dataset.textSizeTarget = "menu";
   div.hidden = true;
 
   return div;
@@ -32,7 +32,7 @@ function buildMenu(): HTMLElement {
 function buildOption(size: Size): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";
-  button.dataset.cardSizeTarget = "option";
+  button.dataset.textSizeTarget = "option";
   button.dataset.size = size;
   button.setAttribute("aria-checked", "false");
 
@@ -41,8 +41,8 @@ function buildOption(size: Size): HTMLButtonElement {
 
 function setupDOM(): void {
   const root = document.createElement("div");
-  root.dataset.controller = "card-size";
-  root.dataset.cardSizeDeckIdValue = DECK_ID;
+  root.dataset.controller = "text-size";
+  root.dataset.textSizeDeckIdValue = DECK_ID;
   root.dataset.size = "m";
 
   root.appendChild(buildToggle());
@@ -57,15 +57,15 @@ async function boot(storedSize?: Size): Promise<void> {
     localStorage.setItem(STORAGE_KEY, storedSize);
   }
   setupDOM();
-  await bootStimulus("card-size", CardSizeController);
+  await bootStimulus("text-size", TextSizeController);
 }
 
 function element(): HTMLElement {
   return ensure(document.querySelector<HTMLElement>(ROOT_SEL));
 }
 
-function controller(): CardSizeController {
-  return getController(element(), "card-size", CardSizeController);
+function controller(): TextSizeController {
+  return getController(element(), "text-size", TextSizeController);
 }
 
 function menu(): HTMLElement {
@@ -77,7 +77,7 @@ function toggle(): HTMLButtonElement {
 }
 
 function option(size: Size): HTMLButtonElement {
-  const sel = `[data-card-size-target='option'][data-size='${size}']`;
+  const sel = `[data-text-size-target='option'][data-size='${size}']`;
 
   return ensure(document.querySelector<HTMLButtonElement>(sel));
 }

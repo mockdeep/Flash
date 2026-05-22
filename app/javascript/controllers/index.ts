@@ -9,8 +9,8 @@ import {application} from "./application";
 import AutoAdvanceController from "./auto_advance_controller";
 application.register("auto-advance", AutoAdvanceController);
 
-import CardSizeController from "./card_size_controller";
-application.register("card-size", CardSizeController);
+import TextSizeController from "./text_size_controller";
+application.register("text-size", TextSizeController);
 
 import ClipboardController from "./clipboard_controller";
 application.register("clipboard", ClipboardController);

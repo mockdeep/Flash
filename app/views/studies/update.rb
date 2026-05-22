@@ -3,6 +3,8 @@
 module Views
   module Studies
     class Update < Views::Base
+      include TextSizeData
+
       attr_accessor :deck, :result, :completed, :study_goal, :demo
 
       def initialize(deck:, result:, completed:, study_goal:, demo: false)
@@ -16,7 +18,11 @@ module Views
 
       def view_template
         div(class: "content-container") do
-          turbo_frame_tag("study") do
+          turbo_frame_tag(
+            "study",
+            class: "study-frame",
+            data: text_size_data,
+          ) do
             if result.level_completed?
               render_level_complete
               next
@@ -80,7 +86,7 @@ module Views
 
         div(data: controller_data) do
           div(class: "edit-card__front-wrapper") do
-            args = { deck:, text: result.question, id: "card-question" }
+            args = { text: result.question, id: "card-question" }
             render(Components::CardFront.new(**args))
             unless demo
               button(
