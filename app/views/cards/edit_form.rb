@@ -35,7 +35,32 @@ module Views
           text_area_field(form, :front, "Front", autofocus: true)
           text_area_field(form, :back, "Back")
           text_field(form, :category, "Category")
+          render_suggest_to_catalog if @card.suggestable_to_catalog?
         end
+      end
+
+      def render_suggest_to_catalog
+        div(class: "edit-card__suggest") do
+          render_suggest_checkbox
+          render_suggest_label
+        end
+      end
+
+      def render_suggest_checkbox
+        input(
+          type: "checkbox",
+          name: "card[suggest_to_catalog]",
+          value: "1",
+          id: "card_suggest_to_catalog",
+          class: "edit-card__suggest-checkbox",
+        )
+      end
+
+      def render_suggest_label
+        label(
+          for: "card_suggest_to_catalog",
+          class: "edit-card__suggest-label",
+        ) { "Suggest this edit to the catalog deck" }
       end
 
       def text_area_field(form, attr, label, autofocus: false)

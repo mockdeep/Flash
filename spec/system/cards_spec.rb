@@ -80,4 +80,59 @@ RSpec.describe "editing a card" do
 
     expect(page).to have_css("dialog[open] .error-explanation")
   end
+
+  context "with a card copied from another user's catalog deck" do
+    def setup_catalog_copy_study
+      source = build_source_card
+      card = create_card
+      card.update!(source_card: source)
+      sign_in(default_user)
+      visit(deck_study_path(default_deck))
+      click_on("Correct answer")
+      [source, card]
+    end
+
+    def build_source_card
+      catalog = create(:deck, user: create(:user), visibility: "public")
+      create(:card, deck: catalog)
+    end
+
+    it "shows the suggest-to-catalog checkbox in the edit modal" do
+      setup_catalog_copy_study
+      click_on("Edit card")
+
+      expect(page).to have_field("Suggest this edit to the catalog deck")
+    end
+
+    it "creates a suggestion when the checkbox is checked and saved" do
+      source, _card = setup_catalog_copy_study
+      check_suggest_and_save("Better question")
+
+      expect(source.suggestions.pending.count).to eq(1)
+    end
+
+    it "does not create a suggestion when the checkbox is left unchecked" do
+      source, _card = setup_catalog_copy_study
+      edit_card("Front", "Better question")
+
+      expect(source.suggestions.count).to eq(0)
+    end
+
+    def check_suggest_and_save(new_front)
+      click_on("Edit card")
+      fill_in("Front", with: new_front)
+      check("Suggest this edit to the catalog deck")
+      click_on("Save")
+      expect(page).to have_text(new_front)
+    end
+  end
+
+  context "with a card that is not a catalog copy" do
+    it "does not show the suggest-to-catalog checkbox" do
+      setup_card_study
+      click_on("Edit card")
+
+      expect(page).to have_no_field("Suggest this edit to the catalog deck")
+    end
+  end
 end

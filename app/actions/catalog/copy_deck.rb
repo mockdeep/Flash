@@ -40,7 +40,11 @@ module Catalog
     end
 
     def self.build_card_attributes(new_deck, card, copy_distractors:)
-      new_card = card.class.new(deck: new_deck, front: card.front)
+      new_card = card.class.new(
+        deck: new_deck,
+        front: card.front,
+        source_card_id: card.id,
+      )
       new_card.back = card.back
       new_card.category = card.category
       new_card.distractors = card.distractors if copy_distractors
