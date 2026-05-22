@@ -6,6 +6,7 @@ class Deck < ApplicationRecord
 
   belongs_to :user
   has_many :cards, dependent: :delete_all
+  has_many :incoming_suggestions, through: :cards, source: :suggestions
 
   attribute(:level, :integer, default: 1)
   attribute(:visibility, :string, default: "private")

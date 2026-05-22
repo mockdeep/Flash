@@ -17,6 +17,10 @@ Rails.application.routes.draw do
     resource :share, only: [:create, :destroy], controller: "shares"
     resource :study, only: [:show, :update]
     resources :cards, only: [:update]
+    resources :suggestions, only: [:index] do
+      post :accept, on: :member
+      post :reject, on: :member
+    end
   end
 
   get "shared/:token", to: "shares#show", as: :shared_deck
