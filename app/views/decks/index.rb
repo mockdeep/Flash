@@ -3,11 +3,13 @@
 module Views
   module Decks
     class Index < Views::Base
-      attr_accessor :decks
+      attr_accessor :decks, :pending_counts, :filter_pending
 
-      def initialize(decks:)
+      def initialize(decks:, pending_counts:, filter_pending:)
         super()
         self.decks = decks
+        self.pending_counts = pending_counts
+        self.filter_pending = filter_pending
       end
 
       def view_template
@@ -20,6 +22,8 @@ module Views
             end
           end
 
+          render_filter_chip if pending_counts.any?
+
           if decks.empty?
             render_empty_state
           else
@@ -29,6 +33,28 @@ module Views
       end
 
       private
+
+      def render_filter_chip
+        div(class: "decks-filter") do
+          filter_pending ? render_active_chip : render_inactive_chip
+        end
+      end
+
+      def render_active_chip
+        link_to(
+          "Show all decks",
+          decks_path,
+          class: "filter-chip filter-chip--active",
+        )
+      end
+
+      def render_inactive_chip
+        link_to(
+          "Show only decks with pending suggestions",
+          decks_path(filter: "pending_suggestions"),
+          class: "filter-chip",
+        )
+      end
 
       def render_empty_state
         div(class: "empty-state") do
@@ -55,6 +81,9 @@ module Views
             div do
               h3(class: "deck-card-title") { deck.name }
               render_stars(deck.level - 1)
+              if pending_counts[deck.id]&.positive?
+                render_suggestion_badge(deck)
+              end
             end
             div(class: "card-count") do
               span(class: "count-number") { deck.cards.count }
@@ -97,6 +126,14 @@ module Views
             div(class: "stat-label") { "Done" }
           end
         end
+      end
+
+      def render_suggestion_badge(deck)
+        link_to(
+          "#{pending_counts[deck.id]} pending suggestions",
+          deck_suggestions_path(deck),
+          class: "deck-suggestion-badge",
+        )
       end
 
       def render_stars(completed_levels)

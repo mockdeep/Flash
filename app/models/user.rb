@@ -47,4 +47,17 @@ class User < ApplicationRecord
   def supporter?
     subscription&.active? || false
   end
+
+  def pending_incoming_suggestions?
+    decks.joins(cards: :suggestions)
+      .exists?(card_suggestions: { state: "pending" })
+  end
+
+  def pending_suggestion_counts_per_deck
+    decks
+      .joins(cards: :suggestions)
+      .where(card_suggestions: { state: "pending" })
+      .group("decks.id")
+      .count
+  end
 end

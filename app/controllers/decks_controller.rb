@@ -2,7 +2,14 @@
 
 class DecksController < ApplicationController
   def index
-    render(Views::Decks::Index.new(decks: current_user.decks.ordered))
+    pending_counts = current_user.pending_suggestion_counts_per_deck
+    render(
+      Views::Decks::Index.new(
+        decks: filtered_decks(pending_counts),
+        pending_counts:,
+        filter_pending: filter_pending?,
+      ),
+    )
   end
 
   def show
@@ -21,6 +28,15 @@ class DecksController < ApplicationController
   end
 
   private
+
+  def filtered_decks(pending_counts)
+    decks = current_user.decks.ordered
+    filter_pending? ? decks.where(id: pending_counts.keys) : decks
+  end
+
+  def filter_pending?
+    params[:filter] == "pending_suggestions"
+  end
 
   def create_action
     deck_params[:deck_type] == "music" ? Decks::CreateMusic : Decks::Create
