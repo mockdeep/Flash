@@ -622,9 +622,6 @@ body {
   left: 50%;
   transform: translateX(-50%);
   z-index: 50;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
   padding: var(--spacing-md) var(--spacing-2xl);
   transition: all var(--transition);
   border: 3px solid var(--color-border-dark);
@@ -640,7 +637,6 @@ body {
   font-family: var(--font-body);
   text-decoration: none;
   cursor: pointer;
-  gap: 2px;
   animation: next-card-appear var(--transition-slow) ease-out;
 }
 
@@ -671,6 +667,13 @@ body {
     3px 3px 0 -2px var(--color-background),
     3px 3px 0 0 var(--color-border-dark),
     0 2px 8px var(--color-shadow-warm);
+}
+
+.hotkey-button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .hotkey-hint {
@@ -767,8 +770,6 @@ body {
 .session-milestone-primary,
 .session-milestone-secondary {
   display: inline-flex;
-  align-items: baseline;
-  gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-xl);
   transition: all var(--transition);
   border: 3px solid var(--color-border-dark);

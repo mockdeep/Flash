@@ -135,7 +135,7 @@ module Views
           link_to(
             deck_study_path(deck, exclude: result.card.id),
             data:,
-            class: "next-card-button",
+            class: "hotkey-button next-card-button",
           ) do
             span { "Next Card" }
             span(class: "hotkey-hint") { "[space]" }
