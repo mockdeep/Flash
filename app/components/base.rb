@@ -25,10 +25,18 @@ module Components
 
     def music_badge
       span(
-        class: "music-badge",
+        class: "badge",
         title: "Microphone required",
         aria: { label: "Microphone required" },
       ) { "🎤" }
+    end
+
+    def catalog_badge
+      span(
+        class: "badge",
+        title: "In catalog",
+        aria: { label: "In catalog" },
+      ) { "🌐" }
     end
   end
 end

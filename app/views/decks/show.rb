@@ -22,12 +22,17 @@ module Views
         end
 
         render_share_section
+        render(Components::CatalogToggleButton.new(deck:)) if admin_owner?
         render_replace_link if deck.is_a?(TextDeck)
 
         render_cards_table if deck.cards.any?
       end
 
       private
+
+      def admin_owner?
+        current_user.admin? && deck.user_id == current_user.id
+      end
 
       def render_replace_link
         link_to(

@@ -44,6 +44,20 @@ RSpec.describe Deck do
     end
   end
 
+  describe "#publicly_visible?" do
+    it "is true when visibility is public" do
+      deck = create(:deck, visibility: "public")
+
+      expect(deck.publicly_visible?).to be(true)
+    end
+
+    it "is false when visibility is private" do
+      deck = create(:deck, visibility: "private")
+
+      expect(deck.publicly_visible?).to be(false)
+    end
+  end
+
   describe "#shared?" do
     it "is false when share_token is nil" do
       deck = create(:deck, share_token: nil)

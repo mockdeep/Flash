@@ -77,19 +77,7 @@ module Views
 
       def render_deck_card(deck)
         div(class: "card card--striped deck-card") do
-          div(class: "deck-card-header") do
-            div do
-              h3(class: "deck-card-title") { deck.name }
-              render_stars(deck.level - 1)
-              if pending_counts[deck.id]&.positive?
-                render_suggestion_badge(deck)
-              end
-            end
-            div(class: "card-count") do
-              span(class: "count-number") { deck.cards.count }
-              span(class: "count-label") { "cards" }
-            end
-          end
+          render_deck_card_header(deck)
 
           if deck.cards.any?
             render_deck_stats(deck)
@@ -102,6 +90,23 @@ module Views
           div(class: "deck-card-actions") do
             link_to("Study", deck_study_path(deck), class: button_class(:secondary, :compact))
             link_to("View Details", deck_path(deck), class: button_class(:ghost, :compact))
+          end
+        end
+      end
+
+      def render_deck_card_header(deck)
+        div(class: "deck-card-header") do
+          div do
+            h3(class: "deck-card-title") do
+              plain(deck.name)
+              catalog_badge if deck.publicly_visible?
+            end
+            render_stars(deck.level - 1)
+            render_suggestion_badge(deck) if pending_counts[deck.id]&.positive?
+          end
+          div(class: "card-count") do
+            span(class: "count-number") { deck.cards.count }
+            span(class: "count-label") { "cards" }
           end
         end
       end

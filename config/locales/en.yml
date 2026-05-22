@@ -45,6 +45,12 @@ en:
   catalog:
     copy:
       success: "Deck copied successfully"
+  catalog_listings:
+    create:
+      success: "Deck added to catalog"
+    destroy:
+      success: "Deck removed from catalog"
+      confirm: "Remove this deck from the catalog?"
   decks:
     create:
       success: "Deck created successfully"

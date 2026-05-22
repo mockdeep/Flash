@@ -22,6 +22,8 @@ class Deck < ApplicationRecord
 
   def music? = false
 
+  def publicly_visible? = visibility == "public"
+
   def shared? = share_token.present?
 
   def generate_share_token!

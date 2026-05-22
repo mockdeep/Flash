@@ -123,6 +123,24 @@ RSpec.describe DecksController do
         expect(rendered).to have_css(".filter-chip--active")
       end
     end
+
+    it "shows a catalog badge for a public deck" do
+      create(:deck, user: default_user, visibility: "public")
+      login_as(default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_css("[title='In catalog']")
+    end
+
+    it "does not show a catalog badge for a private deck" do
+      create(:deck, user: default_user, visibility: "private")
+      login_as(default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_no_css("[title='In catalog']")
+    end
   end
 
   describe "#show" do
@@ -218,6 +236,35 @@ RSpec.describe DecksController do
       get(deck_path(deck))
 
       expect(rendered).to have_no_link("Replace cards")
+    end
+
+    it "shows 'Add to Catalog' for an admin owner of a private deck" do
+      admin = create(:user, :admin)
+      deck = create(:deck, user: admin)
+      login_as(admin)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_button("Add to Catalog")
+    end
+
+    it "shows 'Remove from Catalog' for an admin owner of a public deck" do
+      admin = create(:user, :admin)
+      deck = create(:deck, user: admin, visibility: "public")
+      login_as(admin)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_button("Remove from Catalog")
+    end
+
+    it "does not show catalog buttons for a non-admin owner" do
+      deck = create(:deck, user: default_user)
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_no_button("Add to Catalog")
     end
   end
 
