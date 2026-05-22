@@ -54,6 +54,9 @@ en:
   decks:
     create:
       success: "Deck created successfully"
+    destroy:
+      success: "Deck deleted"
+      confirm: "Delete this deck and all its cards? This cannot be undone."
   replacements:
     create:
       success: "Replaced cards: %{added} added, %{removed} removed, %{reset} reset, %{kept} kept"
@@ -65,6 +68,7 @@ en:
       success: "Share link created"
     destroy:
       success: "Share link revoked"
+      confirm: "Revoke the share link? Anyone using it will lose access."
   suggestions:
     accept:
       success: "Suggestion applied to the card"

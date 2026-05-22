@@ -27,6 +27,12 @@ class DecksController < ApplicationController
     result.success? ? deck_created : deck_create_failed(result.record)
   end
 
+  def destroy
+    current_user.decks.find(params.expect(:id)).destroy!
+    flash[:success] = t(".success")
+    redirect_to(decks_path)
+  end
+
   private
 
   def filtered_decks(pending_counts)

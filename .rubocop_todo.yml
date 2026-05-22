@@ -153,6 +153,7 @@ Metrics/BlockLength:
 Metrics/ClassLength:
   Exclude:
     - 'app/views/decks/index.rb'
+    - 'app/views/decks/show.rb'
     - 'app/views/layouts/application.rb'
     - 'app/views/pages/pricing.rb'
     - 'app/views/pages/privacy.rb'

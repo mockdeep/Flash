@@ -11,7 +11,7 @@ Rails.application.routes.draw do
     post :copy, on: :member
   end
   resource :demo, only: [:show, :create], controller: "demo"
-  resources :decks, only: [:new, :create, :index, :show] do
+  resources :decks, only: [:new, :create, :index, :show, :destroy] do
     resource :milestone, only: [:update]
     resource :catalog_listing, only: [:create, :destroy], controller: "catalog_listings"
     resource :replacement, only: [:new, :create], controller: "replacements"
