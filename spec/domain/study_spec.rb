@@ -77,6 +77,24 @@ RSpec.describe Study do
 
       expect(deck.cards.not_done(1).ordered.offset(5)).not_to include(card)
     end
+
+    it "excludes the given card when others are available" do
+      deck = create(:deck)
+      create_list(:card, 3, deck:)
+      excluded = deck.cards.first
+      card = described_class.new(deck:, exclude_card_id: excluded.id).next_card
+
+      expect(card).not_to eq(excluded)
+    end
+
+    it "returns the excluded card when it is the only one left" do
+      deck = create(:deck)
+      excluded = create(:card, deck:)
+
+      study = described_class.new(deck:, exclude_card_id: excluded.id)
+
+      expect(study.next_card).to eq(excluded)
+    end
   end
 
   describe "#presentation_mode" do

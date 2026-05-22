@@ -133,7 +133,7 @@ module Views
 
           data = { hotkeys_target: "click", hotkey: " " }
           link_to(
-            deck_study_path(deck),
+            deck_study_path(deck, exclude: result.card.id),
             data:,
             class: "next-card-button",
           ) do
