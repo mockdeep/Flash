@@ -57,6 +57,72 @@ RSpec.describe DecksController do
 
       expect(rendered).to have_css(".star--filled", count: 2)
     end
+
+    context "with pending suggestions" do
+      def seed_pending_for(deck)
+        card = create(:card, deck:)
+        create(:card_suggestion, card:)
+      end
+
+      it "renders a count badge on decks with pending suggestions" do
+        deck = create(:deck, user: default_user, name: "Geo")
+        2.times { seed_pending_for(deck) }
+        login_as(default_user)
+
+        get(decks_path)
+
+        expect(rendered).to have_text("2 pending suggestions")
+      end
+
+      it "links the badge to the deck's suggestions page" do
+        deck = create(:deck, user: default_user)
+        seed_pending_for(deck)
+        login_as(default_user)
+
+        get(decks_path)
+
+        expect(rendered).to have_link(href: deck_suggestions_path(deck))
+      end
+
+      it "shows the filter chip when any deck has pending suggestions" do
+        deck = create(:deck, user: default_user)
+        seed_pending_for(deck)
+        login_as(default_user)
+
+        get(decks_path)
+
+        expect(rendered).to have_css(".filter-chip")
+      end
+
+      it "hides the filter chip when no deck has pending suggestions" do
+        create(:deck, user: default_user)
+        login_as(default_user)
+
+        get(decks_path)
+
+        expect(rendered).to have_no_css(".filter-chip")
+      end
+
+      it "filters to decks with pending suggestions when filter is active" do
+        create(:deck, user: default_user, name: "Plain")
+        seed_pending_for(create(:deck, user: default_user, name: "Hot"))
+        login_as(default_user)
+
+        get(decks_path, params: { filter: "pending_suggestions" })
+
+        expect(rendered).to(have_text("Hot").and(have_no_text("Plain")))
+      end
+
+      it "marks the filter chip active when the filter is applied" do
+        deck = create(:deck, user: default_user)
+        seed_pending_for(deck)
+        login_as(default_user)
+
+        get(decks_path, params: { filter: "pending_suggestions" })
+
+        expect(rendered).to have_css(".filter-chip--active")
+      end
+    end
   end
 
   describe "#show" do

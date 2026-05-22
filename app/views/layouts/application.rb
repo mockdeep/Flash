@@ -62,7 +62,7 @@ module Views
                     link_to_unless_current("Sign Up", new_account_path, class: "nav-link nav-link-secondary")
                     link_to_unless_current("Log In", new_session_path, class: "nav-link nav-link-primary")
                   elsif current_user.logged_in?
-                    link_to("Decks", decks_path, class: "nav-link")
+                    render_decks_nav_link
                     link_to("Account", account_path, class: "nav-link")
                     link_to("Subscription", subscription_path, class: "nav-link")
                     span(class: "nav-user") do
@@ -137,6 +137,18 @@ module Views
       end
 
       private
+
+      def render_decks_nav_link
+        link_to(decks_path, class: "nav-link") do
+          plain("Decks")
+          if current_user.pending_incoming_suggestions?
+            span(
+              class: "nav-link-dot",
+              aria: { label: "pending suggestions" },
+            )
+          end
+        end
+      end
 
       def repo_url
         "https://www.github.com/mockdeep/flash"
