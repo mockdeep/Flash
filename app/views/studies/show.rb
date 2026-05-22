@@ -53,10 +53,10 @@ module Views
               render(Components::CardFront.new(text: card.front))
 
               render_active_card(card)
-            end
 
-            # Claim the space hotkey to prevent scrolling down
-            span(data: { hotkeys_target: "click", hotkey: " " }, hidden: true)
+              # Claim the space hotkey to prevent scrolling down
+              span(data: { hotkeys_target: "click", hotkey: " " }, hidden: true)
+            end
           end
         end
       end
