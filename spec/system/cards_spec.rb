@@ -135,4 +135,23 @@ RSpec.describe "editing a card" do
       expect(page).to have_no_field("Suggest this edit to the catalog deck")
     end
   end
+
+  describe "deleting a card" do
+    it "removes the card after confirming" do
+      card = setup_card_study
+      click_on("Edit card")
+      accept_confirm { click_on("Delete") }
+      expect(page).to have_no_css("dialog[open]")
+
+      expect { card.reload }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+
+    it "keeps the card when the confirm is dismissed" do
+      card = setup_card_study
+      click_on("Edit card")
+      dismiss_confirm { click_on("Delete") }
+
+      expect { card.reload }.not_to raise_error
+    end
+  end
 end

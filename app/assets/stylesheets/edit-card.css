@@ -35,9 +35,16 @@
 .edit-card__actions {
   display: flex;
   gap: 0.75rem;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
   padding-top: 1.25rem;
   border-top: 2px solid var(--color-background-subtle);
+}
+
+.edit-card__actions-group {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
 }
 
 .edit-card__suggest {

@@ -51,6 +51,10 @@ en:
     destroy:
       success: "Deck removed from catalog"
       confirm: "Remove this deck from the catalog?"
+  cards:
+    destroy:
+      success: "Card deleted"
+      confirm: "Delete this card? This cannot be undone."
   decks:
     create:
       success: "Deck created successfully"

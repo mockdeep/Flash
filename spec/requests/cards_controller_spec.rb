@@ -201,6 +201,55 @@ RSpec.describe CardsController do
     end
   end
 
+  describe "#destroy" do
+    it "deletes the card" do
+      deck = create(:deck)
+      card = create(:card, deck:)
+      login_as(default_user)
+
+      expect { delete(deck_card_path(deck, card)) }
+        .to change(Card, :count).by(-1)
+    end
+
+    it "redirects to the deck study path" do
+      deck = create(:deck)
+      card = create(:card, deck:)
+      login_as(default_user)
+
+      delete(deck_card_path(deck, card))
+
+      expect(response).to redirect_to(deck_study_path(deck))
+    end
+
+    it "sets a success flash" do
+      deck = create(:deck)
+      card = create(:card, deck:)
+      login_as(default_user)
+
+      delete(deck_card_path(deck, card))
+
+      expect(flash[:success]).to eq("Card deleted")
+    end
+
+    it "returns not_found for another user's card" do
+      other_deck = create(:deck, user: create(:user))
+      other_card = create(:card, deck: other_deck)
+      login_as(default_user)
+      delete(deck_card_path(other_deck, other_card))
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "does not delete another user's card" do
+      other_deck = create(:deck, user: create(:user))
+      other_card = create(:card, deck: other_deck)
+      login_as(default_user)
+
+      expect { delete(deck_card_path(other_deck, other_card)) }
+        .not_to change(Card, :count)
+    end
+  end
+
   context "when not authenticated" do
     it "redirects to sign in" do
       deck = create(:deck)
