@@ -38,6 +38,49 @@ RSpec.describe "studying a deck" do
     expect(page).to have_no_text("You've completed 1 cards")
   end
 
+  context "with example sentences on a card" do
+    def visit_card_with_example
+      default_deck.update!(level: 2)
+      create(
+        :card,
+        deck: default_deck,
+        back: "Paris",
+        example_front: "Je vis à Paris.",
+        example_back: "I live in Paris.",
+      )
+      sign_in(default_user)
+      visit(deck_study_path(default_deck))
+    end
+
+    it "shows the example after answering" do
+      visit_card_with_example
+      click_on("Paris")
+
+      expect(page).to have_text("Je vis à Paris.")
+      expect(page).to have_text("I live in Paris.")
+    end
+
+    it "does not show the example before answering" do
+      visit_card_with_example
+
+      expect(page).to have_no_text("Je vis à Paris.")
+    end
+  end
+
+  it "does not render an example block when the card has no example" do
+    default_deck.update!(level: 2)
+    create(:card, deck: default_deck, back: "Paris")
+    answer_first_card("Paris")
+
+    expect(page).to have_no_css(".study-example")
+  end
+
+  def answer_first_card(answer)
+    sign_in(default_user)
+    visit(deck_study_path(default_deck))
+    click_on(answer)
+  end
+
   context "when the deck is at the fuzzy find level" do
     it "hides the multiple choice keyboard hint" do
       visit_fuzzy_deck

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_22_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_22_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -36,6 +36,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_22_000001) do
     t.datetime "created_at", null: false
     t.bigint "deck_id", null: false
     t.jsonb "distractors", default: [], null: false
+    t.string "example_back"
+    t.string "example_front"
     t.string "front", null: false
     t.bigint "source_card_id"
     t.string "type", null: false

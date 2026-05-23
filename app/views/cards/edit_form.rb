@@ -33,6 +33,8 @@ module Views
           text_area_field(form, :front, "Front", autofocus: true)
           text_area_field(form, :back, "Back")
           text_field(form, :category, "Category")
+          text_area_field(form, :example_front, "Example")
+          text_area_field(form, :example_back, "Example translation")
           render_suggest_to_catalog if @card.suggestable_to_catalog?
         end
       end
