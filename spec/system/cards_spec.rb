@@ -47,6 +47,28 @@ RSpec.describe "editing a card" do
     expect(page).to have_field("Back", with: "Correct answer")
   end
 
+  it "saves example sentence fields" do
+    card = setup_card_study
+    fill_example("Bonjour", "Hello")
+    attrs = { example_front: "Bonjour", example_back: "Hello" }
+
+    expect(card.reload).to have_attributes(attrs)
+  end
+
+  it "shows a validation error if only one example field is filled" do
+    setup_card_study
+    fill_example("Bonjour", "")
+
+    expect(page).to have_css("dialog[open] .error-explanation")
+  end
+
+  def fill_example(front, back)
+    click_on("Edit card")
+    fill_in("Example", with: front)
+    fill_in("Example translation", with: back)
+    click_on("Save")
+  end
+
   it "saves changes and updates the card" do
     card = setup_card_study
     edit_card("Front", "UpdatedQuestion")

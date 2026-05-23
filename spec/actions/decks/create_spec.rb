@@ -253,6 +253,54 @@ RSpec.describe Decks::Create do
       end
     end
 
+    context "when CSV has example columns" do
+      def example_body
+        "front,back,category,example_front,example_back\n" \
+          "Q,A,C,Hola mundo,Hello world\n"
+      end
+
+      def call_with_body(body)
+        described_class.call(
+          user: create(:user),
+          name: "T",
+          cards_csv: csv_file(body),
+        )
+      end
+
+      it "stores example_front on the card" do
+        card = call_with_body(example_body).record.cards.first
+
+        expect(card.example_front).to eq("Hola mundo")
+      end
+
+      it "stores example_back on the card" do
+        card = call_with_body(example_body).record.cards.first
+
+        expect(card.example_back).to eq("Hello world")
+      end
+
+      it "leaves both example fields nil when both row values are blank" do
+        body = "front,back,category,example_front,example_back\nQ,A,C,,\n"
+        card = call_with_body(body).record.cards.first
+
+        expect(card).to have_attributes(example_front: nil, example_back: nil)
+      end
+
+      it "rejects when a row has only example_front" do
+        body = "front,back,category,example_front,example_back\nQ,A,C,Hola,\n"
+        errors = call_with_body(body).record.errors[:cards_csv]
+
+        expect(errors).to include(a_string_matching(/row 1 must include both/))
+      end
+
+      it "rejects when only one of the example columns is present" do
+        body = "front,back,category,example_front\nQ,A,C,Hola\n"
+        errors = call_with_body(body).record.errors[:cards_csv]
+
+        expect(errors).to include(a_string_matching(/must include both/))
+      end
+    end
+
     context "when category column is missing" do
       it "succeeds with empty category" do
         user = create(:user)

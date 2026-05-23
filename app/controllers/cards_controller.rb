@@ -34,7 +34,15 @@ class CardsController < ApplicationController
   end
 
   def card_params
-    params.expect(card: [:front, :back, :category])
+    params.expect(
+      card: [
+        :front,
+        :back,
+        :category,
+        :example_front,
+        :example_back,
+      ],
+    )
   end
 
   def suggest_to_catalog?
@@ -57,6 +65,7 @@ class CardsController < ApplicationController
     [
       replace_question(card),
       replace_answer(card),
+      replace_example(card),
       replace_edit_form(card:, deck:),
     ]
   end
@@ -82,6 +91,13 @@ class CardsController < ApplicationController
         class: "answer-text",
         id: "correct-answer-text",
       ),
+    )
+  end
+
+  def replace_example(card)
+    turbo_stream.replace(
+      Components::StudyExample::WRAPPER_ID,
+      render_to_string(Components::StudyExample.new(card:)),
     )
   end
 

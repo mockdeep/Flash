@@ -620,6 +620,30 @@ body {
   box-shadow: none;
 }
 
+.study-example {
+  margin: var(--spacing-md) 0 var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-left: 4px solid var(--color-border-medium);
+  background: var(--color-background-subtle);
+  animation: answer-reveal var(--transition-slow) ease-out;
+}
+
+.study-example__front {
+  margin: 0 0 var(--spacing-xs);
+  color: var(--color-text);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.study-example__back {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.5;
+}
+
 .next-card-button {
   position: fixed;
   bottom: var(--spacing-lg);

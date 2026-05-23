@@ -42,11 +42,9 @@ module Catalog
     def self.build_card_attributes(new_deck, card, copy_distractors:)
       new_card = card.class.new(
         deck: new_deck,
-        front: card.front,
         source_card_id: card.id,
+        **card.slice(:front, :back, :category, :example_front, :example_back),
       )
-      new_card.back = card.back
-      new_card.category = card.category
       new_card.distractors = card.distractors if copy_distractors
       new_card.attributes.without("id", "created_at", "updated_at")
     end

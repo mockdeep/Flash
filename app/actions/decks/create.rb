@@ -30,9 +30,11 @@ module Decks
 
     def self.validate_csv(csv)
       validate_csv_headers(csv) ||
+        CsvExamples.validate_headers(csv) ||
         validate_csv_rows(csv) ||
         validate_unique_fronts(csv) ||
-        validate_distractors_present(csv)
+        validate_distractors_present(csv) ||
+        CsvExamples.validate_pairs(csv)
     end
 
     def self.validate_csv_headers(csv)
@@ -84,6 +86,7 @@ module Decks
 
     def self.collect_cards_data(csv)
       with_distractors = distractors_column?(csv)
+      with_examples = CsvExamples.present?(csv)
 
       csv.map do |row|
         {
@@ -91,6 +94,7 @@ module Decks
           back: row["back"].squish,
           category: row["category"].to_s.squish,
           distractors: with_distractors ? parse_distractors(row) : [],
+          **(with_examples ? CsvExamples.attributes(row) : {}),
         }
       end
     end

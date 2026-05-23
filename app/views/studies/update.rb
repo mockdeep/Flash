@@ -102,6 +102,8 @@ module Views
             end
           end
 
+          render(Components::StudyExample.new(card: result.card))
+
           ol(class: "study-answers-grid") do
             result.possible_answers.each do |answer|
               li do
