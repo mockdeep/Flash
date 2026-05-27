@@ -292,13 +292,17 @@ describe("selectMatch", () => {
   });
 });
 
-describe("submitTop", () => {
-  it("submits the form with the top-ranked match", async () => {
+function keydown(key: string): KeyboardEvent {
+  return new KeyboardEvent("keydown", {key});
+}
+
+describe("submitSelected", () => {
+  it("submits the form with the top-ranked match by default", async () => {
     const controller = await boot(["caterpillar", "cat"]);
     await typeAndFilter(controller, "ca");
     const submit = stubSubmit();
 
-    controller.submitTop(new KeyboardEvent("keydown", {key: "Enter"}));
+    controller.submitSelected(keydown("Enter"));
 
     expect(submit).toHaveBeenCalledWith();
     expect(answerInputEl().value).toBe("cat");
@@ -309,7 +313,7 @@ describe("submitTop", () => {
     await typeAndFilter(controller, "xyz");
     const submit = stubSubmit();
 
-    controller.submitTop(new KeyboardEvent("keydown", {key: "Enter"}));
+    controller.submitSelected(keydown("Enter"));
 
     expect(submit).not.toHaveBeenCalled();
   });
@@ -319,8 +323,96 @@ describe("submitTop", () => {
     await typeAndFilter(controller, "p");
     stubSubmit();
 
-    controller.submitTop(new KeyboardEvent("keydown", {key: "Enter"}));
+    controller.submitSelected(keydown("Enter"));
 
     expect(possibleAnswerInputEl().value).toBe("Paris");
+  });
+});
+
+function selectedTexts(): string[] {
+  return [...resultsEl().querySelectorAll(".answer-button.is-selected")].
+    map((button) => {
+      return assert(button.textContent);
+    });
+}
+
+describe("arrow-key highlight movement", () => {
+  it("highlights the top match by default", async () => {
+    const controller = await boot(["cat", "candy", "caterpillar"]);
+
+    await typeAndFilter(controller, "ca");
+
+    expect(selectedTexts()).toStrictEqual(["cat"]);
+  });
+
+  it("moves the highlight down with the down arrow", async () => {
+    const controller = await boot(["cat", "candy", "caterpillar"]);
+    await typeAndFilter(controller, "ca");
+
+    controller.moveDown(keydown("ArrowDown"));
+
+    expect(selectedTexts()).toStrictEqual(["candy"]);
+  });
+
+  it("moves the highlight back up with the up arrow", async () => {
+    const controller = await boot(["cat", "candy", "caterpillar"]);
+    await typeAndFilter(controller, "ca");
+    controller.moveDown(keydown("ArrowDown"));
+
+    controller.moveUp(keydown("ArrowUp"));
+
+    expect(selectedTexts()).toStrictEqual(["cat"]);
+  });
+
+  it("does nothing when there are no matches", async () => {
+    const controller = await boot(["Paris"]);
+    await typeAndFilter(controller, "xyz");
+
+    controller.moveDown(keydown("ArrowDown"));
+
+    expect(selectedTexts()).toStrictEqual([]);
+  });
+});
+
+describe("arrow-key selection edges and submit", () => {
+  it("clamps at the last match", async () => {
+    const controller = await boot(["cat", "candy"]);
+    await typeAndFilter(controller, "ca");
+
+    controller.moveDown(keydown("ArrowDown"));
+    controller.moveDown(keydown("ArrowDown"));
+
+    expect(selectedTexts()).toStrictEqual(["candy"]);
+  });
+
+  it("clamps at the first match", async () => {
+    const controller = await boot(["cat", "candy"]);
+    await typeAndFilter(controller, "ca");
+
+    controller.moveUp(keydown("ArrowUp"));
+
+    expect(selectedTexts()).toStrictEqual(["cat"]);
+  });
+
+  it("submits the highlighted match on Enter", async () => {
+    const controller = await boot(["cat", "candy", "caterpillar"]);
+    await typeAndFilter(controller, "ca");
+    controller.moveDown(keydown("ArrowDown"));
+    const submit = stubSubmit();
+
+    controller.submitSelected(keydown("Enter"));
+
+    expect(submit).toHaveBeenCalledWith();
+    expect(answerInputEl().value).toBe("candy");
+  });
+
+  it("resets the highlight to the top when the query changes", async () => {
+    const controller = await boot(["cat", "candy", "caterpillar"]);
+    await typeAndFilter(controller, "ca");
+    controller.moveDown(keydown("ArrowDown"));
+
+    await typeAndFilter(controller, "cat");
+
+    expect(selectedTexts()).toStrictEqual(["cat"]);
   });
 });

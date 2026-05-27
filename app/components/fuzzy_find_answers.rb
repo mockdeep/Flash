@@ -58,7 +58,9 @@ module Components
         fuzzy_find_target: "input",
         action:
           "input->fuzzy-find#filter " \
-          "keydown.enter->fuzzy-find#submitTop",
+          "keydown.down->fuzzy-find#moveDown " \
+          "keydown.up->fuzzy-find#moveUp " \
+          "keydown.enter->fuzzy-find#submitSelected",
       }
     end
 
