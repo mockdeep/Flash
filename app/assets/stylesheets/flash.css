@@ -531,6 +531,19 @@ body {
     0 1px 4px var(--color-shadow-warm);
 }
 
+.answer-button.is-selected {
+  transform: translate(-2px, -2px);
+  border-color: var(--color-primary);
+  box-shadow:
+    6px 6px 0 -2px var(--color-background),
+    6px 6px 0 0 var(--color-primary-dark),
+    0 4px 16px var(--color-shadow-warm-md);
+}
+
+.answer-button.is-selected::before {
+  width: 100%;
+}
+
 /* Answer feedback row animation */
 .answer-row {
   animation: answer-reveal var(--transition-slow) ease-out;

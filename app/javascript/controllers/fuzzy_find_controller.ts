@@ -122,19 +122,39 @@ export default class extends Controller<HTMLElement> {
 
   private currentMatches: string[] = [];
 
+  private selectedIndex = 0;
+
   filter(): void {
     const matches = matchAnswers(this.answersValue, this.inputTarget.value);
     this.currentMatches = matches.map((match) => {
       return match.answer;
     });
+    this.selectedIndex = 0;
     this.renderMatches();
   }
 
-  submitTop(event: KeyboardEvent): void {
+  moveDown(event: KeyboardEvent): void {
+    this.moveSelection(event, 1);
+  }
+
+  moveUp(event: KeyboardEvent): void {
+    this.moveSelection(event, -1);
+  }
+
+  submitSelected(event: KeyboardEvent): void {
     event.preventDefault();
-    const top = this.currentMatches[0];
-    if (top === undefined) { return; }
-    this.submitWith(top);
+    const answer = this.currentMatches[this.selectedIndex];
+    if (answer === undefined) { return; }
+    this.submitWith(answer);
+  }
+
+  private moveSelection(event: KeyboardEvent, delta: number): void {
+    event.preventDefault();
+    if (this.currentMatches.length === 0) { return; }
+    const last = this.currentMatches.length - 1;
+    this.selectedIndex =
+      Math.min(Math.max(this.selectedIndex + delta, 0), last);
+    this.highlightSelected();
   }
 
   private submitWith(answer: string): void {
@@ -150,6 +170,17 @@ export default class extends Controller<HTMLElement> {
 
     this.currentMatches.forEach((answer) => {
       this.resultsTarget.appendChild(this.buildMatchItem(answer));
+    });
+    this.highlightSelected();
+  }
+
+  private highlightSelected(): void {
+    const buttons = this.resultsTarget.
+      querySelectorAll<HTMLButtonElement>(".answer-button");
+    buttons.forEach((button, index) => {
+      const selected = index === this.selectedIndex;
+      button.classList.toggle("is-selected", selected);
+      button.setAttribute("aria-selected", String(selected));
     });
   }
 
