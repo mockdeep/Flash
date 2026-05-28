@@ -649,6 +649,10 @@ body {
   line-height: 1.5;
 }
 
+.study-frame[data-size="s"]  .study-example__front { font-size: 15px; }
+.study-frame[data-size="l"]  .study-example__front { font-size: 20px; }
+.study-frame[data-size="xl"] .study-example__front { font-size: 24px; }
+
 .study-example__back {
   margin: 0;
   color: var(--color-text-secondary);
@@ -656,6 +660,10 @@ body {
   font-style: italic;
   line-height: 1.5;
 }
+
+.study-frame[data-size="s"]  .study-example__back { font-size: 13px; }
+.study-frame[data-size="l"]  .study-example__back { font-size: 17px; }
+.study-frame[data-size="xl"] .study-example__back { font-size: 21px; }
 
 .next-card-button {
   position: fixed;
