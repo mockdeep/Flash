@@ -3,6 +3,8 @@
 class NullUser
   def username = nil
 
+  def time_zone = "UTC"
+
   def authenticate(_password)
     false
   end

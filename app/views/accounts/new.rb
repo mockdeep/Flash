@@ -25,6 +25,8 @@ module Views
             render(Components::ErrorExplanation.new(errors: user.errors))
 
             form_with(model: user, url: account_path, class: "auth-form") do |form|
+              timezone_field(form)
+
               div(class: "auth-form-field") do
                 form.label(:username, "Username", class: "auth-label")
                 form.text_field(

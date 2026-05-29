@@ -63,6 +63,40 @@ RSpec.describe StudiesController do
       end
     end
 
+    context "when the UTC day changes but the user's local day does not" do
+      before do
+        default_user.update!(time_zone: "America/Los_Angeles")
+        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+        create(:card, deck:)
+        # Both instants fall on the same calendar day in Los Angeles.
+        travel_to(Time.utc(2026, 5, 29, 23)) do
+          submit_answer(card:, answer: "Paris")
+        end
+        travel_to(Time.utc(2026, 5, 30, 5)) { get(deck_study_path(deck)) }
+      end
+
+      it "does not reset the completed counter" do
+        expect(rendered).to have_text("1 / 50 completed")
+      end
+    end
+
+    context "when the user's local day changes" do
+      before do
+        default_user.update!(time_zone: "America/Los_Angeles")
+        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+        create(:card, deck:)
+        # The second instant crosses midnight in Los Angeles.
+        travel_to(Time.utc(2026, 5, 30, 5)) do
+          submit_answer(card:, answer: "Paris")
+        end
+        travel_to(Time.utc(2026, 5, 30, 8)) { get(deck_study_path(deck)) }
+      end
+
+      it "resets the completed counter at local midnight" do
+        expect(rendered).to have_text("0 / 50 completed")
+      end
+    end
+
     context "when reset_session param is present" do
       before do
         card = create(:card, deck:, back: "Paris", correct_streak: 0)
@@ -122,7 +156,7 @@ RSpec.describe StudiesController do
 
     before do
       create(:card, deck: demo_deck, front: "Q", back: "A")
-      post(demo_path, params: { deck_id: demo_deck.id })
+      post(demo_path, params: { deck_id: demo_deck.id, time_zone: "UTC" })
     end
 
     it "shows demo banner on the study page" do
@@ -413,7 +447,10 @@ RSpec.describe StudiesController do
 
       before do
         create(:music_card, deck: demo_music_deck, back: "C4")
-        post(demo_path, params: { deck_id: demo_music_deck.id })
+        post(
+          demo_path,
+          params: { deck_id: demo_music_deck.id, time_zone: "UTC" },
+        )
         follow_redirect!
       end
 

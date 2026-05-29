@@ -7,6 +7,7 @@ FactoryBot.define do
     sequence(:email, 100) { |n| "user-#{n}@boon.gl" }
     password { "super-secure" }
     password_confirmation { "super-secure" }
+    time_zone { "UTC" }
 
     trait(:guest) do
       role { "guest" }

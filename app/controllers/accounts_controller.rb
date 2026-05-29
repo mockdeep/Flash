@@ -52,6 +52,7 @@ class AccountsController < ApplicationController
         :password,
         :password_confirmation,
         :study_goal,
+        :time_zone,
       ],
     )
   end

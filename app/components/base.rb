@@ -15,6 +15,14 @@ module Components
 
     register_value_helper :current_user
 
+    def timezone_field(form)
+      form.hidden_field(
+        :time_zone,
+        value: "UTC",
+        data: { controller: "timezone" },
+      )
+    end
+
     def supporter_badge
       span(
         class: "supporter-badge",

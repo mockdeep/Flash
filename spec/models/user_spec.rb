@@ -8,6 +8,7 @@ RSpec.describe User do
       email: "demo@exampoo.com",
       password: "super-secure",
       password_confirmation: "super-secure",
+      time_zone: "UTC",
     }
   end
 
@@ -16,6 +17,11 @@ RSpec.describe User do
   it { is_expected.to have_secure_password }
   it { is_expected.to normalize(:email).from(" FO@bOOn.GL ").to("fo@boon.gl") }
   it { is_expected.to normalize(:username).from(" spacey ").to("spacey") }
+
+  it { is_expected.to allow_value("America/New_York").for(:time_zone) }
+  it { is_expected.not_to allow_value("Not/AZone").for(:time_zone) }
+  it { is_expected.not_to allow_value("").for(:time_zone) }
+  it { is_expected.not_to allow_value(nil).for(:time_zone) }
 
   it do
     create(:user)

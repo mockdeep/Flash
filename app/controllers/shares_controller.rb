@@ -15,7 +15,10 @@ class SharesController < ApplicationController
   end
 
   def try
-    result = Demo::CreateGuestUser.call(deck: shared_deck)
+    result = Demo::CreateGuestUser.call(
+      deck: shared_deck,
+      time_zone: params[:time_zone],
+    )
     save_demo_session(result)
     redirect_to(deck_study_path(result.deck))
   end

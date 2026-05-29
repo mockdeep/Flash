@@ -246,6 +246,7 @@ Rails/SkipsModelValidations:
     - 'db/migrate/20251215211527_add_service_name_to_active_storage_blobs.active_storage.rb'
     - 'db/migrate/20260221050308_add_role_to_users.rb'
     - 'db/migrate/20260408000000_add_study_goal_to_users.rb'
+    - 'db/migrate/20260529000000_add_time_zone_to_users.rb'
 
 # Offense count: 1
 Rails/UnusedIgnoredColumns:

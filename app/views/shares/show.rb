@@ -65,12 +65,13 @@ module Views
       end
 
       def render_try_button
-        button_to(
-          "Try This Deck",
-          try_shared_deck_path(deck.share_token),
+        form_with(
+          url: try_shared_deck_path(deck.share_token),
           method: :post,
-          class: button_class(:primary),
-        )
+        ) do |form|
+          timezone_field(form)
+          form.button("Try This Deck", class: button_class(:primary))
+        end
       end
     end
   end

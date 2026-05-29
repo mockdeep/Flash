@@ -65,12 +65,13 @@ module Views
       end
 
       def render_deck_card_action(deck)
-        button_to(
-          "Try This Deck",
-          demo_path(deck_id: deck.id),
-          method: :post,
-          class: button_class(:secondary, :compact),
-        )
+        form_with(url: demo_path(deck_id: deck.id), method: :post) do |form|
+          timezone_field(form)
+          form.button(
+            "Try This Deck",
+            class: button_class(:secondary, :compact),
+          )
+        end
       end
     end
   end

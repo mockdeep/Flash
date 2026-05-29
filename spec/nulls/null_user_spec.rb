@@ -36,4 +36,10 @@ RSpec.describe NullUser do
       expect(described_class.new.destroy!).to be_nil
     end
   end
+
+  describe "#time_zone" do
+    it "returns UTC" do
+      expect(described_class.new.time_zone).to eq("UTC")
+    end
+  end
 end

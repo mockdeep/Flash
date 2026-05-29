@@ -150,8 +150,9 @@ RSpec.describe SharesController do
     it "creates a guest user without authentication" do
       deck = shared_deck
       create(:card, deck:, front: "Q", back: "A")
+      params = { time_zone: "UTC" }
 
-      expect { post(try_shared_deck_path(deck.share_token)) }
+      expect { post(try_shared_deck_path(deck.share_token), params:) }
         .to change(User, :count).by(1)
     end
 
@@ -159,7 +160,7 @@ RSpec.describe SharesController do
       deck = shared_deck
       create(:card, deck:, front: "Q", back: "A")
 
-      post(try_shared_deck_path(deck.share_token))
+      post(try_shared_deck_path(deck.share_token), params: { time_zone: "UTC" })
 
       expect(User.last.role).to eq("guest")
     end
@@ -168,16 +169,25 @@ RSpec.describe SharesController do
       deck = shared_deck
       create(:card, deck:, front: "Q", back: "A")
 
-      post(try_shared_deck_path(deck.share_token))
+      post(try_shared_deck_path(deck.share_token), params: { time_zone: "UTC" })
 
       expect(User.last.decks.first.name).to eq(deck.name)
+    end
+
+    it "stores the submitted time zone on the guest" do
+      post(
+        try_shared_deck_path(shared_deck.share_token),
+        params: { time_zone: "America/New_York" },
+      )
+
+      expect(User.last.time_zone).to eq("America/New_York")
     end
 
     it "redirects to the study page" do
       deck = shared_deck
       create(:card, deck:, front: "Q", back: "A")
 
-      post(try_shared_deck_path(deck.share_token))
+      post(try_shared_deck_path(deck.share_token), params: { time_zone: "UTC" })
 
       expect(response).to redirect_to(deck_study_path(Deck.last))
     end
@@ -185,7 +195,7 @@ RSpec.describe SharesController do
     it "sets the demo session flag" do
       deck = shared_deck
       create(:card, deck:, front: "Q", back: "A")
-      post(try_shared_deck_path(deck.share_token))
+      post(try_shared_deck_path(deck.share_token), params: { time_zone: "UTC" })
 
       follow_redirect!
 
@@ -197,7 +207,7 @@ RSpec.describe SharesController do
       deck = shared_deck
       3.times { |i| create(:card, deck:, front: "Q#{i}", back: "A#{i}") }
 
-      post(try_shared_deck_path(deck.share_token))
+      post(try_shared_deck_path(deck.share_token), params: { time_zone: "UTC" })
 
       expect(Deck.last.cards.count).to eq(2)
     end
