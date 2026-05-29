@@ -78,8 +78,9 @@ RSpec.describe StudiesController do
 
     context "when returning after reaching milestone" do
       before do
+        deck.update!(study_goal: 3)
         cards =
-          50.times.map do
+          3.times.map do
             create(:card, deck:, back: "Paris", correct_streak: 0)
           end
         create(:card, deck:)
@@ -88,7 +89,7 @@ RSpec.describe StudiesController do
       end
 
       it "shows milestone heading" do
-        expect(rendered).to have_text("You've completed 50 cards")
+        expect(rendered).to have_text("You've completed 3 cards")
       end
 
       it "shows keep going link" do
@@ -148,8 +149,9 @@ RSpec.describe StudiesController do
       before do
         guest_deck = Deck.last
         follow_redirect!
+        guest_deck.update!(study_goal: 3)
         guest_deck.cards.first.update!(correct_streak: 0)
-        create_list(:card, 49, deck: guest_deck, back: "A", correct_streak: 0)
+        create_list(:card, 2, deck: guest_deck, back: "A", correct_streak: 0)
         create(:card, deck: guest_deck)
         guest_deck.cards.reload.where(correct_streak: 0).find_each do |card|
           patch(
