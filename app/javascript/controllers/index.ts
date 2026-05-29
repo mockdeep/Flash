@@ -38,3 +38,6 @@ application.register("mobile-nav", MobileNavController);
 
 import MusicStudyController from "./music_study_controller";
 application.register("music-study", MusicStudyController);
+
+import TimezoneController from "./timezone_controller";
+application.register("timezone", TimezoneController);

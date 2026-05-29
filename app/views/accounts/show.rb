@@ -52,6 +52,16 @@ module Views
             class: "form-input",
           )
         end
+
+        div(class: "form-field") do
+          form.label(:time_zone, "Time Zone", class: "form-label")
+          form.select(
+            :time_zone,
+            User::VALID_TIME_ZONES,
+            {},
+            class: "form-input",
+          )
+        end
       end
 
       def render_actions(form)

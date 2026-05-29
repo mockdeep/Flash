@@ -6,6 +6,8 @@ class User < ApplicationRecord
 
   has_secure_password
 
+  VALID_TIME_ZONES = TZInfo::Timezone.all_identifiers.freeze
+
   attribute(:study_goal, :integer, default: 50)
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase }
@@ -19,6 +21,7 @@ class User < ApplicationRecord
             format: { with: /\A[a-zA-Z0-9_.]+\z/ }
   validates :study_goal,
             numericality: { greater_than_or_equal_to: 1, only_integer: true }
+  validates :time_zone, inclusion: { in: VALID_TIME_ZONES }
 
   has_many :decks, dependent: :destroy
   has_many :card_suggestions, dependent: :destroy

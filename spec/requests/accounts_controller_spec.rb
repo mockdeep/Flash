@@ -8,6 +8,7 @@ RSpec.describe AccountsController do
         email: "demo@exampoo.com",
         password: "super-secure",
         password_confirmation: "super-secure",
+        time_zone: "UTC",
       },
     }
   end
@@ -48,6 +49,15 @@ RSpec.describe AccountsController do
         post(account_path, params: valid_create_params)
 
         expect(response).to redirect_to(root_path)
+      end
+
+      it "stores the submitted time zone" do
+        params = valid_create_params
+        params[:user][:time_zone] = "America/New_York"
+
+        post(account_path, params:)
+
+        expect(User.last.time_zone).to eq("America/New_York")
       end
     end
 
@@ -149,6 +159,14 @@ RSpec.describe AccountsController do
 
       expect { put(account_path, params: { user: { study_goal: 25 } }) }
         .to change_record(default_user, :study_goal).to(25)
+    end
+
+    it "updates the time zone" do
+      login_as(default_user)
+      params = { user: { time_zone: "America/New_York" } }
+
+      expect { put(account_path, params:) }
+        .to change_record(default_user, :time_zone).to("America/New_York")
     end
 
     context "when the user does not successfully update" do

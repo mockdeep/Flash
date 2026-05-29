@@ -41,39 +41,48 @@ RSpec.describe DemoController do
     end
 
     it "redirects to the study page" do
-      post(demo_path, params: { deck_id: demo_deck.id })
+      post(demo_path, params: { deck_id: demo_deck.id, time_zone: "UTC" })
 
       expect(response).to redirect_to(deck_study_path(Deck.last))
     end
 
     it "sets session demo flag" do
-      post(demo_path, params: { deck_id: demo_deck.id })
+      post(demo_path, params: { deck_id: demo_deck.id, time_zone: "UTC" })
 
       follow_redirect!
       expect(rendered).to have_css(".demo-banner")
     end
 
     it "creates a guest user" do
-      action = -> { post(demo_path, params: { deck_id: demo_deck.id }) }
+      params = { deck_id: demo_deck.id, time_zone: "UTC" }
 
-      expect(&action).to change(User, :count).by(1)
+      expect { post(demo_path, params:) }.to change(User, :count).by(1)
     end
 
     it "assigns the guest role to the new user" do
-      post(demo_path, params: { deck_id: demo_deck.id })
+      post(demo_path, params: { deck_id: demo_deck.id, time_zone: "UTC" })
 
       expect(User.last.role).to eq("guest")
     end
 
+    it "stores the submitted time zone on the guest" do
+      post(
+        demo_path,
+        params: { deck_id: demo_deck.id, time_zone: "America/New_York" },
+      )
+
+      expect(User.last.time_zone).to eq("America/New_York")
+    end
+
     it "allows the guest to access the study page" do
-      post(demo_path, params: { deck_id: demo_deck.id })
+      post(demo_path, params: { deck_id: demo_deck.id, time_zone: "UTC" })
 
       follow_redirect!
       expect(response).to have_http_status(:ok)
     end
 
     it "cleans up the guest when a real user logs in" do
-      post(demo_path, params: { deck_id: demo_deck.id })
+      post(demo_path, params: { deck_id: demo_deck.id, time_zone: "UTC" })
       guest = User.last
 
       login_as(owner)
@@ -81,7 +90,7 @@ RSpec.describe DemoController do
     end
 
     it "handles an already-deleted guest gracefully" do
-      post(demo_path, params: { deck_id: demo_deck.id })
+      post(demo_path, params: { deck_id: demo_deck.id, time_zone: "UTC" })
       User.last.destroy!
 
       login_as(owner)

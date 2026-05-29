@@ -20,6 +20,6 @@ class DemoController < ApplicationController
 
   def start_demo
     deck = Deck.publicly_visible.find(params.expect(:deck_id))
-    Demo::CreateGuestUser.call(deck:)
+    Demo::CreateGuestUser.call(deck:, time_zone: params[:time_zone])
   end
 end

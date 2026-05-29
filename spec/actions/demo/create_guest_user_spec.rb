@@ -11,31 +11,40 @@ RSpec.describe Demo::CreateGuestUser do
     end
 
     it "creates a persisted guest user" do
-      result = described_class.call(deck: demo_deck)
+      result = described_class.call(deck: demo_deck, time_zone: "UTC")
 
       expect(result.user).to be_persisted
     end
 
     it "assigns the guest role" do
-      result = described_class.call(deck: demo_deck)
+      result = described_class.call(deck: demo_deck, time_zone: "UTC")
 
       expect(result.user.role).to eq("guest")
     end
 
+    it "assigns the given time zone" do
+      result = described_class.call(
+        deck: demo_deck,
+        time_zone: "America/New_York",
+      )
+
+      expect(result.user.time_zone).to eq("America/New_York")
+    end
+
     it "copies the deck to the guest user" do
-      result = described_class.call(deck: demo_deck)
+      result = described_class.call(deck: demo_deck, time_zone: "UTC")
 
       expect(result.deck.user).to eq(result.user)
     end
 
     it "preserves the deck name" do
-      result = described_class.call(deck: demo_deck)
+      result = described_class.call(deck: demo_deck, time_zone: "UTC")
 
       expect(result.deck.name).to eq(demo_deck.name)
     end
 
     it "copies cards from the source deck" do
-      result = described_class.call(deck: demo_deck)
+      result = described_class.call(deck: demo_deck, time_zone: "UTC")
 
       expect(result.deck.cards.count).to eq(2)
     end
@@ -44,7 +53,7 @@ RSpec.describe Demo::CreateGuestUser do
       stub_const("Demo::CreateGuestUser::CARD_LIMIT", 2)
       create(:card, deck: demo_deck, front: "Q3", back: "A3")
 
-      result = described_class.call(deck: demo_deck)
+      result = described_class.call(deck: demo_deck, time_zone: "UTC")
 
       expect(result.deck.cards.count).to eq(2)
     end

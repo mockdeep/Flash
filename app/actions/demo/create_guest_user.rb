@@ -5,20 +5,21 @@ module Demo
     CARD_LIMIT = 100
 
     class << self
-      def call(deck:)
-        guest = build_guest
+      def call(deck:, time_zone:)
+        guest = build_guest(time_zone)
         copy_deck_for(guest, deck)
       end
 
       private
 
-      def build_guest
+      def build_guest(time_zone)
         id = SecureRandom.hex(8)
         User.new(
           role: "guest",
           username: "guest_#{id}",
           email: "guest_#{id}@localhost",
           password: SecureRandom.hex,
+          time_zone:,
         )
       end
 

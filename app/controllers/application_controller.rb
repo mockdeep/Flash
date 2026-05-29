@@ -5,9 +5,14 @@ require "action_controller"
 class ApplicationController < ActionController::Base
   layout false
 
+  around_action(:use_time_zone)
   before_action(:authenticate_user)
 
   private
+
+  def use_time_zone(&)
+    Time.use_zone(current_user.time_zone, &)
+  end
 
   def log_in(user)
     cleanup_demo_guest unless user.guest?
