@@ -9,15 +9,17 @@ module Components
       ["xl", "Extra large"],
     ].freeze
 
-    def initialize(text:, id: nil)
+    def initialize(text:, id: nil, reading: nil)
       super()
       @text = text
       @id = id
+      @reading = reading
     end
 
     def view_template
       div(class: "card-front-wrapper") do
         h2(class: "card-front", id: @id) { @text }
+        render_reading
         render_menu_toggle
         render_menu
         render_hotkey_targets
@@ -25,6 +27,12 @@ module Components
     end
 
     private
+
+    def render_reading
+      return if @reading.nil?
+
+      render(Components::CardReading.new(reading: @reading))
+    end
 
     def render_menu_toggle
       button(

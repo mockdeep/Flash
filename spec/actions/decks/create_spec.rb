@@ -301,6 +301,41 @@ RSpec.describe Decks::Create do
       end
     end
 
+    context "when CSV has a reading column" do
+      def call_with(body)
+        described_class.call(
+          user: create(:user),
+          name: "T",
+          cards_csv: csv_file(body),
+        )
+      end
+
+      it "stores the reading on the card" do
+        card = call_with("front,back,category,reading\n两,two,Num,liǎng\n")
+          .record.cards.first
+
+        expect(card.reading).to eq("liǎng")
+      end
+
+      it "leaves a row's reading nil when blank" do
+        card = call_with("front,back,category,reading\n三,three,Num,\n")
+          .record.cards.first
+
+        expect(card.reading).to be_nil
+      end
+    end
+
+    context "when CSV has no reading column" do
+      it "leaves reading nil" do
+        user = create(:user)
+        csv = csv_file("front,back,category\nQ,A,C\n")
+
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.record.cards.first.reading).to be_nil
+      end
+    end
+
     context "when category column is missing" do
       it "succeeds with empty category" do
         user = create(:user)

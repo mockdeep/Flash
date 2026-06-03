@@ -87,6 +87,7 @@ module Decks
     def self.collect_cards_data(csv)
       with_distractors = distractors_column?(csv)
       with_examples = CsvExamples.present?(csv)
+      with_reading = CsvReading.present?(csv)
 
       csv.map do |row|
         {
@@ -95,6 +96,7 @@ module Decks
           category: row["category"].to_s.squish,
           distractors: with_distractors ? parse_distractors(row) : [],
           **(with_examples ? CsvExamples.attributes(row) : {}),
+          **(with_reading ? CsvReading.attributes(row) : {}),
         }
       end
     end

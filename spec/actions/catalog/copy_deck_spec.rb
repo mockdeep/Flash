@@ -178,5 +178,13 @@ RSpec.describe Catalog::CopyDeck do
 
       expect(result.record.cards.first.source_card_id).to eq(source_card.id)
     end
+
+    it "copies the card reading" do
+      source = build_public_deck
+      create(:card, deck: source, front: "两", back: "two", reading: "liǎng")
+      result = described_class.call(user: create(:user), deck: source)
+
+      expect(result.record.cards.first.reading).to eq("liǎng")
+    end
   end
 end

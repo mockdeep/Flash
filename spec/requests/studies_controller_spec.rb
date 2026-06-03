@@ -468,6 +468,22 @@ RSpec.describe StudiesController do
     end
   end
 
+  describe "reading" do
+    it "renders the card reading after answering" do
+      card = create(:card, deck:, back: "two", reading: "liǎng")
+      submit_answer(card:, answer: "wrong")
+
+      expect(rendered).to have_css("#card-reading", text: "liǎng")
+    end
+
+    it "does not render a reading before answering" do
+      create(:card, deck:, reading: "liǎng")
+      get(deck_study_path(deck))
+
+      expect(rendered).to have_no_css("#card-reading")
+    end
+  end
+
   context "when not authenticated" do
     before { delete(session_path) }
 

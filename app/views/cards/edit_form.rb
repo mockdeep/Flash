@@ -32,6 +32,7 @@ module Views
         div(class: "edit-card__fields") do
           text_area_field(form, :front, "Front", autofocus: true)
           text_area_field(form, :back, "Back")
+          text_field(form, :reading, "Reading")
           text_field(form, :category, "Category")
           text_area_field(form, :example_front, "Example")
           text_area_field(form, :example_back, "Example translation")

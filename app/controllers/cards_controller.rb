@@ -39,6 +39,7 @@ class CardsController < ApplicationController
         :front,
         :back,
         :category,
+        :reading,
         :example_front,
         :example_back,
       ],
@@ -65,7 +66,7 @@ class CardsController < ApplicationController
     [
       replace_question(card),
       replace_answer(card),
-      replace_example(card),
+      *replace_components(card),
       replace_edit_form(card:, deck:),
     ]
   end
@@ -94,11 +95,16 @@ class CardsController < ApplicationController
     )
   end
 
-  def replace_example(card)
-    turbo_stream.replace(
-      Components::StudyExample::WRAPPER_ID,
-      render_to_string(Components::StudyExample.new(card:)),
-    )
+  def replace_components(card)
+    [
+      Components::CardReading.new(reading: card.reading),
+      Components::StudyExample.new(card:),
+    ].map do |component|
+      turbo_stream.replace(
+        component.class::WRAPPER_ID,
+        render_to_string(component),
+      )
+    end
   end
 
   def replace_edit_form(card:, deck:)

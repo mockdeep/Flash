@@ -209,6 +209,42 @@ RSpec.describe Decks::Replace do
       end
     end
 
+    context "when the CSV adds a reading column" do
+      it "populates reading on a kept card without changing its back" do
+        deck = create(:deck)
+        card = card_with_progress(deck, front: "两", back: "two", category: "C")
+        replace_with(deck, "front,back,category,reading\n两,two,C,liǎng\n")
+
+        expect(card.reload.reading).to eq("liǎng")
+      end
+
+      it "preserves correct_streak when only reading changes" do
+        deck = create(:deck)
+        card = card_with_progress(deck, front: "两", back: "two", category: "C")
+        replace_with(deck, "front,back,category,reading\n两,two,C,liǎng\n")
+
+        expect(card.reload.correct_streak).to eq(2)
+      end
+
+      it "updates reading when the back also changes" do
+        deck = create(:deck)
+        card = card_with_progress(deck, front: "两", back: "old", category: "C")
+        replace_with(deck, "front,back,category,reading\n两,two,C,liǎng\n")
+
+        expect(card.reload).to have_attributes(back: "two", reading: "liǎng")
+      end
+    end
+
+    context "when the CSV omits the reading column" do
+      it "leaves an existing reading untouched" do
+        deck = create(:deck)
+        card = card_with_progress(deck, front: "Q", back: "A", reading: "liǎng")
+        replace_with(deck, "front,back,category\nQ,A,C\n")
+
+        expect(card.reload.reading).to eq("liǎng")
+      end
+    end
+
     context "when CSV is invalid" do
       it "returns failure for missing headers" do
         deck = create(:deck)
