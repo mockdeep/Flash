@@ -189,14 +189,24 @@ end
 
 ### Styling Approach
 
-**CSS Organization:**
-- `application.css` - Base styles, resets, common patterns
-- `catalog.css` - Public deck catalog browsing and preview (`.catalog-show-*` also reused by the share-link preview at `/shared/:token`)
+**CSS Organization** (all included via the layout):
+- `accent-box.css` - `.accent-box` callouts (level-complete, milestones, empty states)
+- `application.css` - Base styles, resets, common patterns, global `a:visited`
+- `auth.css` - Authentication pages (sign in / account)
+- `button.css` - `.button` base and variants (primary / ghost / danger, compact)
+- `card.css` - Generic `.card` container pattern
+- `catalog.css` - Public deck catalog + preview (`.catalog-show-*` reused by the share-link preview at `/shared/:token`)
+- `custom.css` - Scratch space for ad-hoc overrides
 - `decks.css` - Deck listing, deck form, and deck-show page (incl. `.deck-share-*` block)
+- `demo-banner.css` - Demo-mode banner
 - `dialog.css` - Modal dialog component styles (`.dialog`, `.dialog__header`, etc.)
 - `edit-card.css` - Edit card trigger button and form layout within the dialog
-- `flash.css` - Study/flashcard specific styles (the core app)
+- `flash.css` - Study/flashcard core (card front + kebab menu, answers grid, `.card-reading`)
 - `layout.css` - Header, footer, navigation
+- `music-study.css` - Mic-driven music study UI
+- `price-display.css` - `.price-display` component
+- `pricing.css` - Pricing page
+- `subscription.css` - Subscription page
 - `welcome.css` - Landing page styles
 
 **Key Principles:**
@@ -210,8 +220,8 @@ end
 
 **Core Models:**
 - `User` - Authentication, has many decks. Has `username` (unique, alphanumeric + underscores)
-- `Deck` (STI base) - Collection of flashcards, belongs to user. Has `visibility` (`"public"`, `"private"`, `"demo"`), `level` (default 1, current study level), `distractor_pool` (`"category"`, `"preset"`, or `"none"`).
-- `Card` (STI base) - Individual flashcard, belongs to deck
+- `Deck` (STI base) - Collection of flashcards, belongs to user. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"`, `"preset"`, or `"none"`).
+- `Card` (STI base) - Individual flashcard, belongs to deck. Has optional `reading` (pronunciation/gloss kept separate from `back`, e.g. Mandarin pinyin).
 - `Subscription` - Payment/subscription info, belongs to user
 
 **STI subclasses:**
@@ -241,6 +251,9 @@ link_to("My Link", some_path, data:)
 **Current shortcuts:**
 - `1`-`5` - Select answer during study
 - `Space` - Next card after answering
+- `[` / `]` - Decrease / increase study text size (card-front kebab menu)
+- `e` - Open the edit-card dialog during study
+- `Ctrl+Enter` - Save the edit-card dialog
 
 **Hint styles:**
 - `.hotkey-hint` - Prominent hint (amber background, bordered, used on buttons like "Press Space")
@@ -260,92 +273,168 @@ Uses **Creem** (creem.io) for subscription payments:
 
 ```
 app/
-├── actions/             # Service objects for complex operations
+├── actions/                      # Service objects (`.call` → Result); see Actions below
 │   ├── catalog/
-│   │   └── copy_deck.rb     # Duplicates a public deck into a user's account
+│   │   ├── accept_suggestion.rb  # Applies a CardSuggestion to the catalog source card
+│   │   └── copy_deck.rb          # Duplicates a public deck into a user's account
+│   ├── creem/
+│   │   ├── cancel_subscription.rb
+│   │   ├── client.rb             # Creem HTTP client
+│   │   └── create_checkout.rb    # Creates a Creem checkout session
 │   ├── decks/
-│   │   ├── create.rb        # Text deck CSV import
-│   │   └── create_music.rb  # Music deck CSV import (note-sequence backs)
-│   └── creem/
-│       ├── cancel_subscription.rb
-│       └── client.rb
-├── components/
-│   ├── base.rb                    # Base component (supporter_badge, music_badge helpers)
-│   ├── card_preview.rb            # 5-card preview block (shared by catalog and share preview)
-│   └── music_csv_instructions.rb  # CSV format help block for music decks
+│   │   ├── create.rb             # Text deck CSV import
+│   │   ├── create_music.rb       # Music deck CSV import (note-sequence backs)
+│   │   ├── csv_examples.rb       # Optional example_front/example_back columns
+│   │   ├── csv_reading.rb        # Optional `reading` column → cards.reading
+│   │   └── replace.rb            # Re-import: diff CSV vs deck (add/remove/reset/keep)
+│   └── demo/
+│       ├── cleanup_guest_users.rb # Removes expired demo guest users
+│       └── create_guest_user.rb   # Creates a temporary guest user for the demo
+├── components/                   # Phlex view components
+│   ├── base.rb                   # Base component (supporter_badge / music_badge / catalog_badge)
+│   ├── card_front.rb             # Study card-front box + kebab menu; renders the reading gloss inside it
+│   ├── card_preview.rb           # 5-card preview block (shared by catalog and share preview)
+│   ├── card_reading.rb           # Pronunciation/pinyin gloss (rendered inside CardFront on reveal)
+│   ├── catalog_toggle_button.rb  # Publish / unpublish a deck to the public catalog
+│   ├── demo_banner.rb            # Demo-mode banner
+│   ├── error_explanation.rb      # Styled validation-error box
+│   ├── fuzzy_find_answers.rb     # Typed-answer input for fuzzy-find mode (level 3+)
+│   ├── music_card_body.rb        # Mic-driven music study widget
+│   ├── music_csv_instructions.rb # CSV format help block for music decks
+│   ├── session_milestone.rb      # Study milestone prompt (daily goal reached)
+│   ├── session_progress.rb       # Study session progress bar
+│   ├── study_example.rb          # Optional example sentence on the answer view
+│   ├── study_goal_dialog.rb      # Edit daily study-goal dialog
+│   └── text_csv_instructions.rb  # CSV format help block for text decks
 ├── domain/
-│   ├── study.rb         # Study engine; `Study.for(deck:)` dispatches by deck type
-│   └── music_study.rb   # MusicStudy < Study; overrides `possible_answers` to []
+│   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
+│   └── music_study.rb            # MusicStudy < Study; overrides `possible_answers` to []
+├── helpers/
+│   └── css_helper.rb             # `button_class(*modifiers)` → `.button` class lists (mixed into Components::Base)
+├── jobs/
+│   └── callable_job.rb           # Runs `SomeAction.call` async (e.g. demo guest-user cleanup)
 ├── controllers/
 │   ├── application_controller.rb
-│   ├── cards_controller.rb
-│   ├── catalog_controller.rb
-│   ├── decks_controller.rb     # `#create` dispatches Decks::Create vs Decks::CreateMusic on :deck_type
-│   ├── pages_controller.rb
-│   ├── shares_controller.rb    # Owner toggle (create/destroy via :deck_id) + public preview/copy (show/copy via :token)
-│   └── subscriptions_controller.rb
+│   ├── accounts_controller.rb         # Account create / show / update / destroy
+│   ├── cards_controller.rb            # Single-card edit / destroy (turbo streams)
+│   ├── catalog_controller.rb          # Public catalog browse / preview / copy
+│   ├── catalog_listings_controller.rb # Publish / unpublish a deck to the catalog
+│   ├── concerns/
+│   │   └── demo_session.rb            # Demo guest-session helpers
+│   ├── decks_controller.rb            # `#create` dispatches Decks::Create vs CreateMusic on :deck_type
+│   ├── demo_controller.rb             # Starts a guest demo study session
+│   ├── milestones_controller.rb       # Updates a deck's study goal
+│   ├── pages_controller.rb            # pricing / privacy / terms
+│   ├── replacements_controller.rb     # Re-import a deck's cards (Decks::Replace)
+│   ├── sessions_controller.rb         # Login / logout
+│   ├── shares_controller.rb           # Owner toggle (via :deck_id) + public preview/copy (via :token)
+│   ├── studies_controller.rb          # Study show/update; dispatches text vs music views
+│   ├── subscriptions_controller.rb    # Creem subscription show / create / destroy
+│   ├── suggestions_controller.rb      # Review (accept/reject) catalog suggestions on a deck
+│   ├── webhooks/
+│   │   └── creem_controller.rb        # Creem webhook receiver
+│   └── welcome_controller.rb          # Landing page
 ├── models/
+│   ├── application_record.rb
 │   ├── user.rb
-│   ├── deck.rb          # STI base
-│   ├── text_deck.rb     # STI subclass — overrides model_name
-│   ├── music_deck.rb    # STI subclass — defaults distractor_pool to "none"
-│   ├── card.rb          # STI base
-│   ├── text_card.rb     # STI subclass — validates back + category presence
-│   ├── music_card.rb    # STI subclass — validates back against SEQUENCE_REGEXP
+│   ├── deck.rb               # STI base
+│   ├── text_deck.rb          # STI subclass — overrides model_name
+│   ├── music_deck.rb         # STI subclass — defaults distractor_pool to "none"
+│   ├── card.rb               # STI base
+│   ├── text_card.rb          # STI subclass — validates back + category presence
+│   ├── music_card.rb         # STI subclass — validates back against SEQUENCE_REGEXP
+│   ├── card_suggestion.rb    # Proposed edit from a copied card back to its catalog source
 │   └── subscription.rb
-├── views/
-│   ├── base.rb           # Base view class
+├── nulls/
+│   └── null_user.rb          # Null-object User for logged-out / guest requests
+├── views/                    # Phlex views (inherit from Views::Base)
+│   ├── base.rb               # Base view class (wraps the application layout)
 │   ├── layouts/
 │   │   └── application.rb
+│   ├── accounts/
+│   │   ├── new.rb
+│   │   └── show.rb
+│   ├── cards/
+│   │   └── edit_form.rb      # In-dialog card edit form (front / back / reading / category / example)
 │   ├── catalog/
-│   │   ├── index.rb      # Public deck grid (mic badge for music decks)
-│   │   └── show.rb       # Deck preview + copy action (mic badge in header)
-│   ├── welcome/
-│   │   └── index.rb
+│   │   ├── index.rb          # Public deck grid (mic badge for music decks)
+│   │   └── show.rb           # Deck preview + copy action (mic badge in header)
 │   ├── decks/
 │   │   ├── index.rb
-│   │   ├── new.rb        # Includes deck-type toggle (text vs music)
-│   │   └── show.rb       # Includes share-link section (generate / show URL / revoke)
-│   ├── shares/
-│   │   └── show.rb       # Public share-link preview (attributed to owner)
+│   │   ├── new.rb            # Includes deck-type toggle (text vs music)
+│   │   └── show.rb           # Includes share-link section (generate / show URL / revoke)
+│   ├── demo/
+│   │   └── show.rb
 │   ├── pages/
+│   │   ├── pricing.rb
 │   │   ├── privacy.rb
 │   │   └── terms.rb
-│   ├── cards/
-│   │   └── edit_form.rb
+│   ├── sessions/
+│   │   └── new.rb
+│   ├── shares/
+│   │   └── show.rb           # Public share-link preview (attributed to owner)
 │   ├── studies/
-│   │   ├── show.rb
-│   │   └── update.rb
-│   └── subscriptions/
-│       └── show.rb
+│   │   ├── show.rb           # Text-deck study prompt (multiple-choice / fuzzy-find)
+│   │   ├── update.rb         # Text-deck answer result (renders CardReading + StudyExample)
+│   │   ├── music_show.rb     # Mic-driven music study prompt
+│   │   ├── music_update.rb   # Music answer result
+│   │   └── text_size_data.rb # Shared study-frame data helper (wires the text-size controller)
+│   ├── subscriptions/
+│   │   └── show.rb
+│   └── welcome/
+│       └── index.rb
 ├── javascript/
+│   ├── application.ts
+│   ├── channels/
+│   │   └── consumer.ts
+│   ├── helpers/
+│   │   └── assert.ts                 # `assert` / `ensure` runtime guard
 │   ├── controllers/
-│   │   ├── clipboard_controller.ts    # Copies an input value to the clipboard on click
-│   │   ├── deck_type_controller.ts    # Toggles CSV instructions block on creation form
+│   │   ├── application.ts             # Stimulus application bootstrap
+│   │   ├── index.ts                  # Controller manifest (register each controller here)
+│   │   ├── auto_advance_controller.ts # Auto-advances to the next card after answering
+│   │   ├── clipboard_controller.ts   # Copies an input value to the clipboard on click
+│   │   ├── confirm_submit_controller.ts # Confirm-before-submit guard
+│   │   ├── deck_type_controller.ts   # Toggles CSV instructions block on creation form
 │   │   ├── dialog_controller.ts
 │   │   ├── file_upload_controller.ts
-│   │   ├── hotkeys_controller.ts
+│   │   ├── fuzzy_find_controller.ts  # Typed-answer matching for fuzzy-find study mode
+│   │   ├── hotkeys_controller.ts     # Document-level keyboard shortcuts
 │   │   ├── mobile_nav_controller.ts
-│   │   └── music_study_controller.ts  # Mic capture + RAF loop + sequence-state-machine glue
-│   └── music/
-│       ├── note_utils.ts         # Note ↔ frequency, sequence parsing
-│       ├── pitch_detector.ts     # YIN-style pitch detection from Float32Array samples
-│       ├── reference_player.ts   # Web Audio sine playback for note sequences
-│       └── sequence_session.ts   # Pure state machine: hold-to-classify, advance/reset/complete
+│   │   ├── music_study_controller.ts # Mic capture + RAF loop + sequence-state-machine glue
+│   │   ├── music_study_helpers.ts    # Helpers for music_study_controller
+│   │   ├── text_size_controller.ts   # Study text-size kebab menu (persists to localStorage)
+│   │   └── timezone_controller.ts    # Sets the browser time zone on a hidden field
+│   └── music/                        # Pure, framework-free audio modules (100% Vitest coverage)
+│       ├── note_utils.ts             # Note ↔ frequency, sequence parsing
+│       ├── pitch_detector.ts         # YIN-style pitch detection from Float32Array samples
+│       ├── reference_player.ts       # Web Audio sine playback for note sequences
+│       └── sequence_session.ts       # Pure state machine: hold-to-classify, advance/reset/complete
 └── assets/
-    └── stylesheets/
+    └── stylesheets/                  # See CSS Organization above
+        ├── accent-box.css
         ├── application.css
+        ├── auth.css
+        ├── button.css
+        ├── card.css
         ├── catalog.css
+        ├── custom.css
+        ├── decks.css
+        ├── demo-banner.css
         ├── dialog.css
         ├── edit-card.css
         ├── flash.css
         ├── layout.css
-        ├── welcome.css
-        └── decks.css
+        ├── music-study.css
+        ├── price-display.css
+        ├── pricing.css
+        ├── subscription.css
+        └── welcome.css
 
 db/
+├── seeds.rb             # Entry point (loads db/seeds/*)
 └── seeds/
-    └── music_decks.rb   # Seeds starter music decks (called from db/seeds.rb)
+    └── music_decks.rb   # Seeds starter music decks
 ```
 
 ### Actions
@@ -508,7 +597,7 @@ Users can browse and copy public decks at `/catalog`:
 - **Preview**: `/catalog/:id` — card preview (first 5 cards), deck info (no auth required)
 - **Copy**: `POST /catalog/:id/copy` — duplicates deck + cards into current user's account (auth required)
 - Deck visibility is controlled by `deck.visibility` (`"public"` / `"private"`)
-- Visibility is currently set via Rails console; there is no UI for changing it yet
+- **Admins** publish/unpublish a deck to the catalog from the deck-show page (`Components::CatalogToggleButton` → `CatalogListingsController#create`/`#destroy`, which flips `visibility`). Non-admins have no visibility UI.
 
 ### Deck Sharing (revocable link)
 
@@ -524,8 +613,9 @@ Private decks can be shared with a friend via a revocable token. The `decks.shar
 Decks are created by uploading CSV files. The deck-creation form has a "Deck Type" toggle (text vs music) that picks the importer.
 
 **Text decks (`Decks::Create`):**
-- Columns: `front`, `back`, `category` (`distractors` optional)
+- Columns: `front`, `back`, `category` (`distractors`, `reading` optional)
 - Multiple answers separated by `;`
+- `reading` populates `cards.reading` (the pronunciation gloss shown on reveal) — see Reading below
 
 **Music decks (`Decks::CreateMusic`):** see Music Decks section below.
 
@@ -554,6 +644,12 @@ Microphone-driven music study (target: guitar / ukulele). Public music decks app
 **Mic & audio constraints:**
 - `getUserMedia` and `AudioContext` require HTTPS. Rails dev (`bin/dev`) defaults to plain HTTP — use a self-signed cert or staging to actually exercise the mic flow.
 - `AudioContext` autoplay policy: create/resume inside a user-gesture handler. The controller honors this by gating creation behind the explicit "Start Microphone" button.
+
+### Reading (pronunciation gloss)
+
+Cards can carry an optional pronunciation/gloss (e.g. Mandarin pinyin) kept separate from `back`. Keeping it out of `back` keeps the multiple-choice options clean — the gloss is revealed with the card rather than baked into every answer string.
+- **Card data**: `cards.reading` (nullable string). Imported via an optional `reading` CSV column (`Decks::CsvReading`, wired through `Decks::Create` / `Decks::Replace` / `Catalog::CopyDeck`) and editable in the card edit form (kept in sync after an edit by a `card-reading` turbo-stream replace from `CardsController`).
+- **Display**: `Components::CardFront` takes an optional `reading:` and renders `Components::CardReading` *inside* the card-front box, directly under the character, so the two read as one unit. Only the answer (update) view passes `reading:` — the pre-answer and music views omit it, so nothing shows before answering and the gloss never lands on the distractor options. The box border/stripe/shadow live on `.card-front-wrapper` (not the `.card-front` `<h2>`) so the character and reading share one frame. There is no show/hide configuration; a deck that shouldn't show readings simply omits the `reading` column.
 
 ### Study Algorithm
 
@@ -628,7 +724,7 @@ Manual testing checklist for new features:
 Things to keep in mind for future development:
 
 1. **Subscription Features** - If adding paid features, update subscription messaging
-2. **Catalog Enhancements** - UI for setting deck visibility, search/filter, categories
+2. **Catalog Enhancements** - search/filter, categories, self-serve (non-admin) publishing
 3. **Mobile App** - Progressive Web App capabilities
 4. **Bulk Operations** - Edit/delete multiple cards at once
 5. **Study Statistics** - More detailed progress tracking and visualizations

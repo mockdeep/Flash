@@ -86,7 +86,11 @@ module Views
 
         div(data: controller_data) do
           div(class: "edit-card__front-wrapper") do
-            args = { text: result.question, id: "card-question" }
+            args = {
+              text: result.question,
+              id: "card-question",
+              reading: result.card.reading.to_s,
+            }
             render(Components::CardFront.new(**args))
             unless demo
               button(

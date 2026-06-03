@@ -68,23 +68,31 @@ module Decks
     def self.update_card_metadata(card, data)
       return if metadata_unchanged?(card, data)
 
-      card.update!(category: data[:category], distractors: data[:distractors])
+      attributes = {
+        category: data[:category],
+        distractors: data[:distractors],
+      }
+      attributes[:reading] = data[:reading] if data.key?(:reading)
+      card.update!(attributes)
     end
 
     def self.metadata_unchanged?(card, data)
       card.category == data[:category] &&
-        card.distractors == data[:distractors]
+        card.distractors == data[:distractors] &&
+        (!data.key?(:reading) || card.reading == data[:reading])
     end
 
     def self.update_card_with_reset(card, data)
-      card.update!(
+      attributes = {
         back: data[:back],
         category: data[:category],
         distractors: data[:distractors],
         correct_streak: 0,
         correct_count: 0,
         view_count: 0,
-      )
+      }
+      attributes[:reading] = data[:reading] if data.key?(:reading)
+      card.update!(attributes)
     end
 
     def self.insert_new_cards(deck, existing, incoming)
