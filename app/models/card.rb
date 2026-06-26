@@ -4,7 +4,8 @@ class Card < ApplicationRecord
   self.ignored_columns += ["status"]
 
   belongs_to :deck
-  belongs_to :source_card, class_name: "Card", optional: true
+  belongs_to :item
+  belongs_to :source_card, class_name: "Card"
   has_many :suggestions, class_name: "CardSuggestion", dependent: :destroy
 
   validates :deck_id, presence: true
