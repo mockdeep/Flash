@@ -54,16 +54,17 @@ class Study
     return [] if next_card.nil?
 
     case presentation_mode
-    when :fuzzy_find then deck.cards.distinct.pluck(:back)
+    when :fuzzy_find then fuzzy_answers
     else multiple_choice_answers
     end
   end
 
   def answer_card(card_id:, answer:, possible_answers: [])
     card = deck.cards.find(card_id)
+    content = CardContent.new(card)
     card.view_count += 1
-    result_answers = [*possible_answers, card.back].uniq
-    if card.back == answer
+    result_answers = [*possible_answers, content.back].uniq
+    if content.back == answer
       card.correct_count += 1
       card.correct_streak += 1
       card_completed = card.done?
@@ -73,8 +74,8 @@ class Study
       Result.new(
         card:,
         correct: true,
-        correct_answer: card.back,
-        question: card.front,
+        correct_answer: content.back,
+        question: content.front,
         selected_answer: answer,
         possible_answers: result_answers,
         card_completed:,
@@ -90,8 +91,8 @@ class Study
       Result.new(
         card:,
         correct: false,
-        correct_answer: card.back,
-        question: card.front,
+        correct_answer: content.back,
+        question: content.front,
         selected_answer: answer,
         possible_answers: result_answers,
         card_completed: false,
@@ -103,22 +104,35 @@ class Study
   private
 
   def multiple_choice_answers
-    distractors = next_card.distractors.sample(4)
+    content = CardContent.new(next_card)
+    distractors = content.distractors.sample(4)
+    distractors += category_distractors(content, distractors) if category_pool?
+    [*distractors, content.back].shuffle
+  end
 
-    if deck.distractor_pool == "category"
-      other_cards = deck.cards.distinct(:back).where.not(back: next_card.back)
+  def category_pool?
+    deck.distractor_pool == "category"
+  end
 
-      distractors += other_cards.where(category: next_card.category)
-        .where.not(back: distractors)
-        .sample(4 - distractors.length)
-        .pluck(:back)
+  def category_distractors(content, chosen)
+    excluded = chosen + [content.back]
+    same = pick(sibling_backs(content.category), excluded, 4 - chosen.length)
+    same + pick(sibling_backs, excluded + same, 4 - chosen.length - same.length)
+  end
 
-      distractors += other_cards
-        .where.not(back: distractors)
-        .sample(4 - distractors.length)
-        .pluck(:back)
-    end
+  def pick(backs, excluded, count)
+    (backs - excluded).uniq.sample(count)
+  end
 
-    [*distractors, next_card.back].shuffle
+  def sibling_backs(category = nil)
+    cards = deck.cards.where.not(id: next_card.id)
+    cards = cards.joins(:item).where(items: { category: }) if category
+    cards.preload(item: { pairings: :paired_item })
+      .map { |card| CardContent.new(card).back }
+  end
+
+  def fuzzy_answers
+    deck.cards.preload(item: { pairings: :paired_item })
+      .map { |card| CardContent.new(card).back }.uniq
   end
 end

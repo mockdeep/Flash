@@ -12,4 +12,10 @@ class Item < ApplicationRecord
 
   validates :side, presence: true
   validates :text, presence: true, uniqueness: { scope: [:data_set_id, :side] }
+
+  # Paired Back-item texts in authored order (pairing id), forming the glosses
+  # of this Front item. Uses loaded associations so callers can preload.
+  def glosses
+    pairings.sort_by(&:id).map { |pairing| pairing.paired_item.text }
+  end
 end
