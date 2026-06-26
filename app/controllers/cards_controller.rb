@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
 class CardsController < ApplicationController
+  include ProjectsCards
+
   def update
     deck = current_user.decks.find(params.expect(:deck_id))
     card = deck.cards.find(params.expect(:id))
 
-    if card.update(card_params)
+    if save_card(card)
       update_succeeded(deck, card)
     else
       update_failed(deck, card)
@@ -14,7 +16,8 @@ class CardsController < ApplicationController
 
   def destroy
     deck = current_user.decks.find(params.expect(:deck_id))
-    deck.cards.find(params.expect(:id)).destroy!
+    destroy_card(deck.cards.find(params.expect(:id)))
+
     flash[:success] = t(".success")
     redirect_to(deck_study_path(deck))
   end
@@ -35,14 +38,7 @@ class CardsController < ApplicationController
 
   def card_params
     params.expect(
-      card: [
-        :front,
-        :back,
-        :category,
-        :reading,
-        :example_front,
-        :example_back,
-      ],
+      card: [:front, :back, :category, :reading, :example_front, :example_back],
     )
   end
 

@@ -30,6 +30,16 @@ RSpec.describe Decks::Replace do
       Card.where(deck_id: deck.id).pluck(:front)
     end
 
+    context "when mirroring to a data_set" do
+      it "rebuilds the data_set to match the replaced cards" do
+        deck = create(:deck)
+        card_with_progress(deck, front: "Q", back: "old", category: "C")
+        replace_with(deck, "front,back,category\nQ,new;fresh,C\nR,new2,C\n")
+
+        expect_projection_matches(deck)
+      end
+    end
+
     context "when a kept card is completely unchanged" do
       it "does not touch updated_at" do
         deck = create(:deck)
