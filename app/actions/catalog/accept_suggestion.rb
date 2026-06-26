@@ -18,6 +18,7 @@ module Catalog
         back: suggestion.back,
         category: suggestion.category,
       )
+      DataSets::Projection.project_card(suggestion.card)
     end
 
     class Result

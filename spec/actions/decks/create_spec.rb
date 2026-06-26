@@ -83,6 +83,16 @@ RSpec.describe Decks::Create do
       end
     end
 
+    context "when mirroring to a data_set" do
+      it "mirrors the cards into a matching data_set" do
+        user = create(:user)
+        csv = csv_file("front,back\n明白,understand;clear\n")
+        deck = described_class.call(user:, name: "T", cards_csv: csv).record
+
+        expect_projection_matches(deck)
+      end
+    end
+
     context "when CSV has a distractors column" do
       it "stores distractors on the card" do
         user = create(:user)

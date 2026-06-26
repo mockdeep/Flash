@@ -81,9 +81,12 @@ class Study
         level_completed:,
       )
     else
-      card.distractors.unshift(answer).uniq!
-      card.correct_streak = 0
-      card.save!
+      ActiveRecord::Base.transaction do
+        card.distractors.unshift(answer).uniq!
+        card.correct_streak = 0
+        card.save!
+        DataSets::Projection.project_card(card)
+      end
       Result.new(
         card:,
         correct: false,

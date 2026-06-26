@@ -51,6 +51,14 @@ RSpec.describe CardsController do
           .from("Original Front").to("New Front")
       end
 
+      it "keeps the data_set consistent after an edit" do
+        card = create(:card, back: "old")
+        DataSets::Projection.rebuild(card.deck)
+        update_card(deck: card.deck, card:, back: "new;fresh")
+
+        expect_projection_matches(card.deck)
+      end
+
       it "replaces the card question on the page" do
         deck = create(:deck)
         card = create(:card, deck:, front: "Original Front")
@@ -209,6 +217,15 @@ RSpec.describe CardsController do
 
       expect { delete(deck_card_path(deck, card)) }
         .to change(Card, :count).by(-1)
+    end
+
+    it "keeps the data_set consistent after a delete" do
+      card = create(:card, back: "x")
+      DataSets::Projection.rebuild(card.deck)
+      login_as(default_user)
+      delete(deck_card_path(card.deck, card))
+
+      expect_projection_matches(card.deck)
     end
 
     it "redirects to the deck study path" do

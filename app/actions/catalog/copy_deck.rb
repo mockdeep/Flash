@@ -9,6 +9,7 @@ module Catalog
         return Result.new(success: false, record: new_deck) unless new_deck.save
 
         build_and_insert_cards(new_deck, deck, card_limit:)
+        DataSets::Projection.rebuild(new_deck)
       end
 
       Result.new(success: true, record: new_deck)

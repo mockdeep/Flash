@@ -34,6 +34,14 @@ RSpec.describe Catalog::AcceptSuggestion do
       expect(suggestion.card.reload.back).to eq("New back")
     end
 
+    it "mirrors the accepted edit into the data_set" do
+      suggestion = build_suggestion
+      described_class.call(suggestion:)
+
+      expect_projection_matches(suggestion.card.deck)
+      expect(suggestion.card.reload.item.text).to eq("New")
+    end
+
     it "overwrites the card's category" do
       suggestion = build_suggestion
       described_class.call(suggestion:)

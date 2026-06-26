@@ -12,12 +12,16 @@ module Decks
       return failure(deck, error) if error
 
       deck.distractor_pool = distractors_column?(csv) ? "preset" : "category"
+      persist(deck, user, csv)
+    end
 
+    def self.persist(deck, user, csv)
       ActiveRecord::Base.transaction do
         deck.user = user
         return failure(deck) unless deck.save
 
         build_and_insert_cards(deck, collect_cards_data(csv))
+        DataSets::Projection.rebuild(deck)
       end
 
       Result.new(success: true, record: deck)

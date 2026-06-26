@@ -39,6 +39,15 @@ RSpec.describe Catalog::CopyDeck do
       expect(result.record.cards.count).to eq(2)
     end
 
+    it "mirrors the copied cards into a data_set" do
+      source = build_public_deck
+      create(:card, deck: source, front: "Q1", back: "A1;A2")
+      result = described_class.call(user: create(:user), deck: source)
+
+      expect(result.record.data_set).to be_present
+      expect_projection_matches(result.record)
+    end
+
     it "copies card front" do
       source = build_public_deck
       create(:card, deck: source, front: "Q", back: "Paris")

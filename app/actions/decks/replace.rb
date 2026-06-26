@@ -16,6 +16,7 @@ module Decks
       ActiveRecord::Base.transaction do
         deck.update!(distractor_pool: derive_distractor_pool(csv))
         summary = apply_diff(deck, Decks::Create.collect_cards_data(csv))
+        DataSets::Projection.rebuild(deck)
       end
 
       Result.new(success: true, record: deck, summary:)

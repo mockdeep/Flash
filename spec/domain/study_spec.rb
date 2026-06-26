@@ -445,6 +445,15 @@ RSpec.describe Study do
         expect(card.reload.distractors).to eq(["London"])
       end
 
+      it "mirrors the new distractor into the data_set" do
+        card = create(:card, back: "Paris")
+        DataSets::Projection.rebuild(card.deck)
+        described_class.new(deck: card.deck)
+          .answer_card(card_id: card.id, answer: "London")
+
+        expect_projection_matches(card.deck)
+      end
+
       it "prepends wrong answer to existing list" do
         card = create(:card, back: "Paris", distractors: ["Berlin"])
         study = described_class.new(deck: card.deck)
