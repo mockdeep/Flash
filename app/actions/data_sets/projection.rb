@@ -9,10 +9,101 @@ module DataSets
     FRONT = "Front"
     BACK = "Back"
 
+    # Bulk-rebuilds a deck's whole data_set in a handful of set-based queries,
+    # rather than per-card find_or_create. Used by ingest and the backfill.
     def self.rebuild(deck)
       data_set = data_set_for(deck)
       data_set.items.delete_all
-      deck.cards.reload.each { |card| project_card(card) }
+      cards = deck.cards.reload.to_a
+      return if cards.empty?
+
+      insert_content(data_set, cards)
+      # link_cards writes item_id via upsert_all, so drop the now-stale cache.
+      deck.cards.reset
+    end
+
+    def self.insert_content(data_set, cards)
+      item_ids = insert_items(data_set, cards)
+      insert_pairings(cards, item_ids)
+      insert_distractors(cards, item_ids)
+      link_cards(cards, item_ids)
+    end
+
+    def self.insert_items(data_set, cards)
+      rows = item_rows(data_set, cards)
+      result = Item.insert_all(rows, returning: ["id", "side", "text"])
+      result.rows.to_h { |id, side, text| [[side, text], id] }
+    end
+
+    def self.item_rows(data_set, cards)
+      rows = {}
+      cards.each do |card|
+        rows[[FRONT, card.front]] = front_row(data_set, card)
+        back_texts(card).each do |text|
+          rows[[BACK, text]] ||= back_row(data_set, text)
+        end
+      end
+      rows.values
+    end
+
+    def self.back_texts(card)
+      glosses(card) + terms(card.distractors)
+    end
+
+    def self.front_row(data_set, card)
+      {
+        data_set_id: data_set.id,
+        side: FRONT,
+        text: card.front,
+        **front_attributes(card),
+      }
+    end
+
+    def self.back_row(data_set, text)
+      {
+        data_set_id: data_set.id,
+        side: BACK,
+        text:,
+        category: nil,
+        reading: nil,
+        example: nil,
+        paired_example: nil,
+      }
+    end
+
+    def self.insert_pairings(cards, item_ids)
+      rows =
+        cards.flat_map do |card|
+          front_id = item_ids[[FRONT, card.front]]
+          glosses(card).map do |gloss|
+            { item_id: front_id, paired_item_id: item_ids[[BACK, gloss]] }
+          end
+        end
+      Pairing.insert_all(rows) if rows.any?
+    end
+
+    def self.insert_distractors(cards, item_ids)
+      rows =
+        cards.flat_map do |card|
+          front_id = item_ids[[FRONT, card.front]]
+          terms(card.distractors).map do |text|
+            { item_id: front_id, distractor_item_id: item_ids[[BACK, text]] }
+          end
+        end
+      ItemDistractor.insert_all(rows) if rows.any?
+    end
+
+    def self.link_cards(cards, item_ids)
+      rows =
+        cards.map do |card|
+          card.attributes.merge("item_id" => item_ids[[FRONT, card.front]])
+        end
+      Card.upsert_all(
+        rows,
+        unique_by: :id,
+        update_only: [:item_id],
+        record_timestamps: false,
+      )
     end
 
     def self.project_card(card)

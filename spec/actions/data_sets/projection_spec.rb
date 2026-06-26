@@ -85,6 +85,14 @@ RSpec.describe DataSets::Projection do
       expect_projection_matches(deck)
     end
 
+    it "skips pairings for a card whose back has no glosses" do
+      deck = create(:deck)
+      create(:card, deck:, back: ";")
+      described_class.rebuild(deck)
+
+      expect(deck.data_set.items.where(side: "Back")).to be_empty
+    end
+
     it "drops content no longer present on a later rebuild" do
       deck = deck_with(["understand"])
       deck.cards.first.update!(back: "clear")

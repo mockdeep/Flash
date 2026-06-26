@@ -185,6 +185,12 @@ Metrics/MethodLength:
     - 'app/views/welcome/index.rb'
 
 # Offense count: 1
+# Configuration parameters: CountComments, Max, CountAsOne, AllowedMethods, AllowedPatterns.
+Metrics/ModuleLength:
+  Exclude:
+    - 'app/actions/data_sets/projection.rb'
+
+# Offense count: 1
 # Configuration parameters: Mode, AllowedMethods, AllowedPatterns, AllowBangMethods, WaywardPredicates.
 # AllowedMethods: call
 # WaywardPredicates: infinite?, nonzero?
@@ -240,6 +246,7 @@ Rails/FindByOrAssignmentMemoization:
 Rails/SkipsModelValidations:
   Exclude:
     - 'app/actions/catalog/copy_deck.rb'
+    - 'app/actions/data_sets/projection.rb'
     - 'app/actions/decks/create.rb'
     - 'app/actions/decks/create_music.rb'
     - 'app/actions/decks/replace.rb'

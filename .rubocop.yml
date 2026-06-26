@@ -45,11 +45,6 @@ Metrics/BlockLength:
     - config/environments/development.rb
 Rails/FilePath: { EnforcedStyle: slashes }
 Metrics/MethodLength: { Exclude: [db/migrate/**/*.rb] }
-Rails/SkipsModelValidations:
-  # The data_set projection keeps card.item_id as a derived link without
-  # touching the card's timestamps.
-  Exclude:
-    - app/actions/data_sets/projection.rb
 RSpec/MultipleExpectations:
   Exclude:
     - spec/system/**/*.rb

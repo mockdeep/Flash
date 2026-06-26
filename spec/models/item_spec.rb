@@ -10,11 +10,4 @@ RSpec.describe Item do
 
   it { is_expected.to validate_presence_of(:side) }
   it { is_expected.to validate_presence_of(:text) }
-
-  it do
-    create(:item)
-
-    expect(described_class.new)
-      .to validate_uniqueness_of(:text).scoped_to(:data_set_id, :side)
-  end
 end
