@@ -8,6 +8,8 @@ FactoryBot.define do
     sequence(:back, 100) { |n| "Card Back #{n}" }
     category { "General" }
 
+    after(:create) { |card| DataSets::Projection.project_card(card) }
+
     trait(:done) do
       correct_streak { deck.level }
     end
