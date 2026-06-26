@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_02_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_25_000005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -39,18 +39,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_000000) do
     t.string "example_back"
     t.string "example_front"
     t.string "front", null: false
+    t.bigint "item_id"
     t.string "reading"
     t.bigint "source_card_id"
     t.string "type", null: false
     t.datetime "updated_at", null: false
     t.integer "view_count", default: 0, null: false
     t.index ["deck_id", "front"], name: "index_cards_on_deck_id_and_front", unique: true
+    t.index ["item_id"], name: "index_cards_on_item_id"
     t.index ["source_card_id"], name: "index_cards_on_source_card_id"
     t.index ["type"], name: "index_cards_on_type"
   end
 
+  create_table "data_sets", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "name"], name: "index_data_sets_on_user_id_and_name", unique: true
+  end
+
   create_table "decks", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.bigint "data_set_id"
     t.string "distractor_pool", null: false
     t.integer "level", null: false
     t.string "name", null: false
@@ -63,12 +74,43 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_000000) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.string "visibility", default: "private", null: false
+    t.index ["data_set_id"], name: "index_decks_on_data_set_id"
     t.index ["path_id", "path_position"], name: "index_decks_on_path_id_and_path_position", unique: true
     t.index ["path_id"], name: "index_decks_on_path_id"
     t.index ["share_token"], name: "index_decks_on_share_token", unique: true
     t.index ["type"], name: "index_decks_on_type"
     t.index ["user_id", "name"], name: "index_decks_on_user_id_and_name", unique: true
     t.index ["visibility"], name: "index_decks_on_visibility"
+  end
+
+  create_table "item_distractors", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "distractor_item_id", null: false
+    t.bigint "item_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["distractor_item_id"], name: "index_item_distractors_on_distractor_item_id"
+    t.index ["item_id", "distractor_item_id"], name: "index_item_distractors_on_item_id_and_distractor_item_id", unique: true
+  end
+
+  create_table "items", force: :cascade do |t|
+    t.string "category"
+    t.datetime "created_at", null: false
+    t.bigint "data_set_id", null: false
+    t.string "example"
+    t.string "reading"
+    t.string "side", null: false
+    t.string "text", null: false
+    t.datetime "updated_at", null: false
+    t.index ["data_set_id", "side", "text"], name: "index_items_on_data_set_id_and_side_and_text", unique: true
+  end
+
+  create_table "pairings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "item_id", null: false
+    t.bigint "paired_item_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["item_id", "paired_item_id"], name: "index_pairings_on_item_id_and_paired_item_id", unique: true
+    t.index ["paired_item_id"], name: "index_pairings_on_paired_item_id"
   end
 
   create_table "paths", force: :cascade do |t|
@@ -111,8 +153,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_000000) do
   add_foreign_key "card_suggestions", "users", on_delete: :cascade
   add_foreign_key "cards", "cards", column: "source_card_id", on_delete: :nullify
   add_foreign_key "cards", "decks"
+  add_foreign_key "cards", "items", on_delete: :nullify
+  add_foreign_key "data_sets", "users", on_delete: :cascade
+  add_foreign_key "decks", "data_sets", on_delete: :nullify
   add_foreign_key "decks", "paths"
   add_foreign_key "decks", "users"
+  add_foreign_key "item_distractors", "items", column: "distractor_item_id", on_delete: :cascade
+  add_foreign_key "item_distractors", "items", on_delete: :cascade
+  add_foreign_key "items", "data_sets", on_delete: :cascade
+  add_foreign_key "pairings", "items", column: "paired_item_id", on_delete: :cascade
+  add_foreign_key "pairings", "items", on_delete: :cascade
   add_foreign_key "paths", "users"
   add_foreign_key "subscriptions", "users"
 end
