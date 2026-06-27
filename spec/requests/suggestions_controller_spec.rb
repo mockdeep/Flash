@@ -87,7 +87,7 @@ RSpec.describe SuggestionsController do
 
       post(accept_deck_suggestion_path(deck_for(suggestion), suggestion))
 
-      expect(suggestion.card.reload.front).to eq("Better Q")
+      expect(CardContent.new(suggestion.card.reload).front).to eq("Better Q")
     end
 
     it "marks the suggestion accepted" do

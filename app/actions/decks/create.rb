@@ -20,8 +20,7 @@ module Decks
         deck.user = user
         return failure(deck) unless deck.save
 
-        build_and_insert_cards(deck, collect_cards_data(csv))
-        DataSets::Projection.rebuild(deck)
+        DataSets::Projection.build(deck, collect_cards_data(csv))
       end
 
       Result.new(success: true, record: deck)
@@ -103,16 +102,6 @@ module Decks
           **(with_reading ? CsvReading.attributes(row) : {}),
         }
       end
-    end
-
-    def self.build_and_insert_cards(deck, cards_data)
-      cards_attributes =
-        cards_data.map do |data|
-          card = TextCard.new(deck:, **data)
-          card.attributes.without("id", "created_at", "updated_at")
-        end
-
-      Card.insert_all(cards_attributes)
     end
 
     class Result

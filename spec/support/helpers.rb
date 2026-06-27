@@ -2,4 +2,3 @@
 
 require_relative "helpers/request_spec_helpers"
 require_relative "helpers/system_spec_helpers"
-require_relative "helpers/data_set_projection_helpers"

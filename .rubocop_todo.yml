@@ -153,6 +153,7 @@ Metrics/BlockLength:
 Metrics/ClassLength:
   Exclude:
     - 'app/domain/study.rb'
+    - 'app/views/cards/edit_form.rb'
     - 'app/views/decks/index.rb'
     - 'app/views/decks/show.rb'
     - 'app/views/layouts/application.rb'

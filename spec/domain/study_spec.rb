@@ -442,25 +442,25 @@ RSpec.describe Study do
 
         study.answer_card(card_id: card.id, answer: "London")
 
-        expect(card.reload.distractors).to eq(["London"])
+        expect(CardContent.new(card.reload).distractors).to eq(["London"])
       end
 
-      it "mirrors the new distractor into the data_set" do
+      it "records the new distractor in the data_set" do
         card = create(:card, back: "Paris")
-        DataSets::Projection.rebuild(card.deck)
         described_class.new(deck: card.deck)
           .answer_card(card_id: card.id, answer: "London")
 
-        expect_projection_matches(card.deck)
+        expect(CardContent.new(card.reload).distractors).to include("London")
       end
 
-      it "prepends wrong answer to existing list" do
+      it "adds the wrong answer to the existing distractors" do
         card = create(:card, back: "Paris", distractors: ["Berlin"])
         study = described_class.new(deck: card.deck)
 
         study.answer_card(card_id: card.id, answer: "London")
 
-        expect(card.reload.distractors).to eq(["London", "Berlin"])
+        expect(CardContent.new(card.reload).distractors)
+          .to contain_exactly("London", "Berlin")
       end
 
       it "removes duplicate wrong answers" do
@@ -469,7 +469,7 @@ RSpec.describe Study do
 
         study.answer_card(card_id: card.id, answer: "London")
 
-        expect(card.reload.distractors).to eq(["London"])
+        expect(CardContent.new(card.reload).distractors).to eq(["London"])
       end
 
       it "returns result with card_completed false" do

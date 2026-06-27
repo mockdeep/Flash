@@ -29,13 +29,14 @@ module Views
       end
 
       def render_fields(form)
+        content = CardContent.new(@card)
         div(class: "edit-card__fields") do
-          text_area_field(form, :front, "Front", autofocus: true)
-          text_area_field(form, :back, "Back")
-          text_field(form, :reading, "Reading")
-          text_field(form, :category, "Category")
-          text_area_field(form, :example_front, "Example")
-          text_area_field(form, :example_back, "Example translation")
+          text_area_field(form, content, :front, "Front", autofocus: true)
+          text_area_field(form, content, :back, "Back")
+          text_field(form, content, :reading, "Reading")
+          text_field(form, content, :category, "Category")
+          text_area_field(form, content, :example_front, "Example")
+          text_area_field(form, content, :example_back, "Example translation")
           render_suggest_to_catalog if @card.suggestable_to_catalog?
         end
       end
@@ -64,17 +65,19 @@ module Views
         ) { "Suggest this edit to the catalog deck" }
       end
 
-      def text_area_field(form, attr, label, autofocus: false)
+      def text_area_field(form, content, attr, label, autofocus: false)
+        value = content.public_send(attr)
         div(class: "form-field") do
           form.label(attr, label, class: "form-label")
-          form.text_area(attr, class: "form-input", rows: 3, autofocus:)
+          form.text_area(attr, value:, class: "form-input", rows: 3, autofocus:)
         end
       end
 
-      def text_field(form, attr, label)
+      def text_field(form, content, attr, label)
+        value = content.public_send(attr)
         div(class: "form-field") do
           form.label(attr, label, class: "form-label")
-          form.text_field(attr, class: "form-input")
+          form.text_field(attr, value:, class: "form-input")
         end
       end
 

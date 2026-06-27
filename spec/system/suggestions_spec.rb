@@ -59,7 +59,7 @@ RSpec.describe "reviewing suggestions" do
 
     click_on("Accept")
 
-    expect(card.reload.front).to eq("Better Q")
+    expect(CardContent.new(card.reload).front).to eq("Better Q")
   end
 
   it "removes the suggestion from the page after accepting" do

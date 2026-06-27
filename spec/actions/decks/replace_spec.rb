@@ -27,7 +27,11 @@ RSpec.describe Decks::Replace do
     end
 
     def card_fronts(deck)
-      Card.where(deck_id: deck.id).pluck(:front)
+      deck.cards.includes(:item).map { |card| card.item.text }
+    end
+
+    def content_of(card)
+      CardContent.new(card.reload)
     end
 
     context "when mirroring to a data_set" do
@@ -36,7 +40,8 @@ RSpec.describe Decks::Replace do
         card_with_progress(deck, front: "Q", back: "old", category: "C")
         replace_with(deck, "front,back,category\nQ,new;fresh,C\nR,new2,C\n")
 
-        expect_projection_matches(deck)
+        expect(deck.reload.data_set.items.where(side: "Back").pluck(:text))
+          .to contain_exactly("new", "fresh", "new2")
       end
     end
 
@@ -81,7 +86,7 @@ RSpec.describe Decks::Replace do
         card = card_with_progress(deck, front: "Q", back: "A", category: "Old")
         replace_with(deck, "front,back,category\nQ,A,New\n")
 
-        expect(card.reload.category).to eq("New")
+        expect(content_of(card).category).to eq("New")
       end
     end
 
@@ -115,7 +120,7 @@ RSpec.describe Decks::Replace do
         card = card_with_progress(deck, front: "Q", back: "Old")
         replace_with(deck, "front,back,category\nQ,New,Math\n")
 
-        expect(card.reload.back).to eq("New")
+        expect(content_of(card).back).to eq("New")
       end
     end
 
@@ -132,7 +137,7 @@ RSpec.describe Decks::Replace do
         deck = create(:deck)
         replace_with(deck, "front,back,category\nQ,A,C\n")
 
-        expect(deck.cards.find_by(front: "Q").correct_streak).to eq(0)
+        expect(deck.cards.first.correct_streak).to eq(0)
       end
     end
 
@@ -161,7 +166,7 @@ RSpec.describe Decks::Replace do
         card = card_with_progress(deck, front: "Q", back: "A")
         replace_with(deck, "front,back,category,distractors\nQ,A,C,W1;W2\n")
 
-        expect(card.reload.distractors).to eq(["W1", "W2"])
+        expect(content_of(card).distractors).to eq(["W1", "W2"])
       end
 
       it "preserves progress when only distractors are added" do
@@ -225,7 +230,7 @@ RSpec.describe Decks::Replace do
         card = card_with_progress(deck, front: "两", back: "two", category: "C")
         replace_with(deck, "front,back,category,reading\n两,two,C,liǎng\n")
 
-        expect(card.reload.reading).to eq("liǎng")
+        expect(content_of(card).reading).to eq("liǎng")
       end
 
       it "preserves correct_streak when only reading changes" do
@@ -241,7 +246,8 @@ RSpec.describe Decks::Replace do
         card = card_with_progress(deck, front: "两", back: "old", category: "C")
         replace_with(deck, "front,back,category,reading\n两,two,C,liǎng\n")
 
-        expect(card.reload).to have_attributes(back: "two", reading: "liǎng")
+        expect(content_of(card))
+          .to have_attributes(back: "two", reading: "liǎng")
       end
     end
 
@@ -251,7 +257,7 @@ RSpec.describe Decks::Replace do
         card = card_with_progress(deck, front: "Q", back: "A", reading: "liǎng")
         replace_with(deck, "front,back,category\nQ,A,C\n")
 
-        expect(card.reload.reading).to eq("liǎng")
+        expect(content_of(card).reading).to eq("liǎng")
       end
     end
 
@@ -268,7 +274,7 @@ RSpec.describe Decks::Replace do
         card = card_with_progress(deck, front: "Q", back: "A")
         replace_with(deck, "foo,bar\n1,2\n")
 
-        expect(card.reload.back).to eq("A")
+        expect(content_of(card).back).to eq("A")
       end
 
       it "leaves distractor_pool untouched" do

@@ -17,17 +17,17 @@ RSpec.describe "importing a deck with example sentences" do
     upload("with_examples.csv")
     attrs = { example_front: "Hola mundo", example_back: "Hello world" }
 
-    expect(card_for("hola")).to have_attributes(attrs)
+    expect(CardContent.new(card_for("hola"))).to have_attributes(attrs)
   end
 
   def card_for(front)
-    default_user.decks.last.cards.find_by(front:)
+    default_user.decks.last.cards.joins(:item).find_by(items: { text: front })
   end
 
   it "leaves example fields nil when both row values are blank" do
     upload("with_examples.csv")
 
-    expect(card_for("gracias"))
+    expect(CardContent.new(card_for("gracias")))
       .to have_attributes(example_front: nil, example_back: nil)
   end
 

@@ -106,7 +106,7 @@ RSpec.describe ReplacementsController do
 
       post_replace(deck, "front,back,category\nQ,A,C\nNew,N,C\n")
 
-      expect(deck.cards.pluck(:front)).to contain_exactly("Q", "New")
+      expect(deck.cards.map { |c| c.item.text }).to contain_exactly("Q", "New")
     end
 
     it "re-renders the form on invalid CSV" do

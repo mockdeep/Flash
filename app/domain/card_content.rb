@@ -18,6 +18,18 @@ class CardContent
   def example_back = item.paired_example
   def distractors = item.distractors.map(&:text)
 
+  def to_row
+    {
+      front:,
+      back:,
+      category:,
+      reading:,
+      example_front:,
+      example_back:,
+      distractors:,
+    }
+  end
+
   private
 
   attr_reader :item
