@@ -165,12 +165,11 @@ RSpec.describe SuggestionsController do
 
     it "does not modify the card" do
       suggestion = build_pending_suggestion(front: "Different")
-      original_front = suggestion.card.front
       login_as(default_user)
+      path = reject_deck_suggestion_path(deck_for(suggestion), suggestion)
 
-      post(reject_deck_suggestion_path(deck_for(suggestion), suggestion))
-
-      expect(suggestion.card.reload.front).to eq(original_front)
+      expect { post(path) }
+        .not_to(change { CardContent.new(suggestion.card.reload).front })
     end
 
     it "redirects back to the suggestions page" do

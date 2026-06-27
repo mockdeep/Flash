@@ -1,18 +1,16 @@
 # frozen_string_literal: true
 
 RSpec.describe CardsController do
-  def update_card(
-    deck:,
-    card:,
-    front: "New Front",
-    back: "Original Back",
-    category: "Science"
-  )
+  def update_card(deck:, card:, **content)
     login_as(default_user)
     patch(
       deck_card_path(deck, card),
-      params: { card: { front:, back:, category: } },
+      params: { card: default_card.merge(content) },
     )
+  end
+
+  def default_card
+    { front: "New Front", back: "Original Back", category: "Science" }
   end
 
   def build_catalog_copy(deck: default_deck, owner: create(:user))
@@ -96,6 +94,22 @@ RSpec.describe CardsController do
         deck = create(:deck)
         card = create(:card, deck:)
         update_card(deck:, card:, back: "")
+
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+
+      it "rejects an example front without an example back" do
+        deck = create(:deck)
+        card = create(:card, deck:)
+        update_card(deck:, card:, example_front: "Bonjour")
+
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+
+      it "rejects an example back without an example front" do
+        deck = create(:deck)
+        card = create(:card, deck:)
+        update_card(deck:, card:, example_back: "Hello")
 
         expect(response).to have_http_status(:unprocessable_content)
       end

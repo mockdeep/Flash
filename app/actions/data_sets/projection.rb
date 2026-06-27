@@ -56,12 +56,6 @@ module DataSets
       discard_orphans(former_backs)
     end
 
-    # Re-project from a card's own columns (test factory only -- production
-    # writes go through build/replace/project from the source content).
-    def self.project_card(card)
-      project(card, content_for(card))
-    end
-
     # Whether another card in the deck already owns a Front item with this text
     # (front must stay 1:1 with a card).
     def self.front_taken?(card, front)
@@ -279,18 +273,6 @@ module DataSets
 
     def self.terms(values)
       Array(values).map { |value| value.to_s.squish }.compact_blank.uniq
-    end
-
-    def self.content_for(card)
-      {
-        front: card.front,
-        back: card.back,
-        category: card.category,
-        distractors: card.distractors,
-        reading: card.reading,
-        example_front: card.example_front,
-        example_back: card.example_back,
-      }
     end
 
     def self.data_set_for(deck)

@@ -15,6 +15,10 @@ RSpec.describe MusicStudy do
     study.answer_window(card_ids: study.next_window.map(&:id), answer:)
   end
 
+  def window_backs(deck)
+    described_class.new(deck:).pick_window.map { |c| CardContent.new(c).back }
+  end
+
   def bump_others(deck, except)
     deck.cards.where.not(id: except.id).find_each do |card|
       card.update!(correct_streak: 5)
@@ -39,12 +43,12 @@ RSpec.describe MusicStudy do
     it "returns a single card at level 1" do
       deck = make_deck(["C4", "E4", "G4"], level: 1)
 
-      expect(described_class.new(deck:).pick_window.map(&:back)).to eq(["C4"])
+      expect(window_backs(deck)).to eq(["C4"])
     end
 
     it "returns the first N cards at level N for an ordered deck" do
       deck = make_deck(["C4", "E4", "G4", "C5"], level: 3)
-      backs = described_class.new(deck:).pick_window.map(&:back)
+      backs = window_backs(deck)
 
       expect(backs).to eq(["C4", "E4", "G4"])
     end
@@ -52,7 +56,7 @@ RSpec.describe MusicStudy do
     it "advances the anchor as cards gain streak" do
       deck = make_deck(["C4", "E4", "G4", "C5"], level: 1)
       deck.cards.ordered.first.update!(correct_streak: 1)
-      backs = described_class.new(deck:).pick_window.map(&:back)
+      backs = window_backs(deck)
 
       expect(backs).to eq(["E4"])
     end
@@ -60,14 +64,14 @@ RSpec.describe MusicStudy do
     it "clamps the window when the anchor is near the end of the melody" do
       deck = make_deck(["C4", "E4", "G4", "C5"], level: 3)
       deck.cards.ordered.first(3).each { |c| c.update!(correct_streak: 1) }
-      backs = described_class.new(deck:).pick_window.map(&:back)
+      backs = window_backs(deck)
 
       expect(backs).to eq(["E4", "G4", "C5"])
     end
 
     it "returns the whole deck when level equals melody length" do
       deck = make_deck(["C4", "E4", "G4"], level: 3)
-      backs = described_class.new(deck:).pick_window.map(&:back)
+      backs = window_backs(deck)
 
       expect(backs).to eq(["C4", "E4", "G4"])
     end
@@ -87,10 +91,10 @@ RSpec.describe MusicStudy do
 
     it "includes the anchor as the first card in an unordered window" do
       deck = make_deck(["C4", "E4", "G4", "A4"], ordered: false, level: 3)
-      keep_lowest = deck.cards.find_by!(back: "G4")
+      keep_lowest = deck.cards.find { |c| CardContent.new(c).back == "G4" }
       bump_others(deck, keep_lowest)
 
-      expect(described_class.new(deck:).pick_window.first.back).to eq("G4")
+      expect(window_backs(deck).first).to eq("G4")
     end
   end
 
@@ -130,7 +134,7 @@ RSpec.describe MusicStudy do
       study = described_class.new(deck:)
       result = submit_window(study, answer: "C4,E4,G4")
 
-      expect(result.card.back).to eq("C4")
+      expect(CardContent.new(result.card).back).to eq("C4")
     end
 
     it "returns the joined window backs as correct_answer" do
