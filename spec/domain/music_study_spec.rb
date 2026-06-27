@@ -16,7 +16,7 @@ RSpec.describe MusicStudy do
   end
 
   def window_backs(deck)
-    described_class.new(deck:).pick_window.map { |c| CardContent.new(c).back }
+    described_class.new(deck:).pick_window.map(&:back)
   end
 
   def bump_others(deck, except)
@@ -91,7 +91,7 @@ RSpec.describe MusicStudy do
 
     it "includes the anchor as the first card in an unordered window" do
       deck = make_deck(["C4", "E4", "G4", "A4"], ordered: false, level: 3)
-      keep_lowest = deck.cards.find { |c| CardContent.new(c).back == "G4" }
+      keep_lowest = deck.cards.find { |c| c.back == "G4" }
       bump_others(deck, keep_lowest)
 
       expect(window_backs(deck).first).to eq("G4")
@@ -134,7 +134,7 @@ RSpec.describe MusicStudy do
       study = described_class.new(deck:)
       result = submit_window(study, answer: "C4,E4,G4")
 
-      expect(CardContent.new(result.card).back).to eq("C4")
+      expect(result.card.back).to eq("C4")
     end
 
     it "returns the joined window backs as correct_answer" do

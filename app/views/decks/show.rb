@@ -54,11 +54,10 @@ module Views
           end
           tbody do
             table_cards.each do |card|
-              content = CardContent.new(card)
               tr do
-                td { content.front }
-                td { content.back }
-                td { content.category }
+                td { card.front }
+                td { card.back }
+                td { card.category }
               end
             end
           end

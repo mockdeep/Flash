@@ -10,7 +10,7 @@ RSpec.describe Decks::Create do
     end
 
     def first_content(result)
-      CardContent.new(result.record.cards.first)
+      result.record.cards.first
     end
 
     context "when deck creation succeeds" do
@@ -93,8 +93,7 @@ RSpec.describe Decks::Create do
         csv = csv_file("front,back\n明白,understand;clear\n")
         deck = described_class.call(user:, name: "T", cards_csv: csv).record
 
-        expect(CardContent.new(deck.cards.first).back)
-          .to eq("understand; clear")
+        expect(deck.cards.first.back).to eq("understand; clear")
       end
     end
 
@@ -285,21 +284,20 @@ RSpec.describe Decks::Create do
       it "stores example_front on the card" do
         card = call_with_body(example_body).record.cards.first
 
-        expect(CardContent.new(card).example_front).to eq("Hola mundo")
+        expect(card.example_front).to eq("Hola mundo")
       end
 
       it "stores example_back on the card" do
         card = call_with_body(example_body).record.cards.first
 
-        expect(CardContent.new(card).example_back).to eq("Hello world")
+        expect(card.example_back).to eq("Hello world")
       end
 
       it "leaves both example fields nil when both row values are blank" do
         body = "front,back,category,example_front,example_back\nQ,A,C,,\n"
         card = call_with_body(body).record.cards.first
 
-        expect(CardContent.new(card))
-          .to have_attributes(example_front: nil, example_back: nil)
+        expect(card).to have_attributes(example_front: nil, example_back: nil)
       end
 
       it "rejects when a row has only example_front" do
@@ -330,14 +328,14 @@ RSpec.describe Decks::Create do
         card = call_with("front,back,category,reading\n两,two,Num,liǎng\n")
           .record.cards.first
 
-        expect(CardContent.new(card).reading).to eq("liǎng")
+        expect(card.reading).to eq("liǎng")
       end
 
       it "leaves a row's reading nil when blank" do
         card = call_with("front,back,category,reading\n三,three,Num,\n")
           .record.cards.first
 
-        expect(CardContent.new(card).reading).to be_nil
+        expect(card.reading).to be_nil
       end
     end
 

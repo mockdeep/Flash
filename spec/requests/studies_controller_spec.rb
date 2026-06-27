@@ -309,7 +309,7 @@ RSpec.describe StudiesController do
         card = create(:card, deck:, back: "Paris")
 
         expect { submit_answer(card:, answer: "London") }
-          .to change { CardContent.new(card.reload).distractors }
+          .to change { card.reload.distractors }
           .from([]).to(["London"])
       end
 

@@ -52,10 +52,9 @@ module Components
     end
 
     def render_body_row(card)
-      content = CardContent.new(card)
       tr do
-        td { content.front }
-        td { content.back }
+        td { card.front }
+        td { card.back }
       end
     end
 

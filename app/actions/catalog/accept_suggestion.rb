@@ -19,7 +19,7 @@ module Catalog
     end
 
     def self.suggested_content(suggestion)
-      CardContent.new(suggestion.card).to_row.merge(
+      suggestion.card.to_row.merge(
         front: suggestion.front,
         back: suggestion.back,
         category: suggestion.category,

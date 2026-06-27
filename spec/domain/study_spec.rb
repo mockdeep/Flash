@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Study do
-  def answer_card(deck:, card:, answer: CardContent.new(card).back)
+  def answer_card(deck:, card:, answer: card.back)
     described_class.new(deck:).answer_card(card_id: card.id, answer:)
   end
 
@@ -442,7 +442,7 @@ RSpec.describe Study do
 
         study.answer_card(card_id: card.id, answer: "London")
 
-        expect(CardContent.new(card.reload).distractors).to eq(["London"])
+        expect(card.reload.distractors).to eq(["London"])
       end
 
       it "records the new distractor in the data_set" do
@@ -450,7 +450,7 @@ RSpec.describe Study do
         described_class.new(deck: card.deck)
           .answer_card(card_id: card.id, answer: "London")
 
-        expect(CardContent.new(card.reload).distractors).to include("London")
+        expect(card.reload.distractors).to include("London")
       end
 
       it "adds the wrong answer to the existing distractors" do
@@ -459,8 +459,7 @@ RSpec.describe Study do
 
         study.answer_card(card_id: card.id, answer: "London")
 
-        expect(CardContent.new(card.reload).distractors)
-          .to contain_exactly("London", "Berlin")
+        expect(card.reload.distractors).to contain_exactly("London", "Berlin")
       end
 
       it "removes duplicate wrong answers" do
@@ -469,7 +468,7 @@ RSpec.describe Study do
 
         study.answer_card(card_id: card.id, answer: "London")
 
-        expect(CardContent.new(card.reload).distractors).to eq(["London"])
+        expect(card.reload.distractors).to eq(["London"])
       end
 
       it "returns result with card_completed false" do

@@ -61,10 +61,9 @@ class Study
 
   def answer_card(card_id:, answer:, possible_answers: [])
     card = deck.cards.find(card_id)
-    content = CardContent.new(card)
     card.view_count += 1
-    result_answers = [*possible_answers, content.back].uniq
-    if content.back == answer
+    result_answers = [*possible_answers, card.back].uniq
+    if card.back == answer
       card.correct_count += 1
       card.correct_streak += 1
       card_completed = card.done?
@@ -74,8 +73,8 @@ class Study
       Result.new(
         card:,
         correct: true,
-        correct_answer: content.back,
-        question: content.front,
+        correct_answer: card.back,
+        question: card.front,
         selected_answer: answer,
         possible_answers: result_answers,
         card_completed:,
@@ -90,8 +89,8 @@ class Study
       Result.new(
         card:,
         correct: false,
-        correct_answer: content.back,
-        question: content.front,
+        correct_answer: card.back,
+        question: card.front,
         selected_answer: answer,
         possible_answers: result_answers,
         card_completed: false,
@@ -103,19 +102,18 @@ class Study
   private
 
   def multiple_choice_answers
-    content = CardContent.new(next_card)
-    distractors = content.distractors.sample(4)
-    distractors += category_distractors(content, distractors) if category_pool?
-    [*distractors, content.back].shuffle
+    distractors = next_card.distractors.sample(4)
+    distractors += category_distractors(distractors) if category_pool?
+    [*distractors, next_card.back].shuffle
   end
 
   def category_pool?
     deck.distractor_pool == "category"
   end
 
-  def category_distractors(content, chosen)
-    excluded = chosen + [content.back]
-    same = pick(sibling_backs(content.category), excluded, 4 - chosen.length)
+  def category_distractors(chosen)
+    excluded = chosen + [next_card.back]
+    same = pick(sibling_backs(next_card.category), excluded, 4 - chosen.length)
     same + pick(sibling_backs, excluded + same, 4 - chosen.length - same.length)
   end
 
@@ -126,12 +124,10 @@ class Study
   def sibling_backs(category = nil)
     cards = deck.cards.where.not(id: next_card.id)
     cards = cards.joins(:item).where(items: { category: }) if category
-    cards.preload(item: { pairings: :paired_item })
-      .map { |card| CardContent.new(card).back }
+    cards.preload(item: { pairings: :paired_item }).map(&:back)
   end
 
   def fuzzy_answers
-    deck.cards.preload(item: { pairings: :paired_item })
-      .map { |card| CardContent.new(card).back }.uniq
+    deck.cards.preload(item: { pairings: :paired_item }).map(&:back).uniq
   end
 end

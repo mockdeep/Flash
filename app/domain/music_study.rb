@@ -44,7 +44,7 @@ class MusicStudy < Study
   end
 
   def sequence(cards)
-    cards.map { |card| CardContent.new(card).back }.join(",")
+    cards.map(&:back).join(",")
   end
 
   def pick_anchor
@@ -80,7 +80,7 @@ class MusicStudy < Study
       card: cards.first,
       correct:,
       correct_answer: sequence(cards),
-      question: CardContent.new(cards.first).front,
+      question: cards.first.front,
       selected_answer: answer,
       possible_answers: [],
       card_completed: cards.first.done?,

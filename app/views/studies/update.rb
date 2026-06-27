@@ -83,14 +83,14 @@ module Views
 
       def render_card_result
         controller_data = demo ? {} : { controller: "dialog" }
-        content = CardContent.new(result.card)
+        card = result.card
 
         div(data: controller_data) do
           div(class: "edit-card__front-wrapper") do
             args = {
               text: result.question,
               id: "card-question",
-              reading: content.reading.to_s,
+              reading: card.reading.to_s,
             }
             render(Components::CardFront.new(**args))
             unless demo
@@ -107,7 +107,7 @@ module Views
             end
           end
 
-          render(Components::StudyExample.new(content:))
+          render(Components::StudyExample.new(card:))
 
           ol(class: "study-answers-grid") do
             result.possible_answers.each do |answer|

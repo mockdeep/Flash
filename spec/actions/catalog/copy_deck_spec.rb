@@ -8,7 +8,7 @@ RSpec.describe Catalog::CopyDeck do
     end
 
     def first_content(result)
-      CardContent.new(result.record.cards.first)
+      result.record.cards.first
     end
 
     it "returns success result" do
@@ -196,7 +196,7 @@ RSpec.describe Catalog::CopyDeck do
       create(:music_card, deck: source, front: "A3 Note", back: "A3")
       result = described_class.call(user: create(:user), deck: source)
 
-      expect(CardContent.new(result.record.cards.first).back).to eq("A3")
+      expect(result.record.cards.first.back).to eq("A3")
     end
 
     it "copies music cards as MusicCards" do

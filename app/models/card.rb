@@ -3,6 +3,8 @@
 class Card < ApplicationRecord
   self.ignored_columns += ["status"]
 
+  SEPARATOR = "; "
+
   # Edit validation adds errors keyed to content fields that now live on
   # data_set items, not card columns. ActiveModel reads the attribute to build
   # the error message, so resolve these virtual keys to nil instead of raising.
@@ -24,7 +26,29 @@ class Card < ApplicationRecord
   scope :not_done, ->(level) { where(correct_streak: ...level) }
   scope :ordered, -> { order(:id) }
 
+  delegate :reading, :category, to: :item
+
   def done? = correct_streak >= deck.level
+
+  # The card's studyable content, reconstructed from its data_set item (the card
+  # itself is a thin progress anchor). Back is the item's glosses rejoined.
+  def front = item.text
+  def back = item.glosses.join(SEPARATOR)
+  def example_front = item.example
+  def example_back = item.paired_example
+  def distractors = item.distractors.map(&:text)
+
+  def to_row
+    {
+      front:,
+      back:,
+      category:,
+      reading:,
+      example_front:,
+      example_back:,
+      distractors:,
+    }
+  end
 
   def read_attribute_for_validation(key)
     CONTENT_FIELDS.include?(key.to_sym) ? nil : super
