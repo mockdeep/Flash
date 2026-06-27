@@ -29,14 +29,13 @@ module Views
       end
 
       def render_fields(form)
-        content = CardContent.new(@card)
         div(class: "edit-card__fields") do
-          text_area_field(form, content, :front, "Front", autofocus: true)
-          text_area_field(form, content, :back, "Back")
-          text_field(form, content, :reading, "Reading")
-          text_field(form, content, :category, "Category")
-          text_area_field(form, content, :example_front, "Example")
-          text_area_field(form, content, :example_back, "Example translation")
+          text_area_field(form, @card, :front, "Front", autofocus: true)
+          text_area_field(form, @card, :back, "Back")
+          text_field(form, @card, :reading, "Reading")
+          text_field(form, @card, :category, "Category")
+          text_area_field(form, @card, :example_front, "Example")
+          text_area_field(form, @card, :example_back, "Example translation")
           render_suggest_to_catalog if @card.suggestable_to_catalog?
         end
       end

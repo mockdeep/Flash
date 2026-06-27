@@ -26,9 +26,7 @@ module ProjectsCards
   end
 
   def edit_content(card)
-    card_params.to_h.symbolize_keys.merge(
-      distractors: CardContent.new(card).distractors,
-    )
+    card_params.to_h.symbolize_keys.merge(distractors: card.distractors)
   end
 
   def valid_edit?(card, content)

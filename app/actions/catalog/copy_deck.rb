@@ -31,9 +31,8 @@ module Catalog
     end
 
     def self.content_row(card, copy_distractors:)
-      content = CardContent.new(card)
-      content.to_row.merge(
-        distractors: copy_distractors ? content.distractors : [],
+      card.to_row.merge(
+        distractors: copy_distractors ? card.distractors : [],
         source_card_id: card.id,
       )
     end

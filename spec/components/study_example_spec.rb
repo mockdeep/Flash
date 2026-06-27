@@ -6,7 +6,7 @@ RSpec.describe Components::StudyExample do
   def render_for(front, back)
     card = build(:card)
     card.item = build(:item, example: front, paired_example: back)
-    described_class.new(content: CardContent.new(card)).call
+    described_class.new(card:).call
   end
 
   it "always renders the wrapper div with the expected id" do

@@ -182,13 +182,12 @@ module DataSets
     end
 
     def self.former_state(card)
-      content = CardContent.new(card)
       {
         card:,
-        back: content.back,
-        reading: content.reading,
-        example_front: content.example_front,
-        example_back: content.example_back,
+        back: card.back,
+        reading: card.reading,
+        example_front: card.example_front,
+        example_back: card.example_back,
       }
     end
 

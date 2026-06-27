@@ -45,7 +45,7 @@ RSpec.describe CardsController do
         card = create(:card, deck:, front: "Original Front")
 
         expect { update_card(deck:, card:) }
-          .to change { CardContent.new(card.reload).front }
+          .to change { card.reload.front }
           .from("Original Front").to("New Front")
       end
 
@@ -53,7 +53,7 @@ RSpec.describe CardsController do
         card = create(:card, back: "old")
         update_card(deck: card.deck, card:, back: "new;fresh")
 
-        expect(CardContent.new(card.reload).back).to eq("new; fresh")
+        expect(card.reload.back).to eq("new; fresh")
       end
 
       it "replaces the card question on the page" do
@@ -87,7 +87,7 @@ RSpec.describe CardsController do
         card = create(:card, deck:, front: "Original Front")
 
         expect { update_card(deck:, card:, front: "") }
-          .not_to(change { CardContent.new(card.reload).front })
+          .not_to(change { card.reload.front })
       end
 
       it "rejects a blank back" do

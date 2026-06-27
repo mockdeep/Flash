@@ -28,7 +28,7 @@ module Components
     end
 
     def sequence_value
-      cards.map { |card| CardContent.new(card).back }.join(",")
+      cards.map(&:back).join(",")
     end
 
     def render_card_head

@@ -31,7 +31,7 @@ RSpec.describe Decks::Replace do
     end
 
     def content_of(card)
-      CardContent.new(card.reload)
+      card.reload
     end
 
     context "when mirroring to a data_set" do

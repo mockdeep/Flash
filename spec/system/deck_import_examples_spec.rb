@@ -17,7 +17,7 @@ RSpec.describe "importing a deck with example sentences" do
     upload("with_examples.csv")
     attrs = { example_front: "Hola mundo", example_back: "Hello world" }
 
-    expect(CardContent.new(card_for("hola"))).to have_attributes(attrs)
+    expect(card_for("hola")).to have_attributes(attrs)
   end
 
   def card_for(front)
@@ -27,7 +27,7 @@ RSpec.describe "importing a deck with example sentences" do
   it "leaves example fields nil when both row values are blank" do
     upload("with_examples.csv")
 
-    expect(CardContent.new(card_for("gracias")))
+    expect(card_for("gracias"))
       .to have_attributes(example_front: nil, example_back: nil)
   end
 

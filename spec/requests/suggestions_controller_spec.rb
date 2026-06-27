@@ -87,7 +87,7 @@ RSpec.describe SuggestionsController do
 
       post(accept_deck_suggestion_path(deck_for(suggestion), suggestion))
 
-      expect(CardContent.new(suggestion.card.reload).front).to eq("Better Q")
+      expect(suggestion.card.reload.front).to eq("Better Q")
     end
 
     it "marks the suggestion accepted" do
@@ -168,8 +168,7 @@ RSpec.describe SuggestionsController do
       login_as(default_user)
       path = reject_deck_suggestion_path(deck_for(suggestion), suggestion)
 
-      expect { post(path) }
-        .not_to(change { CardContent.new(suggestion.card.reload).front })
+      expect { post(path) }.not_to(change { suggestion.card.reload.front })
     end
 
     it "redirects back to the suggestions page" do
