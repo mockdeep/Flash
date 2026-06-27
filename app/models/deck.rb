@@ -23,6 +23,8 @@ class Deck < ApplicationRecord
 
   def music? = false
 
+  def card_type = "TextCard"
+
   def publicly_visible? = visibility == "public"
 
   def shared? = share_token.present?

@@ -21,5 +21,7 @@ FactoryBot.define do
     sequence(:front, 100) { |n| "Music Card #{n}" }
     sequence(:back, 1) { |n| "#{["C", "D", "E", "F", "G", "A", "B"][n % 7]}3" }
     category { "Notes" }
+
+    after(:create) { |card| DataSets::Projection.project_card(card) }
   end
 end

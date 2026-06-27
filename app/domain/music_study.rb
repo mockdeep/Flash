@@ -25,9 +25,9 @@ class MusicStudy < Study
   end
 
   def answer_window(card_ids:, answer:)
-    cards = card_ids.map { |id| deck.cards.find(id) }
+    cards = card_ids.map { |id| studied_cards.find(id) }
     cards.each { |c| c.view_count += 1 }
-    expected = cards.map(&:back).join(",")
+    expected = sequence(cards)
 
     if expected == answer
       record_correct(cards, answer)
@@ -39,9 +39,17 @@ class MusicStudy < Study
 
   private
 
+  def studied_cards
+    deck.cards.includes(item: { pairings: :paired_item })
+  end
+
+  def sequence(cards)
+    cards.map { |card| CardContent.new(card).back }.join(",")
+  end
+
   def pick_anchor
-    deck.cards.not_done(deck.level).order(:correct_streak, :id).first ||
-      deck.cards.ordered.first
+    studied_cards.not_done(deck.level).order(:correct_streak, :id).first ||
+      studied_cards.ordered.first
   end
 
   def record_correct(cards, answer)
@@ -56,14 +64,14 @@ class MusicStudy < Study
   end
 
   def ordered_window(anchor)
-    cards = deck.cards.ordered.to_a
+    cards = studied_cards.ordered.to_a
     max_start = [cards.length - deck.level, 0].max
     start_idx = [cards.index(anchor), max_start].min
     cards[start_idx, deck.level]
   end
 
   def unordered_window(anchor)
-    others = deck.cards.where.not(id: anchor.id).to_a.sample(deck.level - 1)
+    others = studied_cards.where.not(id: anchor.id).to_a.sample(deck.level - 1)
     [anchor, *others]
   end
 
@@ -71,8 +79,8 @@ class MusicStudy < Study
     Result.new(
       card: cards.first,
       correct:,
-      correct_answer: cards.map(&:back).join(","),
-      question: cards.first.front,
+      correct_answer: sequence(cards),
+      question: CardContent.new(cards.first).front,
       selected_answer: answer,
       possible_answers: [],
       card_completed: cards.first.done?,
