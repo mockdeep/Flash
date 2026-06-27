@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_26_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_27_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -29,16 +29,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_26_000000) do
   end
 
   create_table "cards", force: :cascade do |t|
-    t.string "back", null: false
-    t.string "category", null: false
+    t.string "back"
+    t.string "category"
     t.integer "correct_count", default: 0, null: false
     t.integer "correct_streak", default: 0, null: false
     t.datetime "created_at", null: false
     t.bigint "deck_id", null: false
-    t.jsonb "distractors", default: [], null: false
+    t.jsonb "distractors", default: []
     t.string "example_back"
     t.string "example_front"
-    t.string "front", null: false
+    t.string "front"
     t.bigint "item_id"
     t.string "reading"
     t.bigint "source_card_id"
