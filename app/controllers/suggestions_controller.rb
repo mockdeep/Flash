@@ -35,7 +35,7 @@ class SuggestionsController < ApplicationController
     deck
       .incoming_suggestions
       .pending
-      .includes(:card, :user)
+      .includes(:user, card: { item: { pairings: :paired_item } })
       .order(:card_id, :created_at)
       .group_by(&:card)
   end

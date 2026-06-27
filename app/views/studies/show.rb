@@ -50,7 +50,7 @@ module Views
             else
               card = study.next_card
 
-              render(Components::CardFront.new(text: card.front))
+              render(Components::CardFront.new(text: CardContent.new(card).front))
 
               render_active_card(card)
 

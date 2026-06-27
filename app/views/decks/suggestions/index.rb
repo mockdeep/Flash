@@ -54,11 +54,12 @@ module Views
         end
 
         def render_current_card(card)
+          content = CardContent.new(card)
           div(class: "suggestion-current") do
             h2(class: "suggestion-current-title") { "Current card" }
-            render_field("Front", card.front)
-            render_field("Back", card.back)
-            render_field("Category", card.category)
+            render_field("Front", content.front)
+            render_field("Back", content.back)
+            render_field("Category", content.category)
           end
         end
 
