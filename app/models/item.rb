@@ -11,7 +11,7 @@ class Item < ApplicationRecord
   has_many :distractors, through: :item_distractors, source: :distractor_item
 
   validates :side, presence: true
-  validates :text, presence: true, uniqueness: { scope: [:data_set_id, :side] }
+  validates :text, presence: true
 
   # Paired Back-item texts in authored order (pairing id), forming the glosses
   # of this Front item. Uses loaded associations so callers can preload.
