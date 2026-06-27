@@ -9,6 +9,8 @@ class MusicDeck < Deck
 
   def music? = true
 
+  def card_type = "MusicCard"
+
   private
 
   def default_distractor_pool

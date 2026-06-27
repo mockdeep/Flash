@@ -15,7 +15,7 @@ module Decks
         deck.user = user
         return failure(deck) unless deck.save
 
-        insert_cards(deck, csv)
+        DataSets::Projection.build(deck, card_rows(csv))
       end
 
       Result.new(success: true, record: deck)
@@ -67,18 +67,14 @@ module Decks
       "duplicate 'front' values: #{duplicates.join(", ")}"
     end
 
-    def self.insert_cards(deck, csv)
-      cards_attributes = csv.map { |row| card_attributes(deck, row) }
-      Card.insert_all(cards_attributes)
-    end
-
-    def self.card_attributes(deck, row)
-      MusicCard.new(
-        deck:,
-        front: row["front"].squish,
-        back: row["back"].squish,
-        category: row["category"].to_s.squish,
-      ).attributes.without("id", "created_at", "updated_at")
+    def self.card_rows(csv)
+      csv.map do |row|
+        {
+          front: row["front"].squish,
+          back: row["back"].squish,
+          category: row["category"].to_s.squish,
+        }
+      end
     end
 
     class Result

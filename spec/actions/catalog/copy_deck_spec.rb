@@ -191,19 +191,20 @@ RSpec.describe Catalog::CopyDeck do
       expect(result.record.cards.first.source_card_id).to eq(source_card.id)
     end
 
-    it "handles an empty music deck" do
-      source = create(:music_deck, user: create(:user))
+    it "copies a music deck's cards via its data_set" do
+      source = create(:music_deck)
+      create(:music_card, deck: source, front: "A3 Note", back: "A3")
       result = described_class.call(user: create(:user), deck: source)
 
-      expect(result.record.cards.count).to eq(0)
+      expect(CardContent.new(result.record.cards.first).back).to eq("A3")
     end
 
-    it "copies preset distractors from a music deck via columns" do
-      source = create(:music_deck, distractor_pool: "preset")
-      create(:music_card, deck: source, distractors: ["X"])
+    it "copies music cards as MusicCards" do
+      source = create(:music_deck)
+      create(:music_card, deck: source)
       result = described_class.call(user: create(:user), deck: source)
 
-      expect(result.record.cards.first.distractors).to eq(["X"])
+      expect(result.record.cards.first).to be_a(MusicCard)
     end
 
     it "copies the card reading" do

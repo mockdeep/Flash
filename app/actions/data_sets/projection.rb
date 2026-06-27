@@ -175,7 +175,7 @@ module DataSets
     def self.card_row(deck, row, item_ids)
       {
         deck_id: deck.id,
-        type: "TextCard",
+        type: deck.card_type,
         item_id: item_ids[[FRONT, row[:front]]],
         source_card_id: row[:source_card_id],
       }
