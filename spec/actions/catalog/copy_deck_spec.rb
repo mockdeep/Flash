@@ -7,6 +7,10 @@ RSpec.describe Catalog::CopyDeck do
       create(:deck, user: owner, visibility: "public", name:)
     end
 
+    def first_content(result)
+      CardContent.new(result.record.cards.first)
+    end
+
     it "returns success result" do
       source = build_public_deck
       create(:card, deck: source, front: "Q1", back: "A1")
@@ -44,8 +48,7 @@ RSpec.describe Catalog::CopyDeck do
       create(:card, deck: source, front: "Q1", back: "A1;A2")
       result = described_class.call(user: create(:user), deck: source)
 
-      expect(result.record.data_set).to be_present
-      expect_projection_matches(result.record)
+      expect(first_content(result).back).to eq("A1; A2")
     end
 
     it "copies card front" do
@@ -53,7 +56,7 @@ RSpec.describe Catalog::CopyDeck do
       create(:card, deck: source, front: "Q", back: "Paris")
       result = described_class.call(user: create(:user), deck: source)
 
-      expect(result.record.cards.first.front).to eq("Q")
+      expect(first_content(result).front).to eq("Q")
     end
 
     it "copies card back" do
@@ -61,7 +64,7 @@ RSpec.describe Catalog::CopyDeck do
       create(:card, deck: source, front: "Q", back: "Paris")
       result = described_class.call(user: create(:user), deck: source)
 
-      expect(result.record.cards.first.back).to eq("Paris")
+      expect(first_content(result).back).to eq("Paris")
     end
 
     it "copies card category" do
@@ -69,7 +72,7 @@ RSpec.describe Catalog::CopyDeck do
       create(:card, deck: source, front: "Q", back: "A", category: "Geo")
       result = described_class.call(user: create(:user), deck: source)
 
-      expect(result.record.cards.first.category).to eq("Geo")
+      expect(first_content(result).category).to eq("Geo")
     end
 
     it "zeroes correct_count" do
@@ -151,7 +154,7 @@ RSpec.describe Catalog::CopyDeck do
       create(:card, deck: source, front: "Q", back: "A", distractors: ["W"])
       result = described_class.call(user: create(:user), deck: source)
 
-      expect(result.record.cards.first.distractors).to eq(["W"])
+      expect(first_content(result).distractors).to eq(["W"])
     end
 
     it "does not copy card distractors when source pool is category" do
@@ -159,7 +162,7 @@ RSpec.describe Catalog::CopyDeck do
       create(:card, deck: source, front: "Q", back: "A", distractors: ["W"])
       result = described_class.call(user: create(:user), deck: source)
 
-      expect(result.record.cards.first.distractors).to eq([])
+      expect(first_content(result).distractors).to eq([])
     end
 
     it "caps copied cards when card_limit is set" do
@@ -188,12 +191,27 @@ RSpec.describe Catalog::CopyDeck do
       expect(result.record.cards.first.source_card_id).to eq(source_card.id)
     end
 
+    it "handles an empty music deck" do
+      source = create(:music_deck, user: create(:user))
+      result = described_class.call(user: create(:user), deck: source)
+
+      expect(result.record.cards.count).to eq(0)
+    end
+
+    it "copies preset distractors from a music deck via columns" do
+      source = create(:music_deck, distractor_pool: "preset")
+      create(:music_card, deck: source, distractors: ["X"])
+      result = described_class.call(user: create(:user), deck: source)
+
+      expect(result.record.cards.first.distractors).to eq(["X"])
+    end
+
     it "copies the card reading" do
       source = build_public_deck
       create(:card, deck: source, front: "两", back: "two", reading: "liǎng")
       result = described_class.call(user: create(:user), deck: source)
 
-      expect(result.record.cards.first.reading).to eq("liǎng")
+      expect(first_content(result).reading).to eq("liǎng")
     end
   end
 end

@@ -9,6 +9,10 @@ RSpec.describe Decks::Create do
       file
     end
 
+    def first_content(result)
+      CardContent.new(result.record.cards.first)
+    end
+
     context "when deck creation succeeds" do
       it "returns success result" do
         user = create(:user)
@@ -43,7 +47,7 @@ RSpec.describe Decks::Create do
 
         result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
 
-        expect(result.record.cards.first.front).to eq("What is 2+2?")
+        expect(first_content(result).front).to eq("What is 2+2?")
       end
 
       it "sets card back" do
@@ -52,7 +56,7 @@ RSpec.describe Decks::Create do
 
         result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
 
-        expect(result.record.cards.first.back).to eq("4")
+        expect(first_content(result).back).to eq("4")
       end
 
       it "sets card category" do
@@ -61,16 +65,16 @@ RSpec.describe Decks::Create do
 
         result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
 
-        expect(result.record.cards.first.category).to eq("Math")
+        expect(first_content(result).category).to eq("Math")
       end
 
-      it "preserves semicolons in back values" do
+      it "splits a multi-gloss back into rejoined glosses" do
         user = create(:user)
         csv = csv_file("front,back,category\nColors?,Red;Blue,Art\n")
 
         result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
 
-        expect(result.record.cards.first.back).to eq("Red;Blue")
+        expect(first_content(result).back).to eq("Red; Blue")
       end
 
       it "defaults distractor_pool to 'category'" do
@@ -84,12 +88,13 @@ RSpec.describe Decks::Create do
     end
 
     context "when mirroring to a data_set" do
-      it "mirrors the cards into a matching data_set" do
+      it "builds the data_set content from the cards" do
         user = create(:user)
         csv = csv_file("front,back\n明白,understand;clear\n")
         deck = described_class.call(user:, name: "T", cards_csv: csv).record
 
-        expect_projection_matches(deck)
+        expect(CardContent.new(deck.cards.first).back)
+          .to eq("understand; clear")
       end
     end
 
@@ -99,7 +104,7 @@ RSpec.describe Decks::Create do
         csv = csv_file("front,back,category,distractors\nQ,A,C,W1;W2;W3\n")
         result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
 
-        expect(result.record.cards.first.distractors).to eq(["W1", "W2", "W3"])
+        expect(first_content(result).distractors).to eq(["W1", "W2", "W3"])
       end
 
       it "sets distractor_pool to 'preset'" do
@@ -115,7 +120,7 @@ RSpec.describe Decks::Create do
         csv = csv_file("front,back,category,distractors\nQ,A,C,  W1 ; W2  \n")
         result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
 
-        expect(result.record.cards.first.distractors).to eq(["W1", "W2"])
+        expect(first_content(result).distractors).to eq(["W1", "W2"])
       end
 
       it "rejects when a row has an empty distractors value" do
@@ -280,20 +285,21 @@ RSpec.describe Decks::Create do
       it "stores example_front on the card" do
         card = call_with_body(example_body).record.cards.first
 
-        expect(card.example_front).to eq("Hola mundo")
+        expect(CardContent.new(card).example_front).to eq("Hola mundo")
       end
 
       it "stores example_back on the card" do
         card = call_with_body(example_body).record.cards.first
 
-        expect(card.example_back).to eq("Hello world")
+        expect(CardContent.new(card).example_back).to eq("Hello world")
       end
 
       it "leaves both example fields nil when both row values are blank" do
         body = "front,back,category,example_front,example_back\nQ,A,C,,\n"
         card = call_with_body(body).record.cards.first
 
-        expect(card).to have_attributes(example_front: nil, example_back: nil)
+        expect(CardContent.new(card))
+          .to have_attributes(example_front: nil, example_back: nil)
       end
 
       it "rejects when a row has only example_front" do
@@ -324,14 +330,14 @@ RSpec.describe Decks::Create do
         card = call_with("front,back,category,reading\n两,two,Num,liǎng\n")
           .record.cards.first
 
-        expect(card.reading).to eq("liǎng")
+        expect(CardContent.new(card).reading).to eq("liǎng")
       end
 
       it "leaves a row's reading nil when blank" do
         card = call_with("front,back,category,reading\n三,three,Num,\n")
           .record.cards.first
 
-        expect(card.reading).to be_nil
+        expect(CardContent.new(card).reading).to be_nil
       end
     end
 
@@ -342,7 +348,7 @@ RSpec.describe Decks::Create do
 
         result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
 
-        expect(result.record.cards.first.reading).to be_nil
+        expect(first_content(result).reading).to be_nil
       end
     end
 
@@ -362,7 +368,7 @@ RSpec.describe Decks::Create do
 
         result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
 
-        expect(result.record.cards.first.category).to eq("")
+        expect(first_content(result).category).to eq("")
       end
     end
   end

@@ -83,10 +83,9 @@ class Study
       )
     else
       ActiveRecord::Base.transaction do
-        card.distractors.unshift(answer).uniq!
         card.correct_streak = 0
         card.save!
-        DataSets::Projection.project_card(card)
+        DataSets::Projection.add_distractor(card, answer)
       end
       Result.new(
         card:,

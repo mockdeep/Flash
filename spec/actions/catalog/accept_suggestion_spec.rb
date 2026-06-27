@@ -24,21 +24,20 @@ RSpec.describe Catalog::AcceptSuggestion do
       suggestion = build_suggestion
       described_class.call(suggestion:)
 
-      expect(suggestion.card.reload.front).to eq("New")
+      expect(CardContent.new(suggestion.card.reload).front).to eq("New")
     end
 
     it "overwrites the card's back" do
       suggestion = build_suggestion
       described_class.call(suggestion:)
 
-      expect(suggestion.card.reload.back).to eq("New back")
+      expect(CardContent.new(suggestion.card.reload).back).to eq("New back")
     end
 
     it "mirrors the accepted edit into the data_set" do
       suggestion = build_suggestion
       described_class.call(suggestion:)
 
-      expect_projection_matches(suggestion.card.deck)
       expect(suggestion.card.reload.item.text).to eq("New")
     end
 
@@ -46,7 +45,7 @@ RSpec.describe Catalog::AcceptSuggestion do
       suggestion = build_suggestion
       described_class.call(suggestion:)
 
-      expect(suggestion.card.reload.category).to eq("New cat")
+      expect(CardContent.new(suggestion.card.reload).category).to eq("New cat")
     end
 
     it "marks the suggestion accepted" do
@@ -85,7 +84,7 @@ RSpec.describe Catalog::AcceptSuggestion do
       suggestion = build_colliding_suggestion
       described_class.call(suggestion:)
 
-      expect(suggestion.card.reload.back).to eq("Original")
+      expect(CardContent.new(suggestion.card.reload).back).to eq("Original")
     end
   end
 end

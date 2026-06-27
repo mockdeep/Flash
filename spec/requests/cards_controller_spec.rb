@@ -42,21 +42,20 @@ RSpec.describe CardsController do
 
   describe "#update" do
     context "when update succeeds" do
-      it "updates the card" do
+      it "updates the card's content" do
         deck = create(:deck)
         card = create(:card, deck:, front: "Original Front")
 
         expect { update_card(deck:, card:) }
-          .to change_record(card, :front)
+          .to change { CardContent.new(card.reload).front }
           .from("Original Front").to("New Front")
       end
 
-      it "keeps the data_set consistent after an edit" do
+      it "edits the card's content in the data_set" do
         card = create(:card, back: "old")
-        DataSets::Projection.rebuild(card.deck)
         update_card(deck: card.deck, card:, back: "new;fresh")
 
-        expect_projection_matches(card.deck)
+        expect(CardContent.new(card.reload).back).to eq("new; fresh")
       end
 
       it "replaces the card question on the page" do
@@ -90,7 +89,15 @@ RSpec.describe CardsController do
         card = create(:card, deck:, front: "Original Front")
 
         expect { update_card(deck:, card:, front: "") }
-          .not_to change_record(card, :front)
+          .not_to(change { CardContent.new(card.reload).front })
+      end
+
+      it "rejects a blank back" do
+        deck = create(:deck)
+        card = create(:card, deck:)
+        update_card(deck:, card:, back: "")
+
+        expect(response).to have_http_status(:unprocessable_content)
       end
 
       it "returns unprocessable content status" do
@@ -219,13 +226,13 @@ RSpec.describe CardsController do
         .to change(Card, :count).by(-1)
     end
 
-    it "keeps the data_set consistent after a delete" do
+    it "removes the card's items on delete" do
       card = create(:card, back: "x")
-      DataSets::Projection.rebuild(card.deck)
+      deck = card.deck
       login_as(default_user)
-      delete(deck_card_path(card.deck, card))
+      delete(deck_card_path(deck, card))
 
-      expect_projection_matches(card.deck)
+      expect(deck.reload.data_set.items).to be_empty
     end
 
     it "redirects to the deck study path" do

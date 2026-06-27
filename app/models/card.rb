@@ -9,9 +9,6 @@ class Card < ApplicationRecord
   has_many :suggestions, class_name: "CardSuggestion", dependent: :destroy
 
   validates :deck_id, presence: true
-  validates :front, presence: true, uniqueness: { scope: :deck_id }
-  validates :back, presence: true
-  validates :category, presence: true
   validates :correct_count, presence: true
   validates :correct_streak, presence: true
   validates :view_count, presence: true

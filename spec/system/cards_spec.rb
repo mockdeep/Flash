@@ -52,7 +52,7 @@ RSpec.describe "editing a card" do
     fill_example("Bonjour", "Hello")
     attrs = { example_front: "Bonjour", example_back: "Hello" }
 
-    expect(card.reload).to have_attributes(attrs)
+    expect(CardContent.new(card.reload)).to have_attributes(attrs)
   end
 
   it "shows a validation error if only one example field is filled" do
@@ -74,7 +74,7 @@ RSpec.describe "editing a card" do
     edit_card("Front", "UpdatedQuestion")
     expect(page).to have_text("UpdatedQuestion")
 
-    expect(card.reload.front).to eq("UpdatedQuestion")
+    expect(CardContent.new(card.reload).front).to eq("UpdatedQuestion")
   end
 
   it "closes the modal after saving" do
