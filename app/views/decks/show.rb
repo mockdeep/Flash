@@ -53,15 +53,20 @@ module Views
             end
           end
           tbody do
-            deck.cards.ordered.each do |card|
+            table_cards.each do |card|
+              content = CardContent.new(card)
               tr do
-                td { card.front }
-                td { card.back }
-                td { card.category }
+                td { content.front }
+                td { content.back }
+                td { content.category }
               end
             end
           end
         end
+      end
+
+      def table_cards
+        deck.cards.ordered.includes(item: { pairings: :paired_item })
       end
 
       def render_share_section

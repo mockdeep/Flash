@@ -49,52 +49,54 @@ class CardsController < ApplicationController
   def create_catalog_suggestion(card)
     return unless card.suggestable_to_catalog?
 
+    content = CardContent.new(card)
     CardSuggestion.create!(
       card: card.source_card,
       user: current_user,
-      front: card.front,
-      back: card.back,
-      category: card.category,
+      front: content.front,
+      back: content.back,
+      category: content.category,
     )
   end
 
   def success_streams(card:, deck:)
+    content = CardContent.new(card)
     [
-      replace_question(card),
-      replace_answer(card),
-      *replace_components(card),
+      replace_question(content),
+      replace_answer(content),
+      *replace_components(content),
       replace_edit_form(card:, deck:),
     ]
   end
 
-  def replace_question(card)
+  def replace_question(content)
     turbo_stream.replace(
       "card-question",
       helpers.content_tag(
         :h2,
-        card.front,
+        content.front,
         class: "card-front",
         id: "card-question",
       ),
     )
   end
 
-  def replace_answer(card)
+  def replace_answer(content)
     turbo_stream.replace(
       "correct-answer-text",
       helpers.content_tag(
         :span,
-        card.back,
+        content.back,
         class: "answer-text",
         id: "correct-answer-text",
       ),
     )
   end
 
-  def replace_components(card)
+  def replace_components(content)
     [
-      Components::CardReading.new(reading: card.reading),
-      Components::StudyExample.new(card:),
+      Components::CardReading.new(reading: content.reading),
+      Components::StudyExample.new(content:),
     ].map do |component|
       turbo_stream.replace(
         component.class::WRAPPER_ID,

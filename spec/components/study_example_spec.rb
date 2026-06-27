@@ -3,45 +3,37 @@
 require "rails_helper"
 
 RSpec.describe Components::StudyExample do
-  def render_for(card)
-    described_class.new(card:).call
+  def render_for(front, back)
+    card = build(:card)
+    card.item = build(:item, example: front, paired_example: back)
+    described_class.new(content: CardContent.new(card)).call
   end
 
   it "always renders the wrapper div with the expected id" do
-    html = render_for(build(:card))
-
-    expect(html).to include(%(id="study-example"))
+    expect(render_for(nil, nil)).to include(%(id="study-example"))
   end
 
   it "renders both example texts when present" do
-    attrs = { example_front: "Bonjour le monde", example_back: "Hello world" }
-    card = build(:card, **attrs)
+    html = render_for("Bonjour le monde", "Hello world")
 
-    expect(render_for(card)).to include(*attrs.values)
+    expect(html).to include("Bonjour le monde", "Hello world")
   end
 
   it "renders an empty wrapper when both example fields are blank" do
-    html = render_for(build(:card))
-
-    expect(html).to eq(%(<div id="study-example"></div>))
+    expect(render_for(nil, nil)).to eq(%(<div id="study-example"></div>))
   end
 
   it "renders an empty wrapper when only example_front is present" do
-    card = build(:card, example_front: "Bonjour", example_back: nil)
-
-    expect(render_for(card)).to eq(%(<div id="study-example"></div>))
+    expect(render_for("Bonjour", nil)).to eq(%(<div id="study-example"></div>))
   end
 
   it "renders an empty wrapper when only example_back is present" do
-    card = build(:card, example_front: nil, example_back: "Hello")
-
-    expect(render_for(card)).to eq(%(<div id="study-example"></div>))
+    expect(render_for(nil, "Hello")).to eq(%(<div id="study-example"></div>))
   end
 
   it "html-escapes the example content" do
-    payload = "<script>alert(1)</script>"
-    card = build(:card, example_front: payload, example_back: "safe")
+    html = render_for("<script>alert(1)</script>", "safe")
 
-    expect(render_for(card)).not_to include("<script>")
+    expect(html).not_to include("<script>")
   end
 end
