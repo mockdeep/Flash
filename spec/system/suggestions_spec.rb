@@ -77,7 +77,7 @@ RSpec.describe "reviewing suggestions" do
 
     click_on("Reject")
 
-    expect(card.reload.front).to eq("Old Q")
+    expect(CardContent.new(card.reload).front).to eq("Old Q")
     expect(suggestion.reload.state).to eq("rejected")
   end
 

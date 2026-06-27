@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Study do
-  def answer_card(deck:, card:, answer: card.back)
+  def answer_card(deck:, card:, answer: CardContent.new(card).back)
     described_class.new(deck:).answer_card(card_id: card.id, answer:)
   end
 

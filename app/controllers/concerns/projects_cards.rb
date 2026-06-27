@@ -32,18 +32,25 @@ module ProjectsCards
   end
 
   def valid_edit?(card, content)
-    card.assign_attributes(content.slice(:example_front, :example_back))
-    card.valid?
     add_content_errors(card, content)
     card.errors.empty?
   end
 
-  # card.valid? above covers the example pair (the card's own rule); front/back
-  # presence and uniqueness moved off the card, so they're checked here.
+  # All content (and its validation) moved off the card onto data_set items, so
+  # the edit is validated here against the submitted content.
   def add_content_errors(card, content)
     card.errors.add(:front, :blank) if content[:front].blank?
     card.errors.add(:back, :blank) if content[:back].blank?
+    add_example_pair_error(card, content)
     card.errors.add(:front, :taken) if front_collision?(card, content[:front])
+  end
+
+  def add_example_pair_error(card, content)
+    front = content[:example_front]
+    back = content[:example_back]
+    return if front.present? == back.present?
+
+    card.errors.add(front.present? ? :example_back : :example_front, :blank)
   end
 
   def front_collision?(card, front)
