@@ -16,13 +16,6 @@ RSpec.describe DataSets::Projection do
   end
 
   describe ".build" do
-    it "names the data_set after the deck" do
-      deck = create(:deck, name: "HSK 1")
-      described_class.build(deck, [row(front: "a", back: "b")])
-
-      expect(deck.reload.data_set.name).to eq("HSK 1")
-    end
-
     it "splits a semicolon back into multiple Back items" do
       deck = create(:deck)
       described_class.build(deck, [row(front: "明白", back: "understand; clear")])

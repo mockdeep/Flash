@@ -78,6 +78,6 @@ RSpec.describe "deck sharing" do
     click_on("Add to My Decks")
 
     expect(page).to have_flash(:success, "Deck copied successfully")
-    expect(friend.decks.pluck(:name)).to include(deck.name)
+    expect(friend.decks.map(&:name)).to include(deck.name)
   end
 end

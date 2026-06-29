@@ -3,14 +3,21 @@
 RSpec.describe Deck do
   it { is_expected.to belong_to(:user) }
   it { is_expected.to belong_to(:data_set) }
-  it { is_expected.to validate_presence_of(:name) }
   it { is_expected.to have_many(:cards).dependent(:delete_all) }
 
-  it do
-    create(:deck)
+  describe "#name" do
+    it "borrows the data_set's name" do
+      deck = create(:deck, name: "HSK 1")
 
-    expect(described_class.new)
-      .to validate_uniqueness_of(:name).scoped_to(:user_id)
+      expect(deck.name).to eq("HSK 1")
+    end
+
+    it "surfaces the data_set's name errors on create" do
+      deck = build(:deck, name: "")
+      deck.valid?
+
+      expect(deck.errors[:name]).to include("can't be blank")
+    end
   end
 
   describe "#study_goal" do

@@ -31,15 +31,6 @@ RSpec.describe Decks::CreateReverse do
       expect(result.record.name).to eq("HSK 1 (reversed)")
     end
 
-    it "suffixes the name when it is already taken" do
-      source = create(:deck, name: "HSK 1")
-      create(:card, deck: source)
-      create(:deck, name: "HSK 1 (reversed)", user: source.user)
-      result = described_class.call(source:)
-
-      expect(result.record.name).to eq("HSK 1 (reversed) 2")
-    end
-
     it "defaults the distractor pool to category" do
       result = described_class.call(source: source_deck)
 
@@ -69,12 +60,6 @@ RSpec.describe Decks::CreateReverse do
 
     it "fails when the source is not reversible" do
       result = described_class.call(source: create(:music_deck))
-
-      expect(result).not_to be_success
-    end
-
-    it "fails when the source has no data_set" do
-      result = described_class.call(source: create(:deck))
 
       expect(result).not_to be_success
     end

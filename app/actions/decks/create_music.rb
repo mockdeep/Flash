@@ -5,12 +5,20 @@ require "csv"
 module Decks
   module CreateMusic
     def self.call(user:, name:, cards_csv:, ordered: false)
-      deck = MusicDeck.new(name:, ordered:, study_goal: user.study_goal)
+      deck = MusicDeck.new(
+        ordered:,
+        study_goal: user.study_goal,
+        data_set: DataSet.new(user:, name:),
+      )
       csv = CSV.parse(cards_csv.read, headers: true)
 
       error = validate_csv(csv)
       return failure(deck, error) if error
 
+      persist(deck, user, csv)
+    end
+
+    def self.persist(deck, user, csv)
       ActiveRecord::Base.transaction do
         deck.user = user
         return failure(deck) unless deck.save

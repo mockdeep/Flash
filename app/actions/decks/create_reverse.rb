@@ -17,31 +17,16 @@ module Decks
     end
 
     def self.creatable?(source)
-      source.reversible? && source.data_set && !source.reverse_present?
+      source.reversible? && !source.reverse_present?
     end
 
     def self.build_deck(source)
       ReverseTextDeck.new(
         user: source.user,
-        name: available_name(source),
         study_goal: source.study_goal,
         distractor_pool: "category",
         data_set: source.data_set,
       )
-    end
-
-    # "<name> (reversed)", suffixed with a number if that name is taken (deck
-    # names are unique per user).
-    def self.available_name(source)
-      base = "#{source.name} (reversed)"
-      return base unless taken?(source.user, base)
-
-      (2..).lazy.map { |n| "#{base} #{n}" }
-        .find { |name| !taken?(source.user, name) }
-    end
-
-    def self.taken?(user, name)
-      user.decks.exists?(name:)
     end
 
     def self.failure(source)
