@@ -128,4 +128,83 @@ RSpec.describe DataSets::Projection do
       expect { described_class.remove_card(card) }.not_to change(Item, :count)
     end
   end
+
+  describe "reverse-deck sync" do
+    def with_reverse(forward_cards)
+      fwd = create(:deck)
+      forward_cards.each { |attrs| create(:card, deck: fwd, **attrs) }
+      [fwd, Decks::CreateReverse.call(source: fwd).record]
+    end
+
+    def reverse_prompts(rev)
+      rev.reload.cards.map(&:front)
+    end
+
+    it "creates one reverse card per paired back item" do
+      _fwd, rev = with_reverse([{ front: "明白", back: "understand;clear" }])
+
+      expect(reverse_prompts(rev)).to contain_exactly("understand", "clear")
+    end
+
+    it "omits a distractor-only back item from the reverse deck" do
+      fwd, rev = with_reverse([{ front: "明白", back: "understand" }])
+      described_class.add_distractor(fwd.cards.sole, "decoy")
+
+      expect(reverse_prompts(rev)).to contain_exactly("understand")
+    end
+
+    it "adds a reverse card when the source gains a gloss" do
+      fwd, rev = with_reverse([{ front: "明白", back: "understand" }])
+      content = row(front: "明白", back: "understand;clear")
+      described_class.project(fwd.cards.sole, content)
+
+      expect(reverse_prompts(rev)).to contain_exactly("understand", "clear")
+    end
+
+    it "removes a reverse card when the source loses a gloss" do
+      fwd, rev = with_reverse([{ front: "明白", back: "understand;clear" }])
+      described_class.project(fwd.cards.sole, row(front: "明白", back: "clear"))
+
+      expect(reverse_prompts(rev)).to contain_exactly("clear")
+    end
+
+    it "destroys reverse cards when the source card is removed" do
+      fwd, rev = with_reverse([{ front: "明白", back: "understand" }])
+      described_class.remove_card(fwd.cards.sole)
+
+      expect(reverse_prompts(rev)).to be_empty
+    end
+
+    it "reconciles reverse cards after a source replace" do
+      fwd, rev = with_reverse([{ front: "明白", back: "understand" }])
+      described_class.replace(fwd, [row(front: "你好", back: "hello")])
+
+      expect(reverse_prompts(rev)).to contain_exactly("hello")
+    end
+
+    it "preserves reverse progress across a source replace" do
+      fwd, rev = with_reverse([{ front: "明白", back: "understand" }])
+      rev.cards.sole.update!(correct_streak: 3)
+      described_class.replace(fwd, [row(front: "明白", back: "understand")])
+
+      expect(rev.cards.sole.correct_streak).to eq(3)
+    end
+
+    it "resets reverse progress when the answer changes" do
+      fwd, rev = with_reverse([{ front: "明白", back: "understand" }])
+      rev.cards.sole.update!(correct_streak: 3)
+      renamed = row(front: "懂", back: "understand")
+      described_class.project(fwd.cards.sole, renamed)
+
+      expect(rev.cards.sole.correct_streak).to eq(0)
+    end
+
+    it "records a reverse miss as a Front-side decoy" do
+      _fwd, rev = with_reverse([{ front: "明白", back: "understand" }])
+      card = rev.cards.sole
+      described_class.add_distractor(card, "知道")
+
+      expect(card.distractors).to contain_exactly("知道")
+    end
+  end
 end

@@ -25,6 +25,30 @@ class Deck < ApplicationRecord
 
   def card_type = "TextCard"
 
+  # The item side a deck's cards anchor to (and study as the prompt). A reverse
+  # deck flips this to "Back"; the projection reconciles each deck's cards to
+  # the paired items on its anchor side.
+  def anchor_side = "Front"
+
+  # The pairing column whose values are this deck's anchor items (the side it
+  # studies as the answer's counterpart). Mirrors #anchor_side.
+  def anchor_pairing_column = :item_id
+
+  def reversible? = false
+
+  # Whether a reverse deck already exists over this deck's data_set (one per
+  # source); used to guard creation and hide the create button.
+  def reverse_present?
+    data_set.present? && data_set.decks.exists?(type: "ReverseTextDeck")
+  end
+
+  # Cards whose studied answer carries the given category, for category-pool
+  # distractors. Forward decks read it off the anchored Front item; a reverse
+  # deck overrides this to look through the pairing to the answer item.
+  def cards_in_category(category)
+    cards.joins(:item).where(items: { category: })
+  end
+
   def publicly_visible? = visibility == "public"
 
   def shared? = share_token.present?

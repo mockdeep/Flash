@@ -24,11 +24,15 @@ module DataSets
     # Replace ingest: rebuild items from the new rows while preserving the
     # progress of cards whose front survives (matched by front text).
     def self.replace(deck, rows)
+      sibling_formers = sibling_former_states(deck)
       former = former_states(deck)
       rows = preserve_omitted(rows, former)
       data_set = reset_data_set(deck)
       item_ids = insert_data(data_set, rows)
-      reconcile_cards(deck, rows, item_ids, former)
+      summary = reconcile_cards(deck, rows, item_ids, former)
+      reconcile_siblings(deck, sibling_formers)
+      deck.cards.reset
+      summary
     end
 
     def self.preserve_omitted(rows, former)
@@ -44,6 +48,7 @@ module DataSets
 
     # Re-project a single card from edited content (edit / accept suggestion).
     def self.project(card, content)
+      sibling_formers = sibling_former_states(card.deck)
       data_set = data_set_for(card.deck)
       former_front = card.item
       former_backs = back_items_for(former_front)
@@ -54,6 +59,7 @@ module DataSets
 
       former_front.destroy! if former_front && former_front != front
       discard_orphans(former_backs)
+      reconcile_siblings(card.deck, sibling_formers)
     end
 
     # Whether another card in the deck already owns a Front item with this text
@@ -63,20 +69,25 @@ module DataSets
         .where(items: { text: front }).where.not(id: card.id).exists?
     end
 
-    # Record a wrong-guess distractor as an item reference.
+    # Record a wrong-guess distractor as an item reference. The decoy lives on
+    # the side opposite the prompt (a reverse miss is a Front-side decoy), so it
+    # stays an unpaired item and never spawns a card.
     def self.add_distractor(card, text)
-      front = card.item
-      back = front.data_set.items.find_or_create_by!(side: BACK, text:)
-      ItemDistractor.find_or_create_by!(item: front, distractor_item: back)
+      prompt = card.item
+      decoy_side = prompt.side == FRONT ? BACK : FRONT
+      decoy = prompt.data_set.items.find_or_create_by!(side: decoy_side, text:)
+      ItemDistractor.find_or_create_by!(item: prompt, distractor_item: decoy)
     end
 
     def self.remove_card(card)
       front = card.item
       return unless front
 
+      sibling_formers = sibling_former_states(card.deck)
       backs = back_items_for(front)
       front.destroy!
       discard_orphans(backs)
+      reconcile_siblings(card.deck, sibling_formers)
     end
 
     def self.reset_data_set(deck)
@@ -176,7 +187,7 @@ module DataSets
     end
 
     def self.former_states(deck)
-      deck.cards.includes(item: { pairings: :paired_item }).to_h do |card|
+      deck.cards.to_h do |card|
         [card.item.text, former_state(card)]
       end
     end
@@ -223,6 +234,83 @@ module DataSets
 
     def self.reset_progress(card)
       card.update_columns(correct_streak: 0, correct_count: 0, view_count: 0)
+    end
+
+    # Sync every other deck over the data_set to the items it anchors. A source
+    # edit changes shared items, so a sibling form (a reverse deck) must
+    # gain/lose/refresh cards to stay matched. Former states are captured BEFORE
+    # the mutation so progress survives a full rebuild (matched by item text).
+    def self.sibling_decks(deck)
+      return Deck.none unless deck.data_set
+
+      deck.data_set.decks.where.not(id: deck.id)
+    end
+
+    def self.sibling_former_states(deck)
+      sibling_decks(deck).to_h { |sibling| [sibling.id, deck_states(sibling)] }
+    end
+
+    def self.deck_states(deck)
+      deck.cards.to_h do |card|
+        [card.id, { text: card.item.text, back: card.back }]
+      end
+    end
+
+    def self.reconcile_siblings(deck, sibling_formers)
+      sibling_decks(deck).each do |sibling|
+        reconcile_deck(sibling, sibling_formers[sibling.id] || {})
+      end
+    end
+
+    # Ensure a deck has exactly one card per paired item on its anchor side,
+    # preserving progress for survivors (matched by item text). Also builds a
+    # reverse deck's cards on creation (formers empty, no existing cards).
+    def self.reconcile_deck(deck, formers)
+      wanted = anchor_items(deck).index_by(&:text)
+      existing = existing_by_text(deck, formers)
+      sync_wanted(deck, wanted, existing, formers)
+      (existing.keys - wanted.keys).each { |text| existing[text].destroy! }
+      # Cards were created/destroyed outside the loaded association above.
+      deck.cards.reset
+    end
+
+    def self.sync_wanted(deck, wanted, existing, formers)
+      wanted.each do |text, item|
+        card = existing[text]
+        if card
+          refresh_card(card, item, formers[card.id])
+        else
+          create_anchor_card(deck, item)
+        end
+      end
+    end
+
+    # Items on the deck's anchor side that participate in a pairing - a card is
+    # generated only for paired items (a distractor-only item gets none).
+    def self.anchor_items(deck)
+      deck.data_set.items
+        .where(side: deck.anchor_side, id: pairing_anchor_ids(deck))
+    end
+
+    def self.pairing_anchor_ids(deck)
+      Pairing.select(deck.anchor_pairing_column)
+    end
+
+    # Existing cards keyed by item text. Callers pass formers covering every
+    # card (sibling sync) or an empty deck (reverse-deck build), so a card's
+    # former text is always available.
+    def self.existing_by_text(deck, formers)
+      deck.cards.index_by { |card| formers.dig(card.id, :text) }
+    end
+
+    def self.refresh_card(card, item, former)
+      card.item = item
+      card.update_column(:item_id, item.id)
+      reset_progress(card) if former[:back] != card.back
+    end
+
+    def self.create_anchor_card(deck, item)
+      deck.card_type.constantize.create!(deck:, item:)
     end
 
     def self.upsert_front(data_set, content)

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
 class Pairing < ApplicationRecord
-  belongs_to :item
-  belongs_to :paired_item, class_name: "Item"
+  belongs_to :item, inverse_of: :pairings
+  belongs_to :paired_item, class_name: "Item", inverse_of: :inverse_pairings
 end

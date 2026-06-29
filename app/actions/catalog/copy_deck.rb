@@ -38,7 +38,7 @@ module Catalog
     end
 
     def self.source_cards(source, card_limit)
-      scope = source.cards.includes(item: { pairings: :paired_item })
+      scope = source.cards
       card_limit ? scope.order(:id).limit(card_limit) : scope
     end
 

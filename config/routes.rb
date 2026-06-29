@@ -15,6 +15,7 @@ Rails.application.routes.draw do
     resource :milestone, only: [:update]
     resource :catalog_listing, only: [:create, :destroy], controller: "catalog_listings"
     resource :replacement, only: [:new, :create], controller: "replacements"
+    resource :reversal, only: [:create], controller: "reversals"
     resource :share, only: [:create, :destroy], controller: "shares"
     resource :study, only: [:show, :update]
     resources :cards, only: [:update, :destroy]
