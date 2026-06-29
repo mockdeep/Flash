@@ -19,7 +19,8 @@ class DecksController < ApplicationController
   end
 
   def new
-    render(Views::Decks::New.new(deck: TextDeck.new))
+    deck = TextDeck.new(data_set: DataSet.new)
+    render(Views::Decks::New.new(deck:))
   end
 
   def create

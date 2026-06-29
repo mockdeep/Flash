@@ -4,6 +4,8 @@
 # Back items become prompts and their paired Front items the answers. It shares
 # the source deck's data_set (no re-upload); only the reading direction differs.
 class ReverseTextDeck < TextDeck
+  def name = "#{data_set.name} (reversed)"
+
   def card_type = "ReverseTextCard"
 
   def anchor_side = "Back"

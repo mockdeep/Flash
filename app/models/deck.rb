@@ -9,16 +9,18 @@ class Deck < ApplicationRecord
   has_many :cards, dependent: :delete_all
   has_many :incoming_suggestions, through: :cards, source: :suggestions
 
+  delegate :name, to: :data_set
+
   attribute(:level, :integer, default: 1)
   attribute(:visibility, :string, default: "private")
 
-  validates :name, presence: true, uniqueness: { scope: :user_id }
   validates :visibility, inclusion: { in: VISIBILITIES }
   validates :distractor_pool, inclusion: { in: DISTRACTOR_POOLS }
   validates :study_goal,
             numericality: { greater_than_or_equal_to: 1, only_integer: true }
+  validate(:data_set_name_valid, if: -> { data_set&.new_record? })
 
-  scope :ordered, -> { order(:name) }
+  scope :ordered, -> { joins(:data_set).order("data_sets.name") }
   scope :publicly_visible, -> { where(visibility: "public") }
 
   def music? = false
@@ -59,5 +61,11 @@ class Deck < ApplicationRecord
 
   def revoke_share_token!
     update!(share_token: nil)
+  end
+
+  private
+
+  def data_set_name_valid
+    errors.merge!(data_set.errors) unless data_set.valid?
   end
 end

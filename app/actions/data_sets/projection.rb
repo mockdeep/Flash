@@ -49,7 +49,7 @@ module DataSets
     # Re-project a single card from edited content (edit / accept suggestion).
     def self.project(card, content)
       sibling_formers = sibling_former_states(card.deck)
-      data_set = data_set_for(card.deck)
+      data_set = card.deck.data_set
       former_front = card.item
       former_backs = back_items_for(former_front)
 
@@ -91,7 +91,7 @@ module DataSets
     end
 
     def self.reset_data_set(deck)
-      data_set = data_set_for(deck)
+      data_set = deck.data_set
       data_set.items.delete_all
       data_set
     end
@@ -236,13 +236,7 @@ module DataSets
       card.update_columns(correct_streak: 0, correct_count: 0, view_count: 0)
     end
 
-    # Sync every other deck over the data_set to the items it anchors. A source
-    # edit changes shared items, so a sibling form (a reverse deck) must
-    # gain/lose/refresh cards to stay matched. Former states are captured BEFORE
-    # the mutation so progress survives a full rebuild (matched by item text).
     def self.sibling_decks(deck)
-      return Deck.none unless deck.data_set
-
       deck.data_set.decks.where.not(id: deck.id)
     end
 
@@ -360,16 +354,6 @@ module DataSets
 
     def self.terms(values)
       Array(values).map { |value| value.to_s.squish }.compact_blank.uniq
-    end
-
-    def self.data_set_for(deck)
-      deck.data_set || create_data_set(deck)
-    end
-
-    def self.create_data_set(deck)
-      data_set = DataSet.create!(user: deck.user, name: deck.name)
-      deck.update!(data_set:)
-      data_set
     end
 
     def self.back_items_for(front)
