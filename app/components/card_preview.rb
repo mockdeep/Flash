@@ -27,10 +27,7 @@ module Components
     private
 
     def preview_cards
-      @preview_cards ||=
-        deck.cards.ordered
-          .includes(item: { pairings: :paired_item })
-          .limit(PREVIEW_LIMIT)
+      @preview_cards ||= deck.cards.ordered.limit(PREVIEW_LIMIT)
     end
 
     def render_empty

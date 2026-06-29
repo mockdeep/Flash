@@ -182,6 +182,37 @@ RSpec.describe DecksController do
       expect(rendered).to have_text("Study Deck")
     end
 
+    def deck_with_card
+      create(:card, deck: create(:deck)).deck
+    end
+
+    it "shows the create-reverse button for a forward deck" do
+      deck = deck_with_card
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_text("Create reverse deck")
+    end
+
+    it "hides the create-reverse button once a reverse exists" do
+      deck = deck_with_card
+      Decks::CreateReverse.call(source: deck)
+      login_as(default_user)
+      get(deck_path(deck))
+
+      expect(rendered).to have_no_text("Create reverse deck")
+    end
+
+    it "hides the create-reverse button on a reverse deck" do
+      reverse = Decks::CreateReverse.call(source: deck_with_card).record
+      login_as(default_user)
+
+      get(deck_path(reverse))
+
+      expect(rendered).to have_no_text("Create reverse deck")
+    end
+
     it "prevents viewing another user's deck" do
       other_deck = create(:deck, user: create(:user))
       login_as(default_user)

@@ -40,7 +40,7 @@ class ReplacementsController < ApplicationController
   end
 
   def ensure_text_deck
-    return if deck.is_a?(TextDeck)
+    return if deck.instance_of?(TextDeck)
 
     flash[:error] = t("replacements.unsupported")
     redirect_to(deck_path(deck))

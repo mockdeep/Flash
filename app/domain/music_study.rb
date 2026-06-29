@@ -40,7 +40,7 @@ class MusicStudy < Study
   private
 
   def studied_cards
-    deck.cards.includes(item: { pairings: :paired_item })
+    deck.cards
   end
 
   def sequence(cards)

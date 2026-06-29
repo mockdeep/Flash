@@ -122,12 +122,11 @@ class Study
   end
 
   def sibling_backs(category = nil)
-    cards = deck.cards.where.not(id: next_card.id)
-    cards = cards.joins(:item).where(items: { category: }) if category
-    cards.preload(item: { pairings: :paired_item }).map(&:back)
+    scope = category ? deck.cards_in_category(category) : deck.cards
+    scope.where.not(id: next_card.id).map(&:back)
   end
 
   def fuzzy_answers
-    deck.cards.preload(item: { pairings: :paired_item }).map(&:back).uniq
+    deck.cards.map(&:back).uniq
   end
 end

@@ -102,4 +102,45 @@ RSpec.describe Deck do
       expect(deck.share_token).to be_nil
     end
   end
+
+  describe "direction" do
+    it "anchors the Front side by default" do
+      expect(described_class.new.anchor_side).to eq("Front")
+    end
+
+    it "anchors on the item_id pairing column by default" do
+      expect(described_class.new.anchor_pairing_column).to eq(:item_id)
+    end
+  end
+
+  describe "#reversible?" do
+    it "is false for the base deck" do
+      expect(described_class.new.reversible?).to be(false)
+    end
+
+    it "is true for a text deck" do
+      expect(create(:deck).reversible?).to be(true)
+    end
+  end
+
+  describe "#reverse_present?" do
+    it "is false when the deck has no data_set" do
+      expect(described_class.new.reverse_present?).to be(false)
+    end
+
+    it "is false when no reverse deck shares the data_set" do
+      deck = create(:deck)
+      create(:card, deck:)
+
+      expect(deck.reverse_present?).to be(false)
+    end
+
+    it "is true when a reverse deck shares the data_set" do
+      deck = create(:deck)
+      create(:card, deck:)
+      Decks::CreateReverse.call(source: deck)
+
+      expect(deck.reload.reverse_present?).to be(true)
+    end
+  end
 end
