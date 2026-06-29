@@ -7,7 +7,7 @@ module Decks
     Summary = Struct.new(:added, :removed, :reset, :kept)
 
     def self.call(deck:, cards_csv:)
-      csv = CSV.parse(cards_csv.read, headers: true)
+      csv = Decks::Create.parse_csv(cards_csv)
 
       error = Decks::Create.validate_csv(csv)
       return failure(deck, error) if error

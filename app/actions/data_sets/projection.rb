@@ -152,9 +152,9 @@ module DataSets
     def self.insert_pairings(rows, item_ids)
       pairings =
         rows.flat_map do |row|
-          front_id = item_ids[[FRONT, row[:front]]]
+          front_id = item_ids.fetch([FRONT, row[:front]])
           glosses(row).map do |gloss|
-            { item_id: front_id, paired_item_id: item_ids[[BACK, gloss]] }
+            { item_id: front_id, paired_item_id: item_ids.fetch([BACK, gloss]) }
           end
         end
       Pairing.insert_all(pairings) if pairings.any?
@@ -163,9 +163,10 @@ module DataSets
     def self.insert_distractors(rows, item_ids)
       distractors =
         rows.flat_map do |row|
-          front_id = item_ids[[FRONT, row[:front]]]
+          front_id = item_ids.fetch([FRONT, row[:front]])
           terms(row[:distractors]).map do |text|
-            { item_id: front_id, distractor_item_id: item_ids[[BACK, text]] }
+            decoy_id = item_ids.fetch([BACK, text])
+            { item_id: front_id, distractor_item_id: decoy_id }
           end
         end
       ItemDistractor.insert_all(distractors) if distractors.any?
@@ -181,7 +182,7 @@ module DataSets
       {
         deck_id: deck.id,
         type: deck.card_type,
-        item_id: item_ids[[FRONT, row[:front]]],
+        item_id: item_ids.fetch([FRONT, row[:front]]),
         source_card_id: row[:source_card_id],
       }
     end
@@ -225,7 +226,7 @@ module DataSets
       return unless state
 
       card = state[:card]
-      card.update_column(:item_id, item_ids[[FRONT, row[:front]]])
+      card.update_column(:item_id, item_ids.fetch([FRONT, row[:front]]))
       return :kept if state[:back] == glosses(row).join(SEPARATOR)
 
       reset_progress(card)
