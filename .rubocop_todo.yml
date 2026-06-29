@@ -13,13 +13,6 @@ Bundler/GemVersion:
   Exclude:
     - 'Gemfile'
 
-# Offense count: 2
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: link_or_button, strict
-Capybara/ClickLinkOrButtonStyle:
-  Exclude:
-    - 'spec/support/helpers/system_spec_helpers.rb'
-
 # Offense count: 1
 # Configuration parameters: MaxAmount.
 FactoryBot/ExcessiveCreateList:
