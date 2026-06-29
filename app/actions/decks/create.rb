@@ -9,7 +9,7 @@ module Decks
         study_goal: user.study_goal,
         data_set: DataSet.new(user:, name:),
       )
-      csv = CSV.parse(cards_csv.read, headers: true)
+      csv = parse_csv(cards_csv)
 
       error = validate_csv(csv)
       return failure(deck, error) if error
@@ -27,6 +27,10 @@ module Decks
       end
 
       Result.new(success: true, record: deck)
+    end
+
+    def self.parse_csv(cards_csv)
+      CSV.parse(cards_csv.read.force_encoding("UTF-8"), headers: true)
     end
 
     def self.failure(deck, error = nil)

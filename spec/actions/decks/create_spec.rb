@@ -23,6 +23,17 @@ RSpec.describe Decks::Create do
         expect(result.success?).to be(true)
       end
 
+      it "handles a non-ASCII upload read as binary" do
+        user = create(:user)
+        # Uploaded files read back as ASCII-8BIT; a multi-byte front must still
+        # round-trip into a pairing (regression: nil item_id NotNullViolation).
+        csv = StringIO.new("front,back\n爱,to love\n".b)
+
+        result = described_class.call(user:, name: "中文", cards_csv: csv)
+
+        expect(result.record.cards.first.item.text).to eq("爱")
+      end
+
       it "creates deck with correct name" do
         user = create(:user)
         csv = csv_file("front,back,category\nWhat is 2+2?,4,Math\n")
