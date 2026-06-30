@@ -64,6 +64,13 @@ RSpec.describe Decks::CreateMusic do
       expect(result.success?).to be(false)
     end
 
+    it "rejects a CSV with no rows" do
+      result = call_music(name: "Test", csv_body: "")
+
+      expect(result.record.errors[:cards_csv])
+        .to include("must include at least one row")
+    end
+
     it "rejects a row with a missing front" do
       result = call_music(name: "Test", csv_body: ",A3,Notes\n")
 

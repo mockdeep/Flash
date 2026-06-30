@@ -40,6 +40,7 @@ module Decks
     def self.validate_csv(csv)
       validate_csv_headers(csv) ||
         CsvExamples.validate_headers(csv) ||
+        validate_csv_present(csv) ||
         validate_csv_rows(csv) ||
         validate_unique_fronts(csv) ||
         validate_distractors_present(csv) ||
@@ -51,6 +52,12 @@ module Decks
       return if headers.include?("front") && headers.include?("back")
 
       "must include 'front' and 'back' columns"
+    end
+
+    def self.validate_csv_present(csv)
+      return unless csv.empty?
+
+      "must include at least one row"
     end
 
     def self.validate_csv_rows(csv)

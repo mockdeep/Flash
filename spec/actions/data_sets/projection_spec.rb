@@ -114,12 +114,6 @@ RSpec.describe DataSets::Projection do
 
       expect(back_texts(card.deck)).to include("x")
     end
-
-    it "does nothing for a card with no item" do
-      card = build(:card)
-
-      expect { described_class.remove_card(card) }.not_to change(Item, :count)
-    end
   end
 
   describe "reverse-deck sync" do

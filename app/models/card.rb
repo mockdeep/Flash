@@ -13,7 +13,7 @@ class Card < ApplicationRecord
   ].freeze
 
   belongs_to :deck
-  belongs_to :item
+  belongs_to :item, optional: false
   belongs_to :source_card, class_name: "Card"
   has_many :suggestions, class_name: "CardSuggestion", dependent: :destroy
 

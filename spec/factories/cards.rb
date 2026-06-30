@@ -23,6 +23,7 @@ end
 FactoryBot.define do
   factory(:card, class: "TextCard") do
     deck { default_deck }
+    item { association(:item, data_set: deck.data_set) }
 
     transient do
       sequence(:front, 100) { |n| "Card Front #{n}" }
@@ -43,6 +44,7 @@ FactoryBot.define do
 
   factory(:music_card, class: "MusicCard") do
     deck { default_music_deck }
+    item { association(:item, data_set: deck.data_set) }
 
     transient do
       sequence(:front, 100) { |n| "Music Card #{n}" }
