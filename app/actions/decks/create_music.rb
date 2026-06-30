@@ -15,12 +15,11 @@ module Decks
       error = validate_csv(csv)
       return failure(deck, error) if error
 
-      persist(deck, user, csv)
+      persist(deck, csv)
     end
 
-    def self.persist(deck, user, csv)
+    def self.persist(deck, csv)
       ActiveRecord::Base.transaction do
-        deck.user = user
         return failure(deck) unless deck.save
 
         DataSets::Projection.build(deck, card_rows(csv))

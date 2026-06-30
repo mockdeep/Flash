@@ -1,17 +1,13 @@
 # frozen_string_literal: true
 
 RSpec.describe Deck do
-  it { is_expected.to belong_to(:user) }
   it { is_expected.to belong_to(:data_set).required }
   it { is_expected.to have_many(:cards).dependent(:delete_all) }
+  it { is_expected.to delegate_method(:name).to(:data_set) }
+  it { is_expected.to delegate_method(:user).to(:data_set) }
+  it { is_expected.to delegate_method(:user_id).to(:data_set) }
 
   describe "#name" do
-    it "borrows the data_set's name" do
-      deck = create(:deck, name: "HSK 1")
-
-      expect(deck.name).to eq("HSK 1")
-    end
-
     it "surfaces the data_set's name errors on create" do
       deck = build(:deck, name: "")
       deck.valid?

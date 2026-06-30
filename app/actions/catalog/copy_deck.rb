@@ -16,7 +16,6 @@ module Catalog
 
     def self.build_new_deck(user:, source:)
       source.class.new(
-        user:,
         study_goal: user.study_goal,
         distractor_pool: source.distractor_pool,
         data_set: DataSet.new(user:, name: source.name),

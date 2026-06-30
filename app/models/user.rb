@@ -23,7 +23,8 @@ class User < ApplicationRecord
             numericality: { greater_than_or_equal_to: 1, only_integer: true }
   validates :time_zone, inclusion: { in: VALID_TIME_ZONES }
 
-  has_many :decks, dependent: :destroy
+  has_many :data_sets, dependent: :destroy
+  has_many :decks, through: :data_sets
   has_many :card_suggestions, dependent: :destroy
   has_one :subscription, dependent: :destroy
 
