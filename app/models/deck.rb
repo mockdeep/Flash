@@ -4,12 +4,11 @@ class Deck < ApplicationRecord
   VISIBILITIES = ["public", "private"].freeze
   DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
 
-  belongs_to :user
   belongs_to :data_set, optional: false
   has_many :cards, dependent: :delete_all
   has_many :incoming_suggestions, through: :cards, source: :suggestions
 
-  delegate :name, to: :data_set
+  delegate :name, :user, :user_id, to: :data_set
 
   attribute(:level, :integer, default: 1)
   attribute(:visibility, :string, default: "private")
