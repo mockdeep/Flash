@@ -2,7 +2,7 @@
 
 class Item < ApplicationRecord
   belongs_to :data_set
-  has_many :cards, dependent: :nullify
+  has_many :cards, dependent: :destroy
 
   has_many :pairings, dependent: :destroy
   has_many :paired_items, through: :pairings, source: :paired_item

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_30_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_30_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -33,7 +33,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_000000) do
     t.integer "correct_streak", default: 0, null: false
     t.datetime "created_at", null: false
     t.bigint "deck_id", null: false
-    t.bigint "item_id"
+    t.bigint "item_id", null: false
     t.bigint "source_card_id"
     t.string "type", null: false
     t.datetime "updated_at", null: false
@@ -143,7 +143,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_000000) do
   add_foreign_key "card_suggestions", "users", on_delete: :cascade
   add_foreign_key "cards", "cards", column: "source_card_id", on_delete: :nullify
   add_foreign_key "cards", "decks"
-  add_foreign_key "cards", "items", on_delete: :nullify
+  add_foreign_key "cards", "items", on_delete: :cascade
   add_foreign_key "data_sets", "users", on_delete: :cascade
   add_foreign_key "decks", "data_sets", on_delete: :cascade
   add_foreign_key "decks", "paths"

@@ -206,6 +206,16 @@ RSpec.describe Decks::Create do
           .to include("must include 'front' and 'back' columns")
       end
 
+      it "returns failure when the CSV has no rows" do
+        user = create(:user)
+        csv = csv_file("front,back,category\n")
+
+        result = described_class.call(user:, name: "Test Deck", cards_csv: csv)
+
+        expect(result.record.errors[:cards_csv])
+          .to include("must include at least one row")
+      end
+
       it "returns failure when a row has blank front" do
         user = create(:user)
         csv = csv_file("front,back,category\n,A,C\n")

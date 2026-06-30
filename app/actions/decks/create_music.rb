@@ -35,8 +35,15 @@ module Decks
 
     def self.validate_csv(csv)
       validate_headers(csv) ||
+        validate_present(csv) ||
         validate_rows(csv) ||
         validate_unique_fronts(csv)
+    end
+
+    def self.validate_present(csv)
+      return unless csv.empty?
+
+      "must include at least one row"
     end
 
     def self.validate_headers(csv)

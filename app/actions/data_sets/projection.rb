@@ -27,9 +27,10 @@ module DataSets
       sibling_formers = sibling_former_states(deck)
       former = former_states(deck)
       rows = preserve_omitted(rows, former)
-      data_set = reset_data_set(deck)
-      item_ids = insert_data(data_set, rows)
+      data_set = deck.data_set
+      item_ids = upsert_data(data_set, rows)
       summary = reconcile_cards(deck, rows, item_ids, former)
+      prune_items(data_set, item_ids.values)
       reconcile_siblings(deck, sibling_formers)
       deck.cards.reset
       summary
@@ -57,7 +58,7 @@ module DataSets
       rebuild_links(data_set, front, content)
       card.update_column(:item_id, front.id)
 
-      former_front.destroy! if former_front && former_front != front
+      former_front.destroy! if former_front != front
       discard_orphans(former_backs)
       reconcile_siblings(card.deck, sibling_formers)
     end
@@ -81,8 +82,6 @@ module DataSets
 
     def self.remove_card(card)
       front = card.item
-      return unless front
-
       sibling_formers = sibling_former_states(card.deck)
       backs = back_items_for(front)
       front.destroy!
@@ -103,6 +102,33 @@ module DataSets
       insert_pairings(rows, item_ids)
       insert_distractors(rows, item_ids)
       item_ids
+    end
+
+    def self.upsert_data(data_set, rows)
+      item_ids = upsert_items(data_set, rows)
+      clear_all_links(data_set)
+      insert_pairings(rows, item_ids)
+      insert_distractors(rows, item_ids)
+      item_ids
+    end
+
+    def self.upsert_items(data_set, rows)
+      result = Item.upsert_all(
+        item_rows(data_set, rows),
+        unique_by: [:data_set_id, :side, :text],
+        returning: ["id", "side", "text"],
+      )
+      result.rows.to_h { |id, side, text| [[side, text], id] }
+    end
+
+    def self.clear_all_links(data_set)
+      fronts = data_set.items.select(:id)
+      Pairing.where(item_id: fronts).delete_all
+      ItemDistractor.where(item_id: fronts).delete_all
+    end
+
+    def self.prune_items(data_set, keep_ids)
+      data_set.items.where.not(id: keep_ids).delete_all
     end
 
     def self.insert_items(data_set, rows)
@@ -358,8 +384,6 @@ module DataSets
     end
 
     def self.back_items_for(front)
-      return [] unless front
-
       paired = Pairing.where(item_id: front.id).select(:paired_item_id)
       decoys =
         ItemDistractor.where(item_id: front.id).select(:distractor_item_id)

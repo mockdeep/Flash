@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe Card do
   it { is_expected.to belong_to(:deck) }
-  it { is_expected.to belong_to(:item) }
+  it { is_expected.to belong_to(:item).required }
   it { is_expected.to validate_presence_of(:correct_count) }
   it { is_expected.to validate_presence_of(:correct_streak) }
   it { is_expected.to validate_presence_of(:deck_id) }

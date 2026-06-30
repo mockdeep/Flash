@@ -292,6 +292,22 @@ RSpec.describe Decks::Replace do
         expect(result.record.errors[:cards_csv])
           .to include("must include 'front' and 'back' columns")
       end
+
+      it "rejects a header-only CSV" do
+        deck = create(:deck)
+        result = replace_with(deck, "front,back,category\n")
+
+        expect(result.record.errors[:cards_csv])
+          .to include("must include at least one row")
+      end
+
+      it "leaves existing cards untouched for a header-only CSV" do
+        deck = create(:deck)
+        card_with_progress(deck, front: "Q", back: "A")
+        replace_with(deck, "front,back,category\n")
+
+        expect(card_fronts(deck)).to contain_exactly("Q")
+      end
     end
   end
 end
