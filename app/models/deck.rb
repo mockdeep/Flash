@@ -5,7 +5,7 @@ class Deck < ApplicationRecord
   DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
 
   belongs_to :user
-  belongs_to :data_set
+  belongs_to :data_set, optional: false
   has_many :cards, dependent: :delete_all
   has_many :incoming_suggestions, through: :cards, source: :suggestions
 

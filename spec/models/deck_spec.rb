@@ -2,7 +2,7 @@
 
 RSpec.describe Deck do
   it { is_expected.to belong_to(:user) }
-  it { is_expected.to belong_to(:data_set) }
+  it { is_expected.to belong_to(:data_set).required }
   it { is_expected.to have_many(:cards).dependent(:delete_all) }
 
   describe "#name" do
