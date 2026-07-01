@@ -9,7 +9,7 @@ When adding new features, controllers, actions, views, or CSS files, update the 
 Flash is a flashcard study application built with Ruby on Rails that uses spaced repetition to help users learn and retain information. The app features a distinctive "Terminal Scholar" design aesthetic and uses Phlex for view rendering instead of ERB.
 
 **Tech Stack:**
-- Ruby on Rails 8.1.1
+- Ruby on Rails 8.1.3
 - PostgreSQL database
 - Phlex for HTML views
 - Creem for payment processing
@@ -193,7 +193,7 @@ end
 - `accent-box.css` - `.accent-box` callouts (level-complete, milestones, empty states)
 - `application.css` - Base styles, resets, common patterns, global `a:visited`
 - `auth.css` - Authentication pages (sign in / account)
-- `button.css` - `.button` base and variants (primary / ghost / danger, compact)
+- `button.css` - `.button` base and variants (`button_class` modifiers: compact / primary / ghost / secondary / danger / disabled)
 - `card.css` - Generic `.card` container pattern
 - `catalog.css` - Public deck catalog + preview (`.catalog-show-*` reused by the share-link preview at `/shared/:token`)
 - `custom.css` - Scratch space for ad-hoc overrides
@@ -218,17 +218,27 @@ end
 
 ### Data Model
 
+**Content vs. progress — the `data_set` model.** Card content does **not** live on the card. A card is a thin progress anchor (`deck_id`, `item_id`, `type`, counters, `source_card_id`); its studyable content is reconstructed from a shared, neutral **data set**. This lets one upload be studied as several deck "forms" (e.g. forward + reverse) without re-uploading. All the item/pairing/card wiring is built and maintained by `DataSets::Projection` (see Actions).
+
 **Core Models:**
-- `User` - Authentication, has many decks. Has `username` (unique, alphanumeric + underscores)
-- `Deck` (STI base) - Collection of flashcards, belongs to user. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"`, `"preset"`, or `"none"`).
-- `Card` (STI base) - Individual flashcard, belongs to deck. Has optional `reading` (pronunciation/gloss kept separate from `back`, e.g. Mandarin pinyin).
-- `Subscription` - Payment/subscription info, belongs to user
+- `User` - Authentication. Has `username` (unique, `/\A[a-zA-Z0-9_.]+\z/` — letters, digits, `_`, `.`), `role` (`"user"` / `"admin"` / `"guest"`), `study_goal`, `time_zone`. `has_many :data_sets`; `has_many :decks, through: :data_sets`.
+- `DataSet` - A user's uploaded content, reusable across decks. `belongs_to :user`, `has_many :items`, `has_many :decks`. `name` unique per user. Owns the "name" and "owner" that decks delegate to.
+- `Item` - One neutral term. Has `side` (`"Front"` / `"Back"`), `text`, and (Front-side) `category`, `reading`, `example`, `paired_example`. Belongs to a data set; unique on `[data_set_id, side, text]`. Front↔back meaning is expressed through `Pairing`; distractor candidates through `ItemDistractor`. `#glosses` / `#reverse_glosses` return the paired texts in authored order.
+- `Pairing` - Join between a Front `item` and a Back `paired_item` (one row per gloss). Reverse decks read it via `inverse_pairings`.
+- `ItemDistractor` - Join marking a Back item as a preset distractor for a Front `item`.
+- `Deck` (STI base) - A study form over a data set. `belongs_to :data_set` (**not** user); `delegate :name, :user, :user_id, to: :data_set`. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"` / `"preset"` / `"none"`, NOT NULL — set by the importer), `ordered`, `study_goal`, and nullable `share_token`.
+- `Card` (STI base) - Progress anchor. `belongs_to :deck`, `belongs_to :item`; `delegate :reading, :category, to: :item`. Reconstructs `front`/`back`/`example_front`/`example_back`/`distractors` from its item. No content columns of its own.
+- `CardSuggestion` - Proposed edit from a copied card back to its catalog source card.
+- `Subscription` - Payment/subscription info, belongs to user.
 
 **STI subclasses:**
-- `TextDeck < Deck` / `TextCard < Card` — the original "question/answer" flashcard flow with multiple-choice study. Validates `back` and `category` presence.
-- `MusicDeck < Deck` / `MusicCard < Card` — microphone-driven music study. `MusicCard` validates `back` against `MusicCard::SEQUENCE_REGEXP` (note sequences like `E3` or `C4,E4,G4`). `MusicDeck` defaults `distractor_pool` to `"none"`.
+- `TextDeck < Deck` / `TextCard < Card` — the original question/answer flow with multiple-choice (or fuzzy-find) study. `TextDeck` is `reversible?`.
+- `ReverseTextDeck < TextDeck` / `ReverseTextCard < TextCard` — studies an existing data set in the opposite direction (Back items become prompts, paired Front items the answers). Shares the source deck's data set — no re-upload. `anchor_side` flips to `"Back"` and `anchor_pairing_column` to `:paired_item_id`; a reverse of a reverse is not allowed. See Reverse Decks below.
+- `MusicDeck < Deck` / `MusicCard < Card` — microphone-driven music study. Each `MusicCard.back` is a **single** note validated against `MusicCard::NOTE_REGEXP` (e.g. `C4`, `F#3`); sequences are formed at study time by windowing (see Music Decks). `MusicDeck` defaults `distractor_pool` to `"none"`.
 
 **STI convention — `model_name` override:** every Deck/Card subclass overrides `self.model_name` to return the parent's so `form_with(model: text_deck)` keeps routing to `decks_path` (not `text_decks_path`). Apply this to any new STI subclass.
+
+**Not yet built — `paths`.** The schema has a `paths` table and `decks.path_id` / `decks.path_position`, but there is no `Path` model, controller, or UI. It's DB-only scaffolding for a future ordered-deck-sequence feature.
 
 **Card Progress:**
 - A card is "done" at the current level when `correct_streak >= deck.level`
@@ -281,11 +291,14 @@ app/
 │   │   ├── cancel_subscription.rb
 │   │   ├── client.rb             # Creem HTTP client
 │   │   └── create_checkout.rb    # Creates a Creem checkout session
+│   ├── data_sets/
+│   │   └── projection.rb         # Builds/replaces/edits items+pairings+cards from content rows
 │   ├── decks/
 │   │   ├── create.rb             # Text deck CSV import
-│   │   ├── create_music.rb       # Music deck CSV import (note-sequence backs)
+│   │   ├── create_music.rb       # Music deck CSV import (one note per card)
+│   │   ├── create_reverse.rb     # Spins a ReverseTextDeck over an existing deck's data set
 │   │   ├── csv_examples.rb       # Optional example_front/example_back columns
-│   │   ├── csv_reading.rb        # Optional `reading` column → cards.reading
+│   │   ├── csv_reading.rb        # Optional `reading` column → items.reading
 │   │   └── replace.rb            # Re-import: diff CSV vs deck (add/remove/reset/keep)
 │   └── demo/
 │       ├── cleanup_guest_users.rb # Removes expired demo guest users
@@ -308,26 +321,32 @@ app/
 │   └── text_csv_instructions.rb  # CSV format help block for text decks
 ├── domain/
 │   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
-│   └── music_study.rb            # MusicStudy < Study; overrides `possible_answers` to []
+│   └── music_study.rb            # MusicStudy < Study; windows cards into note sequences
 ├── helpers/
+│   ├── application_helper.rb     # (empty)
 │   └── css_helper.rb             # `button_class(*modifiers)` → `.button` class lists (mixed into Components::Base)
+├── mailers/
+│   └── application_mailer.rb
 ├── jobs/
+│   ├── application_job.rb
 │   └── callable_job.rb           # Runs `SomeAction.call` async (e.g. demo guest-user cleanup)
 ├── controllers/
 │   ├── application_controller.rb
 │   ├── accounts_controller.rb         # Account create / show / update / destroy
-│   ├── cards_controller.rb            # Single-card edit / destroy (turbo streams)
+│   ├── cards_controller.rb            # Single-card edit / destroy (turbo streams; via ProjectsCards)
 │   ├── catalog_controller.rb          # Public catalog browse / preview / copy
 │   ├── catalog_listings_controller.rb # Publish / unpublish a deck to the catalog
 │   ├── concerns/
-│   │   └── demo_session.rb            # Demo guest-session helpers
+│   │   ├── demo_session.rb            # Demo guest-session helpers
+│   │   └── projects_cards.rb          # save_card/destroy_card → DataSets::Projection (edit validation)
 │   ├── decks_controller.rb            # `#create` dispatches Decks::Create vs CreateMusic on :deck_type
 │   ├── demo_controller.rb             # Starts a guest demo study session
 │   ├── milestones_controller.rb       # Updates a deck's study goal
 │   ├── pages_controller.rb            # pricing / privacy / terms
 │   ├── replacements_controller.rb     # Re-import a deck's cards (Decks::Replace)
+│   ├── reversals_controller.rb        # Create a reverse deck (Decks::CreateReverse)
 │   ├── sessions_controller.rb         # Login / logout
-│   ├── shares_controller.rb           # Owner toggle (via :deck_id) + public preview/copy (via :token)
+│   ├── shares_controller.rb           # Owner toggle (via :deck_id) + public preview/copy/try (via :token)
 │   ├── studies_controller.rb          # Study show/update; dispatches text vs music views
 │   ├── subscriptions_controller.rb    # Creem subscription show / create / destroy
 │   ├── suggestions_controller.rb      # Review (accept/reject) catalog suggestions on a deck
@@ -336,21 +355,32 @@ app/
 │   └── welcome_controller.rb          # Landing page
 ├── models/
 │   ├── application_record.rb
-│   ├── user.rb
-│   ├── deck.rb               # STI base
-│   ├── text_deck.rb          # STI subclass — overrides model_name
-│   ├── music_deck.rb         # STI subclass — defaults distractor_pool to "none"
-│   ├── card.rb               # STI base
-│   ├── text_card.rb          # STI subclass — validates back + category presence
-│   ├── music_card.rb         # STI subclass — validates back against SEQUENCE_REGEXP
-│   ├── card_suggestion.rb    # Proposed edit from a copied card back to its catalog source
+│   ├── user.rb              # has_many :data_sets; :decks through data_sets
+│   ├── data_set.rb          # Reusable content set; owns name/user for its decks
+│   ├── item.rb             # Neutral term (side/text + Front-side metadata); glosses/distractors
+│   ├── pairing.rb          # Front item ↔ Back paired_item join
+│   ├── item_distractor.rb  # Front item ↔ Back distractor_item join
+│   ├── deck.rb             # STI base — belongs_to data_set; anchor_side/anchor_pairing_column
+│   ├── text_deck.rb        # STI subclass — reversible
+│   ├── reverse_text_deck.rb # STI subclass of TextDeck — studies data set in reverse
+│   ├── music_deck.rb       # STI subclass — defaults distractor_pool to "none"
+│   ├── card.rb             # STI base — thin progress anchor; content from item
+│   ├── text_card.rb        # STI subclass — overrides model_name
+│   ├── reverse_text_card.rb # STI subclass of TextCard — answer/back come from paired Front item
+│   ├── music_card.rb       # STI subclass — NOTE_REGEXP (single note)
+│   ├── card_suggestion.rb  # Proposed edit from a copied card back to its catalog source
 │   └── subscription.rb
 ├── nulls/
 │   └── null_user.rb          # Null-object User for logged-out / guest requests
 ├── views/                    # Phlex views (inherit from Views::Base)
 │   ├── base.rb               # Base view class (wraps the application layout)
 │   ├── layouts/
-│   │   └── application.rb
+│   │   ├── application.rb
+│   │   ├── mailer.html.erb
+│   │   └── mailer.text.erb
+│   ├── pwa/
+│   │   ├── manifest.json.erb        # PWA manifest (served at /manifest)
+│   │   └── service-worker.js        # PWA service worker (served at /service-worker)
 │   ├── accounts/
 │   │   ├── new.rb
 │   │   └── show.rb
@@ -362,7 +392,11 @@ app/
 │   ├── decks/
 │   │   ├── index.rb
 │   │   ├── new.rb            # Includes deck-type toggle (text vs music)
-│   │   └── show.rb           # Includes share-link section (generate / show URL / revoke)
+│   │   ├── show.rb           # Share-link section + "create reverse deck" action
+│   │   ├── replacements/
+│   │   │   └── new.rb        # Re-import (replace) a deck's cards form
+│   │   └── suggestions/
+│   │       └── index.rb      # Review incoming catalog suggestions for a deck
 │   ├── demo/
 │   │   └── show.rb
 │   ├── pages/
@@ -459,6 +493,20 @@ end
 ```
 
 Controllers call actions and branch on `result.success?`.
+
+### DataSets::Projection
+
+`app/actions/data_sets/projection.rb` is the one place that translates **content rows** into the item/pairing/distractor graph plus the thin cards that anchor to it. A "row" is a hash of the shape a CSV row or the edit form produces: `{ front:, back:, category:, distractors:, reading:, example_front:, example_back:, source_card_id? }`. Items are the source of truth; a card is just `item_id` + progress.
+
+Entry points:
+- `build(deck, rows)` — fresh ingest (`Decks::Create`, `Decks::CreateMusic`, `Catalog::CopyDeck`): rebuild the data set and insert one card per row.
+- `replace(deck, rows)` — re-import (`Decks::Replace`): upsert items, reconcile cards by front text (kept / reset / added / removed), prune orphans.
+- `project(card, content)` — single-card edit / accept-suggestion: re-point the card at an upserted Front item and rebuild its links.
+- `add_distractor(card, text)` — a wrong guess accretes the guessed text as an unpaired decoy item + `ItemDistractor` (never spawns a card).
+- `remove_card(card)` / `front_taken?(card, front)` — deletion and front-uniqueness helpers.
+- `reconcile_deck(deck, formers)` — ensures a deck has exactly one card per paired item on its `anchor_side`, preserving progress by item text. Used to build a reverse deck's cards and to keep **sibling decks** (other decks over the same data set) in sync after any content change.
+
+Because decks share a data set, most projection methods snapshot sibling card state up front and call `reconcile_siblings` at the end so a forward-deck edit propagates to its reverse (and vice versa).
 
 ### Authentication
 
@@ -605,31 +653,36 @@ Private decks can be shared with a friend via a revocable token. The `decks.shar
 - **Generate / revoke**: owner POSTs to `/decks/:deck_id/share` (sets a fresh `urlsafe_base64(16)` token) or DELETEs to revoke. Both handled by `SharesController#create` / `#destroy`; backed by `Deck#generate_share_token!` / `#revoke_share_token!` / `#shared?` on the model.
 - **Public preview**: `GET /shared/:token` → `SharesController#show` renders `Views::Shares::Show` with no auth (`skip_before_action :authenticate_user, only: [:show]`). Attributes the deck to its owner ("shared by [username]"). Returns 404 if the token doesn't match a current deck (revocation just nullifies the column).
 - **Add to my decks**: `POST /shared/:token/copy` → `SharesController#copy` reuses `Catalog::CopyDeck` to fork the deck into `current_user`'s account.
+- **Try without an account**: `POST /shared/:token/try` → `SharesController#try` spins up a guest user (`Demo::CreateGuestUser`) over the shared deck and redirects into a study session (no auth, like the demo).
 - **Share UI on deck show page** uses a Stimulus `clipboard` controller for copy-to-clipboard on the share-link input.
 - Sharing is orthogonal to `visibility` — a `"private"` deck can have a token without being listed in the catalog.
 
 ### CSV Import
 
-Decks are created by uploading CSV files. The deck-creation form has a "Deck Type" toggle (text vs music) that picks the importer.
+Decks are created by uploading CSV files. The deck-creation form has a "Deck Type" toggle (text vs music) that picks the importer. Every import parses the CSV into content rows and hands them to `DataSets::Projection.build` — the CSV creates the data set's items/pairings, not card columns.
 
 **Text decks (`Decks::Create`):**
-- Columns: `front`, `back`, `category` (`distractors`, `reading` optional)
-- Multiple answers separated by `;`
-- `reading` populates `cards.reading` (the pronunciation gloss shown on reveal) — see Reading below
+- Required columns: `front`, `back`; optional: `category`, `distractors`, `reading`, `example_front`/`example_back`
+- `front` must be unique within the file; multiple `back` answers separated by `;`
+- Presence of a `distractors` column sets the deck's `distractor_pool` to `"preset"` (each row must then supply distractors); otherwise it's `"category"`
+- `reading` populates the Front item's `reading` (the pronunciation gloss shown on reveal) — see Reading below
 
 **Music decks (`Decks::CreateMusic`):** see Music Decks section below.
+
+Reverse decks are **not** created from a CSV — they're spun off an existing deck (see Reverse Decks).
 
 ### Music Decks
 
 Microphone-driven music study (target: guitar / ukulele). Public music decks appear in the catalog with a 🎤 badge (rendered via `Components::Base#music_badge`).
 
 **Card data model:**
-- `front` = label, **hidden during attempt**, revealed on success (e.g. `"C Major Chord"`)
-- `back` = comma-separated note sequence — both played as the audio reference and what the user must play back (e.g. `"C4,E4,G4"`). Validated against `MusicCard::SEQUENCE_REGEXP` (sharps only, octaves 1–8).
+- `front` = label, **hidden during attempt**, revealed on success (e.g. `"E string, 3rd fret"`)
+- `back` = a **single** note, validated against `MusicCard::NOTE_REGEXP` (`/\A[A-G]#?[1-8]\z/` — sharps only, octaves 1–8, e.g. `C4`, `F#3`)
+- Multi-note **sequences are formed at study time**, not stored per card — `MusicStudy` windows several cards together (see dispatch below).
 
-**CSV format:** same headers as text decks (`front,back,category`). Multi-note backs **must be quoted** (`"C4,E4,G4"`) so commas don't split the cell. Music CSVs reject space-separated notes — the format is one canonical comma-only shape.
+**CSV format:** same headers as text decks (`front,back,category`), one note per `back`. The `ordered` flag on the deck (a checkbox on the new-deck form) controls whether study windows are drawn in file order.
 
-**Domain dispatch:** `Study.for(deck:)` returns `MusicStudy` for music decks (overrides `possible_answers` to `[]`). The base `Study#answer_card` works for music as-is — the JS POSTs `answer = card.back` so the existing `card.back == answer` comparison is the right check.
+**Domain dispatch:** `Study.for(deck:)` returns `MusicStudy` for music decks. `MusicStudy` overrides card selection to build a **window** of `deck.level` cards (consecutive from an anchor if `deck.ordered?`, else the anchor plus random others) and studies them as one note sequence. It answers the whole window (`answer_window`, permitting `card_ids: []`): the JS POSTs the played sequence and the expected value is the cards' `back`s joined with `,`. Progress is bumped per card in the window; the deck levels up when no cards remain not-done — so higher levels study longer sequences.
 
 **Study UI:** `StudiesController#show`/`#update` dispatches to `Views::Studies::MusicShow`/`MusicUpdate` (vs `Show`/`Update`) when `deck.music?`. The MusicShow view renders `Components::MusicCardBody`, which is the mic-driven widget — Start Microphone gate, Play Reference button, hidden card front, progress counter, and a hidden form the JS POSTs through on completion.
 
@@ -645,19 +698,28 @@ Microphone-driven music study (target: guitar / ukulele). Public music decks app
 - `getUserMedia` and `AudioContext` require HTTPS. Rails dev (`bin/dev`) defaults to plain HTTP — use a self-signed cert or staging to actually exercise the mic flow.
 - `AudioContext` autoplay policy: create/resume inside a user-gesture handler. The controller honors this by gating creation behind the explicit "Start Microphone" button.
 
+### Reverse Decks
+
+A reverse deck studies an existing text deck's content in the opposite direction — the answers become prompts — **without re-uploading**. Both decks share one `data_set`; only the reading direction differs.
+
+- **Create**: on the deck-show page, a `TextDeck` that is `reversible?` and has no reverse yet shows a "create reverse deck" action → `POST /decks/:deck_id/reversal` → `ReversalsController#create` → `Decks::CreateReverse`. It builds a `ReverseTextDeck` on the same `data_set` and generates its cards via `DataSets::Projection.reconcile_deck` (one card per paired Back item). At most one reverse per data set (`Deck#reverse_present?`), and a reverse can't be reversed again.
+- **Direction knobs**: `ReverseTextDeck` overrides `anchor_side` to `"Back"` and `anchor_pairing_column` to `:paired_item_id`. `ReverseTextCard` anchors a Back item; its `front` is that item's text, while `back` / `reading` / `category` / examples come from the paired **Front** item (via `answer_item`). Category-pool distractors reach the category through the pairing (`cards_in_category` override).
+- **Staying in sync**: because forward and reverse share a data set, any content change (edit, replace, delete, add-distractor) reconciles sibling decks — `DataSets::Projection` snapshots sibling card state and calls `reconcile_deck` so both directions stay consistent.
+
 ### Reading (pronunciation gloss)
 
 Cards can carry an optional pronunciation/gloss (e.g. Mandarin pinyin) kept separate from `back`. Keeping it out of `back` keeps the multiple-choice options clean — the gloss is revealed with the card rather than baked into every answer string.
-- **Card data**: `cards.reading` (nullable string). Imported via an optional `reading` CSV column (`Decks::CsvReading`, wired through `Decks::Create` / `Decks::Replace` / `Catalog::CopyDeck`) and editable in the card edit form (kept in sync after an edit by a `card-reading` turbo-stream replace from `CardsController`).
+- **Data**: `items.reading` (nullable string on the Front item; the card delegates `reading` to its item). Imported via an optional `reading` CSV column (`Decks::CsvReading`, wired through `Decks::Create` / `Decks::Replace` / `Catalog::CopyDeck`) and editable in the card edit form (an edit re-projects the item; the card view is kept in sync by a `card-reading` turbo-stream replace from `CardsController`).
 - **Display**: `Components::CardFront` takes an optional `reading:` and renders `Components::CardReading` *inside* the card-front box, directly under the character, so the two read as one unit. Only the answer (update) view passes `reading:` — the pre-answer and music views omit it, so nothing shows before answering and the gloss never lands on the distractor options. The box border/stripe/shadow live on `.card-front-wrapper` (not the `.card-front` `<h2>`) so the character and reading share one frame. There is no show/hide configuration; a deck that shouldn't show readings simply omits the `reading` column.
 
 ### Study Algorithm
 
 The study engine (`app/domain/study.rb`) manages card selection and answer processing:
-- Selects from the first 20 not-done cards (at the current deck level), randomized
-- Generates 5 multiple-choice answers (prioritizing previous wrong answers, then same-category cards)
-- On correct answer: increments `correct_count` and `correct_streak`; if the last card at the level is completed, advances `deck.level`
-- On incorrect answer: resets `correct_streak` to 0, records the wrong answer
+- **Active window**: picks randomly from the not-done cards (at the current level) capped at `2^(level-1) × 20` — the pool of cards in play grows as the deck levels up
+- **Presentation mode**: multiple-choice below level 3, **fuzzy-find** (typed-answer) at level 3+ (`FUZZY_FIND_LEVEL`); `possible_answers` branches on this
+- **Multiple choice**: 4 distractors + the answer, shuffled. Distractors come from the card's own preset `distractors` (item-level); a `"category"`-pool deck tops up from same-category then any sibling cards via `deck.cards_in_category`
+- On correct answer: increments `correct_count` and `correct_streak`; if the last not-done card at the level is completed, advances `deck.level`
+- On incorrect answer: resets `correct_streak` to 0 and calls `DataSets::Projection.add_distractor` to record the wrong guess as a decoy item for that card
 - Level advancement happens in `Study#answer_card`, not in the controller
 
 ### Subscription Transparency
@@ -725,11 +787,12 @@ Things to keep in mind for future development:
 
 1. **Subscription Features** - If adding paid features, update subscription messaging
 2. **Catalog Enhancements** - search/filter, categories, self-serve (non-admin) publishing
-3. **Mobile App** - Progressive Web App capabilities
+3. **Mobile App** - Progressive Web App (a manifest + service worker are already served at `/manifest` and `/service-worker`)
 4. **Bulk Operations** - Edit/delete multiple cards at once
 5. **Study Statistics** - More detailed progress tracking and visualizations
 6. **Accessibility** - Continue improving screen reader support
 7. **Internationalization** - Multi-language support for UI (not just study content)
+8. **Paths** - Ordered deck sequences (DB scaffolding exists: `paths` table, `decks.path_id` / `path_position`; no model/controller/UI yet)
 
 ## Resources
 
