@@ -5,7 +5,9 @@ module Decks
   # studied with prompts and answers swapped. It shares the source data_set (no
   # re-upload) and generates one card per paired answer item.
   module CreateReverse
-    def self.call(source:)
+    extend self
+
+    def call(source:)
       return failure(source) unless creatable?(source)
 
       deck = build_deck(source)
@@ -16,11 +18,13 @@ module Decks
       Result.new(success: true, record: deck)
     end
 
-    def self.creatable?(source)
+    private
+
+    def creatable?(source)
       source.reversible? && !source.reverse_present?
     end
 
-    def self.build_deck(source)
+    def build_deck(source)
       ReverseTextDeck.new(
         study_goal: source.study_goal,
         distractor_pool: "category",
@@ -28,7 +32,7 @@ module Decks
       )
     end
 
-    def self.failure(source)
+    def failure(source)
       Result.new(success: false, record: source)
     end
 

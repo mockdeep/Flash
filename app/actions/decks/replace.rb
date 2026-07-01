@@ -4,9 +4,11 @@ require "csv"
 
 module Decks
   module Replace
+    extend self
+
     Summary = Struct.new(:added, :removed, :reset, :kept)
 
-    def self.call(deck:, cards_csv:)
+    def call(deck:, cards_csv:)
       csv = Decks::Create.parse_csv(cards_csv)
 
       error = Decks::Create.validate_csv(csv)
@@ -22,11 +24,13 @@ module Decks
       Result.new(success: true, record: deck, summary:)
     end
 
-    def self.derive_distractor_pool(csv)
+    private
+
+    def derive_distractor_pool(csv)
       Decks::Create.distractors_column?(csv) ? "preset" : "category"
     end
 
-    def self.failure(deck, error)
+    def failure(deck, error)
       deck.errors.add(:cards_csv, error)
       Result.new(success: false, record: deck, summary: nil)
     end

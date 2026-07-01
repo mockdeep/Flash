@@ -4,7 +4,9 @@ require "csv"
 
 module Decks
   module CreateMusic
-    def self.call(user:, name:, cards_csv:, ordered: false)
+    extend self
+
+    def call(user:, name:, cards_csv:, ordered: false)
       deck = MusicDeck.new(
         ordered:,
         study_goal: user.study_goal,
@@ -18,7 +20,9 @@ module Decks
       persist(deck, csv)
     end
 
-    def self.persist(deck, csv)
+    private
+
+    def persist(deck, csv)
       ActiveRecord::Base.transaction do
         return failure(deck) unless deck.save
 
@@ -28,32 +32,32 @@ module Decks
       Result.new(success: true, record: deck)
     end
 
-    def self.failure(deck, error = nil)
+    def failure(deck, error = nil)
       deck.errors.add(:cards_csv, error) if error
       Result.new(success: false, record: deck)
     end
 
-    def self.validate_csv(csv)
+    def validate_csv(csv)
       validate_headers(csv) ||
         validate_present(csv) ||
         validate_rows(csv) ||
         validate_unique_fronts(csv)
     end
 
-    def self.validate_present(csv)
+    def validate_present(csv)
       return unless csv.empty?
 
       "must include at least one row"
     end
 
-    def self.validate_headers(csv)
+    def validate_headers(csv)
       headers = csv.headers.map { |h| h.to_s.strip.downcase }
       return if headers.include?("front") && headers.include?("back")
 
       "must include 'front' and 'back' columns"
     end
 
-    def self.validate_rows(csv)
+    def validate_rows(csv)
       csv.each_with_index do |row, index|
         error = validate_row(row, index)
         return error if error
@@ -62,7 +66,7 @@ module Decks
       nil
     end
 
-    def self.validate_row(row, index)
+    def validate_row(row, index)
       front = row["front"].to_s.squish
       back = row["back"].to_s.squish
       if front.blank? || back.blank?
@@ -73,7 +77,7 @@ module Decks
       "row #{index + 1}: '#{back}' is not a valid note"
     end
 
-    def self.validate_unique_fronts(csv)
+    def validate_unique_fronts(csv)
       fronts = csv.map { |row| row["front"].squish }
       duplicates = fronts.tally.select { |_, count| count > 1 }.keys
       return if duplicates.empty?
@@ -81,7 +85,7 @@ module Decks
       "duplicate 'front' values: #{duplicates.join(", ")}"
     end
 
-    def self.card_rows(csv)
+    def card_rows(csv)
       csv.map do |row|
         {
           front: row["front"].squish,
