@@ -2,7 +2,9 @@
 
 module Demo
   module CleanupGuestUsers
-    def self.call
+    extend self
+
+    def call
       User
         .where(role: "guest")
         .where(created_at: ...24.hours.ago)

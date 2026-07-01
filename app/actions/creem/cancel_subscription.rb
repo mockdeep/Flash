@@ -2,7 +2,9 @@
 
 module Creem
   module CancelSubscription
-    def self.call(subscription:)
+    extend self
+
+    def call(subscription:)
       response = Client.post(
         "/subscriptions/#{subscription.creem_subscription_id}/cancel",
         { mode: "immediate" },

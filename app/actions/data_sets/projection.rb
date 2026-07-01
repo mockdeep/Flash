@@ -7,6 +7,8 @@
 # form produces. Items are the source of truth; cards are item_id + progress.
 module DataSets
   module Projection
+    extend self
+
     FRONT = "Front"
     BACK = "Back"
     SEPARATOR = "; "
@@ -15,7 +17,7 @@ module DataSets
 
     # Fresh build for ingest (Create / CopyDeck): rebuild the data_set from the
     # rows and create one thin card per row.
-    def self.build(deck, rows)
+    def build(deck, rows)
       data_set = reset_data_set(deck)
       item_ids = insert_data(data_set, rows)
       insert_cards(deck, rows, item_ids)
@@ -23,7 +25,7 @@ module DataSets
 
     # Replace ingest: rebuild items from the new rows while preserving the
     # progress of cards whose front survives (matched by front text).
-    def self.replace(deck, rows)
+    def replace(deck, rows)
       sibling_formers = sibling_former_states(deck)
       former = former_states(deck)
       rows = preserve_omitted(rows, former)
@@ -36,19 +38,8 @@ module DataSets
       summary
     end
 
-    def self.preserve_omitted(rows, former)
-      rows.map do |row|
-        state = former[row[:front]]
-        next row unless state
-
-        PRESERVED.each_with_object(row.dup) do |key, merged|
-          merged[key] = state[key] unless row.key?(key)
-        end
-      end
-    end
-
     # Re-project a single card from edited content (edit / accept suggestion).
-    def self.project(card, content)
+    def project(card, content)
       sibling_formers = sibling_former_states(card.deck)
       data_set = card.deck.data_set
       former_front = card.item
@@ -65,7 +56,7 @@ module DataSets
 
     # Whether another card in the deck already owns a Front item with this text
     # (front must stay 1:1 with a card).
-    def self.front_taken?(card, front)
+    def front_taken?(card, front)
       card.deck.cards.joins(:item)
         .where(items: { text: front }).where.not(id: card.id).exists?
     end
@@ -73,14 +64,14 @@ module DataSets
     # Record a wrong-guess distractor as an item reference. The decoy lives on
     # the side opposite the prompt (a reverse miss is a Front-side decoy), so it
     # stays an unpaired item and never spawns a card.
-    def self.add_distractor(card, text)
+    def add_distractor(card, text)
       prompt = card.item
       decoy_side = prompt.side == FRONT ? BACK : FRONT
       decoy = prompt.data_set.items.find_or_create_by!(side: decoy_side, text:)
       ItemDistractor.find_or_create_by!(item: prompt, distractor_item: decoy)
     end
 
-    def self.remove_card(card)
+    def remove_card(card)
       front = card.item
       sibling_formers = sibling_former_states(card.deck)
       backs = back_items_for(front)
@@ -89,13 +80,38 @@ module DataSets
       reconcile_siblings(card.deck, sibling_formers)
     end
 
-    def self.reset_data_set(deck)
+    # Ensure a deck has exactly one card per paired item on its anchor side,
+    # preserving progress for survivors (matched by item text). Also builds a
+    # reverse deck's cards on creation (formers empty, no existing cards).
+    def reconcile_deck(deck, formers)
+      wanted = anchor_items(deck).index_by(&:text)
+      existing = existing_by_text(deck, formers)
+      sync_wanted(deck, wanted, existing, formers)
+      (existing.keys - wanted.keys).each { |text| existing[text].destroy! }
+      # Cards were created/destroyed outside the loaded association above.
+      deck.cards.reset
+    end
+
+    private
+
+    def preserve_omitted(rows, former)
+      rows.map do |row|
+        state = former[row[:front]]
+        next row unless state
+
+        PRESERVED.each_with_object(row.dup) do |key, merged|
+          merged[key] = state[key] unless row.key?(key)
+        end
+      end
+    end
+
+    def reset_data_set(deck)
       data_set = deck.data_set
       data_set.items.delete_all
       data_set
     end
 
-    def self.insert_data(data_set, rows)
+    def insert_data(data_set, rows)
       return {} if rows.empty?
 
       item_ids = insert_items(data_set, rows)
@@ -104,7 +120,7 @@ module DataSets
       item_ids
     end
 
-    def self.upsert_data(data_set, rows)
+    def upsert_data(data_set, rows)
       item_ids = upsert_items(data_set, rows)
       clear_all_links(data_set)
       insert_pairings(rows, item_ids)
@@ -112,7 +128,7 @@ module DataSets
       item_ids
     end
 
-    def self.upsert_items(data_set, rows)
+    def upsert_items(data_set, rows)
       result = Item.upsert_all(
         item_rows(data_set, rows),
         unique_by: [:data_set_id, :side, :text],
@@ -121,17 +137,17 @@ module DataSets
       result.rows.to_h { |id, side, text| [[side, text], id] }
     end
 
-    def self.clear_all_links(data_set)
+    def clear_all_links(data_set)
       fronts = data_set.items.select(:id)
       Pairing.where(item_id: fronts).delete_all
       ItemDistractor.where(item_id: fronts).delete_all
     end
 
-    def self.prune_items(data_set, keep_ids)
+    def prune_items(data_set, keep_ids)
       data_set.items.where.not(id: keep_ids).delete_all
     end
 
-    def self.insert_items(data_set, rows)
+    def insert_items(data_set, rows)
       result = Item.insert_all(
         item_rows(data_set, rows),
         returning: ["id", "side", "text"],
@@ -139,7 +155,7 @@ module DataSets
       result.rows.to_h { |id, side, text| [[side, text], id] }
     end
 
-    def self.item_rows(data_set, rows)
+    def item_rows(data_set, rows)
       items = {}
       rows.each do |row|
         items[[FRONT, row[:front]]] = front_row(data_set, row)
@@ -150,11 +166,11 @@ module DataSets
       items.values
     end
 
-    def self.back_texts(row)
+    def back_texts(row)
       glosses(row) + terms(row[:distractors])
     end
 
-    def self.front_row(data_set, row)
+    def front_row(data_set, row)
       {
         data_set_id: data_set.id,
         side: FRONT,
@@ -163,7 +179,7 @@ module DataSets
       }
     end
 
-    def self.back_row(data_set, text)
+    def back_row(data_set, text)
       {
         data_set_id: data_set.id,
         side: BACK,
@@ -175,7 +191,7 @@ module DataSets
       }
     end
 
-    def self.insert_pairings(rows, item_ids)
+    def insert_pairings(rows, item_ids)
       pairings =
         rows.flat_map do |row|
           front_id = item_ids.fetch([FRONT, row[:front]])
@@ -186,7 +202,7 @@ module DataSets
       Pairing.insert_all(pairings) if pairings.any?
     end
 
-    def self.insert_distractors(rows, item_ids)
+    def insert_distractors(rows, item_ids)
       distractors =
         rows.flat_map do |row|
           front_id = item_ids.fetch([FRONT, row[:front]])
@@ -198,13 +214,13 @@ module DataSets
       ItemDistractor.insert_all(distractors) if distractors.any?
     end
 
-    def self.insert_cards(deck, rows, item_ids)
+    def insert_cards(deck, rows, item_ids)
       return if rows.empty?
 
       Card.insert_all(rows.map { |row| card_row(deck, row, item_ids) })
     end
 
-    def self.card_row(deck, row, item_ids)
+    def card_row(deck, row, item_ids)
       {
         deck_id: deck.id,
         type: deck.card_type,
@@ -213,13 +229,13 @@ module DataSets
       }
     end
 
-    def self.former_states(deck)
+    def former_states(deck)
       deck.cards.to_h do |card|
         [card.item.text, former_state(card)]
       end
     end
 
-    def self.former_state(card)
+    def former_state(card)
       {
         card:,
         back: card.back,
@@ -229,7 +245,7 @@ module DataSets
       }
     end
 
-    def self.reconcile_cards(deck, rows, item_ids, former)
+    def reconcile_cards(deck, rows, item_ids, former)
       counts = { kept: 0, reset: 0 }
       added = []
       rows.each do |row|
@@ -241,13 +257,13 @@ module DataSets
       { added: added.size, removed:, **counts }
     end
 
-    def self.remove_vanished(rows, former)
+    def remove_vanished(rows, former)
       vanished = former.keys - rows.pluck(:front)
       vanished.each { |front| former[front][:card].destroy! }
       vanished.size
     end
 
-    def self.reconcile_existing(row, item_ids, former)
+    def reconcile_existing(row, item_ids, former)
       state = former[row[:front]]
       return unless state
 
@@ -259,43 +275,31 @@ module DataSets
       :reset
     end
 
-    def self.reset_progress(card)
+    def reset_progress(card)
       card.update_columns(correct_streak: 0, correct_count: 0, view_count: 0)
     end
 
-    def self.sibling_decks(deck)
+    def sibling_decks(deck)
       deck.data_set.decks.where.not(id: deck.id)
     end
 
-    def self.sibling_former_states(deck)
+    def sibling_former_states(deck)
       sibling_decks(deck).to_h { |sibling| [sibling.id, deck_states(sibling)] }
     end
 
-    def self.deck_states(deck)
+    def deck_states(deck)
       deck.cards.to_h do |card|
         [card.id, { text: card.item.text, back: card.back }]
       end
     end
 
-    def self.reconcile_siblings(deck, sibling_formers)
+    def reconcile_siblings(deck, sibling_formers)
       sibling_decks(deck).each do |sibling|
         reconcile_deck(sibling, sibling_formers[sibling.id] || {})
       end
     end
 
-    # Ensure a deck has exactly one card per paired item on its anchor side,
-    # preserving progress for survivors (matched by item text). Also builds a
-    # reverse deck's cards on creation (formers empty, no existing cards).
-    def self.reconcile_deck(deck, formers)
-      wanted = anchor_items(deck).index_by(&:text)
-      existing = existing_by_text(deck, formers)
-      sync_wanted(deck, wanted, existing, formers)
-      (existing.keys - wanted.keys).each { |text| existing[text].destroy! }
-      # Cards were created/destroyed outside the loaded association above.
-      deck.cards.reset
-    end
-
-    def self.sync_wanted(deck, wanted, existing, formers)
+    def sync_wanted(deck, wanted, existing, formers)
       wanted.each do |text, item|
         card = existing[text]
         if card
@@ -308,46 +312,46 @@ module DataSets
 
     # Items on the deck's anchor side that participate in a pairing - a card is
     # generated only for paired items (a distractor-only item gets none).
-    def self.anchor_items(deck)
+    def anchor_items(deck)
       deck.data_set.items
         .where(side: deck.anchor_side, id: pairing_anchor_ids(deck))
     end
 
-    def self.pairing_anchor_ids(deck)
+    def pairing_anchor_ids(deck)
       Pairing.select(deck.anchor_pairing_column)
     end
 
     # Existing cards keyed by item text. Callers pass formers covering every
     # card (sibling sync) or an empty deck (reverse-deck build), so a card's
     # former text is always available.
-    def self.existing_by_text(deck, formers)
+    def existing_by_text(deck, formers)
       deck.cards.index_by { |card| formers.dig(card.id, :text) }
     end
 
-    def self.refresh_card(card, item, former)
+    def refresh_card(card, item, former)
       card.item = item
       card.update_column(:item_id, item.id)
       reset_progress(card) if former[:back] != card.back
     end
 
-    def self.create_anchor_card(deck, item)
+    def create_anchor_card(deck, item)
       deck.card_type.constantize.create!(deck:, item:)
     end
 
-    def self.upsert_front(data_set, content)
+    def upsert_front(data_set, content)
       front =
         data_set.items.find_or_initialize_by(side: FRONT, text: content[:front])
       front.update!(front_attributes(content))
       front
     end
 
-    def self.rebuild_links(data_set, front, content)
+    def rebuild_links(data_set, front, content)
       clear_links(front)
       pair_glosses(data_set, front, glosses(content))
       link_distractors(data_set, front, terms(content[:distractors]))
     end
 
-    def self.front_attributes(content)
+    def front_attributes(content)
       {
         category: content[:category],
         reading: content[:reading],
@@ -356,41 +360,41 @@ module DataSets
       }
     end
 
-    def self.clear_links(front)
+    def clear_links(front)
       Pairing.where(item_id: front.id).delete_all
       ItemDistractor.where(item_id: front.id).delete_all
     end
 
-    def self.pair_glosses(data_set, front, glosses)
+    def pair_glosses(data_set, front, glosses)
       glosses.each do |gloss|
         back = data_set.items.find_or_create_by!(side: BACK, text: gloss)
         Pairing.create!(item: front, paired_item: back)
       end
     end
 
-    def self.link_distractors(data_set, front, distractors)
+    def link_distractors(data_set, front, distractors)
       distractors.each do |distractor|
         back = data_set.items.find_or_create_by!(side: BACK, text: distractor)
         ItemDistractor.create!(item: front, distractor_item: back)
       end
     end
 
-    def self.glosses(content)
+    def glosses(content)
       terms(content[:back].to_s.split(";"))
     end
 
-    def self.terms(values)
+    def terms(values)
       Array(values).map { |value| value.to_s.squish }.compact_blank.uniq
     end
 
-    def self.back_items_for(front)
+    def back_items_for(front)
       paired = Pairing.where(item_id: front.id).select(:paired_item_id)
       decoys =
         ItemDistractor.where(item_id: front.id).select(:distractor_item_id)
       Item.where(id: paired).or(Item.where(id: decoys)).to_a
     end
 
-    def self.discard_orphans(items)
+    def discard_orphans(items)
       items.each do |item|
         next if Pairing.exists?(paired_item_id: item.id)
         next if ItemDistractor.exists?(distractor_item_id: item.id)

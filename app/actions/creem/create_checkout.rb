@@ -2,7 +2,9 @@
 
 module Creem
   module CreateCheckout
-    def self.call(user:)
+    extend self
+
+    def call(user:)
       product_id = ENV.fetch("CREEM_PRODUCT_ID")
       success_url = Rails.application.routes.url_helpers.subscription_url
       customer = { email: user.email }

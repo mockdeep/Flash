@@ -2,7 +2,9 @@
 
 module Catalog
   module AcceptSuggestion
-    def self.call(suggestion:)
+    extend self
+
+    def call(suggestion:)
       ActiveRecord::Base.transaction do
         apply_to_card(suggestion)
         suggestion.update!(state: "accepted")
@@ -12,13 +14,15 @@ module Catalog
       Result.new(success: false, record: e.record)
     end
 
-    def self.apply_to_card(suggestion)
+    private
+
+    def apply_to_card(suggestion)
       card = suggestion.card
       ensure_front_available!(card, suggestion.front)
       DataSets::Projection.project(card, suggested_content(suggestion))
     end
 
-    def self.suggested_content(suggestion)
+    def suggested_content(suggestion)
       suggestion.card.to_row.merge(
         front: suggestion.front,
         back: suggestion.back,
@@ -26,7 +30,7 @@ module Catalog
       )
     end
 
-    def self.ensure_front_available!(card, front)
+    def ensure_front_available!(card, front)
       return unless DataSets::Projection.front_taken?(card, front)
 
       card.errors.add(:front, :taken)

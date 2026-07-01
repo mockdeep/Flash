@@ -2,7 +2,9 @@
 
 module Catalog
   module CopyDeck
-    def self.call(user:, deck:, card_limit: nil)
+    extend self
+
+    def call(user:, deck:, card_limit: nil)
       new_deck = build_new_deck(user:, source: deck)
 
       ActiveRecord::Base.transaction do
@@ -14,7 +16,9 @@ module Catalog
       Result.new(success: true, record: new_deck)
     end
 
-    def self.build_new_deck(user:, source:)
+    private
+
+    def build_new_deck(user:, source:)
       source.class.new(
         study_goal: user.study_goal,
         distractor_pool: source.distractor_pool,
@@ -22,21 +26,21 @@ module Catalog
       )
     end
 
-    def self.copy_rows(source, card_limit)
+    def copy_rows(source, card_limit)
       copy_distractors = source.distractor_pool == "preset"
       source_cards(source, card_limit).map do |card|
         content_row(card, copy_distractors:)
       end
     end
 
-    def self.content_row(card, copy_distractors:)
+    def content_row(card, copy_distractors:)
       card.to_row.merge(
         distractors: copy_distractors ? card.distractors : [],
         source_card_id: card.id,
       )
     end
 
-    def self.source_cards(source, card_limit)
+    def source_cards(source, card_limit)
       scope = source.cards
       card_limit ? scope.order(:id).limit(card_limit) : scope
     end
