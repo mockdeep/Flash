@@ -633,6 +633,36 @@ body {
   box-shadow: none;
 }
 
+.answer-streak {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.answer-streak__pips {
+  display: inline-flex;
+  gap: 5px;
+}
+
+.streak-pip {
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--color-success-border);
+}
+
+.streak-pip--filled {
+  background: var(--color-success-border);
+}
+
+.answer-streak__count {
+  color: var(--color-success-dark);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+}
+
 .study-example {
   margin: var(--spacing-md) 0 var(--spacing-lg);
   padding: var(--spacing-md) var(--spacing-lg);
