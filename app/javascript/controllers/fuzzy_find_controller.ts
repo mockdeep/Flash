@@ -31,29 +31,30 @@ function normalize(text: string): string {
   return result;
 }
 
-function matchesAt(
+function findPrefixWord(
   answerWords: string[],
-  queryWords: string[],
+  queryWord: string,
   start: number,
-): boolean {
-  for (const [offset, queryWord] of queryWords.entries()) {
-    const word = answerWords[start + offset];
-    if (word === undefined) { return false; }
-    if (!word.startsWith(queryWord)) { return false; }
+): number {
+  for (let index = start; index < answerWords.length; index += 1) {
+    if (answerWords[index]?.startsWith(queryWord) === true) { return index; }
   }
 
-  return true;
+  return -1;
 }
 
 function hasPrefixMatch(
   answerWords: string[],
   queryWords: string[],
 ): boolean {
-  for (let start = 0; start < answerWords.length; start += 1) {
-    if (matchesAt(answerWords, queryWords, start)) { return true; }
+  let start = 0;
+  for (const queryWord of queryWords) {
+    const index = findPrefixWord(answerWords, queryWord, start);
+    if (index === -1) { return false; }
+    start = index + 1;
   }
 
-  return false;
+  return true;
 }
 
 function totalChars(words: string[]): number {
