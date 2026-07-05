@@ -295,6 +295,41 @@ RSpec.describe StudiesController do
 
         expect(rendered).to have_css(".answer-faded", text: "London")
       end
+
+      it "does not show streak pips at level 1" do
+        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+        create(:card, deck:)
+        submit_answer(card:, answer: "Paris")
+
+        expect(rendered).to have_no_css(".answer-streak")
+      end
+
+      it "shows streak progress at level 2" do
+        deck.update!(level: 2)
+        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+        create(:card, deck:)
+        submit_answer(card:, answer: "Paris")
+
+        expect(rendered).to have_css(".answer-streak", text: "1/2")
+      end
+
+      it "fills one pip per correct answer in a row" do
+        deck.update!(level: 2)
+        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+        create(:card, deck:)
+        submit_answer(card:, answer: "Paris")
+
+        expect(rendered).to have_css(".streak-pip--filled", count: 1)
+      end
+
+      it "shows all pips filled when the card clears" do
+        deck.update!(level: 2)
+        card = create(:card, deck:, back: "Paris", correct_streak: 1)
+        create(:card, deck:, correct_streak: 0)
+        submit_answer(card:, answer: "Paris")
+
+        expect(rendered).to have_css(".streak-pip--filled", count: 2)
+      end
     end
 
     context "when answer is incorrect" do
@@ -325,6 +360,14 @@ RSpec.describe StudiesController do
         submit_answer(card:, answer: "London")
 
         expect(rendered).to have_css(".answer-correct", text: "Paris")
+      end
+
+      it "does not show streak pips" do
+        deck.update!(level: 2)
+        card = create(:card, deck:, back: "Paris")
+        submit_answer(card:, answer: "London")
+
+        expect(rendered).to have_no_css(".answer-streak")
       end
 
       it "shows the next card link" do

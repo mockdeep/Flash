@@ -117,6 +117,7 @@ module Views
                   answer_id =
                     ("correct-answer-text" if answer == result.correct_answer)
                   span(class: "answer-text", id: answer_id) { answer }
+                  render_streak_pips if show_streak_pips?(answer)
                 end
               end
             end
@@ -153,6 +154,22 @@ module Views
             span { "Next Card" }
             span(class: "hotkey-hint") { "[space]" }
           end
+        end
+      end
+
+      def show_streak_pips?(answer)
+        answer == result.correct_answer && result.correct? && deck.level > 1
+      end
+
+      def render_streak_pips
+        filled = [result.card.correct_streak, deck.level].min
+        span(class: "answer-streak") do
+          span(class: "answer-streak__pips", aria: { hidden: "true" }) do
+            deck.level.times do |i|
+              span(class: ["streak-pip", ("streak-pip--filled" if i < filled)])
+            end
+          end
+          span(class: "answer-streak__count") { "#{filled}/#{deck.level}" }
         end
       end
 
