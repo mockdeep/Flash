@@ -105,9 +105,8 @@ module Views
                 },
               ) { "✏" }
             end
+            render(Components::StudyExample.new(card:))
           end
-
-          render(Components::StudyExample.new(card:))
 
           ol(class: "study-answers-grid") do
             result.possible_answers.each do |answer|

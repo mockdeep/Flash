@@ -24,6 +24,9 @@ application.register("deck-type", DeckTypeController);
 import DialogController from "./dialog_controller";
 application.register("dialog", DialogController);
 
+import DisclosureController from "./disclosure_controller";
+application.register("disclosure", DisclosureController);
+
 import FileUploadController from "./file_upload_controller";
 application.register("file-upload", FileUploadController);
 

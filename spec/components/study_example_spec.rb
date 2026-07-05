@@ -19,6 +19,18 @@ RSpec.describe Components::StudyExample do
     expect(html).to include("Bonjour le monde", "Hello world")
   end
 
+  it "renders a toggle bound to the x hotkey" do
+    html = render_for("Bonjour le monde", "Hello world")
+
+    expect(html).to include("study-example__toggle", %(data-hotkey="x"))
+  end
+
+  it "renders the panel hidden" do
+    html = render_for("Bonjour le monde", "Hello world")
+
+    expect(html).to include(%(class="study-example" hidden))
+  end
+
   it "renders an empty wrapper when both example fields are blank" do
     expect(render_for(nil, nil)).to eq(%(<div id="study-example"></div>))
   end
