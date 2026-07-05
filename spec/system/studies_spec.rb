@@ -52,12 +52,39 @@ RSpec.describe "studying a deck" do
       visit(deck_study_path(default_deck))
     end
 
-    it "shows the example after answering" do
+    it "shows the example when toggled after answering" do
       visit_card_with_example
       click_on("Paris")
+      click_on("example")
 
       expect(page).to have_text("Je vis à Paris.")
       expect(page).to have_text("I live in Paris.")
+    end
+
+    it "keeps the example hidden until toggled" do
+      visit_card_with_example
+      click_on("Paris")
+
+      expect(page).to have_css(".study-example__toggle")
+      expect(page).to have_no_text("Je vis à Paris.")
+    end
+
+    it "hides the example again with the close button" do
+      visit_card_with_example
+      click_on("Paris")
+      click_on("example")
+      click_on("Close example")
+
+      expect(page).to have_no_text("Je vis à Paris.")
+    end
+
+    it "toggles the example with the x hotkey" do
+      visit_card_with_example
+      click_on("Paris")
+
+      find("body").send_keys("x")
+
+      expect(page).to have_text("Je vis à Paris.")
     end
 
     it "does not show the example before answering" do
@@ -67,12 +94,12 @@ RSpec.describe "studying a deck" do
     end
   end
 
-  it "does not render an example block when the card has no example" do
+  it "does not render an example toggle when the card has no example" do
     default_deck.update!(level: 2)
     create(:card, deck: default_deck, back: "Paris")
     answer_first_card("Paris")
 
-    expect(page).to have_no_css(".study-example")
+    expect(page).to have_no_css(".study-example__toggle")
   end
 
   def answer_first_card(answer)
