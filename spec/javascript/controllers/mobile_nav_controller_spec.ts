@@ -1,6 +1,6 @@
 import {bootStimulus, getController} from "support/stimulus";
 import MobileNavController from "controllers/mobile_nav_controller";
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 
 function setupDOM(): void {
   document.body.innerHTML = `
@@ -19,7 +19,7 @@ async function setupController(): Promise<void> {
 function element(): HTMLElement {
   const selector = "[data-controller='mobile-nav']";
 
-  return assert(document.querySelector<HTMLElement>(selector));
+  return ensure(document.querySelector<HTMLElement>(selector));
 }
 
 function controller(): MobileNavController {
@@ -29,7 +29,7 @@ function controller(): MobileNavController {
 function menu(): HTMLElement {
   const selector = "[data-mobile-nav-target='menu']";
 
-  return assert(document.querySelector<HTMLElement>(selector));
+  return ensure(document.querySelector<HTMLElement>(selector));
 }
 
 describe("toggle", () => {

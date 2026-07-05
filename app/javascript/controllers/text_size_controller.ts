@@ -1,6 +1,6 @@
 import {Controller} from "@hotwired/stimulus";
 
-import {assert as ensure} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 
 const SIZES = ["s", "m", "l", "xl"] as const;
 type Size = (typeof SIZES)[number];

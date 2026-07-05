@@ -1,6 +1,6 @@
 import {bootStimulus, getController} from "support/stimulus";
 import DialogController from "controllers/dialog_controller";
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 
 // HTMLDialogElement.showModal and close are not implemented in jsdom
 // eslint-disable-next-line vitest/require-hook
@@ -29,7 +29,7 @@ async function setupController(): Promise<void> {
 function element(): HTMLElement {
   const selector = "[data-controller='dialog']";
 
-  return assert(document.querySelector<HTMLElement>(selector));
+  return ensure(document.querySelector<HTMLElement>(selector));
 }
 
 function controller(): DialogController {
@@ -39,7 +39,7 @@ function controller(): DialogController {
 function dialog(): HTMLDialogElement {
   const selector = "dialog[data-dialog-target='dialog']";
 
-  return assert(document.querySelector<HTMLDialogElement>(selector));
+  return ensure(document.querySelector<HTMLDialogElement>(selector));
 }
 
 describe("open", () => {

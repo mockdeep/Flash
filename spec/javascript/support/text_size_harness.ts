@@ -1,6 +1,6 @@
 import {bootStimulus, getController} from "support/stimulus";
 import TextSizeController from "controllers/text_size_controller";
-import {assert as ensure} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 
 type Size = "s" | "m" | "l" | "xl";
 type EventTargetName = "target" | "currentTarget";

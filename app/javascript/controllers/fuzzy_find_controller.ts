@@ -1,6 +1,6 @@
 import {Controller} from "@hotwired/stimulus";
 
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 
 const MAX_RESULTS = 5;
 
@@ -163,7 +163,7 @@ export default class extends Controller<HTMLElement> {
    */
   private anchorStudyFrame(): void {
     if (!window.matchMedia(MOBILE_VIEWPORT).matches) { return; }
-    const frame = assert(this.element.closest(".study-frame"));
+    const frame = ensure(this.element.closest(".study-frame"));
     frame.scrollIntoView({behavior: "instant", block: "start"});
   }
 

@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 import {detectPitch} from "music/pitch_detector";
 
 const SAMPLE_RATE = 44100;
@@ -24,14 +24,14 @@ function relativeError(detected: number, target: number): number {
 describe("detectPitch with default options", () => {
   it("detects a 440 Hz sine wave within 1%", () => {
     const samples = generateSine(440, 4096);
-    const detected = assert(detectPitch(samples, SAMPLE_RATE));
+    const detected = ensure(detectPitch(samples, SAMPLE_RATE));
 
     expect(relativeError(detected, 440)).toBeLessThan(0.01);
   });
 
   it("detects middle C (~261.63 Hz) within 1%", () => {
     const samples = generateSine(261.63, 4096);
-    const detected = assert(detectPitch(samples, SAMPLE_RATE));
+    const detected = ensure(detectPitch(samples, SAMPLE_RATE));
 
     expect(relativeError(detected, 261.63)).toBeLessThan(0.01);
   });
@@ -53,7 +53,7 @@ describe("detectPitch with custom options", () => {
   it("respects a custom threshold for accepting a candidate", () => {
     const samples = generateSine(440, 4096);
     const detected =
-      assert(detectPitch(samples, SAMPLE_RATE, {threshold: 0.05}));
+      ensure(detectPitch(samples, SAMPLE_RATE, {threshold: 0.05}));
 
     expect(relativeError(detected, 440)).toBeLessThan(0.01);
   });
@@ -61,7 +61,7 @@ describe("detectPitch with custom options", () => {
   it("respects a custom minHz (raises maxTau, shrinks search range)", () => {
     const samples = generateSine(440, 4096);
     const detected =
-      assert(detectPitch(samples, SAMPLE_RATE, {minHz: 200}));
+      ensure(detectPitch(samples, SAMPLE_RATE, {minHz: 200}));
 
     expect(relativeError(detected, 440)).toBeLessThan(0.01);
   });
@@ -69,7 +69,7 @@ describe("detectPitch with custom options", () => {
   it("respects a custom maxHz (raises minTau, shrinks search range)", () => {
     const samples = generateSine(440, 4096);
     const detected =
-      assert(detectPitch(samples, SAMPLE_RATE, {maxHz: 1000}));
+      ensure(detectPitch(samples, SAMPLE_RATE, {maxHz: 1000}));
 
     expect(relativeError(detected, 440)).toBeLessThan(0.01);
   });
@@ -83,7 +83,7 @@ describe("detectPitch with custom options", () => {
   it("stops the local-min walk when it reaches the maxTau boundary", () => {
     const samples = generateSine(100, 4096);
     const detected =
-      assert(detectPitch(samples, SAMPLE_RATE, {minHz: 100}));
+      ensure(detectPitch(samples, SAMPLE_RATE, {minHz: 100}));
 
     expect(relativeError(detected, 100)).toBeLessThan(0.01);
   });

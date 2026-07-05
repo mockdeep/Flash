@@ -1,7 +1,7 @@
 import {describe, expect, it} from "vitest";
 import {bootStimulus, getController} from "support/stimulus";
 import DeckTypeController from "controllers/deck_type_controller";
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 
 const textSel = "[data-deck-type-target='textInstructions']";
 const musicSel = "[data-deck-type-target='musicInstructions']";
@@ -56,7 +56,7 @@ async function setupController(): Promise<void> {
 }
 
 function element(): HTMLElement {
-  return assert(document.querySelector<HTMLElement>(rootSel));
+  return ensure(document.querySelector<HTMLElement>(rootSel));
 }
 
 function controller(): DeckTypeController {
@@ -64,21 +64,21 @@ function controller(): DeckTypeController {
 }
 
 function textInstructions(): HTMLElement {
-  return assert(document.querySelector<HTMLElement>(textSel));
+  return ensure(document.querySelector<HTMLElement>(textSel));
 }
 
 function musicInstructions(): HTMLElement {
-  return assert(document.querySelector<HTMLElement>(musicSel));
+  return ensure(document.querySelector<HTMLElement>(musicSel));
 }
 
 function musicSettings(): HTMLElement {
-  return assert(document.querySelector<HTMLElement>(settingsSel));
+  return ensure(document.querySelector<HTMLElement>(settingsSel));
 }
 
 function radio(value: RadioValue): HTMLInputElement {
   const sel = `input[name="deck[deck_type]"][value="${value}"]`;
 
-  return assert(document.querySelector<HTMLInputElement>(sel));
+  return ensure(document.querySelector<HTMLInputElement>(sel));
 }
 
 describe("connect with text selected", () => {

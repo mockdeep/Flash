@@ -6,7 +6,7 @@ import {
   renderProgress,
 } from "./music_study_helpers";
 import {Controller} from "@hotwired/stimulus";
-import {assert as ensure} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 import {detectPitch} from "music/pitch_detector";
 import {frequencyToNote, parseSequence} from "music/note_utils";
 import {initialState, step} from "music/sequence_session";

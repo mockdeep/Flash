@@ -1,7 +1,7 @@
 import {describe, expect, it} from "vitest";
 import {bootStimulus, getController} from "support/stimulus";
 import FileUploadController from "controllers/file_upload_controller";
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 
 const iconSel = "[data-file-upload-target='icon']";
 const textSel = "[data-file-upload-target='text']";
@@ -31,7 +31,7 @@ async function setupController(): Promise<void> {
 function element(): HTMLElement {
   const selector = "[data-controller='file-upload']";
 
-  return assert(document.querySelector<HTMLElement>(selector));
+  return ensure(document.querySelector<HTMLElement>(selector));
 }
 
 function controller(): FileUploadController {
@@ -39,11 +39,11 @@ function controller(): FileUploadController {
 }
 
 function icon(): HTMLElement {
-  return assert(document.querySelector<HTMLElement>(iconSel));
+  return ensure(document.querySelector<HTMLElement>(iconSel));
 }
 
 function text(): HTMLElement {
-  return assert(document.querySelector<HTMLElement>(textSel));
+  return ensure(document.querySelector<HTMLElement>(textSel));
 }
 
 function fileList(files: File[]): FileList {

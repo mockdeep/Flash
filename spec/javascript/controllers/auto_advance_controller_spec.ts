@@ -1,7 +1,7 @@
 import type {visit as Visit} from "@hotwired/turbo";
 import {describe, expect, it, vi} from "vitest";
 import AutoAdvanceController from "controllers/auto_advance_controller";
-import {assert as ensure} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 import {bootStimulus, getController} from "support/stimulus";
 import {visit} from "@hotwired/turbo";
 

@@ -1,7 +1,7 @@
 import {describe, expect, it, vi} from "vitest";
 import {bootStimulus, getController} from "support/stimulus";
 import ConfirmSubmitController from "controllers/confirm_submit_controller";
-import {assert as ensure} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 
 const message = "Are you sure?";
 

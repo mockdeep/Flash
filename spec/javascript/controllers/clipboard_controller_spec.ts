@@ -1,7 +1,7 @@
 import {describe, expect, it, vi} from "vitest";
 import {bootStimulus, getController} from "support/stimulus";
 import ClipboardController from "controllers/clipboard_controller";
-import {assert as ensure} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 
 const url = "https://flash.test/shared/abc123";
 
