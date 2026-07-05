@@ -33,6 +33,30 @@ Object.defineProperty(globalThis, "localStorage", {
   writable: true,
 });
 
+/*
+ * Non-matching matchMedia shim: jsdom does not implement it. Tests that need
+ * a matching media query mock window.matchMedia per-test.
+ */
+function buildMediaQueryList(query: string): MediaQueryList {
+  return {
+    addEventListener(): void { /* Listeners are irrelevant in tests */ },
+    addListener(): void { /* Deprecated listener API */ },
+    dispatchEvent(): boolean { return false; },
+    matches: false,
+    media: query,
+    onchange: null,
+    removeEventListener(): void { /* Listeners are irrelevant in tests */ },
+    removeListener(): void { /* Deprecated listener API */ },
+  };
+}
+
+// eslint-disable-next-line vitest/require-hook
+Object.defineProperty(window, "matchMedia", {
+  configurable: true,
+  value: buildMediaQueryList,
+  writable: true,
+});
+
 beforeEach(() => {
   expect.hasAssertions();
 

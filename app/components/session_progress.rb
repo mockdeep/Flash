@@ -61,7 +61,7 @@ module Components
           class: "milestone-goal-trigger",
           data: { action: "click->dialog#open" },
         ) { @study_goal.to_s }
-        plain(" completed")
+        span(class: "progress-label__suffix") { " completed" }
       end
     end
 
