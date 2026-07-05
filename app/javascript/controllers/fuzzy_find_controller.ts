@@ -1,6 +1,10 @@
 import {Controller} from "@hotwired/stimulus";
 
+import {assert} from "helpers/assert";
+
 const MAX_RESULTS = 5;
+
+const MOBILE_VIEWPORT = "(max-width: 768px)";
 
 const ATOMIC_LATIN_SUBSTITUTIONS = new Map<string, string>([
   ["æ", "ae"],
@@ -125,6 +129,10 @@ export default class extends Controller<HTMLElement> {
 
   private selectedIndex = 0;
 
+  override connect(): void {
+    this.anchorStudyFrame();
+  }
+
   filter(): void {
     const matches = matchAnswers(this.answersValue, this.inputTarget.value);
     this.currentMatches = matches.map((match) => {
@@ -147,6 +155,16 @@ export default class extends Controller<HTMLElement> {
     const answer = this.currentMatches[this.selectedIndex];
     if (answer === undefined) { return; }
     this.submitWith(answer);
+  }
+
+  /*
+   * Keep the study frame pinned to the top of the screen on mobile so the
+   * page doesn't jump when the on-screen keyboard opens for the input.
+   */
+  private anchorStudyFrame(): void {
+    if (!window.matchMedia(MOBILE_VIEWPORT).matches) { return; }
+    const frame = assert(this.element.closest(".study-frame"));
+    frame.scrollIntoView({behavior: "instant", block: "start"});
   }
 
   private moveSelection(event: KeyboardEvent, delta: number): void {

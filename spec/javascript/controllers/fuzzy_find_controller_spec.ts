@@ -89,6 +89,40 @@ async function typeAndFilter(
   await Promise.resolve();
 }
 
+function mockMobileViewport(): void {
+  const matchMedia = window.matchMedia.bind(window);
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => {
+    const mediaQueryList = matchMedia(query);
+    Object.defineProperty(mediaQueryList, "matches", {value: true});
+
+    return mediaQueryList;
+  });
+}
+
+function wrapInStudyFrame(): HTMLElement {
+  const frame = document.createElement("div");
+  frame.className = "study-frame";
+  const root = assert(document.querySelector<HTMLElement>(rootSel));
+  frame.appendChild(root);
+  document.body.appendChild(frame);
+
+  return frame;
+}
+
+describe("connect on a mobile viewport", () => {
+  it("scrolls the study frame to the top of the screen", async () => {
+    mockMobileViewport();
+    setupDOM(["Paris"]);
+    const frame = wrapInStudyFrame();
+    const scroll = vi.fn<(options?: ScrollIntoViewOptions) => void>();
+    frame.scrollIntoView = scroll;
+
+    await bootStimulus("fuzzy-find", FuzzyFindController);
+
+    expect(scroll).toHaveBeenCalledWith({behavior: "instant", block: "start"});
+  });
+});
+
 describe("filter with no input", () => {
   it("shows nothing when input is empty", async () => {
     const controller = await boot(["Paris", "London"]);

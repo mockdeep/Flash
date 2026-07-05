@@ -1013,6 +1013,52 @@ body {
   .hotkey-hint {
     display: none;
   }
+
+  .study-frame {
+    scroll-margin-top: 80px;
+  }
+
+  .session-progress {
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 4px var(--spacing-xs);
+    padding: 6px var(--spacing-xs);
+  }
+
+  .deck-progress-row,
+  .session-progress-bar {
+    display: contents;
+  }
+
+  .session-progress .level-stars {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .session-progress .progress-completed {
+    grid-row: 1;
+    grid-column: 2;
+    margin-bottom: 0;
+  }
+
+  .session-progress .progress-label {
+    grid-row: 1;
+    grid-column: 3;
+  }
+
+  .session-progress .progress-deck {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+
+  .session-progress-bar-complete .progress-completed {
+    animation: progress-glow 1s ease-out;
+  }
+
+  .session-progress .level-label,
+  .progress-label__suffix {
+    display: none;
+  }
 }
 
 /* Focus styles for accessibility */
