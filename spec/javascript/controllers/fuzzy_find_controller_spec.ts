@@ -152,7 +152,7 @@ describe("filter matching", () => {
 });
 
 describe("filter multi-word matching", () => {
-  it("matches consecutive words when the query has whitespace", async () => {
+  it("matches adjacent words when the query has whitespace", async () => {
     const controller = await boot(["last name", "first name", "lastly"]);
 
     await typeAndFilter(controller, "last name");
@@ -160,7 +160,7 @@ describe("filter multi-word matching", () => {
     expect(matchTexts()).toStrictEqual(["last name"]);
   });
 
-  it("matches consecutive word prefixes inside a phrase", async () => {
+  it("matches word prefixes inside a phrase", async () => {
     const controller = await boot([
       "the quick brown fox",
       "quick fox",
@@ -172,6 +172,16 @@ describe("filter multi-word matching", () => {
     expect(matchTexts()).toStrictEqual(["the quick brown fox"]);
   });
 
+  it("matches word prefixes separated by other words", async () => {
+    const controller = await boot(["to have a beard", "to be happy"]);
+
+    await typeAndFilter(controller, "ha be");
+
+    expect(matchTexts()).toStrictEqual(["to have a beard"]);
+  });
+});
+
+describe("filter multi-word edge cases", () => {
   it("does not match when query words are out of order", async () => {
     const controller = await boot(["the quick brown fox"]);
 
