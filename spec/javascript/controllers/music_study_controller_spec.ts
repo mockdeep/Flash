@@ -5,7 +5,7 @@ import type {MusicSpec} from "support/music_study_harness";
 import MusicStudyController, {
   resetMicActivatedForTests,
 } from "controllers/music_study_controller";
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 import {playSequence} from "music/reference_player";
 import {bootMusicStudy, musicTarget} from "support/music_study_harness";
 
@@ -76,7 +76,7 @@ describe("startMic when access is granted", () => {
 
   it("connects the mic source to a 4096-sized analyser", async () => {
     const spec = await started();
-    const ctx = assert(spec.harness.audioContexts[0]);
+    const ctx = ensure(spec.harness.audioContexts[0]);
 
     expect(ctx.analyser.fftSize).toBe(4096);
     expect(ctx.source.connect).toHaveBeenCalledWith(ctx.analyser);
@@ -96,7 +96,7 @@ describe("startMic when access is granted", () => {
 
   it("auto-plays the reference sequence", async () => {
     const spec = await started("C4,E4");
-    const ctx = assert(spec.harness.audioContexts[0]);
+    const ctx = ensure(spec.harness.audioContexts[0]);
 
     expect(playSequence).toHaveBeenCalledWith(ctx, ["C4", "E4"]);
   });
@@ -133,7 +133,7 @@ describe("play after the mic has been started", () => {
 
   it("calls playSequence with the audio context and parsed notes", async () => {
     const spec = await startThenPlay();
-    const ctx = assert(spec.harness.audioContexts[0]);
+    const ctx = ensure(spec.harness.audioContexts[0]);
 
     expect(playSequence).toHaveBeenCalledWith(ctx, ["C4", "E4"]);
   });
@@ -149,7 +149,7 @@ describe("a frame that fires after disconnect", () => {
   it("returns early without touching the (now-null) analyser", async () => {
     const spec = await started();
     const entries = Array.from(spec.harness.raf.callbacks.entries());
-    const [, callback] = assert(entries[0]);
+    const [, callback] = ensure(entries[0]);
 
     spec.controller.disconnect();
 
@@ -168,7 +168,7 @@ describe("disconnect after the mic has been started", () => {
 
   it("stops every track on the media stream", async () => {
     const spec = await started();
-    const track = assert(spec.harness.stream.tracks[0]);
+    const track = ensure(spec.harness.stream.tracks[0]);
 
     spec.controller.disconnect();
 
@@ -177,7 +177,7 @@ describe("disconnect after the mic has been started", () => {
 
   it("closes the audio context", async () => {
     const spec = await started();
-    const ctx = assert(spec.harness.audioContexts[0]);
+    const ctx = ensure(spec.harness.audioContexts[0]);
 
     spec.controller.disconnect();
 
@@ -186,7 +186,7 @@ describe("disconnect after the mic has been started", () => {
 
   it("swallows errors from a failed close()", async () => {
     const spec = await started();
-    const ctx = assert(spec.harness.audioContexts[0]);
+    const ctx = ensure(spec.harness.audioContexts[0]);
     ctx.close.mockRejectedValueOnce(new Error("already closed"));
 
     expect(() => { spec.controller.disconnect(); }).not.toThrow();

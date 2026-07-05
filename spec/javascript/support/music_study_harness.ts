@@ -1,7 +1,7 @@
 import type {Context, Controller} from "@hotwired/stimulus";
 import type {Mock} from "vitest";
 import {vi} from "vitest";
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 import {bootStimulus, getController} from "support/stimulus";
 import {detectPitch} from "music/pitch_detector";
 
@@ -189,7 +189,7 @@ async function bootMusicStudy<TController extends Controller>(
   setupMusicDOM(sequence);
   await bootStimulus("music-study", controllerClass);
   const sel = "[data-controller='music-study']";
-  const root = assert(document.querySelector<HTMLElement>(sel));
+  const root = ensure(document.querySelector<HTMLElement>(sel));
   const controller = getController(root, "music-study", controllerClass);
 
   return {controller, harness};
@@ -201,7 +201,7 @@ function fireFrames(harness: MusicHarness, count: number): void {
     if (entries.length === 0) {
       return;
     }
-    const [handle, callback] = assert(entries[0]);
+    const [handle, callback] = ensure(entries[0]);
     harness.raf.callbacks.delete(handle);
     callback(performance.now());
   }
@@ -221,19 +221,19 @@ function holdNote(harness: MusicHarness, hz: number, when: number): void {
 function musicTarget(name: string): HTMLElement {
   const sel = `[data-music-study-target='${name}']`;
 
-  return assert(document.querySelector<HTMLElement>(sel));
+  return ensure(document.querySelector<HTMLElement>(sel));
 }
 
 function musicInput(name: string): HTMLInputElement {
   const sel = `[data-music-study-target='${name}']`;
 
-  return assert(document.querySelector<HTMLInputElement>(sel));
+  return ensure(document.querySelector<HTMLInputElement>(sel));
 }
 
 function musicForm(name: string): HTMLFormElement {
   const sel = `[data-music-study-target='${name}']`;
 
-  return assert(document.querySelector<HTMLFormElement>(sel));
+  return ensure(document.querySelector<HTMLFormElement>(sel));
 }
 
 export {

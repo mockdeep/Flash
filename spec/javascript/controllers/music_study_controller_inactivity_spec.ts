@@ -5,7 +5,7 @@ import type {MusicSpec} from "support/music_study_harness";
 import MusicStudyController, {
   resetMicActivatedForTests,
 } from "controllers/music_study_controller";
-import {assert as ensure} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 import {playSequence} from "music/reference_player";
 import {bootMusicStudy, holdNote} from "support/music_study_harness";
 

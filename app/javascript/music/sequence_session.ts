@@ -1,4 +1,4 @@
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 
 interface Candidate {
   note: string;
@@ -85,7 +85,7 @@ function classifyHeldNote(
   state: SessionState,
   detectedNote: string,
 ): StepResult {
-  const expected = assert(state.notes[state.nextIndex]);
+  const expected = ensure(state.notes[state.nextIndex]);
   const matched = detectedNote === expected;
   const nextIndex = nextIndexAfter(state, matched);
   const attemptCount = state.attemptCount + 1;
@@ -157,7 +157,7 @@ function processTone(state: SessionState, input: StepInput): StepResult {
   if (!isInTolerance(input)) {
     return clearCandidate(state);
   }
-  const {note} = assert(input.detected);
+  const {note} = ensure(input.detected);
   if (state.candidate?.note !== note) {
     return startCandidate(state, note, input.now);
   }

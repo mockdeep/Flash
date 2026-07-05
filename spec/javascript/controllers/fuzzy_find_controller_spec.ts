@@ -1,7 +1,7 @@
 import {describe, expect, it, vi} from "vitest";
 import {bootStimulus, getController} from "support/stimulus";
 import FuzzyFindController from "controllers/fuzzy_find_controller";
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 
 const rootSel = "[data-controller='fuzzy-find']";
 const inputSel = "[data-fuzzy-find-target='input']";
@@ -25,45 +25,45 @@ function setupDOM(answers: string[]): void {
       <p data-fuzzy-find-target="noMatches" hidden></p>
     </div>
   `;
-  const root = assert(document.querySelector<HTMLElement>(rootSel));
+  const root = ensure(document.querySelector<HTMLElement>(rootSel));
   root.dataset.fuzzyFindAnswersValue = JSON.stringify(answers);
 }
 
 async function boot(answers: string[]): Promise<FuzzyFindController> {
   setupDOM(answers);
   await bootStimulus("fuzzy-find", FuzzyFindController);
-  const root = assert(document.querySelector<HTMLElement>(rootSel));
+  const root = ensure(document.querySelector<HTMLElement>(rootSel));
 
   return getController(root, "fuzzy-find", FuzzyFindController);
 }
 
 function inputEl(): HTMLInputElement {
-  return assert(document.querySelector<HTMLInputElement>(inputSel));
+  return ensure(document.querySelector<HTMLInputElement>(inputSel));
 }
 
 function resultsEl(): HTMLElement {
-  return assert(document.querySelector<HTMLElement>(resultsSel));
+  return ensure(document.querySelector<HTMLElement>(resultsSel));
 }
 
 function noMatchesEl(): HTMLElement {
-  return assert(document.querySelector<HTMLElement>(noMatchesSel));
+  return ensure(document.querySelector<HTMLElement>(noMatchesSel));
 }
 
 function answerInputEl(): HTMLInputElement {
-  return assert(document.querySelector<HTMLInputElement>(answerInputSel));
+  return ensure(document.querySelector<HTMLInputElement>(answerInputSel));
 }
 
 function possibleAnswerInputEl(): HTMLInputElement {
-  return assert(document.querySelector<HTMLInputElement>(possibleSel));
+  return ensure(document.querySelector<HTMLInputElement>(possibleSel));
 }
 
 function formEl(): HTMLFormElement {
-  return assert(document.querySelector<HTMLFormElement>("form"));
+  return ensure(document.querySelector<HTMLFormElement>("form"));
 }
 
 function matchTexts(): string[] {
   return [...resultsEl().querySelectorAll("button")].map((button) => {
-    return assert(button.textContent);
+    return ensure(button.textContent);
   });
 }
 
@@ -77,7 +77,7 @@ function stubSubmit(): SubmitFn {
 function topMatchButton(): HTMLButtonElement {
   const button = resultsEl().querySelector<HTMLButtonElement>(matchButtonSel);
 
-  return assert(button);
+  return ensure(button);
 }
 
 async function typeAndFilter(
@@ -102,7 +102,7 @@ function mockMobileViewport(): void {
 function wrapInStudyFrame(): HTMLElement {
   const frame = document.createElement("div");
   frame.className = "study-frame";
-  const root = assert(document.querySelector<HTMLElement>(rootSel));
+  const root = ensure(document.querySelector<HTMLElement>(rootSel));
   frame.appendChild(root);
   document.body.appendChild(frame);
 
@@ -376,7 +376,7 @@ describe("submitSelected", () => {
 function selectedTexts(): string[] {
   return [...resultsEl().querySelectorAll(".answer-button.is-selected")].
     map((button) => {
-      return assert(button.textContent);
+      return ensure(button.textContent);
     });
 }
 

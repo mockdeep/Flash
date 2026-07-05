@@ -5,7 +5,7 @@ import type {MusicSpec} from "support/music_study_harness";
 import MusicStudyController, {
   resetMicActivatedForTests,
 } from "controllers/music_study_controller";
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 import {detectPitch} from "music/pitch_detector";
 import {playSequence} from "music/reference_player";
 import {
@@ -45,7 +45,7 @@ async function withHeldPlayback(spec: Spec, body: () => void): Promise<void> {
   await spec.controller.startMic();
   const playPromise = spec.controller.play();
   body();
-  assert(resolvers[0])();
+  ensure(resolvers[0])();
   await playPromise;
 }
 
@@ -254,7 +254,7 @@ describe("delayed replay when attempts are exhausted", () => {
 
     exhaust(spec);
     vi.advanceTimersByTime(1000);
-    const ctx = assert(spec.harness.audioContexts[0]);
+    const ctx = ensure(spec.harness.audioContexts[0]);
     const {calls} = vi.mocked(playSequence).mock;
     vi.useRealTimers();
 

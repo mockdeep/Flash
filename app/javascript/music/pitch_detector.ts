@@ -1,4 +1,4 @@
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 
 const DEFAULT_THRESHOLD = 0.15;
 const DEFAULT_MIN_HZ = 60;
@@ -19,7 +19,7 @@ function differenceFunction(
   for (let tau = 1; tau <= maxTau; tau += 1) {
     let sum = 0;
     for (let index = 0; index < maxTau; index += 1) {
-      const delta = assert(samples[index]) - assert(samples[index + tau]);
+      const delta = ensure(samples[index]) - ensure(samples[index + tau]);
       sum += delta * delta;
     }
     diffs[tau] = sum;
@@ -32,8 +32,8 @@ function normalizeCMNDF(diffs: Float32Array): void {
   diffs[0] = 1;
   let runningSum = 0;
   for (let tau = 1; tau < diffs.length; tau += 1) {
-    runningSum += assert(diffs[tau]);
-    diffs[tau] = assert(diffs[tau]) * tau / runningSum;
+    runningSum += ensure(diffs[tau]);
+    diffs[tau] = ensure(diffs[tau]) * tau / runningSum;
   }
 }
 
@@ -47,11 +47,11 @@ interface SearchArgs {
 function findFundamentalTau(args: SearchArgs): number | null {
   const {diffs, maxTau, minTau, threshold} = args;
   for (let tau = minTau; tau <= maxTau; tau += 1) {
-    if (assert(diffs[tau]) < threshold) {
+    if (ensure(diffs[tau]) < threshold) {
       let bestTau = tau;
       while (
         bestTau < maxTau &&
-        assert(diffs[bestTau + 1]) < assert(diffs[bestTau])
+        ensure(diffs[bestTau + 1]) < ensure(diffs[bestTau])
       ) {
         bestTau += 1;
       }

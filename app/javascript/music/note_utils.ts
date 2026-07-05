@@ -1,4 +1,4 @@
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 
 const A4_FREQUENCY = 440;
 const A4_MIDI = 69;
@@ -27,19 +27,19 @@ function noteToMidi(note: string): number {
   if (!match) {
     throw new Error(`Invalid note: ${note}`);
   }
-  const offset = assert(LETTER_TO_OFFSET[assert(match[1])]);
+  const offset = ensure(LETTER_TO_OFFSET[ensure(match[1])]);
   let sharpStep = 0;
   if (match[2] === "#") {
     sharpStep = 1;
   }
-  const octave = Number(assert(match[3]));
+  const octave = Number(ensure(match[3]));
 
   return offset + sharpStep + (octave + 1) * SEMITONES_PER_OCTAVE;
 }
 
 function midiToNote(midi: number): string {
   const octave = Math.floor(midi / SEMITONES_PER_OCTAVE) - 1;
-  const name = assert(NOTE_NAMES[midi % SEMITONES_PER_OCTAVE]);
+  const name = ensure(NOTE_NAMES[midi % SEMITONES_PER_OCTAVE]);
 
   return `${name}${octave}`;
 }

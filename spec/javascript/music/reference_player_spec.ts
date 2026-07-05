@@ -1,7 +1,7 @@
 import type {AudioContextLike} from "music/reference_player";
 import type {Mock} from "vitest";
 import {describe, expect, it, vi} from "vitest";
-import {assert} from "helpers/assert";
+import {ensure} from "helpers/ensure";
 import {playSequence} from "music/reference_player";
 
 interface MockGain {
@@ -114,15 +114,15 @@ describe("playSequence configures each oscillator", () => {
     const harness = buildHarness();
     await playAndFlush(harness, ["A4"]);
 
-    expect(assert(harness.oscillators[0]).type).toBe("sine");
-    expect(assert(harness.oscillators[1]).type).toBe("sine");
+    expect(ensure(harness.oscillators[0]).type).toBe("sine");
+    expect(ensure(harness.oscillators[1]).type).toBe("sine");
   });
 
   it("sets the fundamental to the note's frequency", async () => {
     const harness = buildHarness();
     await playAndFlush(harness, ["A4"]);
 
-    expect(assert(harness.oscillators[0]).frequency.value).
+    expect(ensure(harness.oscillators[0]).frequency.value).
       toBeCloseTo(440, 5);
   });
 
@@ -130,7 +130,7 @@ describe("playSequence configures each oscillator", () => {
     const harness = buildHarness();
     await playAndFlush(harness, ["A4"]);
 
-    expect(assert(harness.oscillators[1]).frequency.value).
+    expect(ensure(harness.oscillators[1]).frequency.value).
       toBeCloseTo(880, 5);
   });
 
@@ -138,17 +138,17 @@ describe("playSequence configures each oscillator", () => {
     const harness = buildHarness();
     await playAndFlush(harness, ["A4"]);
 
-    expect(assert(harness.oscillators[0]).connect).
-      toHaveBeenCalledWith(assert(harness.gains[0]));
-    expect(assert(harness.oscillators[1]).connect).
-      toHaveBeenCalledWith(assert(harness.gains[1]));
+    expect(ensure(harness.oscillators[0]).connect).
+      toHaveBeenCalledWith(ensure(harness.gains[0]));
+    expect(ensure(harness.oscillators[1]).connect).
+      toHaveBeenCalledWith(ensure(harness.gains[1]));
   });
 
   it("connects gain → destination", async () => {
     const harness = buildHarness();
     await playAndFlush(harness, ["A4"]);
 
-    expect(assert(harness.gains[0]).connect).
+    expect(ensure(harness.gains[0]).connect).
       toHaveBeenCalledWith(harness.destination);
   });
 });
@@ -158,15 +158,15 @@ describe("playSequence schedules with default timings", () => {
     const harness = buildHarness(2);
     await playAndFlush(harness, ["A4", "C5"]);
 
-    expect(assert(harness.oscillators[0]).start).toHaveBeenCalledWith(2);
-    expect(assert(harness.oscillators[2]).start).toHaveBeenCalledWith(2.6);
+    expect(ensure(harness.oscillators[0]).start).toHaveBeenCalledWith(2);
+    expect(ensure(harness.oscillators[2]).start).toHaveBeenCalledWith(2.6);
   });
 
   it("stops each note 500ms after its start by default", async () => {
     const harness = buildHarness();
     await playAndFlush(harness, ["A4"]);
 
-    expect(assert(harness.oscillators[0]).stop).toHaveBeenCalledWith(0.5);
+    expect(ensure(harness.oscillators[0]).stop).toHaveBeenCalledWith(0.5);
   });
 });
 
@@ -196,7 +196,7 @@ describe("playSequence honors custom options", () => {
     const harness = buildHarness();
     await playAndFlush(harness, ["A4"], {noteDurationMs: 200});
 
-    expect(assert(harness.oscillators[0]).stop).toHaveBeenCalledWith(0.2);
+    expect(ensure(harness.oscillators[0]).stop).toHaveBeenCalledWith(0.2);
   });
 
   it("respects a custom gapMs in scheduling", async () => {
@@ -207,6 +207,6 @@ describe("playSequence honors custom options", () => {
       {gapMs: 50, noteDurationMs: 200},
     );
 
-    expect(assert(harness.oscillators[2]).start).toHaveBeenCalledWith(0.25);
+    expect(ensure(harness.oscillators[2]).start).toHaveBeenCalledWith(0.25);
   });
 });
