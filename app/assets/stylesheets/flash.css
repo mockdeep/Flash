@@ -778,20 +778,20 @@ body {
 .study-frame[data-size="xl"] .study-example__back { font-size: 21px; }
 
 .card-reading {
-  margin-top: var(--spacing-xs);
+  position: absolute;
+  bottom: 9px;
+  left: 50%;
+  transform: translateX(-50%);
   color: var(--color-text-secondary);
   font-family: var(--font-mono);
-  font-size: 20px;
-  text-align: center;
+  font-size: 15px;
+  white-space: nowrap;
+  animation: answer-reveal var(--transition-slow) ease-out;
 }
 
 .card-reading:empty {
   display: none;
 }
-
-.study-frame[data-size="s"]  .card-reading { font-size: 16px; }
-.study-frame[data-size="l"]  .card-reading { font-size: 24px; }
-.study-frame[data-size="xl"] .card-reading { font-size: 28px; }
 
 .next-card-button {
   position: fixed;
