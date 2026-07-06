@@ -1098,7 +1098,7 @@ body {
   }
 
   .card-front-wrapper {
-    padding: var(--spacing-md) var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-sm) var(--spacing-lg);
     box-shadow:
       4px 4px 0 -2px var(--color-background),
       4px 4px 0 0 var(--color-border-dark);
