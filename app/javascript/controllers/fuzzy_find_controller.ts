@@ -85,27 +85,6 @@ function collectMatches(answers: string[], queryWords: string[]): Match[] {
   return matches;
 }
 
-function buildMatchButton(answer: string): HTMLButtonElement {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "answer-button";
-  button.dataset.action = "fuzzy-find#select";
-  button.dataset.fuzzyFindAnswerParam = answer;
-  const text = document.createElement("span");
-  text.className = "answer-text";
-  text.textContent = answer;
-  button.appendChild(text);
-
-  return button;
-}
-
-function buildMatchItem(answer: string): HTMLLIElement {
-  const li = document.createElement("li");
-  li.appendChild(buildMatchButton(answer));
-
-  return li;
-}
-
 function matchAnswers(answers: string[], rawQuery: string): Match[] {
   const query = normalize(rawQuery.trim());
   if (query.length === 0) { return []; }
@@ -126,6 +105,7 @@ export default class extends Controller<HTMLElement> {
     "form",
     "answerInput",
     "possibleAnswerInput",
+    "matchTemplate",
   ];
 
   static override values = {
@@ -143,6 +123,8 @@ export default class extends Controller<HTMLElement> {
   declare answerInputTarget: HTMLInputElement;
 
   declare possibleAnswerInputTarget: HTMLInputElement;
+
+  declare matchTemplateTarget: HTMLTemplateElement;
 
   declare answersValue: string[];
 
@@ -213,9 +195,19 @@ export default class extends Controller<HTMLElement> {
     this.noMatchesTarget.hidden = this.currentMatches.length > 0 || empty;
 
     this.currentMatches.forEach((answer) => {
-      this.resultsTarget.appendChild(buildMatchItem(answer));
+      this.resultsTarget.appendChild(this.buildMatchItem(answer));
     });
     this.highlightSelected();
+  }
+
+  private buildMatchItem(answer: string): DocumentFragment {
+    const item = document.importNode(this.matchTemplateTarget.content, true);
+    const button =
+      ensure(item.querySelector<HTMLButtonElement>(".answer-button"));
+    button.dataset.fuzzyFindAnswerParam = answer;
+    ensure(item.querySelector(".answer-text")).textContent = answer;
+
+    return item;
   }
 
   private highlightSelected(): void {

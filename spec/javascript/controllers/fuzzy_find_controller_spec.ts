@@ -23,6 +23,15 @@ function setupDOM(answers: string[]): void {
       <input type="text" data-fuzzy-find-target="input">
       <ol data-fuzzy-find-target="results"></ol>
       <p data-fuzzy-find-target="noMatches" hidden></p>
+      <template data-fuzzy-find-target="matchTemplate">
+        <li>
+          <button
+            type="button"
+            class="answer-button"
+            data-action="fuzzy-find#select"
+          ><span class="answer-text"></span></button>
+        </li>
+      </template>
     </div>
   `;
   const root = ensure(document.querySelector<HTMLElement>(rootSel));
