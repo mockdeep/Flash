@@ -1,17 +1,13 @@
 import {describe, expect, it} from "vitest";
 import {
   boot,
-  clickEventOn,
+  buildOption,
   controller,
   element,
   eventTargeting,
-  keyEvent,
-  menu,
-  openMenu,
   option,
   selectEvent,
   STORAGE_KEY,
-  toggle,
 } from "support/text_size_harness";
 
 describe("connect with empty storage", () => {
@@ -61,46 +57,9 @@ describe("connect with garbage in storage", () => {
   });
 });
 
-describe("toggleMenu", () => {
-  it("opens a closed menu", async () => {
-    await boot();
-
-    openMenu();
-
-    expect(menu().hidden).toBe(false);
-  });
-
-  it("sets aria-expanded to true when opening", async () => {
-    await boot();
-
-    openMenu();
-
-    expect(toggle().getAttribute("aria-expanded")).toBe("true");
-  });
-
-  it("closes an open menu", async () => {
-    await boot();
-    openMenu();
-
-    controller().toggleMenu(new MouseEvent("click"));
-
-    expect(menu().hidden).toBe(true);
-  });
-
-  it("sets aria-expanded to false when closing", async () => {
-    await boot();
-    openMenu();
-
-    controller().toggleMenu(new MouseEvent("click"));
-
-    expect(toggle().getAttribute("aria-expanded")).toBe("false");
-  });
-});
-
 describe("setSize from a menu option", () => {
   it("applies the chosen size to the wrapper", async () => {
     await boot();
-    openMenu();
 
     controller().setSize(selectEvent("xl"));
 
@@ -113,15 +72,6 @@ describe("setSize from a menu option", () => {
     controller().setSize(selectEvent("l"));
 
     expect(localStorage.getItem(STORAGE_KEY)).toBe("l");
-  });
-
-  it("closes the menu", async () => {
-    await boot();
-    openMenu();
-
-    controller().setSize(selectEvent("l"));
-
-    expect(menu().hidden).toBe(true);
   });
 
   it("updates aria-checked on the options", async () => {
@@ -206,71 +156,24 @@ describe("larger", () => {
   });
 });
 
-describe("handleDocClick", () => {
-  it("closes when an open menu is clicked outside the wrapper", async () => {
-    await boot();
-    openMenu();
-    const outside = document.createElement("div");
-    document.body.appendChild(outside);
+describe("options re-rendered by a frame swap", () => {
+  it("syncs the checked state of freshly connected options", async () => {
+    await boot("l");
+    const fresh = buildOption("l");
 
-    controller().handleDocClick(clickEventOn(outside));
+    element().appendChild(fresh);
+    await Promise.resolve();
 
-    expect(menu().hidden).toBe(true);
+    expect(fresh.getAttribute("aria-checked")).toBe("true");
   });
 
-  it("leaves the menu open when the click is inside the wrapper", async () => {
-    await boot();
-    openMenu();
+  it("leaves non-matching fresh options unchecked", async () => {
+    await boot("l");
+    const fresh = buildOption("m");
 
-    controller().handleDocClick(clickEventOn(menu()));
+    element().appendChild(fresh);
+    await Promise.resolve();
 
-    expect(menu().hidden).toBe(false);
-  });
-
-  it("does nothing when the menu is already closed", async () => {
-    await boot();
-    const outside = document.createElement("div");
-    document.body.appendChild(outside);
-
-    controller().handleDocClick(clickEventOn(outside));
-
-    expect(menu().hidden).toBe(true);
-  });
-
-  it("ignores clicks whose target is not a DOM node", async () => {
-    await boot();
-    openMenu();
-
-    controller().handleDocClick(clickEventOn({notANode: true}));
-
-    expect(menu().hidden).toBe(false);
-  });
-});
-
-describe("handleEsc", () => {
-  it("closes an open menu when Escape is pressed", async () => {
-    await boot();
-    openMenu();
-
-    controller().handleEsc(keyEvent("Escape"));
-
-    expect(menu().hidden).toBe(true);
-  });
-
-  it("ignores non-Escape keys", async () => {
-    await boot();
-    openMenu();
-
-    controller().handleEsc(keyEvent("a"));
-
-    expect(menu().hidden).toBe(false);
-  });
-
-  it("does nothing when the menu is already closed", async () => {
-    await boot();
-
-    controller().handleEsc(keyEvent("Escape"));
-
-    expect(menu().hidden).toBe(true);
+    expect(fresh.getAttribute("aria-checked")).toBe("false");
   });
 });

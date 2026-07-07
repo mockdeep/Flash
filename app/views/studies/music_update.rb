@@ -3,7 +3,7 @@
 module Views
   module Studies
     class MusicUpdate < Views::Base
-      include TextSizeData
+      include StudyFrameData
 
       LEVEL_BODY = "You've mastered all the cards at this level."
 
@@ -23,7 +23,7 @@ module Views
           turbo_frame_tag(
             "study",
             class: "study-frame",
-            data: text_size_data,
+            data: study_frame_data,
           ) { render_frame }
         end
       end

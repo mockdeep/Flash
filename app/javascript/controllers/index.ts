@@ -30,6 +30,9 @@ application.register("disclosure", DisclosureController);
 import FileUploadController from "./file_upload_controller";
 application.register("file-upload", FileUploadController);
 
+import FontController from "./font_controller";
+application.register("font", FontController);
+
 import FuzzyFindController from "./fuzzy_find_controller";
 application.register("fuzzy-find", FuzzyFindController);
 

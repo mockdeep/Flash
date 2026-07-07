@@ -3,7 +3,7 @@
 module Views
   module Studies
     class Update < Views::Base
-      include TextSizeData
+      include StudyFrameData
 
       attr_accessor :deck, :result, :completed, :study_goal, :demo
 
@@ -21,7 +21,7 @@ module Views
           turbo_frame_tag(
             "study",
             class: "study-frame",
-            data: text_size_data,
+            data: study_frame_data,
           ) do
             if result.level_completed?
               render_level_complete
@@ -91,6 +91,7 @@ module Views
               text: result.question,
               id: "card-question",
               reading: card.reading.to_s,
+              font_menu: deck.hanzi?,
             }
             render(Components::CardFront.new(**args))
             unless demo

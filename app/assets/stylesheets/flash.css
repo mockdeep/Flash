@@ -1,4 +1,8 @@
 @import 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap';
+@import '@fontsource/noto-sans-sc/400.css';
+@import '@fontsource/noto-serif-sc/400.css';
+@import 'lxgw-wenkai-webfont/lxgwwenkai-regular.css';
+@import '@fontsource/ma-shan-zheng/400.css';
 
 :root {
   /* Color Palette - Terminal Scholar */
@@ -326,6 +330,21 @@ body {
 .study-frame[data-size="l"]  .card-front { font-size: clamp(28px, 6vw, 44px); }
 .study-frame[data-size="xl"] .card-front { font-size: clamp(36px, 8vw, 60px); }
 
+.study-frame[data-font="hei"] { --hanzi-font: 'Noto Sans SC'; }
+.study-frame[data-font="song"] { --hanzi-font: 'Noto Serif SC'; }
+.study-frame[data-font="kai"] { --hanzi-font: 'LXGW WenKai'; }
+.study-frame[data-font="hand"] { --hanzi-font: 'Ma Shan Zheng'; }
+
+/* The Latin face leads each stack so only hanzi (absent from it) fall
+ * through; the hanzi face must precede the generics, which always match. */
+.study-frame[data-font] .card-front {
+  font-family: 'DM Serif Display', var(--hanzi-font), Georgia, serif;
+}
+
+.study-frame[data-font] :is(.answer-text, .study-example__front, .study-example__back, .fuzzy-find__input) {
+  font-family: Manrope, var(--hanzi-font), system-ui, sans-serif;
+}
+
 .card-front__menu-toggle {
   position: absolute;
   top: 8px;
@@ -425,6 +444,11 @@ body {
 .card-front__menu-option[data-size="m"]  .card-front__menu-option-letter { font-size: 18px; }
 .card-front__menu-option[data-size="l"]  .card-front__menu-option-letter { font-size: 22px; }
 .card-front__menu-option[data-size="xl"] .card-front__menu-option-letter { font-size: 28px; }
+
+.card-front__menu-option[data-font="hei"]  .card-front__menu-option-letter { font-family: 'Noto Sans SC', sans-serif; }
+.card-front__menu-option[data-font="song"] .card-front__menu-option-letter { font-family: 'Noto Serif SC', serif; }
+.card-front__menu-option[data-font="kai"]  .card-front__menu-option-letter { font-family: 'LXGW WenKai', sans-serif; }
+.card-front__menu-option[data-font="hand"] .card-front__menu-option-letter { font-family: 'Ma Shan Zheng', cursive; }
 
 .study-answers-grid li:has(.answer-button) {
   animation: answer-appear var(--transition-slow) backwards;
