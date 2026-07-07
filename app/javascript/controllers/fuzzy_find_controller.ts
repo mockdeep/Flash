@@ -85,6 +85,27 @@ function collectMatches(answers: string[], queryWords: string[]): Match[] {
   return matches;
 }
 
+function buildMatchButton(answer: string): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "answer-button";
+  button.dataset.action = "fuzzy-find#select";
+  button.dataset.fuzzyFindAnswerParam = answer;
+  const text = document.createElement("span");
+  text.className = "answer-text";
+  text.textContent = answer;
+  button.appendChild(text);
+
+  return button;
+}
+
+function buildMatchItem(answer: string): HTMLLIElement {
+  const li = document.createElement("li");
+  li.appendChild(buildMatchButton(answer));
+
+  return li;
+}
+
 function matchAnswers(answers: string[], rawQuery: string): Match[] {
   const query = normalize(rawQuery.trim());
   if (query.length === 0) { return []; }
@@ -157,6 +178,10 @@ export default class extends Controller<HTMLElement> {
     this.submitWith(answer);
   }
 
+  select(event: {params: {answer: string}}): void {
+    this.submitWith(event.params.answer);
+  }
+
   /*
    * Keep the study frame pinned to the top of the screen on mobile so the
    * page doesn't jump when the on-screen keyboard opens for the input.
@@ -188,7 +213,7 @@ export default class extends Controller<HTMLElement> {
     this.noMatchesTarget.hidden = this.currentMatches.length > 0 || empty;
 
     this.currentMatches.forEach((answer) => {
-      this.resultsTarget.appendChild(this.buildMatchItem(answer));
+      this.resultsTarget.appendChild(buildMatchItem(answer));
     });
     this.highlightSelected();
   }
@@ -201,28 +226,5 @@ export default class extends Controller<HTMLElement> {
       button.classList.toggle("is-selected", selected);
       button.setAttribute("aria-selected", String(selected));
     });
-  }
-
-  private buildMatchItem(answer: string): HTMLLIElement {
-    const li = document.createElement("li");
-    li.appendChild(this.buildMatchButton(answer));
-
-    return li;
-  }
-
-  private buildMatchButton(answer: string): HTMLButtonElement {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "answer-button";
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      this.submitWith(answer);
-    });
-    const text = document.createElement("span");
-    text.className = "answer-text";
-    text.textContent = answer;
-    button.appendChild(text);
-
-    return button;
   }
 }
