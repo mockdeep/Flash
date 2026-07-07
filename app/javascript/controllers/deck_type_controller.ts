@@ -8,13 +8,13 @@ export default class extends Controller {
     "musicSettings",
   ];
 
-  radioTargets!: HTMLInputElement[];
+  declare radioTargets: HTMLInputElement[];
 
-  textInstructionsTarget!: HTMLElement;
+  declare textInstructionsTarget: HTMLElement;
 
-  musicInstructionsTarget!: HTMLElement;
+  declare musicInstructionsTarget: HTMLElement;
 
-  musicSettingsTarget!: HTMLFieldSetElement;
+  declare musicSettingsTarget: HTMLFieldSetElement;
 
   override connect(): void {
     this.update();

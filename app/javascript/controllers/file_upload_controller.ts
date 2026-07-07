@@ -3,11 +3,11 @@ import {Controller} from "@hotwired/stimulus";
 export default class extends Controller {
   static override targets = ["input", "icon", "text"];
 
-  inputTarget!: HTMLInputElement;
+  declare inputTarget: HTMLInputElement;
 
-  iconTarget!: HTMLElement;
+  declare iconTarget: HTMLElement;
 
-  textTarget!: HTMLElement;
+  declare textTarget: HTMLElement;
 
   select(): void {
     const file = this.inputTarget.files?.[0];

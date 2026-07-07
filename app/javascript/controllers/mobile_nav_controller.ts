@@ -3,7 +3,7 @@ import {Controller} from "@hotwired/stimulus";
 export default class extends Controller {
   static override targets = ["menu"];
 
-  menuTarget!: HTMLElement;
+  declare menuTarget: HTMLElement;
 
   toggle(): void {
     this.menuTarget.classList.toggle("site-nav-open");
