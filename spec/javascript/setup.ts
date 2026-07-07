@@ -1,6 +1,5 @@
 import {beforeEach, expect, vi} from "vitest";
 
-// eslint-disable-next-line vitest/require-hook
 Object.defineProperty(navigator, "serviceWorker", {
   configurable: true,
   value: {register: vi.fn()},
@@ -26,7 +25,6 @@ function buildLocalStorage(): Storage {
   };
 }
 
-// eslint-disable-next-line vitest/require-hook
 Object.defineProperty(globalThis, "localStorage", {
   configurable: true,
   value: buildLocalStorage(),
@@ -50,7 +48,6 @@ function buildMediaQueryList(query: string): MediaQueryList {
   };
 }
 
-// eslint-disable-next-line vitest/require-hook
 Object.defineProperty(window, "matchMedia", {
   configurable: true,
   value: buildMediaQueryList,

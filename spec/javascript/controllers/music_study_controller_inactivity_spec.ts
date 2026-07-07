@@ -99,7 +99,6 @@ describe("window focus after a pause", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    // eslint-disable-next-line vitest/prefer-called-with
     expect(spec.harness.getUserMedia).toHaveBeenCalled();
   });
 
@@ -120,7 +119,6 @@ describe("window focus after a pause", () => {
     window.dispatchEvent(new Event("focus"));
     await new Promise((resolve) => { setTimeout(resolve, 0); });
 
-    // eslint-disable-next-line vitest/prefer-called-with
     expect(spec.harness.raf.request).toHaveBeenCalled();
   });
 });
@@ -161,7 +159,6 @@ describe("visibilitychange when the page becomes visible after pause", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    // eslint-disable-next-line vitest/prefer-called-with
     expect(spec.harness.getUserMedia).toHaveBeenCalled();
   });
 });

@@ -6,7 +6,6 @@ export default class extends Controller {
   messageValue!: string;
 
   confirm(event: SubmitEvent): void {
-    // eslint-disable-next-line no-alert
     if (!window.confirm(this.messageValue)) {
       event.preventDefault();
     }

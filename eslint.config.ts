@@ -34,6 +34,9 @@ export default defineConfig([
         },
       },
     },
+    linterOptions: {
+      noInlineConfig: true,
+    },
     plugins: {
       importPlugin,
       perfectionist,

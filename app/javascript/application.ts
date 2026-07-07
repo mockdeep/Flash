@@ -7,5 +7,4 @@ import "./controllers/index";
 
 session.drive = false;
 
-// eslint-disable-next-line no-void
 void navigator.serviceWorker.register("/service-worker.js");
