@@ -1,6 +1,7 @@
 import {Controller} from "@hotwired/stimulus";
 
 import {ensure} from "helpers/ensure";
+import {findEl} from "helpers/find_el";
 
 const MAX_RESULTS = 5;
 
@@ -202,10 +203,9 @@ export default class extends Controller<HTMLElement> {
 
   private buildMatchItem(answer: string): DocumentFragment {
     const item = document.importNode(this.matchTemplateTarget.content, true);
-    const button =
-      ensure(item.querySelector<HTMLButtonElement>(".answer-button"));
+    const button = findEl(item, "button", ".answer-button");
     button.dataset.fuzzyFindAnswerParam = answer;
-    ensure(item.querySelector(".answer-text")).textContent = answer;
+    findEl(item, "span", ".answer-text").textContent = answer;
 
     return item;
   }

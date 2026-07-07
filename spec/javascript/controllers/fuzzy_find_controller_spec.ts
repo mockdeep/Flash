@@ -2,6 +2,7 @@ import {describe, expect, it, vi} from "vitest";
 import {bootStimulus, getController} from "support/stimulus";
 import FuzzyFindController from "controllers/fuzzy_find_controller";
 import {ensure} from "helpers/ensure";
+import {findEl} from "helpers/find_el";
 
 const rootSel = "[data-controller='fuzzy-find']";
 const inputSel = "[data-fuzzy-find-target='input']";
@@ -9,9 +10,12 @@ const resultsSel = "[data-fuzzy-find-target='results']";
 const noMatchesSel = "[data-fuzzy-find-target='noMatches']";
 const answerInputSel = "[data-fuzzy-find-target='answerInput']";
 const possibleSel = "[data-fuzzy-find-target='possibleAnswerInput']";
-const matchButtonSel = "button.answer-button";
 
 type SubmitFn = (submitter?: HTMLElement | null) => void;
+
+function rootEl(): HTMLElement {
+  return findEl(document, "div", rootSel);
+}
 
 function setupDOM(answers: string[]): void {
   document.body.innerHTML = `
@@ -34,40 +38,38 @@ function setupDOM(answers: string[]): void {
       </template>
     </div>
   `;
-  const root = ensure(document.querySelector<HTMLElement>(rootSel));
-  root.dataset.fuzzyFindAnswersValue = JSON.stringify(answers);
+  rootEl().dataset.fuzzyFindAnswersValue = JSON.stringify(answers);
 }
 
 async function boot(answers: string[]): Promise<FuzzyFindController> {
   setupDOM(answers);
   await bootStimulus("fuzzy-find", FuzzyFindController);
-  const root = ensure(document.querySelector<HTMLElement>(rootSel));
 
-  return getController(root, "fuzzy-find", FuzzyFindController);
+  return getController(rootEl(), "fuzzy-find", FuzzyFindController);
 }
 
 function inputEl(): HTMLInputElement {
-  return ensure(document.querySelector<HTMLInputElement>(inputSel));
+  return findEl(document, "input", inputSel);
 }
 
 function resultsEl(): HTMLElement {
-  return ensure(document.querySelector<HTMLElement>(resultsSel));
+  return findEl(document, "ol", resultsSel);
 }
 
 function noMatchesEl(): HTMLElement {
-  return ensure(document.querySelector<HTMLElement>(noMatchesSel));
+  return findEl(document, "p", noMatchesSel);
 }
 
 function answerInputEl(): HTMLInputElement {
-  return ensure(document.querySelector<HTMLInputElement>(answerInputSel));
+  return findEl(document, "input", answerInputSel);
 }
 
 function possibleAnswerInputEl(): HTMLInputElement {
-  return ensure(document.querySelector<HTMLInputElement>(possibleSel));
+  return findEl(document, "input", possibleSel);
 }
 
 function formEl(): HTMLFormElement {
-  return ensure(document.querySelector<HTMLFormElement>("form"));
+  return findEl(document, "form");
 }
 
 function matchTexts(): string[] {
@@ -84,9 +86,7 @@ function stubSubmit(): SubmitFn {
 }
 
 function topMatchButton(): HTMLButtonElement {
-  const button = resultsEl().querySelector<HTMLButtonElement>(matchButtonSel);
-
-  return ensure(button);
+  return findEl(resultsEl(), "button", ".answer-button");
 }
 
 async function typeAndFilter(
@@ -111,8 +111,7 @@ function mockMobileViewport(): void {
 function wrapInStudyFrame(): HTMLElement {
   const frame = document.createElement("div");
   frame.className = "study-frame";
-  const root = ensure(document.querySelector<HTMLElement>(rootSel));
-  frame.appendChild(root);
+  frame.appendChild(rootEl());
   document.body.appendChild(frame);
 
   return frame;
