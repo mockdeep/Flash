@@ -1,6 +1,6 @@
 import {ensure} from "helpers/ensure";
 
-describe("ensure", () => {
+describe(ensure, () => {
   it("throws an error when the passed value is null", () => {
     expect(() => { ensure(null); }).toThrow("value is null or undefined");
   });

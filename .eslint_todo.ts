@@ -26,17 +26,6 @@ const config: Linter.Config[] = [
       "vitest/no-hooks": "off",
     },
   },
-  // Offense count: 5
-  {
-    files: [
-      "spec/javascript/helpers/ensure_spec.ts",
-      "spec/javascript/music/note_utils_spec.ts",
-      "spec/javascript/music/sequence_session_spec.ts",
-    ],
-    rules: {
-      "vitest/prefer-describe-function-title": "off",
-    },
-  },
   // Offense count: 4
   {
     files: [

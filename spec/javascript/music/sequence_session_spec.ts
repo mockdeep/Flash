@@ -23,7 +23,7 @@ function holding(
   return {...state, candidate: {note, since}};
 }
 
-describe("initialState", () => {
+describe(initialState, () => {
   it("starts at index 0 with no candidate and no attempts", () => {
     const state = initialState(["C4", "E4"]);
 
