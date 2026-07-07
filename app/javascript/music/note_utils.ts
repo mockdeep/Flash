@@ -11,7 +11,7 @@ const LETTER_TO_OFFSET: {[letter: string]: number} = {
 
 const NOTE_NAMES = "C C# D D# E F F# G G# A A# B".split(" ");
 
-const NOTE_REGEXP = /^([A-G])(#?)(\d)$/u;
+const NOTE_REGEXP = /^(?<letter>[A-G])(?<sharp>#?)(?<octave>\d)$/u;
 
 interface PitchMatch {
   cents: number;
@@ -19,16 +19,16 @@ interface PitchMatch {
 }
 
 function noteToMidi(note: string): number {
-  const match = note.match(NOTE_REGEXP);
-  if (!match) {
+  const groups = NOTE_REGEXP.exec(note)?.groups;
+  if (!groups) {
     throw new Error(`Invalid note: ${note}`);
   }
-  const offset = ensure(LETTER_TO_OFFSET[ensure(match[1])]);
+  const offset = ensure(LETTER_TO_OFFSET[ensure(groups.letter)]);
   let sharpStep = 0;
-  if (match[2] === "#") {
+  if (groups.sharp === "#") {
     sharpStep = 1;
   }
-  const octave = Number(ensure(match[3]));
+  const octave = Number(ensure(groups.octave));
 
   return offset + sharpStep + (octave + 1) * SEMITONES_PER_OCTAVE;
 }

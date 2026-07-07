@@ -5,9 +5,9 @@ export default class extends Controller {
 
   static override values = {url: String};
 
-  buttonTarget!: HTMLButtonElement;
+  declare buttonTarget: HTMLButtonElement;
 
-  urlValue!: string;
+  declare urlValue: string;
 
   async copy(): Promise<void> {
     const {textContent: original} = this.buttonTarget;

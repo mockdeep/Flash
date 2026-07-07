@@ -33,7 +33,7 @@ function isBehindDialog(element: HTMLElement): boolean {
 export default class extends Controller {
   static override targets = ["click"];
 
-  clickTargets!: HTMLElement[];
+  declare clickTargets: HTMLElement[];
 
   indexedClickTargets = new Map<string, HTMLElement>();
 

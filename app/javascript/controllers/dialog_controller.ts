@@ -3,7 +3,7 @@ import {Controller} from "@hotwired/stimulus";
 export default class extends Controller {
   static override targets = ["dialog"];
 
-  dialogTarget!: HTMLDialogElement;
+  declare dialogTarget: HTMLDialogElement;
 
   open(): void {
     this.dialogTarget.showModal();
