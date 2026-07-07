@@ -26,6 +26,7 @@ module Components
         render_input
         render_results_container
         render_no_matches
+        render_match_template
       end
     end
 
@@ -96,6 +97,18 @@ module Components
         data: { fuzzy_find_target: "noMatches" },
         hidden: true,
       ) { "No matches" }
+    end
+
+    def render_match_template
+      template(data: { fuzzy_find_target: "matchTemplate" }) do
+        li do
+          button(
+            type: "button",
+            class: "answer-button",
+            data: { action: "fuzzy-find#select" },
+          ) { span(class: "answer-text") }
+        end
+      end
     end
   end
 end
