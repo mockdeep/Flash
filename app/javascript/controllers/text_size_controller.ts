@@ -27,13 +27,9 @@ function saveSize(deckId: string, size: Size): void {
 }
 
 export default class extends Controller<HTMLElement> {
-  static override targets = ["menu", "toggle", "option"];
+  static override targets = ["option"];
 
   static override values = {deckId: String};
-
-  declare menuTarget: HTMLElement;
-
-  declare toggleTarget: HTMLButtonElement;
 
   declare optionTargets: HTMLElement[];
 
@@ -41,15 +37,8 @@ export default class extends Controller<HTMLElement> {
 
   private size: Size = DEFAULT_SIZE;
 
-  private isMenuOpen = false;
-
   override connect(): void {
     this.applySize(loadSize(this.deckIdValue));
-  }
-
-  toggleMenu(event: MouseEvent): void {
-    event.stopPropagation();
-    this.setMenuOpen(!this.isMenuOpen);
   }
 
   setSize(event: MouseEvent): void {
@@ -59,7 +48,6 @@ export default class extends Controller<HTMLElement> {
     if (!isSize(size)) { return; }
     this.applySize(size);
     saveSize(this.deckIdValue, size);
-    this.setMenuOpen(false);
   }
 
   smaller(): void {
@@ -70,17 +58,12 @@ export default class extends Controller<HTMLElement> {
     this.stepSize(1);
   }
 
-  handleDocClick(event: MouseEvent): void {
-    if (!this.isMenuOpen) { return; }
-    if (!(event.target instanceof Node)) { return; }
-    if (this.element.contains(event.target)) { return; }
-    this.setMenuOpen(false);
-  }
-
-  handleEsc(event: KeyboardEvent): void {
-    if (event.key !== "Escape") { return; }
-    if (!this.isMenuOpen) { return; }
-    this.setMenuOpen(false);
+  /*
+   * Options re-render with each Turbo frame swap while the frame (and this
+   * controller) persists, so sync each fresh option's checked state.
+   */
+  optionTargetConnected(option: HTMLElement): void {
+    this.syncOption(option);
   }
 
   private stepSize(delta: number): void {
@@ -95,15 +78,11 @@ export default class extends Controller<HTMLElement> {
   private applySize(size: Size): void {
     this.size = size;
     this.element.dataset.size = size;
-    this.optionTargets.forEach((option) => {
-      const matches = option.dataset.size === size;
-      option.setAttribute("aria-checked", String(matches));
-    });
+    this.optionTargets.forEach((option) => { this.syncOption(option); });
   }
 
-  private setMenuOpen(open: boolean): void {
-    this.isMenuOpen = open;
-    this.menuTarget.hidden = !open;
-    this.toggleTarget.setAttribute("aria-expanded", String(open));
+  private syncOption(option: HTMLElement): void {
+    const matches = option.dataset.size === this.size;
+    option.setAttribute("aria-checked", String(matches));
   }
 }

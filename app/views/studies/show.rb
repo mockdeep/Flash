@@ -3,7 +3,7 @@
 module Views
   module Studies
     class Show < Views::Base
-      include TextSizeData
+      include StudyFrameData
 
       attr_accessor :deck, :study, :completed, :study_goal, :demo
 
@@ -28,7 +28,7 @@ module Views
 
           h1 { deck.name }
 
-          turbo_frame_tag("study", class: "study-frame", data: text_size_data) do
+          turbo_frame_tag("study", class: "study-frame", data: study_frame_data) do
             if deck.cards.none?
               div(class: "accent-box") do
                 div(class: "accent-box__icon") { "📚" }
@@ -50,7 +50,12 @@ module Views
             else
               card = study.next_card
 
-              render(Components::CardFront.new(text: card.front))
+              render(
+                Components::CardFront.new(
+                  text: card.front,
+                  font_menu: deck.hanzi?,
+                ),
+              )
 
               render_active_card(card)
 

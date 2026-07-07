@@ -7,11 +7,15 @@
   "packageManager": "pnpm@10.26.1",
   "version": "0.1.0",
   "dependencies": {
+    "@fontsource/ma-shan-zheng": "^5.2.9",
+    "@fontsource/noto-sans-sc": "^5.2.9",
+    "@fontsource/noto-serif-sc": "^5.2.9",
     "@hotwired/stimulus": "^3.2.2",
     "@hotwired/turbo": "^8.0.23",
     "@hotwired/turbo-rails": "^8.0.23",
     "@rails/actioncable": "^8.1.300",
-    "@rails/activestorage": "^8.1.300"
+    "@rails/activestorage": "^8.1.300",
+    "lxgw-wenkai-webfont": "^1.7.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.4",

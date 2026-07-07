@@ -50,6 +50,14 @@ class Deck < ApplicationRecord
     cards.joins(:item).where(items: { category: })
   end
 
+  # Whether the deck's data_set contains Han characters on any item; gates the
+  # study page's hanzi font menu.
+  def hanzi?
+    return @hanzi if defined?(@hanzi)
+
+    @hanzi = data_set.items.pluck(:text).any? { it.match?(/\p{Han}/) }
+  end
+
   def publicly_visible? = visibility == "public"
 
   def shared? = share_token.present?

@@ -50,6 +50,21 @@ RSpec.describe StudiesController do
       expect(rendered).to have_no_css(".demo-banner")
     end
 
+    it "wires the font controller on a hanzi deck", :aggregate_failures do
+      create(:card, deck:, front: "他", back: "he; him")
+      get(deck_study_path(deck))
+
+      expect(rendered).to have_css(".study-frame[data-controller~='font']")
+      expect(rendered).to have_css("[data-font='kai']", visible: :all)
+    end
+
+    it "omits the font controller on a deck without hanzi" do
+      create(:card, deck:)
+      get(deck_study_path(deck))
+
+      expect(rendered).to have_no_css(".study-frame[data-controller~='font']")
+    end
+
     context "when visiting on a new day" do
       before do
         card = create(:card, deck:, back: "Paris")
