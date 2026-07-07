@@ -5,7 +5,7 @@ import {
   parseSequence,
 } from "music/note_utils";
 
-describe("noteToFrequency", () => {
+describe(noteToFrequency, () => {
   it("returns 440 for A4", () => {
     expect(noteToFrequency("A4")).toBeCloseTo(440, 5);
   });
@@ -49,7 +49,7 @@ describe("noteToFrequency", () => {
   });
 });
 
-describe("frequencyToNote", () => {
+describe(frequencyToNote, () => {
   it("returns A4 with 0 cents for 440 Hz", () => {
     expect(frequencyToNote(440)).toStrictEqual({cents: 0, note: "A4"});
   });
@@ -88,7 +88,7 @@ describe("frequencyToNote", () => {
   });
 });
 
-describe("parseSequence", () => {
+describe(parseSequence, () => {
   it("splits a single note into a one-element array", () => {
     expect(parseSequence("G4")).toStrictEqual(["G4"]);
   });
