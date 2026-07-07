@@ -124,6 +124,14 @@ RSpec.describe "studying a deck" do
       expect(page).to have_no_button("Berlin")
     end
 
+    it "submits an answer when the user clicks a suggestion" do
+      visit_fuzzy_deck(back: "Paris")
+      fuzzy_input.fill_in(with: "pa")
+      click_on("Paris")
+
+      expect(page).to have_css("#correct-answer-text", text: "Paris")
+    end
+
     it "submits the typed answer when the user presses Enter" do
       visit_fuzzy_deck(back: "Paris")
       fuzzy_input.fill_in(with: "pa")
