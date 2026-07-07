@@ -9,7 +9,8 @@ interface TrackMock {
   stop: Mock<() => void>;
 }
 
-interface MediaStreamMock extends MediaStream {
+interface MediaStreamMock {
+  getTracks: Mock<() => TrackMock[]>;
   tracks: TrackMock[];
 }
 
@@ -42,7 +43,7 @@ interface RafState {
 
 interface MusicHarness {
   audioContexts: AudioContextMock[];
-  getUserMedia: Mock<MediaDevices["getUserMedia"]>;
+  getUserMedia: Mock<GetUserMediaFn>;
   now: {value: number};
   raf: RafState;
   stream: MediaStreamMock;
@@ -61,14 +62,13 @@ function buildTrack(): TrackMock {
 
 function buildStream(): MediaStreamMock {
   const tracks = [buildTrack()];
-  const stream = {
+
+  return {
     getTracks: vi.fn<() => TrackMock[]>(() => {
       return tracks;
     }),
     tracks,
   };
-
-  return stream as unknown as MediaStreamMock;
 }
 
 function buildAnalyser(): AnalyserMock {
@@ -129,7 +129,8 @@ function stubRaf(): RafState {
   return {callbacks, cancel, nextHandle, request};
 }
 
-type GetUserMediaFn = MediaDevices["getUserMedia"];
+type GetUserMediaFn =
+  (constraints?: MediaStreamConstraints) => Promise<MediaStreamMock>;
 
 function stubGetUserMedia(stream: MediaStreamMock): Mock<GetUserMediaFn> {
   const getUserMedia = vi.fn<GetUserMediaFn>(async () => {
