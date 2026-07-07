@@ -47,13 +47,13 @@ function text(): HTMLElement {
 }
 
 function fileList(files: File[]): FileList {
-  const list = {
+  const list: FileList = {
     item: (index: number): File | null => { return files[index] ?? null; },
     length: files.length,
     [Symbol.iterator]: (): ArrayIterator<File> => {
       return files[Symbol.iterator]();
     },
-  } as FileList;
+  };
 
   for (const [index, file] of files.entries()) {
     Object.defineProperty(list, index, {value: file});

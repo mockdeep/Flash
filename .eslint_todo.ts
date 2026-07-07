@@ -6,25 +6,6 @@
 import type {Linter} from "eslint";
 
 const config: Linter.Config[] = [
-  // Offense count: 3
-  {
-    files: [
-      "spec/javascript/controllers/file_upload_controller_spec.ts",
-      "spec/javascript/support/music_study_harness.ts",
-    ],
-    rules: {
-      "@typescript-eslint/consistent-type-assertions": "off",
-    },
-  },
-  // Offense count: 1
-  {
-    files: [
-      "spec/javascript/support/music_study_harness.ts",
-    ],
-    rules: {
-      "@typescript-eslint/no-unsafe-type-assertion": "off",
-    },
-  },
   // Offense count: 1
   {
     files: [
