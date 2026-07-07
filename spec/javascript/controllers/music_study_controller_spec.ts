@@ -1,6 +1,6 @@
 import type {detectPitch as DetectPitch} from "music/pitch_detector";
 import type {playSequence as PlaySequence} from "music/reference_player";
-import {describe, expect, it, vi} from "vitest";
+import {afterEach, describe, expect, it, vi} from "vitest";
 import type {MusicSpec} from "support/music_study_harness";
 import MusicStudyController, {
   resetMicActivatedForTests,

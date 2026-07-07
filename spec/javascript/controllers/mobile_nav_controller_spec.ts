@@ -1,3 +1,4 @@
+import {describe, expect, it} from "vitest";
 import {bootStimulus, getController} from "support/stimulus";
 import MobileNavController from "controllers/mobile_nav_controller";
 import {ensure} from "helpers/ensure";

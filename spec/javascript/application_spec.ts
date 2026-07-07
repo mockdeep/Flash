@@ -1,3 +1,4 @@
+import {expect, it} from "vitest";
 import "javascript/application";
 import {session} from "@hotwired/turbo";
 

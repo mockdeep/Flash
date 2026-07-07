@@ -1,3 +1,4 @@
+import {describe, expect, it, vi} from "vitest";
 import {bootStimulus, getController} from "support/stimulus";
 import DialogController from "controllers/dialog_controller";
 import {ensure} from "helpers/ensure";
