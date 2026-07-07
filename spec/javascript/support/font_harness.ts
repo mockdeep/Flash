@@ -11,6 +11,14 @@ const DECK_ID = "42";
 const STORAGE_KEY = `font:${DECK_ID}`;
 const ROOT_SEL = "[data-controller='font']";
 
+function buildCard(cardId: string): HTMLElement {
+  const div = document.createElement("div");
+  div.dataset.fontTarget = "card";
+  div.dataset.cardId = cardId;
+
+  return div;
+}
+
 function buildOption(choice: Choice): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";
@@ -66,6 +74,7 @@ function selectEvent(choice: Choice): MouseEvent {
 
 export {
   boot,
+  buildCard,
   buildOption,
   controller,
   element,

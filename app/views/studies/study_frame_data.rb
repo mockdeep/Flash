@@ -18,7 +18,6 @@ module Views
         {
           controller: "text-size font",
           font_deck_id_value: deck.id,
-          action: "turbo:frame-load->font#reroll",
         }
       end
     end

@@ -54,6 +54,7 @@ module Views
                 Components::CardFront.new(
                   text: card.front,
                   font_menu: deck.hanzi?,
+                  card_id: card.id,
                 ),
               )
 

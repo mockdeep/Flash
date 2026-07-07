@@ -60,6 +60,21 @@ RSpec.describe "study font" do
     expect(page).to have_css(".study-frame[data-font='song']")
   end
 
+  def pick_mix_and_read_font
+    open_card_menu
+    pick_font("mix")
+    find(".study-frame")["data-font"]
+  end
+
+  it "keeps the mixed font while answering a card" do
+    visit_hanzi_study_page
+    asked = pick_mix_and_read_font
+
+    first(".answer-button").click
+
+    expect(page).to have_css(".study-frame[data-font='#{asked}'] .answer-row")
+  end
+
   it "omits the font section on a deck without hanzi", :aggregate_failures do
     visit_latin_study_page
     open_card_menu
