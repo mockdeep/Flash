@@ -4,7 +4,6 @@ import DialogController from "controllers/dialog_controller";
 import {ensure} from "helpers/ensure";
 
 // HTMLDialogElement.showModal and close are not implemented in jsdom
-// eslint-disable-next-line vitest/require-hook
 Object.assign(HTMLDialogElement.prototype, {
   close(): void { /* Noop for jsdom */ },
   showModal(): void { /* Noop for jsdom */ },
