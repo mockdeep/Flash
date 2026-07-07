@@ -1,4 +1,4 @@
-/// <reference types="vitest/globals" />
+import {beforeEach, expect, vi} from "vitest";
 
 // eslint-disable-next-line vitest/require-hook
 Object.defineProperty(navigator, "serviceWorker", {

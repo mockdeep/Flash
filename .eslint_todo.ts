@@ -36,24 +36,6 @@ const config: Linter.Config[] = [
       "vitest/prefer-import-in-mock": "off",
     },
   },
-  // Offense count: 86
-  {
-    files: [
-      "spec/javascript/application_spec.ts",
-      "spec/javascript/channels/consumer_spec.ts",
-      "spec/javascript/controllers/dialog_controller_spec.ts",
-      "spec/javascript/controllers/hotkeys_controller_spec.ts",
-      "spec/javascript/controllers/mobile_nav_controller_spec.ts",
-      "spec/javascript/controllers/music_study_controller_spec.ts",
-      "spec/javascript/controllers/music_study_controller_ticks_spec.ts",
-      "spec/javascript/helpers/ensure_spec.ts",
-      "spec/javascript/setup.ts",
-      "spec/javascript/support/stimulus.ts",
-    ],
-    rules: {
-      "vitest/prefer-importing-vitest-globals": "off",
-    },
-  },
   // Offense count: 1
   {
     files: [
