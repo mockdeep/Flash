@@ -1,6 +1,7 @@
 import {describe, expect, it, vi} from "vitest";
 import {
   boot,
+  buildCard,
   buildOption,
   controller,
   element,
@@ -126,21 +127,44 @@ describe("setFont defensive guards", () => {
   });
 });
 
-describe("reroll", () => {
-  it("picks a new font when mix is chosen", async () => {
+describe("a new card connecting", () => {
+  it("rerolls the font when mix is chosen", async () => {
     await boot("mix");
+    controller().cardTargetConnected(buildCard("1"));
     vi.spyOn(Math, "random").mockReturnValue(0.99);
 
-    controller().reroll();
+    controller().cardTargetConnected(buildCard("2"));
 
     expect(element().dataset.font).toBe("hand");
+  });
+
+  it("keeps the font when the same card reconnects", async () => {
+    await boot("mix");
+    controller().cardTargetConnected(buildCard("1"));
+    const asked = element().dataset.font;
+    vi.spyOn(Math, "random").mockReturnValue(0.99);
+
+    controller().cardTargetConnected(buildCard("1"));
+
+    expect(element().dataset.font).toBe(asked);
+  });
+
+  it("ignores cards without an id", async () => {
+    await boot("mix");
+    controller().cardTargetConnected(buildCard("1"));
+    const asked = element().dataset.font;
+    vi.spyOn(Math, "random").mockReturnValue(0.99);
+
+    controller().cardTargetConnected(document.createElement("div"));
+
+    expect(element().dataset.font).toBe(asked);
   });
 
   it("leaves a fixed font unchanged", async () => {
     await boot("kai");
     vi.spyOn(Math, "random").mockReturnValue(0.99);
 
-    controller().reroll();
+    controller().cardTargetConnected(buildCard("2"));
 
     expect(element().dataset.font).toBe("kai");
   });

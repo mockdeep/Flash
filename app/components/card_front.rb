@@ -2,12 +2,13 @@
 
 module Components
   class CardFront < Components::Base
-    def initialize(text:, id: nil, reading: nil, font_menu: false)
+    def initialize(text:, id: nil, reading: nil, font_menu: false, card_id: nil)
       super()
       @text = text
       @id = id
       @reading = reading
       @font_menu = font_menu
+      @card_id = card_id
     end
 
     def view_template
@@ -22,12 +23,15 @@ module Components
     private
 
     def wrapper_data
-      {
+      data = {
         controller: "disclosure",
         action:
           "click@window->disclosure#handleDocClick " \
           "keydown@window->disclosure#handleEsc",
       }
+      return data if @card_id.nil?
+
+      data.merge(font_target: "card", card_id: @card_id)
     end
 
     def render_reading

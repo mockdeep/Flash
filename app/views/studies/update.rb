@@ -92,6 +92,7 @@ module Views
               id: "card-question",
               reading: card.reading.to_s,
               font_menu: deck.hanzi?,
+              card_id: card.id,
             }
             render(Components::CardFront.new(**args))
             unless demo

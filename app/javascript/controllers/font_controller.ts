@@ -37,7 +37,7 @@ function saveChoice(deckId: string, choice: Choice): void {
 }
 
 export default class extends Controller<HTMLElement> {
-  static override targets = ["option"];
+  static override targets = ["card", "option"];
 
   static override values = {deckId: String};
 
@@ -46,6 +46,8 @@ export default class extends Controller<HTMLElement> {
   declare deckIdValue: string;
 
   private choice: Choice = DEFAULT_CHOICE;
+
+  private lastCardId: string | null = null;
 
   override connect(): void {
     this.applyChoice(loadChoice(this.deckIdValue));
@@ -61,10 +63,15 @@ export default class extends Controller<HTMLElement> {
   }
 
   /*
-   * Mix picks a fresh font for every card; the frame element survives Turbo
-   * frame navigations, so this fires on each turbo:frame-load.
+   * Mix picks a fresh font per card, not per Turbo frame swap: answering
+   * re-renders the frame with the same card's result, and that card must keep
+   * the font it was asked in. Card elements carry their card id, so a reroll
+   * only happens when a different card connects.
    */
-  reroll(): void {
+  cardTargetConnected(card: HTMLElement): void {
+    const {cardId} = card.dataset;
+    if (cardId === undefined || cardId === this.lastCardId) { return; }
+    this.lastCardId = cardId;
     if (this.choice !== "mix") { return; }
     this.applyFont(randomFont());
   }
