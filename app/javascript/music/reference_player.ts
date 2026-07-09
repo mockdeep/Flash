@@ -6,15 +6,6 @@ const FUNDAMENTAL_VOLUME = 0.4;
 const OCTAVE_VOLUME = 0.2;
 const MS_PER_SECOND = 1000;
 
-/*
- * These interfaces use method syntax rather than property syntax
- * (@typescript-eslint/method-signature-style) because method syntax
- * gives us bivariant parameter checking, which is what lets real DOM
- * AudioContext satisfy these structural interfaces. Real
- * `AudioNode.connect` takes `(dest: AudioNode | AudioParam)` —
- * narrower than our `unknown` — and only method shorthand makes the
- * relationship work without `as` casts.
- */
 interface AudioParamLike {
   setValueAtTime(value: number, when: number): void;
 }

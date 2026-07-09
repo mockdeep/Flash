@@ -60,6 +60,7 @@ export default defineConfig([
       "@typescript-eslint/consistent-type-assertions":
         ["error", {assertionStyle: "never"}],
       "@typescript-eslint/explicit-member-accessibility": "off",
+      "@typescript-eslint/method-signature-style": ["error", "method"],
       "@typescript-eslint/naming-convention": "off",
       "@typescript-eslint/no-magic-numbers": "off",
       "@typescript-eslint/prefer-readonly-parameter-types": "off",

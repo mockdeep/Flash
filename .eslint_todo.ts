@@ -9,15 +9,6 @@ const config: Linter.Config[] = [
   // Offense count: 7
   {
     files: [
-      "app/javascript/music/reference_player.ts",
-    ],
-    rules: {
-      "@typescript-eslint/method-signature-style": "off",
-    },
-  },
-  // Offense count: 7
-  {
-    files: [
       "app/javascript/music/note_utils.ts",
     ],
     rules: {
