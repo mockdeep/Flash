@@ -81,6 +81,7 @@ RSpec.describe "studying a deck" do
     it "toggles the example with the x hotkey" do
       visit_card_with_example
       click_on("Paris")
+      expect(page).to have_css(".study-example__toggle")
 
       find("body").send_keys("x")
 
