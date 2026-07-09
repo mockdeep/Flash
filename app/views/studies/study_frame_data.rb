@@ -9,7 +9,7 @@ module Views
           text_size_deck_id_value: deck.id,
           size: "m",
         }
-        return data unless deck.hanzi?
+        return data unless deck.mandarin?
 
         data.merge(font_frame_data)
       end
@@ -26,7 +26,7 @@ module Views
       # navigation that fetches each next card.
       def study_frame_data_with_hanzi
         data = study_frame_data
-        return data if turbo_frame_request? || !deck.hanzi?
+        return data if turbo_frame_request? || !deck.mandarin?
 
         data.merge(font_hanzi_value: deck.hanzi_chars)
       end

@@ -50,7 +50,8 @@ RSpec.describe StudiesController do
       expect(rendered).to have_no_css(".demo-banner")
     end
 
-    it "wires the font controller on a hanzi deck", :aggregate_failures do
+    it "wires the font controller on a Mandarin deck", :aggregate_failures do
+      deck = create(:deck, language: "zh")
       create(:card, deck:, front: "他", back: "he; him")
       get(deck_study_path(deck))
 
@@ -58,7 +59,7 @@ RSpec.describe StudiesController do
       expect(rendered).to have_css("[data-font='kai']", visible: :all)
     end
 
-    it "omits the font controller on a deck without hanzi" do
+    it "omits the font controller on a deck without a language" do
       create(:card, deck:)
       get(deck_study_path(deck))
 
@@ -66,6 +67,7 @@ RSpec.describe StudiesController do
     end
 
     it "embeds the deck's hanzi for font prewarming on full page loads" do
+      deck = create(:deck, language: "zh")
       create(:card, deck:, front: "他", back: "he; him")
       get(deck_study_path(deck))
 
@@ -73,6 +75,7 @@ RSpec.describe StudiesController do
     end
 
     it "omits the hanzi payload on turbo frame navigations" do
+      deck = create(:deck, language: "zh")
       create(:card, deck:, front: "他", back: "he; him")
       get(deck_study_path(deck), headers: { "Turbo-Frame" => "study" })
 
