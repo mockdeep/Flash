@@ -71,6 +71,23 @@ RSpec.describe Deck do
     end
   end
 
+  describe "#hanzi_chars" do
+    it "collects the distinct Han characters across items" do
+      deck = create(:deck)
+      create(:card, deck:, front: "你好", back: "hello")
+      create(:card, deck:, front: "好吗", back: "well?")
+
+      expect(deck.hanzi_chars.chars).to contain_exactly("你", "好", "吗")
+    end
+
+    it "is empty when no item contains Han characters" do
+      deck = create(:deck)
+      create(:card, deck:, front: "hola", back: "hello")
+
+      expect(deck.hanzi_chars).to eq("")
+    end
+  end
+
   describe "#publicly_visible?" do
     it "is true when visibility is public" do
       deck = create(:deck, visibility: "public")

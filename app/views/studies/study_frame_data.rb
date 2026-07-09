@@ -20,6 +20,16 @@ module Views
           font_deck_id_value: deck.id,
         }
       end
+
+      # Turbo frame swaps keep the original frame element's attributes, so the
+      # hanzi prewarm payload only rides on full page loads, not on the frame
+      # navigation that fetches each next card.
+      def study_frame_data_with_hanzi
+        data = study_frame_data
+        return data if turbo_frame_request? || !deck.hanzi?
+
+        data.merge(font_hanzi_value: deck.hanzi_chars)
+      end
     end
   end
 end

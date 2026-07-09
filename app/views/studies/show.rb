@@ -28,7 +28,11 @@ module Views
 
           h1 { deck.name }
 
-          turbo_frame_tag("study", class: "study-frame", data: study_frame_data) do
+          turbo_frame_tag(
+            "study",
+            class: "study-frame",
+            data: study_frame_data_with_hanzi,
+          ) do
             if deck.cards.none?
               div(class: "accent-box") do
                 div(class: "accent-box__icon") { "📚" }
