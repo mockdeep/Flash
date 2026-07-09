@@ -5,6 +5,6 @@ set -euo pipefail
 esbuild app/assets/stylesheets/application.css \
   --bundle \
   --outdir=app/assets/builds \
-  --loader:.woff=file \
+  --loader:.woff=empty \
   --loader:.woff2=file \
   "$@"
