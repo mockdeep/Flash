@@ -52,10 +52,12 @@ class Deck < ApplicationRecord
 
   # Whether the deck's data_set contains Han characters on any item; gates the
   # study page's hanzi font menu.
-  def hanzi?
-    return @hanzi if defined?(@hanzi)
+  def hanzi? = hanzi_chars.present?
 
-    @hanzi = data_set.items.pluck(:text).any? { it.match?(/\p{Han}/) }
+  # The distinct Han characters across the data_set's items; the study page
+  # embeds them once so the browser can prewarm the font slices they need.
+  def hanzi_chars
+    @hanzi_chars ||= data_set.items.pluck(:text).join.scan(/\p{Han}/).uniq.join
   end
 
   def publicly_visible? = visibility == "public"

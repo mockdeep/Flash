@@ -8,6 +8,14 @@ type Choice = Font | "mix";
 
 const DEFAULT_CHOICE: Choice = "hei";
 
+// Mirrors the --hanzi-font mapping in flash.css.
+const FAMILIES: {[font in Font]: string} = {
+  hand: "Ma Shan Zheng",
+  hei: "Noto Sans SC",
+  kai: "LXGW WenKai",
+  song: "Noto Serif SC",
+};
+
 function isFont(value: string | null | undefined): value is Font {
   return value === "hei" || value === "song" ||
     value === "kai" || value === "hand";
@@ -39,11 +47,13 @@ function saveChoice(deckId: string, choice: Choice): void {
 export default class extends Controller<HTMLElement> {
   static override targets = ["card", "option"];
 
-  static override values = {deckId: String};
+  static override values = {deckId: String, hanzi: String};
 
   declare optionTargets: HTMLElement[];
 
   declare deckIdValue: string;
+
+  declare hanziValue: string;
 
   private choice: Choice = DEFAULT_CHOICE;
 
@@ -85,13 +95,28 @@ export default class extends Controller<HTMLElement> {
     this.optionTargets.forEach((option) => { this.syncOption(option); });
     if (choice === "mix") {
       this.applyFont(randomFont());
+      FONTS.forEach((font) => { this.warm(font); });
     } else {
       this.applyFont(choice);
+      this.warm(choice);
     }
   }
 
   private applyFont(font: Font): void {
     this.element.dataset.font = font;
+  }
+
+  /*
+   * Ask the browser to fetch every slice of the family that the deck's
+   * characters (embedded on the initial page render) will need, so cards
+   * first paint in the correct font instead of popping in slice by slice.
+   * Slices are immutable-cached, and the browser never re-fetches a loaded
+   * face, so repeat calls cost only the range matching.
+   */
+  private warm(font: Font): void {
+    if (this.hanziValue === "") { return; }
+    document.fonts.load(`1em "${FAMILIES[font]}"`, this.hanziValue).
+      catch(() => { return null; });
   }
 
   private syncOption(option: HTMLElement): void {

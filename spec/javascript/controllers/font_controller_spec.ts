@@ -1,4 +1,5 @@
 import {describe, expect, it, vi} from "vitest";
+import type {FontLoad} from "support/font_harness";
 import {
   boot,
   buildCard,
@@ -9,6 +10,7 @@ import {
   option,
   selectEvent,
   STORAGE_KEY,
+  stubFonts,
 } from "support/font_harness";
 
 describe("connect with empty storage", () => {
@@ -167,6 +169,65 @@ describe("a new card connecting", () => {
     controller().cardTargetConnected(buildCard("2"));
 
     expect(element().dataset.font).toBe("kai");
+  });
+});
+
+describe("prewarming", () => {
+  it("warms the chosen family with the deck's characters", async () => {
+    const fonts = stubFonts();
+
+    await boot("kai", "你好");
+
+    expect(fonts.load).toHaveBeenCalledWith("1em \"LXGW WenKai\"", "你好");
+  });
+
+  it("skips warming when no characters are embedded", async () => {
+    const fonts = stubFonts();
+
+    await boot("kai");
+
+    expect(fonts.load).not.toHaveBeenCalled();
+  });
+
+  it("warms a newly selected family", async () => {
+    const fonts = stubFonts();
+    await boot("kai", "你");
+
+    controller().setFont(selectEvent("song"));
+
+    expect(fonts.load).toHaveBeenCalledWith("1em \"Noto Serif SC\"", "你");
+  });
+
+  it("survives a failed font load", async () => {
+    stubFonts({
+      load: vi.fn<FontLoad>(async () => {
+        return Promise.reject(new Error("offline"));
+      }),
+    });
+
+    await boot("kai", "你");
+    await new Promise((resolve) => { setTimeout(resolve, 0); });
+
+    expect(element().dataset.font).toBe("kai");
+  });
+});
+
+describe("prewarming under mix", () => {
+  it("warms every family", async () => {
+    const fonts = stubFonts();
+
+    await boot("mix", "你");
+
+    expect(fonts.load).toHaveBeenCalledTimes(4);
+  });
+
+  it("does not warm again when a card rerolls the font", async () => {
+    const fonts = stubFonts();
+    await boot("mix", "你");
+
+    controller().cardTargetConnected(buildCard("1"));
+
+    expect(fonts.load).toHaveBeenCalledTimes(4);
   });
 });
 

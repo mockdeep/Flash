@@ -14,6 +14,7 @@ module Components
     include Phlex::Rails::Helpers::TurboFrameTag
 
     register_value_helper :current_user
+    register_value_helper :turbo_frame_request?
 
     def timezone_field(form)
       form.hidden_field(
