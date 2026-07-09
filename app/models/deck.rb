@@ -8,7 +8,7 @@ class Deck < ApplicationRecord
   has_many :cards, dependent: :delete_all
   has_many :incoming_suggestions, through: :cards, source: :suggestions
 
-  delegate :name, :user, :user_id, to: :data_set
+  delegate :name, :user, :user_id, :language, to: :data_set
 
   attribute(:level, :integer, default: 1)
   attribute(:visibility, :string, default: "private")
@@ -50,9 +50,8 @@ class Deck < ApplicationRecord
     cards.joins(:item).where(items: { category: })
   end
 
-  # Whether the deck's data_set contains Han characters on any item; gates the
-  # study page's hanzi font menu.
-  def hanzi? = hanzi_chars.present?
+  # Gates the study page's Mandarin font menu.
+  def mandarin? = language == "zh"
 
   # The distinct Han characters across the data_set's items; the study page
   # embeds them once so the browser can prewarm the font slices they need.

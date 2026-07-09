@@ -21,6 +21,7 @@ module DataSets
       data_set = reset_data_set(deck)
       item_ids = insert_data(data_set, rows)
       insert_cards(deck, rows, item_ids)
+      data_set.detect_language!
     end
 
     # Replace ingest: rebuild items from the new rows while preserving the

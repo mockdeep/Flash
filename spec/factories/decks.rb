@@ -5,9 +5,10 @@ FactoryBot.define do
     transient do
       sequence(:name, 100) { |n| "Deck #{n}" }
       user { default_user }
+      language { nil }
     end
 
-    data_set { association(:data_set, user:, name:) }
+    data_set { association(:data_set, user:, name:, language:) }
     study_goal { 50 }
     distractor_pool { "category" }
   end

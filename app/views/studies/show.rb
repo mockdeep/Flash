@@ -57,7 +57,7 @@ module Views
               render(
                 Components::CardFront.new(
                   text: card.front,
-                  font_menu: deck.hanzi?,
+                  font_menu: deck.mandarin?,
                   card_id: card.id,
                 ),
               )

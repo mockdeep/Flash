@@ -106,6 +106,22 @@ RSpec.describe Decks::Create do
 
         expect(deck.cards.first.back).to eq("understand; clear")
       end
+
+      it "detects Mandarin from the CSV content" do
+        user = create(:user)
+        csv = csv_file("front,back\n明白,understand\n")
+        deck = described_class.call(user:, name: "T", cards_csv: csv).record
+
+        expect(deck.data_set.language).to eq("zh")
+      end
+
+      it "leaves the language empty on a plain-text CSV" do
+        user = create(:user)
+        csv = csv_file("front,back\nQ,A\n")
+        deck = described_class.call(user:, name: "T", cards_csv: csv).record
+
+        expect(deck.data_set.language).to be_nil
+      end
     end
 
     context "when CSV has a distractors column" do

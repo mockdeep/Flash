@@ -48,26 +48,17 @@ RSpec.describe Deck do
     end
   end
 
-  describe "#hanzi?" do
-    it "is true when a card front contains Han characters" do
-      deck = create(:deck)
-      create(:card, deck:, front: "他", back: "he; him")
+  describe "#mandarin?" do
+    it "is true when the data_set language is Mandarin" do
+      deck = create(:deck, language: "zh")
 
-      expect(deck.hanzi?).to be(true)
+      expect(deck.mandarin?).to be(true)
     end
 
-    it "is true when only a card back contains Han characters" do
+    it "is false when the data_set has no language" do
       deck = create(:deck)
-      create(:card, deck:, front: "he", back: "他")
 
-      expect(deck.hanzi?).to be(true)
-    end
-
-    it "is false when no card contains Han characters" do
-      deck = create(:deck)
-      create(:card, deck:, front: "hola", back: "hello")
-
-      expect(deck.hanzi?).to be(false)
+      expect(deck.mandarin?).to be(false)
     end
   end
 
