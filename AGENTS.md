@@ -710,17 +710,25 @@ A reverse deck studies an existing text deck's content in the opposite direction
 
 Cards can carry an optional pronunciation/gloss (e.g. Mandarin pinyin) kept separate from `back`. Keeping it out of `back` keeps the multiple-choice options clean — the gloss is revealed with the card rather than baked into every answer string.
 - **Data**: `items.reading` (nullable string on the Front item; the card delegates `reading` to its item). Imported via an optional `reading` CSV column (`Decks::CsvReading`, wired through `Decks::Create` / `Decks::Replace` / `Catalog::CopyDeck`) and editable in the card edit form (an edit re-projects the item; the card view is kept in sync by a `card-reading` turbo-stream replace from `CardsController`).
-- **Display**: `Components::CardFront` takes an optional `reading:` and renders `Components::CardReading` *inside* the card-front box, directly under the character, so the two read as one unit. Only the answer (update) view passes `reading:` — the pre-answer and music views omit it, so nothing shows before answering and the gloss never lands on the distractor options. The box border/stripe/shadow live on `.card-front-wrapper` (not the `.card-front` `<h2>`) so the character and reading share one frame. There is no show/hide configuration; a deck that shouldn't show readings simply omits the `reading` column.
+- **Display**: `Components::CardFront` takes an optional `reading:` and renders `Components::CardReading` *inside* the card-front box, directly under the character, so the two read as one unit. The answer (update) view passes `reading:`, and so does the question view when it re-renders after a passed reading stage (the confirmed reading stays visible while the translation is answered — see Study Algorithm). The initial pre-answer and music views omit it, so nothing shows before answering and the gloss never lands on the distractor options.
+- **Study**: the reading also powers the level-2 **reading stage** — pick the reading, then the translation (see Study Algorithm). The box border/stripe/shadow live on `.card-front-wrapper` (not the `.card-front` `<h2>`) so the character and reading share one frame. There is no show/hide configuration; a deck that shouldn't show readings simply omits the `reading` column.
 
 ### Study Algorithm
 
 The study engine (`app/domain/study.rb`) manages card selection and answer processing:
 - **Active window**: picks randomly from the not-done cards (at the current level) capped at `2^(level-1) × 20` — the pool of cards in play grows as the deck levels up
-- **Presentation mode**: multiple-choice below level 3, **fuzzy-find** (typed-answer) at level 3+ (`FUZZY_FIND_LEVEL`); `possible_answers` branches on this
+- **Presentation mode**: multiple-choice below level 3, **fuzzy-find** (typed-answer) at level 3+ (`FUZZY_FIND_LEVEL`); at level 2 (`READING_LEVEL`) a card with a `reading` on a forward deck gets a **reading stage** first (see below). `possible_answers` branches on the mode
 - **Multiple choice**: 4 distractors + the answer, shuffled. Distractors come from the card's own preset `distractors` (item-level); a `"category"`-pool deck tops up from same-category then any sibling cards via `deck.cards_in_category`
 - On correct answer: increments `correct_count` and `correct_streak`; if the last not-done card at the level is completed, advances `deck.level`
 - On incorrect answer: resets `correct_streak` to 0 and calls `DataSets::Projection.add_distractor` to record the wrong guess as a decoy item for that card
 - Level advancement happens in `Study#answer_card`, not in the controller
+
+**Reading stage (level 2)**: on a forward text deck at level 2, a card with a `reading` is asked in two parts — pick the reading (multiple choice), then pick the translation. It gates the translation question but never scores it:
+- The stage is stateless — answer buttons carry `stage: "reading"` in their params and `Study#record_answer` routes those to `answer_reading`
+- A **miss** resets `correct_streak` and bumps `view_count`, but does **not** call `add_distractor` (a wrong pinyin pick must not pollute the translation distractor pool); the regular result view renders it
+- A **pass** writes nothing; the controller re-renders the question view pinned to the same card (`Study.for(deck:, card_id:)` forces the translation stage, and the confirmed reading stays visible under the character). The translation answer then flows through `answer_card` as usual
+- **Decoys are computed, not stored**: sibling Front items' readings, ranked by how close each sibling front's **character count** is to the prompt's — the learner predicts phoneme count by counting the prompt's characters, so a wrong-count option is a free elimination. Two slots prefer siblings that share the prompt's first or last character *and* match its character count exactly (knowing one character's reading then can't eliminate them). Sibling readings equal to the card's own (homophones) are excluded
+- Reverse decks skip the stage (`anchor_side` guard) — the options there are the answer characters, so a reading question would hint the answer. Cards without a `reading` behave exactly as before, even at level 2
 
 ### Subscription Transparency
 
