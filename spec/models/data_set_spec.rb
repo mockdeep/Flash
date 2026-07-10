@@ -16,28 +16,31 @@ RSpec.describe DataSet do
       .to validate_uniqueness_of(:name).scoped_to(:user_id)
   end
 
-  it "allows a supported language or none" do
-    expect(described_class.new).to validate_inclusion_of(:language)
-      .in_array(described_class::LANGUAGES).allow_nil
+  it "allows any ISO 639 language code or none" do
+    expect(described_class.new).to allow_value("zh", "tlh", nil).for(:language)
   end
 
-  describe "#detect_language!" do
-    it "sets zh when an item contains Han characters" do
-      data_set = create(:data_set)
-      create(:item, data_set:, text: "你好")
+  it "rejects codes outside the registry and non-shortest forms" do
+    expect(described_class.new)
+      .not_to allow_value("xx", "zho", "Spanish").for(:language)
+  end
 
-      data_set.detect_language!
-
-      expect(data_set.reload.language).to eq("zh")
+  describe "LANGUAGES" do
+    it "keys each language by its shortest available code" do
+      expect(described_class::LANGUAGES["zh"]).to eq("Chinese")
     end
 
-    it "leaves the language empty when no item contains Han characters" do
-      data_set = create(:data_set)
-      create(:item, data_set:, text: "hola")
+    it "includes languages that only have a three-letter code" do
+      expect(described_class::LANGUAGES["tlh"]).to eq("Klingon")
+    end
 
-      data_set.detect_language!
+    it "omits collective language families" do
+      expect(described_class::LANGUAGES).not_to have_key("afa")
+    end
 
-      expect(data_set.reload.language).to be_nil
+    it "omits special-purpose codes" do
+      expect(described_class::LANGUAGES.keys)
+        .not_to include("und", "zxx", "mul", "mis")
     end
   end
 end

@@ -107,18 +107,28 @@ RSpec.describe Decks::Create do
         expect(deck.cards.first.back).to eq("understand; clear")
       end
 
-      it "detects Mandarin from the CSV content" do
+      it "stores the selected language on the data_set" do
         user = create(:user)
         csv = csv_file("front,back\n明白,understand\n")
-        deck = described_class.call(user:, name: "T", cards_csv: csv).record
+        deck = described_class
+          .call(user:, name: "T", cards_csv: csv, language: "zh").record
 
         expect(deck.data_set.language).to eq("zh")
       end
 
-      it "leaves the language empty on a plain-text CSV" do
+      it "leaves the language empty when none is selected" do
         user = create(:user)
         csv = csv_file("front,back\nQ,A\n")
         deck = described_class.call(user:, name: "T", cards_csv: csv).record
+
+        expect(deck.data_set.language).to be_nil
+      end
+
+      it "normalizes a blank language to nil" do
+        user = create(:user)
+        csv = csv_file("front,back\nQ,A\n")
+        deck = described_class
+          .call(user:, name: "T", cards_csv: csv, language: "").record
 
         expect(deck.data_set.language).to be_nil
       end

@@ -6,6 +6,7 @@ export default class extends Controller {
     "textInstructions",
     "musicInstructions",
     "musicSettings",
+    "languageSettings",
   ];
 
   declare radioTargets: HTMLInputElement[];
@@ -16,18 +17,24 @@ export default class extends Controller {
 
   declare musicSettingsTarget: HTMLFieldSetElement;
 
+  declare languageSettingsTarget: HTMLFieldSetElement;
+
   override connect(): void {
     this.update();
   }
 
   update(): void {
-    const isMusic = this.radioTargets.some((radio) => {
-      return radio.checked && radio.value === "music";
+    const checked = this.radioTargets.find((radio) => {
+      return radio.checked;
     });
+    const isMusic = checked?.value === "music";
+    const isLanguage = checked?.value === "language";
 
     this.textInstructionsTarget.hidden = isMusic;
     this.musicInstructionsTarget.hidden = !isMusic;
     this.musicSettingsTarget.hidden = !isMusic;
     this.musicSettingsTarget.disabled = !isMusic;
+    this.languageSettingsTarget.hidden = !isLanguage;
+    this.languageSettingsTarget.disabled = !isLanguage;
   }
 }
