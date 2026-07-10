@@ -45,7 +45,7 @@ RSpec.describe "creating a music deck" do
   it "re-hides the Music Style fieldset when switching back to Text" do
     visit_new_deck
     choose("Music (microphone required)")
-    choose("Text / Flashcard")
+    choose("Basic")
 
     expect(page).to have_no_css("legend", text: "Music Style")
   end

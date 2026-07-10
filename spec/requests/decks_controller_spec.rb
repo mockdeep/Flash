@@ -370,9 +370,10 @@ RSpec.describe DecksController do
   end
 
   describe "#create" do
-    def deck_params(name:, csv_file:, deck_type: nil)
+    def deck_params(name:, csv_file:, deck_type: nil, language: nil)
       attrs = { name:, cards_csv: csv_file }
       attrs[:deck_type] = deck_type if deck_type
+      attrs[:language] = language if language
       { deck: attrs }
     end
 
@@ -413,6 +414,41 @@ RSpec.describe DecksController do
         post(decks_path, params: deck_params(name: "", csv_file: csv))
 
         expect(flash.now[:error]).to eq("Name can't be blank")
+      end
+    end
+
+    context "when deck_type is 'language'" do
+      def post_language_deck(language: nil)
+        csv = fixture_file_upload("decks/basic.csv", "text/csv")
+        login_as(default_user)
+        post(
+          decks_path,
+          params: deck_params(
+            name: "Vocab", csv_file: csv, deck_type: "language", language:,
+          ),
+        )
+      end
+
+      it "stores the selected language on the data_set" do
+        post_language_deck(language: "es")
+
+        expect(DataSet.find_by(name: "Vocab").language).to eq("es")
+      end
+
+      it "re-renders the form when no language is selected" do
+        post_language_deck
+
+        expect(rendered).to have_text("Create New Deck")
+      end
+
+      it "sets an error flash when no language is selected" do
+        post_language_deck
+
+        expect(flash.now[:error]).to eq("Please select a language")
+      end
+
+      it "does not create a deck when no language is selected" do
+        expect { post_language_deck }.not_to change(Deck, :count)
       end
     end
 

@@ -6,13 +6,15 @@ import {ensure} from "helpers/ensure";
 const textSel = "[data-deck-type-target='textInstructions']";
 const musicSel = "[data-deck-type-target='musicInstructions']";
 const settingsSel = "[data-deck-type-target='musicSettings']";
+const languageSel = "[data-deck-type-target='languageSettings']";
 const rootSel = "[data-controller='deck-type']";
 
-type RadioValue = "text" | "music";
+type RadioValue = "text" | "language" | "music";
 type InstructionsName =
   "textInstructions" |
   "musicInstructions" |
-  "musicSettings";
+  "musicSettings" |
+  "languageSettings";
 
 function buildRadio(value: RadioValue, checked: boolean): HTMLInputElement {
   const input = document.createElement("input");
@@ -41,10 +43,12 @@ function setupDOM(): void {
   const root = document.createElement("div");
   root.dataset.controller = "deck-type";
   root.appendChild(buildRadio("text", true));
+  root.appendChild(buildRadio("language", false));
   root.appendChild(buildRadio("music", false));
   root.appendChild(buildInstructions("textInstructions", false));
   root.appendChild(buildInstructions("musicInstructions", true));
   root.appendChild(buildInstructions("musicSettings", true));
+  root.appendChild(buildInstructions("languageSettings", true));
 
   document.body.replaceChildren(root);
 }
@@ -75,6 +79,10 @@ function musicSettings(): HTMLElement {
   return ensure(document.querySelector<HTMLElement>(settingsSel));
 }
 
+function languageSettings(): HTMLElement {
+  return ensure(document.querySelector<HTMLElement>(languageSel));
+}
+
 function radio(value: RadioValue): HTMLInputElement {
   const sel = `input[name="deck[deck_type]"][value="${value}"]`;
 
@@ -98,6 +106,12 @@ describe("connect with text selected", () => {
     await setupController();
 
     expect(musicSettings().hidden).toBe(true);
+  });
+
+  it("hides the language settings", async () => {
+    await setupController();
+
+    expect(languageSettings().hidden).toBe(true);
   });
 });
 
@@ -130,6 +144,43 @@ describe("update after selecting music", () => {
     controller().update();
 
     expect(musicSettings().hidden).toBe(false);
+  });
+});
+
+describe("update after selecting language", () => {
+  it("shows the language settings", async () => {
+    await setupController();
+    radio("text").checked = false;
+    radio("language").checked = true;
+
+    controller().update();
+
+    expect(languageSettings().hidden).toBe(false);
+  });
+
+  it("keeps the text instructions visible", async () => {
+    await setupController();
+    radio("text").checked = false;
+    radio("language").checked = true;
+
+    controller().update();
+
+    expect(textInstructions().hidden).toBe(false);
+  });
+});
+
+describe("update after switching from language back to text", () => {
+  it("re-hides the language settings", async () => {
+    await setupController();
+    radio("text").checked = false;
+    radio("language").checked = true;
+    controller().update();
+
+    radio("language").checked = false;
+    radio("text").checked = true;
+    controller().update();
+
+    expect(languageSettings().hidden).toBe(true);
   });
 });
 

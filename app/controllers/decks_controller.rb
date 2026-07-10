@@ -24,6 +24,8 @@ class DecksController < ApplicationController
   end
 
   def create
+    return language_missing_error if language_missing?
+
     result = create_action.call(**create_params, user: current_user)
     result.success? ? deck_created : deck_create_failed(result.record)
   end
@@ -53,6 +55,18 @@ class DecksController < ApplicationController
     deck_params.except(:deck_type)
   end
 
+  # The language select is disabled unless the Language deck type is chosen,
+  # so a blank value only arrives when browser validation is bypassed.
+  def language_missing?
+    deck_params[:deck_type] == "language" && deck_params[:language].blank?
+  end
+
+  def language_missing_error
+    deck = TextDeck.new(data_set: DataSet.new(name: deck_params[:name]))
+    deck.errors.add(:base, "Please select a language")
+    deck_create_failed(deck)
+  end
+
   def deck_created
     flash[:success] = t(".success")
     redirect_to(decks_path)
@@ -68,7 +82,7 @@ class DecksController < ApplicationController
   end
 
   def deck_params
-    params.expect(deck: [:name, :cards_csv, :deck_type, :ordered])
+    params.expect(deck: [:name, :cards_csv, :deck_type, :ordered, :language])
       .to_h.symbolize_keys
   end
 end
