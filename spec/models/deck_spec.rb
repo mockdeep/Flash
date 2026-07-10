@@ -50,12 +50,18 @@ RSpec.describe Deck do
 
   describe "#mandarin?" do
     it "is true when the data_set language is Mandarin" do
-      deck = create(:deck, language: "zh")
+      deck = create(:reading_deck, language: "zh")
 
       expect(deck.mandarin?).to be(true)
     end
 
-    it "is false when the data_set has no language" do
+    it "is false when the language is not Mandarin" do
+      deck = create(:reading_deck, language: "es")
+
+      expect(deck.mandarin?).to be(false)
+    end
+
+    it "is false for a basic deck" do
       deck = create(:deck)
 
       expect(deck.mandarin?).to be(false)
@@ -64,7 +70,7 @@ RSpec.describe Deck do
 
   describe "#hanzi_chars" do
     it "collects the distinct Han characters across items" do
-      deck = create(:deck)
+      deck = create(:reading_deck)
       create(:card, deck:, front: "你好", back: "hello")
       create(:card, deck:, front: "好吗", back: "well?")
 
@@ -72,10 +78,24 @@ RSpec.describe Deck do
     end
 
     it "is empty when no item contains Han characters" do
-      deck = create(:deck)
+      deck = create(:reading_deck, language: "es")
       create(:card, deck:, front: "hola", back: "hello")
 
       expect(deck.hanzi_chars).to eq("")
+    end
+  end
+
+  describe "#type_allowed_by_data_set" do
+    it "rejects a deck class the data_set can't build" do
+      deck = build(:deck, data_set: create(:language_data_set))
+
+      expect(deck).not_to be_valid
+    end
+
+    it "accepts a deck class the data_set can build" do
+      deck = build(:reading_deck)
+
+      expect(deck).to be_valid
     end
   end
 
@@ -148,12 +168,20 @@ RSpec.describe Deck do
   end
 
   describe "#reversible?" do
-    it "is false for the base deck" do
-      expect(described_class.new.reversible?).to be(false)
+    it "is false for a basic deck" do
+      expect(create(:deck).reversible?).to be(false)
     end
 
-    it "is true for a text deck" do
-      expect(create(:deck).reversible?).to be(true)
+    it "is true for a reading deck" do
+      expect(create(:reading_deck).reversible?).to be(true)
+    end
+
+    it "is false for a writing deck" do
+      reading = create(:reading_deck)
+      create(:card, deck: reading)
+      writing = Decks::CreateReverse.call(source: reading).record
+
+      expect(writing.reversible?).to be(false)
     end
   end
 
@@ -163,14 +191,14 @@ RSpec.describe Deck do
     end
 
     it "is false when no reverse deck shares the data_set" do
-      deck = create(:deck)
+      deck = create(:reading_deck)
       create(:card, deck:)
 
       expect(deck.reverse_present?).to be(false)
     end
 
     it "is true when a reverse deck shares the data_set" do
-      deck = create(:deck)
+      deck = create(:reading_deck)
       create(:card, deck:)
       Decks::CreateReverse.call(source: deck)
 

@@ -2,7 +2,7 @@
 
 RSpec.describe "reverse decks" do
   def forward_deck
-    deck = create(:deck, name: "Mandarin", user: default_user)
+    deck = create(:reading_deck, name: "Mandarin", user: default_user)
     create(:card, deck:, front: "明白", back: "understand")
     deck
   end
@@ -32,7 +32,7 @@ RSpec.describe "reverse decks" do
 
   it "can be studied with the back as the prompt" do
     reversed_source
-    visit(deck_study_path(ReverseTextDeck.last))
+    visit(deck_study_path(WritingDeck.last))
 
     expect(page).to have_text("understand")
   end

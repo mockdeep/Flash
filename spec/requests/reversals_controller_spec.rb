@@ -2,7 +2,7 @@
 
 RSpec.describe ReversalsController do
   def reversible_deck
-    deck = create(:deck, user: default_user)
+    deck = create(:reading_deck, user: default_user)
     create(:card, deck:)
     deck
   end
@@ -19,7 +19,7 @@ RSpec.describe ReversalsController do
       login_as(default_user)
 
       expect { post(deck_reversal_path(deck)) }
-        .to change(ReverseTextDeck, :count).by(1)
+        .to change(WritingDeck, :count).by(1)
     end
 
     it "redirects to the new reverse deck" do
@@ -28,7 +28,7 @@ RSpec.describe ReversalsController do
 
       post(deck_reversal_path(deck))
 
-      expect(response).to redirect_to(deck_path(ReverseTextDeck.last))
+      expect(response).to redirect_to(deck_path(WritingDeck.last))
     end
 
     it "sets a success flash" do

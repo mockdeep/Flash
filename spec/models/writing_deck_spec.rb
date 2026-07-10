@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe ReverseTextDeck do
+RSpec.describe WritingDeck do
   it "anchors the Back side" do
     expect(described_class.new.anchor_side).to eq("Back")
   end
@@ -21,7 +21,7 @@ RSpec.describe ReverseTextDeck do
 
   describe "#cards_in_category" do
     def reverse_with_categories
-      fwd = create(:deck)
+      fwd = create(:reading_deck)
       create(:card, deck: fwd, front: "明白", back: "know", category: "v")
       create(:card, deck: fwd, front: "你好", back: "hi", category: "g")
       Decks::CreateReverse.call(source: fwd).record

@@ -157,7 +157,7 @@ RSpec.describe Study do
       end
 
       def reverse_deck_with_reading
-        source = create(:deck)
+        source = create(:reading_deck)
         create(:card, deck: source, front: "两", back: "two", reading: "liǎng")
         reverse = Decks::CreateReverse.call(source:).record
         reverse.tap { |deck| deck.update!(level: Study::READING_LEVEL) }

@@ -6,7 +6,7 @@ RSpec.describe ReverseTextCard do
   # Reverse a forward deck holding a single (single-gloss) card and return its
   # one reverse card.
   def reverse_card(**forward)
-    deck = create(:deck)
+    deck = create(:reading_deck)
     create(:card, deck:, **forward)
     Decks::CreateReverse.call(source: deck).record.cards.sole
   end
@@ -21,7 +21,7 @@ RSpec.describe ReverseTextCard do
   end
 
   it "joins multiple paired fronts as the answer" do
-    deck = create(:deck)
+    deck = create(:reading_deck)
     create(:card, deck:, front: "明白", back: "understand")
     create(:card, deck:, front: "清楚", back: "understand")
     rev = Decks::CreateReverse.call(source: deck).record

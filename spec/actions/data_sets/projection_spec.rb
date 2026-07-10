@@ -118,7 +118,7 @@ RSpec.describe DataSets::Projection do
 
   describe "reverse-deck sync" do
     def with_reverse(forward_cards)
-      fwd = create(:deck)
+      fwd = create(:reading_deck)
       forward_cards.each { |attrs| create(:card, deck: fwd, **attrs) }
       [fwd, Decks::CreateReverse.call(source: fwd).record]
     end

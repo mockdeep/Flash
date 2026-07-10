@@ -48,7 +48,7 @@ RSpec.describe StudiesController do
     end
 
     it "wires the font controller on a Mandarin deck", :aggregate_failures do
-      deck = create(:deck, language: "zh")
+      deck = create(:reading_deck)
       create(:card, deck:, front: "他", back: "he; him")
       get(deck_study_path(deck))
 
@@ -64,7 +64,7 @@ RSpec.describe StudiesController do
     end
 
     it "embeds the deck's hanzi for font prewarming on full page loads" do
-      deck = create(:deck, language: "zh")
+      deck = create(:reading_deck)
       create(:card, deck:, front: "他", back: "he; him")
       get(deck_study_path(deck))
 
@@ -72,7 +72,7 @@ RSpec.describe StudiesController do
     end
 
     it "omits the hanzi payload on turbo frame navigations" do
-      deck = create(:deck, language: "zh")
+      deck = create(:reading_deck)
       create(:card, deck:, front: "他", back: "he; him")
       get(deck_study_path(deck), headers: { "Turbo-Frame" => "study" })
 

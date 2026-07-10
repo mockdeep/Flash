@@ -8,8 +8,9 @@ module Decks
 
     def call(user:, name:, cards_csv:, language: nil)
       language = language.presence
+      deck_class = language ? ReadingDeck : BasicDeck
       data_set_class = language ? LanguageDataSet : BasicDataSet
-      deck = TextDeck.new(
+      deck = deck_class.new(
         study_goal: user.study_goal,
         data_set: data_set_class.new(user:, name:, language:),
       )

@@ -183,7 +183,7 @@ RSpec.describe DecksController do
     end
 
     def deck_with_card
-      create(:card, deck: create(:deck)).deck
+      create(:card, deck: create(:reading_deck)).deck
     end
 
     it "shows the create-reverse button for a forward deck" do
@@ -441,6 +441,20 @@ RSpec.describe DecksController do
         expect(DataSet.find_by(name: "Vocab")).to be_a(LanguageDataSet)
       end
 
+      it "creates a ReadingDeck" do
+        post_language_deck(language: "es")
+
+        expect(DataSet.find_by(name: "Vocab").decks.sole).to be_a(ReadingDeck)
+      end
+
+      it "re-renders the form when a language deck fails validation" do
+        create(:data_set, name: "Vocab", user: default_user)
+
+        post_language_deck(language: "es")
+
+        expect(rendered).to have_text("Create New Deck")
+      end
+
       it "re-renders the form when no language is selected" do
         post_language_deck
 
@@ -472,8 +486,8 @@ RSpec.describe DecksController do
         expect { post_music_deck }.to change(MusicDeck, :count).by(1)
       end
 
-      it "does not create a TextDeck" do
-        expect { post_music_deck }.not_to change(TextDeck, :count)
+      it "does not create a BasicDeck" do
+        expect { post_music_deck }.not_to change(BasicDeck, :count)
       end
 
       it "redirects to decks index" do

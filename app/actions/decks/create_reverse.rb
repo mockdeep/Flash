@@ -25,7 +25,7 @@ module Decks
     end
 
     def build_deck(source)
-      ReverseTextDeck.new(
+      WritingDeck.new(
         study_goal: source.study_goal,
         distractor_pool: "category",
         data_set: source.data_set,

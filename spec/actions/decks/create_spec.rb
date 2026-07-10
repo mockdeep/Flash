@@ -142,12 +142,29 @@ RSpec.describe Decks::Create do
         expect(deck.data_set).to be_a(LanguageDataSet)
       end
 
+      it "builds a ReadingDeck when a language is given" do
+        user = create(:user)
+        csv = csv_file("front,back\n明白,understand\n")
+        deck = described_class
+          .call(user:, name: "T", cards_csv: csv, language: "zh").record
+
+        expect(deck).to be_a(ReadingDeck)
+      end
+
       it "builds a BasicDataSet without a language" do
         user = create(:user)
         csv = csv_file("front,back\nQ,A\n")
         deck = described_class.call(user:, name: "T", cards_csv: csv).record
 
         expect(deck.data_set).to be_a(BasicDataSet)
+      end
+
+      it "builds a BasicDeck without a language" do
+        user = create(:user)
+        csv = csv_file("front,back\nQ,A\n")
+        deck = described_class.call(user:, name: "T", cards_csv: csv).record
+
+        expect(deck).to be_a(BasicDeck)
       end
     end
 

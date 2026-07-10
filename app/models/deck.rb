@@ -18,6 +18,7 @@ class Deck < ApplicationRecord
   validates :study_goal,
             numericality: { greater_than_or_equal_to: 1, only_integer: true }
   validate(:data_set_name_valid, if: -> { data_set&.new_record? })
+  validate(:type_allowed_by_data_set)
 
   scope :ordered, -> { joins(:data_set).order("data_sets.name") }
   scope :publicly_visible, -> { where(visibility: "public") }
@@ -37,10 +38,14 @@ class Deck < ApplicationRecord
 
   def reversible? = false
 
+  # Whether the deck's content can be replaced from a fresh CSV; only the
+  # forward text decks support it.
+  def replaceable? = false
+
   # Whether a reverse deck already exists over this deck's data_set (one per
   # source); used to guard creation and hide the create button.
   def reverse_present?
-    data_set.present? && data_set.decks.exists?(type: "ReverseTextDeck")
+    data_set.present? && data_set.decks.exists?(type: "WritingDeck")
   end
 
   # Cards whose studied answer carries the given category, for category-pool
@@ -50,14 +55,8 @@ class Deck < ApplicationRecord
     cards.joins(:item).where(items: { category: })
   end
 
-  # Gates the study page's Mandarin font menu.
-  def mandarin? = language == "zh"
-
-  # The distinct Han characters across the data_set's items; the study page
-  # embeds them once so the browser can prewarm the font slices they need.
-  def hanzi_chars
-    @hanzi_chars ||= data_set.items.pluck(:text).join.scan(/\p{Han}/).uniq.join
-  end
+  # Gates the study page's Mandarin font menu; only language decks can be.
+  def mandarin? = false
 
   def publicly_visible? = visibility == "public"
 
@@ -75,5 +74,11 @@ class Deck < ApplicationRecord
 
   def data_set_name_valid
     errors.merge!(data_set.errors) unless data_set.valid?
+  end
+
+  def type_allowed_by_data_set
+    return if data_set.nil? || data_set.deck_classes.include?(self.class)
+
+    errors.add(:type, "can't be built on a #{data_set.class.name}")
   end
 end
