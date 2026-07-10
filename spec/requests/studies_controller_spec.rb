@@ -544,6 +544,118 @@ RSpec.describe StudiesController do
     end
   end
 
+  describe "reading stage" do
+    def reading_card(**attrs)
+      deck = create(:deck, level: 2)
+      create(:card, deck:, reading: "liǎng", **attrs)
+    end
+
+    def submit_reading(card:, answer:)
+      answer_params = {
+        card_id: card.id,
+        answer:,
+        stage: "reading",
+        possible_answers: ["liǎng", "sān"],
+      }
+      patch(deck_study_path(card.deck), params: { answer: answer_params })
+    end
+
+    it "asks for the reading first at level 2" do
+      card = reading_card
+      get(deck_study_path(card.deck))
+
+      expect(rendered).to have_text("Pick the reading")
+    end
+
+    it "offers the reading as an answer option" do
+      card = reading_card
+      get(deck_study_path(card.deck))
+
+      expect(rendered).to have_css(".answer-button", text: "liǎng")
+    end
+
+    it "skips the gate when the card has no reading" do
+      card = reading_card(reading: nil)
+      get(deck_study_path(card.deck))
+
+      expect(rendered).to have_no_text("Pick the reading")
+    end
+
+    context "when the reading is answered correctly" do
+      it "renders the translation question for the same card" do
+        card = reading_card(front: "两", back: "two")
+        submit_reading(card:, answer: "liǎng")
+
+        expect(rendered).to have_css(".card-front", text: "两")
+      end
+
+      it "offers the translation as an answer option" do
+        card = reading_card(back: "two")
+        submit_reading(card:, answer: "liǎng")
+
+        expect(rendered).to have_css(".answer-button", text: "two")
+      end
+
+      it "shows the confirmed reading under the character" do
+        card = reading_card(back: "two")
+        submit_reading(card:, answer: "liǎng")
+
+        expect(rendered).to have_css("#card-reading", text: "liǎng")
+      end
+
+      it "no longer asks for the reading" do
+        card = reading_card(back: "two")
+        submit_reading(card:, answer: "liǎng")
+
+        expect(rendered).to have_no_text("Pick the reading")
+      end
+
+      it "does not change the correct streak" do
+        card = reading_card(correct_streak: 1)
+
+        expect { submit_reading(card:, answer: "liǎng") }
+          .to not_change_record(card, :correct_streak)
+      end
+    end
+
+    context "when the reading is answered incorrectly" do
+      it "reveals the correct reading" do
+        card = reading_card
+        submit_reading(card:, answer: "sān")
+
+        expect(rendered).to have_css(".answer-correct", text: "liǎng")
+      end
+
+      it "marks the wrong reading" do
+        card = reading_card
+        submit_reading(card:, answer: "sān")
+
+        expect(rendered).to have_css(".answer-incorrect", text: "sān")
+      end
+
+      it "resets the correct streak" do
+        card = reading_card(correct_streak: 1)
+
+        expect { submit_reading(card:, answer: "sān") }
+          .to change_record(card, :correct_streak).from(1).to(0)
+      end
+
+      it "does not record the wrong reading as a distractor" do
+        card = reading_card
+
+        expect { submit_reading(card:, answer: "sān") }
+          .to(not_change { card.reload.distractors })
+      end
+
+      it "shows the next card link" do
+        card = reading_card
+        submit_reading(card:, answer: "sān")
+
+        expect(rendered).to have_link("Next Card")
+      end
+    end
+  end
+
   describe "reading" do
     it "renders the card reading after answering" do
       card = create(:card, deck:, back: "two", reading: "liǎng")

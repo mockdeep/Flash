@@ -15,10 +15,21 @@ class StudiesController < ApplicationController
     deck = current_user.decks.find(params.expect(:deck_id))
     result = Study.for(deck:).record_answer(params)
     increment_counters(result)
-    render_study(update_view_class(deck), deck:, result:)
+    if result.reading_passed?
+      render_translation_stage(deck, result.card)
+    else
+      render_study(update_view_class(deck), deck:, result:)
+    end
   end
 
   private
+
+  # A passed reading stage re-renders the question view pinned to the same
+  # card, now asking for the translation.
+  def render_translation_stage(deck, card)
+    study = Study.for(deck:, card_id: card.id)
+    render_study(show_view_class(deck), deck:, study:)
+  end
 
   def show_view_class(deck)
     deck.music? ? Views::Studies::MusicShow : Views::Studies::Show
