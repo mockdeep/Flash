@@ -4,6 +4,7 @@
 # declare their own rules; the base class is never instantiated.
 class DataSet < ApplicationRecord
   belongs_to :user
+  belongs_to :topic
   has_many :items, dependent: :destroy
   has_many :decks, dependent: :destroy
 

@@ -19,6 +19,41 @@ RSpec.describe DecksController do
       expect(rendered).to have_text("My Test Deck")
     end
 
+    def deck_in_topic(name)
+      deck = create(:deck, user: default_user)
+      topic = create(:topic, name:, user: default_user)
+      deck.data_set.update!(topic:)
+      deck
+    end
+
+    it "groups decks under their topic heading" do
+      login_as(default_user)
+      deck_in_topic("Mandarin")
+
+      get(decks_path)
+
+      expect(rendered).to have_css("h2", text: "Mandarin")
+    end
+
+    it "lists un-topiced decks under 'Other Decks' when topics exist" do
+      login_as(default_user)
+      deck_in_topic("Mandarin")
+      create(:deck, user: default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_css("h2", text: "Other Decks")
+    end
+
+    it "omits the 'Other Decks' heading when no topics exist" do
+      login_as(default_user)
+      create(:deck, user: default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_no_css("h2", text: "Other Decks")
+    end
+
     it "shows card count for each deck" do
       login_as(default_user)
       deck = create(:deck, user: default_user)
@@ -184,6 +219,51 @@ RSpec.describe DecksController do
 
     def deck_with_card
       create(:card, deck: create(:reading_deck)).deck
+    end
+
+    it "shows the topic form when the deck has no topic" do
+      deck = deck_with_card
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_button("Add to topic")
+    end
+
+    def deck_in_topic(name)
+      deck = deck_with_card
+      topic = create(:topic, name:, user: default_user)
+      deck.data_set.update!(topic:)
+      deck
+    end
+
+    it "shows the assigned topic" do
+      deck = deck_in_topic("Mandarin")
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_text("Topic: Mandarin")
+    end
+
+    it "suggests the user's existing topics in the topic form" do
+      create(:topic, name: "Mandarin", user: default_user)
+      login_as(default_user)
+
+      get(deck_path(deck_with_card))
+
+      expect(rendered)
+        .to have_css("datalist option[value='Mandarin']", visible: :all)
+    end
+
+    it "does not suggest another user's topics" do
+      create(:topic, name: "Mandarin", user: create(:user))
+      login_as(default_user)
+
+      get(deck_path(deck_with_card))
+
+      expect(rendered)
+        .to have_no_css("datalist option[value='Mandarin']", visible: :all)
     end
 
     it "shows the create-reverse button for a forward deck" do

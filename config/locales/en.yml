@@ -77,6 +77,12 @@ en:
     destroy:
       success: "Share link revoked"
       confirm: "Revoke the share link? Anyone using it will lose access."
+  topic_assignments:
+    create:
+      success: "Added to the %{name} topic"
+      blank: "Topic name can't be blank"
+    destroy:
+      success: "Removed from topic"
   suggestions:
     accept:
       success: "Suggestion applied to the card"

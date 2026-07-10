@@ -27,7 +27,7 @@ module Views
           if decks.empty?
             render_empty_state
           else
-            render_decks_grid
+            render_deck_sections
           end
         end
       end
@@ -67,9 +67,29 @@ module Views
         end
       end
 
-      def render_decks_grid
+      # Topic sections first (alphabetical), then the un-topiced decks -- under
+      # an "Other Decks" heading only when there are topics to distinguish
+      # them from.
+      def render_deck_sections
+        grouped = decks.group_by(&:topic)
+        topics = grouped.keys.compact.sort_by(&:name)
+        loose = grouped[nil] || []
+
+        topics.each { |topic| render_topic_section(topic, grouped[topic]) }
+        return if loose.empty?
+
+        h2(class: "decks-section-title") { "Other Decks" } if topics.any?
+        render_decks_grid(loose)
+      end
+
+      def render_topic_section(topic, topic_decks)
+        h2(class: "decks-section-title") { topic.name }
+        render_decks_grid(topic_decks)
+      end
+
+      def render_decks_grid(section_decks)
         div(class: "decks-grid") do
-          decks.each do |deck|
+          section_decks.each do |deck|
             render_deck_card(deck)
           end
         end

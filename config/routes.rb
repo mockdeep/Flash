@@ -18,6 +18,7 @@ Rails.application.routes.draw do
     resource :reversal, only: [:create], controller: "reversals"
     resource :share, only: [:create, :destroy], controller: "shares"
     resource :study, only: [:show, :update]
+    resource :topic_assignment, only: [:create, :destroy], controller: "topic_assignments"
     resources :cards, only: [:update, :destroy]
     resources :suggestions, only: [:index] do
       post :accept, on: :member

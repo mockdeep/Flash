@@ -47,9 +47,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_11_000000) do
     t.datetime "created_at", null: false
     t.string "language"
     t.string "name", null: false
+    t.bigint "topic_id"
     t.string "type", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["topic_id"], name: "index_data_sets_on_topic_id"
     t.index ["user_id", "name"], name: "index_data_sets_on_user_id_and_name", unique: true
   end
 
@@ -114,6 +116,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_11_000000) do
     t.index ["user_id"], name: "index_subscriptions_on_user_id"
   end
 
+  create_table "topics", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "name"], name: "index_topics_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_topics_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -133,6 +144,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_11_000000) do
   add_foreign_key "cards", "cards", column: "source_card_id", on_delete: :nullify
   add_foreign_key "cards", "decks"
   add_foreign_key "cards", "items", on_delete: :cascade
+  add_foreign_key "data_sets", "topics", on_delete: :nullify
   add_foreign_key "data_sets", "users", on_delete: :cascade
   add_foreign_key "decks", "data_sets", on_delete: :cascade
   add_foreign_key "item_distractors", "items", column: "distractor_item_id", on_delete: :cascade
@@ -141,4 +153,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_11_000000) do
   add_foreign_key "pairings", "items", column: "paired_item_id", on_delete: :cascade
   add_foreign_key "pairings", "items", on_delete: :cascade
   add_foreign_key "subscriptions", "users"
+  add_foreign_key "topics", "users", on_delete: :cascade
 end
