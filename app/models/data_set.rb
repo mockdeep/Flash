@@ -8,4 +8,8 @@ class DataSet < ApplicationRecord
   has_many :decks, dependent: :destroy
 
   validates :name, presence: true, uniqueness: { scope: :user_id }
+
+  # The deck classes that can be built over this data_set; each subclass
+  # declares its own.
+  def deck_classes = []
 end

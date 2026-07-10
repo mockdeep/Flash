@@ -37,4 +37,6 @@ class LanguageDataSet < DataSet
   ].freeze
 
   validates :language, presence: true, inclusion: { in: LANGUAGES.keys }
+
+  def deck_classes = [ReadingDeck, WritingDeck]
 end

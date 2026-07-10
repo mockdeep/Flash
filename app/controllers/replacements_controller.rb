@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ReplacementsController < ApplicationController
-  before_action(:ensure_text_deck)
+  before_action(:ensure_replaceable_deck)
 
   def new
     render(Views::Decks::Replacements::New.new(deck:))
@@ -39,8 +39,8 @@ class ReplacementsController < ApplicationController
     params.expect(replacement: [:cards_csv]).to_h.symbolize_keys
   end
 
-  def ensure_text_deck
-    return if deck.instance_of?(TextDeck)
+  def ensure_replaceable_deck
+    return if deck.replaceable?
 
     flash[:error] = t("replacements.unsupported")
     redirect_to(deck_path(deck))

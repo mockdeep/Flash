@@ -23,7 +23,7 @@ module Views
 
         render_share_section
         render(Components::CatalogToggleButton.new(deck:)) if admin_owner?
-        render_replace_link if deck.instance_of?(TextDeck)
+        render_replace_link if deck.replaceable?
         render_reverse_button if deck.reversible? && !deck.reverse_present?
 
         render_cards_table if deck.cards.any?

@@ -4,16 +4,16 @@ require "rails_helper"
 
 RSpec.describe Decks::CreateReverse do
   def source_deck(cards: [{ front: "明白", back: "understand;clear" }])
-    deck = create(:deck)
+    deck = create(:reading_deck)
     cards.each { |attrs| create(:card, deck:, **attrs) }
     deck
   end
 
   describe ".call" do
-    it "creates a ReverseTextDeck" do
+    it "creates a WritingDeck" do
       result = described_class.call(source: source_deck)
 
-      expect(result.record).to be_a(ReverseTextDeck)
+      expect(result.record).to be_a(WritingDeck)
     end
 
     it "shares the source data_set" do
@@ -24,7 +24,7 @@ RSpec.describe Decks::CreateReverse do
     end
 
     it "names it after the source" do
-      source = create(:deck, name: "HSK 1")
+      source = create(:reading_deck, name: "HSK 1")
       create(:card, deck: source)
       result = described_class.call(source:)
 
@@ -60,6 +60,12 @@ RSpec.describe Decks::CreateReverse do
 
     it "fails when the source is not reversible" do
       result = described_class.call(source: create(:music_deck))
+
+      expect(result).not_to be_success
+    end
+
+    it "fails when the source is a basic deck" do
+      result = described_class.call(source: create(:deck))
 
       expect(result).not_to be_success
     end

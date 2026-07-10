@@ -71,7 +71,7 @@ RSpec.describe "creating a music deck" do
     visit_new_deck
     submit_text_form(name: "Basic")
 
-    expect(TextDeck.joins(:data_set).find_by(data_sets: { name: "Basic" }))
+    expect(BasicDeck.joins(:data_set).find_by(data_sets: { name: "Basic" }))
       .to be_present
   end
 end

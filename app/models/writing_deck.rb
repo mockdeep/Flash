@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
-# A reverse deck studies an existing data_set in the opposite direction: the
-# Back items become prompts and their paired Front items the answers. It shares
-# the source deck's data_set (no re-upload); only the reading direction differs.
-class ReverseTextDeck < TextDeck
+# The reverse study of a language data_set: given a meaning, recall the
+# target-language word and identify its written form. The Back items become
+# prompts and their paired Front items the answers; it shares the source
+# deck's data_set (no re-upload), only the direction differs.
+class WritingDeck < LanguageDeck
   def name = "#{data_set.name} (reversed)"
 
   def card_type = "ReverseTextCard"
@@ -11,9 +12,6 @@ class ReverseTextDeck < TextDeck
   def anchor_side = "Back"
 
   def anchor_pairing_column = :paired_item_id
-
-  # A reverse of a reverse would just be the forward deck again.
-  def reversible? = false
 
   # The category lives on the answer (Front) item, so reach it through the
   # pairing: Front items in the category -> their paired Back items -> cards.

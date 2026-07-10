@@ -2,4 +2,6 @@
 
 class BasicDataSet < DataSet
   validates :language, absence: true
+
+  def deck_classes = [BasicDeck]
 end
