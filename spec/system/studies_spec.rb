@@ -148,4 +148,39 @@ RSpec.describe "studying a deck" do
       expect(page).to have_text("No matches")
     end
   end
+
+  context "when the deck is at the reading level" do
+    def visit_reading_deck
+      deck = create(:deck, user: default_user, level: Study::READING_LEVEL)
+      create(:card, deck:, front: "两", back: "two", reading: "liǎng")
+      create(:card, :done, deck:, back: "three", reading: "sān")
+      sign_in(default_user)
+      visit(deck_study_path(deck))
+    end
+
+    it "asks the translation of the same card once the reading is picked" do
+      visit_reading_deck
+      expect(page).to have_text(/pick the reading/i)
+
+      click_on("liǎng")
+
+      expect(page).to have_css(".card-front", text: "两")
+      expect(page).to have_css("#card-reading", text: "liǎng")
+    end
+
+    it "completes the card through both stages" do
+      visit_reading_deck
+      click_on("liǎng")
+      click_on("two")
+
+      expect(page).to have_css("#correct-answer-text", text: "two")
+    end
+
+    it "reveals the correct reading after a miss" do
+      visit_reading_deck
+      click_on("sān")
+
+      expect(page).to have_css(".answer-correct", text: "liǎng")
+    end
+  end
 end

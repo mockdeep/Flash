@@ -95,6 +95,16 @@ RSpec.describe Study do
 
       expect(study.next_card).to eq(excluded)
     end
+
+    it "pins next_card to the given card_id" do
+      deck = create(:deck)
+      card = create(:card, deck:)
+      create(:card, deck:)
+
+      study = described_class.new(deck:, card_id: card.id)
+
+      expect(study.next_card).to eq(card)
+    end
   end
 
   describe "#presentation_mode" do
@@ -115,6 +125,58 @@ RSpec.describe Study do
       deck = create(:deck, level: described_class::FUZZY_FIND_LEVEL + 1)
 
       expect(described_class.new(deck:).presentation_mode).to eq(:fuzzy_find)
+    end
+
+    context "when the deck is at the reading level" do
+      def reading_level_deck
+        create(:deck, level: described_class::READING_LEVEL)
+      end
+
+      it "returns :reading when the next card has a reading" do
+        deck = reading_level_deck
+        create(:card, deck:, reading: "liǎng")
+
+        expect(described_class.new(deck:).presentation_mode).to eq(:reading)
+      end
+
+      it "returns :multiple_choice when the next card has no reading" do
+        deck = reading_level_deck
+        create(:card, deck:)
+
+        expect(described_class.new(deck:).presentation_mode)
+          .to eq(:multiple_choice)
+      end
+
+      it "returns :multiple_choice when pinned to a card by card_id" do
+        deck = reading_level_deck
+        card = create(:card, deck:, reading: "liǎng")
+
+        study = described_class.new(deck:, card_id: card.id)
+
+        expect(study.presentation_mode).to eq(:multiple_choice)
+      end
+
+      def reverse_deck_with_reading
+        source = create(:deck)
+        create(:card, deck: source, front: "两", back: "two", reading: "liǎng")
+        reverse = Decks::CreateReverse.call(source:).record
+        reverse.tap { |deck| deck.update!(level: Study::READING_LEVEL) }
+      end
+
+      it "returns :multiple_choice on a reverse deck" do
+        reverse = reverse_deck_with_reading
+
+        expect(described_class.new(deck: reverse).presentation_mode)
+          .to eq(:multiple_choice)
+      end
+    end
+
+    it "returns :multiple_choice below the reading level" do
+      deck = create(:deck, level: described_class::READING_LEVEL - 1)
+      create(:card, deck:, reading: "liǎng")
+
+      expect(described_class.new(deck:).presentation_mode)
+        .to eq(:multiple_choice)
     end
   end
 
@@ -222,6 +284,136 @@ RSpec.describe Study do
       end
     end
 
+    context "when in reading mode" do
+      # A reading-level deck holding the prompt card the study will pick.
+      def deck_with_prompt(front:, reading:)
+        deck = create(:deck, level: Study::READING_LEVEL)
+        create(:card, deck:, front:, reading:)
+        deck
+      end
+
+      it "includes the card's reading" do
+        deck = deck_with_prompt(front: "两", reading: "liǎng")
+
+        expect(described_class.new(deck:).possible_answers).to include("liǎng")
+      end
+
+      it "uses sibling readings as decoys" do
+        deck = deck_with_prompt(front: "两", reading: "liǎng")
+        create(:card, :done, deck:, reading: "sān")
+
+        expect(described_class.new(deck:).possible_answers)
+          .to contain_exactly("liǎng", "sān")
+      end
+
+      it "excludes sibling readings equal to the card's own" do
+        deck = deck_with_prompt(front: "是", reading: "shì")
+        create(:card, :done, deck:, reading: "shì")
+
+        expect(described_class.new(deck:).possible_answers).to eq(["shì"])
+      end
+
+      it "skips siblings without a reading" do
+        deck = deck_with_prompt(front: "两", reading: "liǎng")
+        create(:card, :done, deck:)
+
+        expect(described_class.new(deck:).possible_answers).to eq(["liǎng"])
+      end
+
+      it "deduplicates repeated sibling readings" do
+        deck = deck_with_prompt(front: "两", reading: "liǎng")
+        create(:card, :done, deck:, reading: "sān")
+        create(:card, :done, deck:, reading: "sān")
+
+        answers = described_class.new(deck:).possible_answers
+
+        expect(answers.tally.values).to all(eq(1))
+      end
+
+      def create_siblings(deck, readings)
+        readings.each { |reading| create(:card, :done, deck:, reading:) }
+      end
+
+      it "prefers decoys whose front matches the prompt's character count" do
+        deck = deck_with_prompt(front: "学生", reading: "abcd")
+        create(:card, :done, deck:, front: "九十百千万", reading: "uvwx")
+        create_filler_siblings(deck)
+
+        expect(described_class.new(deck:).possible_answers)
+          .not_to include("uvwx")
+      end
+
+      it "offers at most five options" do
+        deck = deck_with_prompt(front: "妈", reading: "mā")
+        create_siblings(deck, ["bà", "gē", "dì", "yī", "èr"])
+
+        expect(described_class.new(deck:).possible_answers.size).to eq(5)
+      end
+
+      def create_reading_siblings(deck, pairs)
+        pairs.each do |front, reading|
+          create(:card, :done, deck:, front:, reading:)
+        end
+      end
+
+      # Four filler siblings with two-character fronts that share no character
+      # with the prompts below.
+      def create_filler_siblings(deck)
+        fillers =
+          [["一二", "efgh"], ["三四", "ijkl"], ["五六", "mnop"], ["七八", "qrst"]]
+        create_reading_siblings(deck, fillers)
+      end
+
+      # The single-character version of the fillers above.
+      def create_single_char_fillers(deck)
+        pairs = [["一", "efgh"], ["二", "ijkl"], ["三", "mnop"], ["四", "qrst"]]
+        create_reading_siblings(deck, pairs)
+      end
+
+      it "anchors a decoy on the prompt's first character" do
+        deck = deck_with_prompt(front: "学生", reading: "abcd")
+        create(:card, :done, deck:, front: "学校", reading: "abzzzz")
+        create_filler_siblings(deck)
+
+        expect(described_class.new(deck:).possible_answers).to include("abzzzz")
+      end
+
+      it "anchors a decoy on the prompt's last character" do
+        deck = deck_with_prompt(front: "学生", reading: "abcd")
+        create(:card, :done, deck:, front: "先生", reading: "zzzzcd")
+        create_filler_siblings(deck)
+
+        expect(described_class.new(deck:).possible_answers).to include("zzzzcd")
+      end
+
+      it "does not anchor decoys for a single-character prompt" do
+        deck = deck_with_prompt(front: "人", reading: "abcd")
+        create(:card, :done, deck:, front: "人们", reading: "abzzzz")
+        create_single_char_fillers(deck)
+
+        expect(described_class.new(deck:).possible_answers)
+          .not_to include("abzzzz")
+      end
+
+      it "does not anchor a shared-character sibling of a different count" do
+        deck = deck_with_prompt(front: "学生", reading: "abcd")
+        create(:card, :done, deck:, front: "学校图书馆", reading: "abzzzz")
+        create_filler_siblings(deck)
+
+        expect(described_class.new(deck:).possible_answers)
+          .not_to include("abzzzz")
+      end
+
+      it "does not duplicate a sibling matching both ends of the prompt" do
+        deck = deck_with_prompt(front: "人中人", reading: "aa")
+        create(:card, :done, deck:, front: "人间人", reading: "bb")
+
+        answers = described_class.new(deck:).possible_answers
+
+        expect(answers.tally.values).to all(eq(1))
+      end
+    end
+
     context "when deck distractor_pool is 'preset'" do
       it "uses only the card's own distractors" do
         deck = create(:deck, distractor_pool: "preset")
@@ -251,6 +443,112 @@ RSpec.describe Study do
         answers = described_class.new(deck:).possible_answers
 
         expect(answers).to eq(["Paris"])
+      end
+    end
+  end
+
+  describe "#answer_reading" do
+    def reading_card(**attrs)
+      deck = create(:deck, level: Study::READING_LEVEL)
+      create(:card, deck:, reading: "liǎng", **attrs)
+    end
+
+    def answer_reading(card:, answer:)
+      described_class.new(deck: card.deck)
+        .answer_reading(card_id: card.id, answer:)
+    end
+
+    context "when the reading is correct" do
+      it "returns reading_passed true" do
+        card = reading_card
+
+        result = answer_reading(card:, answer: "liǎng")
+
+        expect(result.reading_passed?).to be(true)
+      end
+
+      it "returns correct true" do
+        card = reading_card
+
+        result = answer_reading(card:, answer: "liǎng")
+
+        expect(result.correct?).to be(true)
+      end
+
+      it "does not change the view count" do
+        card = reading_card
+
+        expect { answer_reading(card:, answer: "liǎng") }
+          .to not_change_record(card, :view_count)
+      end
+
+      it "does not change the correct streak" do
+        card = reading_card(correct_streak: 1)
+
+        expect { answer_reading(card:, answer: "liǎng") }
+          .to not_change_record(card, :correct_streak)
+      end
+
+      it "does not record a distractor" do
+        card = reading_card
+
+        expect { answer_reading(card:, answer: "liǎng") }
+          .to(not_change { card.reload.distractors })
+      end
+    end
+
+    context "when the reading is wrong" do
+      it "returns reading_passed false" do
+        card = reading_card
+
+        result = answer_reading(card:, answer: "sān")
+
+        expect(result.reading_passed?).to be(false)
+      end
+
+      it "returns correct false" do
+        card = reading_card
+
+        result = answer_reading(card:, answer: "sān")
+
+        expect(result.correct?).to be(false)
+      end
+
+      it "resets the correct streak" do
+        card = reading_card(correct_streak: 1)
+
+        expect { answer_reading(card:, answer: "sān") }
+          .to change_record(card, :correct_streak).from(1).to(0)
+      end
+
+      it "increments the view count" do
+        card = reading_card(view_count: 0)
+
+        expect { answer_reading(card:, answer: "sān") }
+          .to change_record(card, :view_count).from(0).to(1)
+      end
+
+      it "does not record the wrong reading as a distractor" do
+        card = reading_card
+
+        expect { answer_reading(card:, answer: "sān") }
+          .to(not_change { card.reload.distractors })
+      end
+
+      it "returns the reading as the correct answer" do
+        card = reading_card
+
+        result = answer_reading(card:, answer: "sān")
+
+        expect(result.correct_answer).to eq("liǎng")
+      end
+
+      it "includes the reading in result possible_answers" do
+        card = reading_card
+
+        result = answer_reading(card:, answer: "sān")
+
+        expect(result.possible_answers).to include("liǎng")
       end
     end
   end

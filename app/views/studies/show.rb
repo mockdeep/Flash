@@ -57,6 +57,9 @@ module Views
               render(
                 Components::CardFront.new(
                   text: card.front,
+                  # A confirmed reading stays visible while the translation
+                  # stage is answered.
+                  reading: (card.reading if study.reading_confirmed?),
                   font_menu: deck.mandarin?,
                   card_id: card.id,
                 ),
@@ -75,20 +78,30 @@ module Views
 
       def render_active_card(card)
         answers = study.possible_answers
-        if study.presentation_mode == :fuzzy_find
+        case study.presentation_mode
+        when :fuzzy_find
           render(Components::FuzzyFindAnswers.new(deck:, card:, answers:))
+        when :reading
+          p(class: "keyboard-hint") { "Pick the reading" }
+          render_answers(card, answers, stage: "reading")
+          p(class: "keyboard-hint") { "Press 1-5 to answer" }
         else
           render_answers(card, answers)
           p(class: "keyboard-hint") { "Press 1-5 to answer" }
         end
       end
 
-      def render_answers(card, answers)
+      def render_answers(card, answers, stage: nil)
         ol(class: "study-answers-grid") do
           answers.each_with_index do |answer, index|
             li do
               params = {
-                answer: { answer:, card_id: card.id, possible_answers: answers },
+                answer: {
+                  answer:,
+                  card_id: card.id,
+                  possible_answers: answers,
+                  stage:,
+                }.compact,
               }
               data = { hotkeys_target: "click", hotkey: (index + 1).to_s }
               button_to(
