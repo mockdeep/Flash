@@ -226,15 +226,11 @@ RSpec.describe Study do
     end
 
     context "when wrong answer matches a same-category card" do
-      let(:deck) { create(:deck) }
-      let(:attrs) { { deck:, category: "Geo" } }
-
-      before do
-        create(:card, distractors: ["B"], **attrs)
-        create(:card, back: "B", **attrs)
-      end
-
       it "does not duplicate the answer" do
+        deck = create(:deck)
+        create(:card, deck:, category: "Geo", distractors: ["B"])
+        create(:card, deck:, category: "Geo", back: "B")
+
         answers = described_class.new(deck:).possible_answers
 
         expect(answers.tally.values).to all(eq(1))
@@ -261,11 +257,13 @@ RSpec.describe Study do
     end
 
     context "when in fuzzy find mode" do
-      let(:level) { Study::FUZZY_FIND_LEVEL }
+      def fuzzy_find_deck
+        create(:deck, level: Study::FUZZY_FIND_LEVEL)
+      end
 
       it "returns all back values for cards in the deck" do
-        deck = create(:deck, level:)
-        create(:card, deck:, back: "Paris", correct_streak: level - 1)
+        deck = fuzzy_find_deck
+        create(:card, deck:, back: "Paris", correct_streak: deck.level - 1)
         create(:card, :done, deck:, back: "London")
 
         answers = described_class.new(deck:).possible_answers
@@ -274,8 +272,8 @@ RSpec.describe Study do
       end
 
       it "deduplicates repeated back values" do
-        deck = create(:deck, level:)
-        create(:card, deck:, back: "Paris", correct_streak: level - 1)
+        deck = fuzzy_find_deck
+        create(:card, deck:, back: "Paris", correct_streak: deck.level - 1)
         create(:card, :done, deck:, back: "Paris")
 
         answers = described_class.new(deck:).possible_answers
