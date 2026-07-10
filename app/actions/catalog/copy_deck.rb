@@ -22,7 +22,7 @@ module Catalog
       source.class.new(
         study_goal: user.study_goal,
         distractor_pool: source.distractor_pool,
-        data_set: DataSet.new(
+        data_set: source.data_set.class.new(
           user:, name: source.name, language: source.language,
         ),
       )

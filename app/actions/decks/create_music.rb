@@ -10,7 +10,7 @@ module Decks
       deck = MusicDeck.new(
         ordered:,
         study_goal: user.study_goal,
-        data_set: DataSet.new(user:, name:),
+        data_set: MusicDataSet.new(user:, name:),
       )
       csv = CSV.parse(cards_csv.read, headers: true)
 

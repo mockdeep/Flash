@@ -435,6 +435,12 @@ RSpec.describe DecksController do
         expect(DataSet.find_by(name: "Vocab").language).to eq("es")
       end
 
+      it "creates a LanguageDataSet" do
+        post_language_deck(language: "es")
+
+        expect(DataSet.find_by(name: "Vocab")).to be_a(LanguageDataSet)
+      end
+
       it "re-renders the form when no language is selected" do
         post_language_deck
 

@@ -41,6 +41,13 @@ RSpec.describe Catalog::CopyDeck do
       expect(result.record.data_set.language).to eq("zh")
     end
 
+    it "copies the data_set type from the source" do
+      source = create(:deck, visibility: "public", language: "zh")
+      result = described_class.call(user: create(:user), deck: source)
+
+      expect(result.record.data_set).to be_a(LanguageDataSet)
+    end
+
     it "copies two cards from the source deck" do
       source = build_public_deck
       create(:card, deck: source, front: "Q1", back: "A1")
