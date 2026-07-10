@@ -7,9 +7,11 @@ module Decks
     extend self
 
     def call(user:, name:, cards_csv:, language: nil)
+      language = language.presence
+      data_set_class = language ? LanguageDataSet : BasicDataSet
       deck = TextDeck.new(
         study_goal: user.study_goal,
-        data_set: DataSet.new(user:, name:, language: language.presence),
+        data_set: data_set_class.new(user:, name:, language:),
       )
       csv = parse_csv(cards_csv)
 

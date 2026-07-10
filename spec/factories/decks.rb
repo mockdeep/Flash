@@ -8,7 +8,13 @@ FactoryBot.define do
       language { nil }
     end
 
-    data_set { association(:data_set, user:, name:, language:) }
+    data_set do
+      if language
+        association(:language_data_set, user:, name:, language:)
+      else
+        association(:data_set, user:, name:)
+      end
+    end
     study_goal { 50 }
     distractor_pool { "category" }
   end
@@ -19,7 +25,7 @@ FactoryBot.define do
       user { default_user }
     end
 
-    data_set { association(:data_set, user:, name:) }
+    data_set { association(:music_data_set, user:, name:) }
     study_goal { 50 }
     distractor_pool { "none" }
   end

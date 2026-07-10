@@ -101,11 +101,11 @@ module Views
       # Optgroups: the common languages up top, everything else below.
       # A code appears in only one group so option text stays unambiguous.
       def language_options
-        common = DataSet::COMMON_LANGUAGE_CODES
+        all = LanguageDataSet::LANGUAGES
+        common = LanguageDataSet::COMMON_LANGUAGE_CODES
         {
-          "Common" => DataSet::LANGUAGES.slice(*common).map(&:reverse).sort,
-          "More languages" =>
-            DataSet::LANGUAGES.except(*common).map(&:reverse),
+          "Common" => all.slice(*common).map(&:reverse).sort,
+          "More languages" => all.except(*common).map(&:reverse),
         }
       end
     end
