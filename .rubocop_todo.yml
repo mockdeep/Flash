@@ -192,24 +192,9 @@ Naming/PredicateMethod:
   Exclude:
     - 'app/nulls/null_user.rb'
 
-# Offense count: 27
-# Configuration parameters: AllowSubject, Max.
-RSpec/MultipleMemoizedHelpers:
-  Exclude:
-    - 'spec/actions/demo/create_guest_user_spec.rb'
-    - 'spec/domain/study_spec.rb'
-    - 'spec/helpers/css_helper_spec.rb'
-    - 'spec/requests/demo_controller_spec.rb'
-    - 'spec/requests/sessions_controller_spec.rb'
-    - 'spec/requests/studies_controller_spec.rb'
-    - 'spec/system/sessions_spec.rb'
-
-# Offense count: 11
+# Offense count: 4
 RSpec/NoBeforeHook:
   Exclude:
-    - 'spec/actions/demo/create_guest_user_spec.rb'
-    - 'spec/domain/study_spec.rb'
-    - 'spec/requests/demo_controller_spec.rb'
     - 'spec/requests/studies_controller_spec.rb'
 
 # Offense count: 2

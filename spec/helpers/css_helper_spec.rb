@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe CssHelper do
-  let(:helper) { Object.new.extend(described_class) }
+  def helper
+    Object.new.extend(described_class)
+  end
 
   describe "#button_class" do
     it "returns base class with no modifiers" do
