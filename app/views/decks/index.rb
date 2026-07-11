@@ -77,17 +77,91 @@ module Views
         topics = grouped.keys.compact.sort_by(&:name)
         loose = grouped[nil] || []
 
-        topics.each { |topic| render_topic_section(topic.name, grouped[topic]) }
+        topics.each do |topic|
+          render_topic_section(topic.name, grouped[topic], "topic-#{topic.id}")
+        end
         return if loose.empty?
 
-        render_topic_section(topics.any? ? "Other Decks" : nil, loose)
+        render_topic_section(topics.any? ? "Other Decks" : nil, loose, "other")
       end
 
-      def render_topic_section(title, section_decks)
-        section(class: "topic-section") do
+      # The filter key names the remembered tab in localStorage, so it has to
+      # stay stable across visits, not across users -- localStorage is already
+      # per-browser.
+      def render_topic_section(title, section_decks, section_id)
+        section(
+          class: "topic-section",
+          data: {
+            controller: "filter rail",
+            filter_key_value: section_id,
+            filter_active_class: "rail-tab--active",
+            action: "resize@window->rail#syncArrows " \
+                    "filter:applied->rail#syncArrows",
+          },
+        ) do
           render_section_heading(title, section_decks) if title
-          render_rail(section_decks)
+          render_rail_tabs(section_decks)
+          render_rail_wrap(section_decks)
         end
+      end
+
+      def render_rail_tabs(section_decks)
+        labels = type_labels(section_decks)
+        return if labels.size < 2
+
+        div(class: "rail-tabs") do
+          render_rail_tab("All", section_decks.size, active: true)
+          labels.each do |label|
+            count = section_decks.count { |deck| deck.type_label == label }
+            render_rail_tab(label, count)
+          end
+        end
+      end
+
+      def type_labels(section_decks)
+        section_decks
+          .sort_by { |deck| [deck.type_position, deck.type_label] }
+          .map(&:type_label)
+          .uniq
+      end
+
+      def render_rail_tab(label, count, active: false)
+        classes = ["rail-tab", ("rail-tab--active" if active)].compact.join(" ")
+        button(
+          type: "button",
+          class: classes,
+          data: {
+            action: "filter#select",
+            filter_value_param: label,
+            filter_target: "tab",
+          },
+        ) do
+          plain(label)
+          span(class: "rail-tab-count") { count }
+        end
+      end
+
+      def render_rail_wrap(section_decks)
+        div(class: "rail-wrap") do
+          render_rail_arrow(-1, "‹", "Scroll left")
+          render_rail(section_decks)
+          render_rail_arrow(1, "›", "Scroll right")
+        end
+      end
+
+      def render_rail_arrow(direction, glyph, label)
+        side = direction.negative? ? "left" : "right"
+        button(
+          type: "button",
+          class: "rail-arrow rail-arrow--#{side}",
+          aria: { label: },
+          data: {
+            action: "rail#scroll",
+            rail_dir_param: direction,
+            rail_target: "#{side}Arrow",
+          },
+          hidden: true,
+        ) { glyph }
       end
 
       def render_section_heading(title, section_decks)
@@ -103,7 +177,10 @@ module Views
       # spotlight; the copy in its natural slot stays put so the list order
       # never shifts underneath the reader.
       def render_rail(section_decks)
-        div(class: "rail") do
+        div(
+          class: "rail",
+          data: { rail_target: "rail", action: "scroll->rail#syncArrows" },
+        ) do
           render_mru_spotlight(section_decks)
 
           deck_sets(section_decks).each_with_index do |set_decks, set_index|
@@ -121,12 +198,17 @@ module Views
           .chunk_while { |a, b| a.data_set_id == b.data_set_id }
       end
 
+      # The divider carries the spotlight deck's type so the two hide together
+      # when a tab filters that type out.
       def render_mru_spotlight(section_decks)
         mru = section_decks.select(&:last_studied_at).max_by(&:last_studied_at)
         return if mru.nil?
 
         render_rail_card(mru, mru: true)
-        div(class: "rail-divider")
+        div(
+          class: "rail-divider",
+          data: { filter_value: mru.type_label, filter_target: "item" },
+        )
       end
 
       def render_rail_card(deck, mru: false, set_start: false)
@@ -136,7 +218,10 @@ module Views
           ("rail-card--set-start" if set_start),
         ].compact.join(" ")
 
-        div(class: classes) do
+        div(
+          class: classes,
+          data: { filter_value: deck.type_label, filter_target: "item" },
+        ) do
           remaining = deck.cards.not_done(deck.level).count
           render_study_link(deck, remaining)
           render_mru_label(deck) if mru
