@@ -15,6 +15,14 @@ RSpec.describe WritingDeck do
     expect(described_class.new.card_type).to eq("WritingCard")
   end
 
+  it "is labeled Writing on the decks index" do
+    expect(described_class.new.type_label).to eq("Writing")
+  end
+
+  it "sorts after its set's forward deck" do
+    expect(described_class.new.type_position).to eq(2)
+  end
+
   it "is not itself reversible" do
     expect(described_class.new.reversible?).to be(false)
   end

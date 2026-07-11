@@ -3,6 +3,8 @@
 module Views
   module Decks
     class Index < Views::Base
+      include Phlex::Rails::Helpers::TimeAgoInWords
+
       attr_accessor :decks, :pending_counts, :filter_pending
 
       def initialize(decks:, pending_counts:, filter_pending:)
@@ -75,81 +77,110 @@ module Views
         topics = grouped.keys.compact.sort_by(&:name)
         loose = grouped[nil] || []
 
-        topics.each { |topic| render_topic_section(topic, grouped[topic]) }
+        topics.each { |topic| render_topic_section(topic.name, grouped[topic]) }
         return if loose.empty?
 
-        h2(class: "decks-section-title") { "Other Decks" } if topics.any?
-        render_decks_grid(loose)
+        render_topic_section(topics.any? ? "Other Decks" : nil, loose)
       end
 
-      def render_topic_section(topic, topic_decks)
-        h2(class: "decks-section-title") { topic.name }
-        render_decks_grid(topic_decks)
+      def render_topic_section(title, section_decks)
+        section(class: "topic-section") do
+          render_section_heading(title, section_decks) if title
+          render_rail(section_decks)
+        end
       end
 
-      def render_decks_grid(section_decks)
-        div(class: "decks-grid") do
-          section_decks.each do |deck|
-            render_deck_card(deck)
+      def render_section_heading(title, section_decks)
+        h2(class: "decks-section-title") do
+          plain(title)
+          span(class: "topic-meta") do
+            pluralize(section_decks.size, "deck")
           end
         end
       end
 
-      def render_deck_card(deck)
-        div(class: "card card--striped deck-card") do
-          render_deck_card_header(deck)
+      # The most recently studied deck repeats at the head of the rail as a
+      # spotlight; the copy in its natural slot stays put so the list order
+      # never shifts underneath the reader.
+      def render_rail(section_decks)
+        div(class: "rail") do
+          render_mru_spotlight(section_decks)
 
-          if deck.cards.any?
-            render_deck_stats(deck)
-          else
-            div(class: "deck-empty-message") do
-              "No cards yet"
+          deck_sets(section_decks).each_with_index do |set_decks, set_index|
+            set_decks.each_with_index do |deck, deck_index|
+              set_start = set_index.positive? && deck_index.zero?
+              render_rail_card(deck, set_start:)
             end
           end
-
-          div(class: "deck-card-actions") do
-            link_to("Study", deck_study_path(deck), class: button_class(:secondary, :compact))
-            link_to("View Details", deck_path(deck), class: button_class(:ghost, :compact))
-          end
         end
       end
 
-      def render_deck_card_header(deck)
-        div(class: "deck-card-header") do
-          div do
-            h3(class: "deck-card-title") do
-              plain(deck.name)
-              catalog_badge if deck.publicly_visible?
-            end
-            render_stars(deck.level - 1)
-            render_suggestion_badge(deck) if pending_counts[deck.id]&.positive?
-          end
-          div(class: "card-count") do
-            span(class: "count-number") { deck.cards.count }
-            span(class: "count-label") { "cards" }
-          end
+      def deck_sets(section_decks)
+        section_decks
+          .sort_by { |deck| [deck.data_set.name, deck.type_position] }
+          .chunk_while { |a, b| a.data_set_id == b.data_set_id }
+      end
+
+      def render_mru_spotlight(section_decks)
+        mru = section_decks.select(&:last_studied_at).max_by(&:last_studied_at)
+        return if mru.nil?
+
+        render_rail_card(mru, mru: true)
+        div(class: "rail-divider")
+      end
+
+      def render_rail_card(deck, mru: false, set_start: false)
+        classes = [
+          "rail-card",
+          ("rail-card--mru" if mru),
+          ("rail-card--set-start" if set_start),
+        ].compact.join(" ")
+
+        div(class: classes) do
+          remaining = deck.cards.not_done(deck.level).count
+          render_study_link(deck, remaining)
+          render_mru_label(deck) if mru
+          div(class: "rail-type") { deck.type_label }
+          render_rail_title(deck)
+          render_stars(deck.level - 1)
+          render_rail_meta(deck, remaining)
         end
       end
 
-      def render_deck_stats(deck)
-        not_done_count = deck.cards.not_done(deck.level).count
-        done_count = deck.cards.done(deck.level).count
+      def render_study_link(deck, remaining)
+        return if deck.cards.none?
 
-        div(class: "deck-stats") do
-          div(class: "stat-item stat-level") do
-            div(class: "stat-value") { deck.level }
-            div(class: "stat-label") { "Level" }
-          end
+        label = remaining.zero? ? "Review →" : "Study →"
+        link_to(label, deck_study_path(deck), class: "rail-card-study")
+      end
 
-          div(class: "stat-item stat-pending") do
-            div(class: "stat-value") { not_done_count }
-            div(class: "stat-label") { "Remaining" }
-          end
+      def render_mru_label(deck)
+        div(class: "mru-label") do
+          "↻ Last studied #{time_ago_in_words(deck.last_studied_at)} ago"
+        end
+      end
 
-          div(class: "stat-item stat-done") do
-            div(class: "stat-value") { done_count }
-            div(class: "stat-label") { "Done" }
-          end
+      def render_rail_title(deck)
+        h3(class: "rail-title") do
+          link_to(deck.data_set.name, deck_path(deck))
+          catalog_badge if deck.publicly_visible?
+        end
+      end
+
+      def render_rail_meta(deck, remaining)
+        div(class: "rail-meta") do
+          render_remaining(deck, remaining)
+          render_suggestion_badge(deck) if pending_counts[deck.id]&.positive?
+        end
+      end
+
+      def render_remaining(deck, remaining)
+        if deck.cards.none?
+          span(class: "rail-remaining rail-remaining--empty") { "No cards yet" }
+        elsif remaining.zero?
+          span(class: "rail-remaining rail-remaining--done") { "Done ✓" }
+        else
+          span(class: "rail-remaining") { "#{remaining} left" }
         end
       end
 
@@ -162,7 +193,7 @@ module Views
       end
 
       def render_stars(completed_levels)
-        div(class: "deck-card-stars") do
+        div(class: "rail-stars") do
           3.times do |i|
             css = i < completed_levels ? "star star--filled" : "star star--empty"
             span(class: css) { "★" }

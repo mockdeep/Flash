@@ -25,6 +25,10 @@ class Deck < ApplicationRecord
 
   def music? = false
 
+  # Where the deck sorts among its data_set's siblings on the decks index
+  # rail; forward study comes first, so only reverse decks push later.
+  def type_position = 1
+
   # The item side a deck's cards anchor to (and study as the prompt). A reverse
   # deck flips this to "Back"; the projection reconciles each deck's cards to
   # the paired items on its anchor side.

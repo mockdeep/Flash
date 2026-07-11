@@ -10,7 +10,7 @@ RSpec.describe DecksController do
       expect(rendered).to have_text("No Decks Yet")
     end
 
-    it "renders decks grid when user has decks" do
+    it "renders the deck rail when user has decks" do
       login_as(default_user)
       create(:deck, user: default_user, name: "My Test Deck")
 
@@ -54,14 +54,13 @@ RSpec.describe DecksController do
       expect(rendered).to have_no_css("h2", text: "Other Decks")
     end
 
-    it "shows card count for each deck" do
+    it "shows the deck count in a topic heading" do
       login_as(default_user)
-      deck = create(:deck, user: default_user)
-      create(:basic_card, deck:)
+      deck_in_topic("Mandarin")
 
       get(decks_path)
 
-      expect(rendered).to have_text("1")
+      expect(rendered).to have_css(".topic-meta", text: "1 deck")
     end
 
     it "shows 'No cards yet' for empty deck" do
@@ -73,14 +72,146 @@ RSpec.describe DecksController do
       expect(rendered).to have_text("No cards yet")
     end
 
-    it "shows stats for deck with cards" do
+    it "shows the remaining count for a deck with cards" do
       deck = create(:deck, user: default_user)
       create(:basic_card, deck:)
       login_as(default_user)
 
       get(decks_path)
 
-      expect(rendered).to have_text("Remaining")
+      expect(rendered).to have_text("1 left")
+    end
+
+    it "labels each deck with its type" do
+      login_as(default_user)
+      create(:deck, user: default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".rail-type", text: "Basic")
+    end
+
+    it "links the deck name to the deck page" do
+      deck = create(:deck, user: default_user)
+      login_as(default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_link(deck.name, href: deck_path(deck))
+    end
+
+    it "links each deck with pending cards to its study page" do
+      deck = create(:deck, user: default_user)
+      create(:basic_card, deck:)
+      login_as(default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_link("Study →", href: deck_study_path(deck))
+    end
+
+    it "omits the study link for a deck with no cards" do
+      create(:deck, user: default_user)
+      login_as(default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_no_link("Study →")
+    end
+
+    it "shows Done for a deck whose cards are all done" do
+      deck = create(:deck, user: default_user)
+      create(:basic_card, deck:, correct_streak: 1)
+      login_as(default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_text("Done ✓")
+    end
+
+    it "offers Review instead of Study when a deck is done" do
+      deck = create(:deck, user: default_user)
+      create(:basic_card, deck:, correct_streak: 1)
+      login_as(default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_link("Review →", href: deck_study_path(deck))
+    end
+
+    def reversible_pair
+      reading = create(:reading_deck, user: default_user)
+      create(:writing_deck, data_set: reading.data_set)
+    end
+
+    it "orders a reading deck before the writing deck sharing its set" do
+      login_as(default_user)
+      reversible_pair
+
+      get(decks_path)
+
+      expect(rendered)
+        .to have_css(".rail-card:first-child .rail-type", text: "Reading")
+    end
+
+    it "titles a writing deck with its set name, not the reversed name" do
+      login_as(default_user)
+      reversible_pair
+
+      get(decks_path)
+
+      expect(rendered).to have_no_text("(reversed)")
+    end
+
+    def studied_deck(name, at)
+      create(:deck, user: default_user, name:, last_studied_at: at)
+    end
+
+    it "spotlights the most recently studied deck" do
+      login_as(default_user)
+      studied_deck("Old", 2.days.ago)
+      studied_deck("New", 1.hour.ago)
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".rail-card--mru .rail-title", text: "New")
+    end
+
+    it "notes when the spotlighted deck was last studied" do
+      login_as(default_user)
+      create(:deck, user: default_user, last_studied_at: 1.hour.ago)
+
+      get(decks_path)
+
+      expect(rendered).to have_text("Last studied about 1 hour ago")
+    end
+
+    it "keeps the spotlighted deck in its natural position as well" do
+      login_as(default_user)
+      create(:deck, user: default_user, last_studied_at: 1.hour.ago)
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".rail-card", count: 2)
+    end
+
+    it "renders no spotlight when nothing has been studied" do
+      login_as(default_user)
+      create(:deck, user: default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_no_css(".rail-card--mru")
+    end
+
+    it "spotlights per topic, not across the whole page" do
+      login_as(default_user)
+      deck_in_topic("Mandarin").update!(last_studied_at: 1.hour.ago)
+      deck_in_topic("Music")
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".rail-card--mru", count: 1)
     end
 
     it "shows filled stars for completed levels" do
