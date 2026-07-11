@@ -25,6 +25,7 @@ class User < ApplicationRecord
 
   has_many :data_sets, dependent: :destroy
   has_many :decks, through: :data_sets
+  has_many :topics, dependent: :destroy
   has_many :card_suggestions, dependent: :destroy
   has_one :subscription, dependent: :destroy
 

@@ -22,6 +22,7 @@ module Views
         end
 
         render_share_section
+        render_topic_section
         render(Components::CatalogToggleButton.new(deck:)) if admin_owner?
         render_replace_link if deck.replaceable?
         render_reverse_button if deck.reversible? && !deck.reverse_present?
@@ -81,6 +82,47 @@ module Views
       def render_share_section
         div(class: "deck-share") do
           deck.shared? ? render_active_share : render_inactive_share
+        end
+      end
+
+      def render_topic_section
+        div(class: "deck-topic") do
+          deck.topic ? render_assigned_topic : render_topic_form
+        end
+      end
+
+      def render_assigned_topic
+        span { "Topic: #{deck.topic.name}" }
+        button_to(
+          "Remove from topic",
+          deck_topic_assignment_path(deck),
+          method: :delete,
+          class: button_class(:ghost, :compact),
+        )
+      end
+
+      # A type-or-pick input: the datalist suggests existing topics while any
+      # new name creates one on submit.
+      def render_topic_form
+        form_with(
+          url: deck_topic_assignment_path(deck),
+          scope: :topic,
+          class: "deck-topic-form",
+        ) do |form|
+          form.label(:name, "Topic", class: "form-label")
+          form.text_field(
+            :name,
+            list: "topic-options",
+            required: true,
+            placeholder: "e.g. Mandarin",
+            class: "form-input",
+          )
+          datalist(id: "topic-options") do
+            current_user.topics.order(:name).each do |topic|
+              option(value: topic.name)
+            end
+          end
+          form.submit("Add to topic", class: button_class(:secondary, :compact))
         end
       end
 
