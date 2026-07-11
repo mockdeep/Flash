@@ -3,7 +3,13 @@
 RSpec.describe "reviewing suggestions" do
   def build_deck_with_suggestion
     deck = build_catalog_deck
-    card = create(:card, deck:, front: "Old Q", back: "Old A", category: "Geo")
+    card = create(
+      :basic_card,
+      deck:,
+      front: "Old Q",
+      back: "Old A",
+      category: "Geo",
+    )
     suggestion = create_suggestion(card)
     [deck, card, suggestion]
   end

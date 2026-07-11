@@ -25,8 +25,6 @@ class Deck < ApplicationRecord
 
   def music? = false
 
-  def card_type = "TextCard"
-
   # The item side a deck's cards anchor to (and study as the prompt). A reverse
   # deck flips this to "Back"; the projection reconciles each deck's cards to
   # the paired items on its anchor side.

@@ -7,5 +7,7 @@ class BasicDeck < Deck
     Deck.model_name
   end
 
+  def card_type = "BasicCard"
+
   def replaceable? = true
 end

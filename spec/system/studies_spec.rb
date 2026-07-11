@@ -8,7 +8,7 @@ RSpec.describe "studying a deck" do
   def visit_fuzzy_deck(*card_attrs)
     deck = create(:deck, user: default_user, level: Study::FUZZY_FIND_LEVEL)
     card_attrs = [{}] if card_attrs.empty?
-    card_attrs.each { |attrs| create(:card, deck:, **attrs) }
+    card_attrs.each { |attrs| create(:basic_card, deck:, **attrs) }
     sign_in(default_user)
     visit(deck_study_path(deck))
   end
@@ -22,7 +22,7 @@ RSpec.describe "studying a deck" do
 
   def reach_milestone
     deck = create(:deck, user: default_user, study_goal: 1, level: 1)
-    create_list(:card, 2, deck:, back: "Paris", correct_streak: 0)
+    create_list(:basic_card, 2, deck:, back: "Paris", correct_streak: 0)
     sign_in(default_user)
     visit(deck_study_path(deck))
     click_on("Paris", match: :first)
@@ -42,7 +42,7 @@ RSpec.describe "studying a deck" do
     def visit_card_with_example
       default_deck.update!(level: 2)
       create(
-        :card,
+        :basic_card,
         deck: default_deck,
         back: "Paris",
         example_front: "Je vis à Paris.",
@@ -97,7 +97,7 @@ RSpec.describe "studying a deck" do
 
   it "does not render an example toggle when the card has no example" do
     default_deck.update!(level: 2)
-    create(:card, deck: default_deck, back: "Paris")
+    create(:basic_card, deck: default_deck, back: "Paris")
     answer_first_card("Paris")
 
     expect(page).to have_no_css(".study-example__toggle")
@@ -152,8 +152,8 @@ RSpec.describe "studying a deck" do
   context "when the deck is at the reading level" do
     def visit_reading_deck
       deck = create(:deck, user: default_user, level: Study::READING_LEVEL)
-      create(:card, deck:, front: "两", back: "two", reading: "liǎng")
-      create(:card, :done, deck:, back: "three", reading: "sān")
+      create(:basic_card, deck:, front: "两", back: "two", reading: "liǎng")
+      create(:basic_card, :done, deck:, back: "three", reading: "sān")
       sign_in(default_user)
       visit(deck_study_path(deck))
     end

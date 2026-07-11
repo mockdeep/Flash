@@ -101,7 +101,7 @@ RSpec.describe ReplacementsController do
 
     it "applies the diff" do
       deck = create(:deck, user: default_user)
-      create(:card, deck:, front: "Q", back: "A")
+      create(:basic_card, deck:, front: "Q", back: "A")
       login_as(default_user)
 
       post_replace(deck, "front,back,category\nQ,A,C\nNew,N,C\n")

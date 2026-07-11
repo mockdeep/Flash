@@ -11,8 +11,8 @@ RSpec.describe WritingDeck do
     expect(described_class.new.anchor_pairing_column).to eq(:paired_item_id)
   end
 
-  it "builds ReverseTextCards" do
-    expect(described_class.new.card_type).to eq("ReverseTextCard")
+  it "builds WritingCards" do
+    expect(described_class.new.card_type).to eq("WritingCard")
   end
 
   it "is not itself reversible" do
@@ -22,8 +22,8 @@ RSpec.describe WritingDeck do
   describe "#cards_in_category" do
     def reverse_with_categories
       fwd = create(:reading_deck)
-      create(:card, deck: fwd, front: "明白", back: "know", category: "v")
-      create(:card, deck: fwd, front: "你好", back: "hi", category: "g")
+      create(:reading_card, deck: fwd, front: "明白", back: "know", category: "v")
+      create(:reading_card, deck: fwd, front: "你好", back: "hi", category: "g")
       Decks::CreateReverse.call(source: fwd).record
     end
 

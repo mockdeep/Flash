@@ -3,7 +3,7 @@
 RSpec.describe "study text size" do
   def visit_study_page
     deck = create(:deck, user: default_user)
-    create_list(:card, 5, deck:)
+    create_list(:basic_card, 5, deck:)
     sign_in(default_user)
     visit(deck_study_path(deck))
     deck

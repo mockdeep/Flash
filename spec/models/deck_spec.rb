@@ -71,15 +71,15 @@ RSpec.describe Deck do
   describe "#hanzi_chars" do
     it "collects the distinct Han characters across items" do
       deck = create(:reading_deck)
-      create(:card, deck:, front: "你好", back: "hello")
-      create(:card, deck:, front: "好吗", back: "well?")
+      create(:reading_card, deck:, front: "你好", back: "hello")
+      create(:reading_card, deck:, front: "好吗", back: "well?")
 
       expect(deck.hanzi_chars.chars).to contain_exactly("你", "好", "吗")
     end
 
     it "is empty when no item contains Han characters" do
       deck = create(:reading_deck, language: "es")
-      create(:card, deck:, front: "hola", back: "hello")
+      create(:reading_card, deck:, front: "hola", back: "hello")
 
       expect(deck.hanzi_chars).to eq("")
     end
@@ -178,7 +178,7 @@ RSpec.describe Deck do
 
     it "is false for a writing deck" do
       reading = create(:reading_deck)
-      create(:card, deck: reading)
+      create(:reading_card, deck: reading)
       writing = Decks::CreateReverse.call(source: reading).record
 
       expect(writing.reversible?).to be(false)
@@ -192,14 +192,14 @@ RSpec.describe Deck do
 
     it "is false when no reverse deck shares the data_set" do
       deck = create(:reading_deck)
-      create(:card, deck:)
+      create(:reading_card, deck:)
 
       expect(deck.reverse_present?).to be(false)
     end
 
     it "is true when a reverse deck shares the data_set" do
       deck = create(:reading_deck)
-      create(:card, deck:)
+      create(:reading_card, deck:)
       Decks::CreateReverse.call(source: deck)
 
       expect(deck.reload.reverse_present?).to be(true)

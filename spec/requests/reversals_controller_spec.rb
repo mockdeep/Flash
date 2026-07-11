@@ -3,7 +3,7 @@
 RSpec.describe ReversalsController do
   def reversible_deck
     deck = create(:reading_deck, user: default_user)
-    create(:card, deck:)
+    create(:reading_card, deck:)
     deck
   end
 

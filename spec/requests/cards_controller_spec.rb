@@ -15,8 +15,8 @@ RSpec.describe CardsController do
 
   def build_catalog_copy(deck: default_deck, owner: create(:user))
     catalog = create(:deck, user: owner, visibility: "public")
-    source = create(:card, deck: catalog)
-    copy = create(:card, deck:, source_card: source)
+    source = create(:basic_card, deck: catalog)
+    copy = create(:basic_card, deck:, source_card: source)
     [source, copy]
   end
 
@@ -42,7 +42,7 @@ RSpec.describe CardsController do
     context "when update succeeds" do
       it "updates the card's content" do
         deck = create(:deck)
-        card = create(:card, deck:, front: "Original Front")
+        card = create(:basic_card, deck:, front: "Original Front")
 
         expect { update_card(deck:, card:) }
           .to change { card.reload.front }
@@ -50,7 +50,7 @@ RSpec.describe CardsController do
       end
 
       it "edits the card's content in the data_set" do
-        card = create(:card, back: "old")
+        card = create(:basic_card, back: "old")
         update_card(deck: card.deck, card:, back: "new;fresh")
 
         expect(card.reload.back).to eq("new; fresh")
@@ -58,7 +58,7 @@ RSpec.describe CardsController do
 
       it "replaces the card question on the page" do
         deck = create(:deck)
-        card = create(:card, deck:, front: "Original Front")
+        card = create(:basic_card, deck:, front: "Original Front")
         update_card(deck:, card:, front: "Updated Front")
 
         expect(rendered).to have_css("turbo-stream[target='card-question']")
@@ -66,7 +66,7 @@ RSpec.describe CardsController do
 
       it "replaces the edit form frame" do
         deck = create(:deck)
-        card = create(:card, deck:)
+        card = create(:basic_card, deck:)
         update_card(deck:, card:)
 
         expect(rendered).to have_css("turbo-stream[target='card_edit_form']")
@@ -74,7 +74,7 @@ RSpec.describe CardsController do
 
       it "returns ok status" do
         deck = create(:deck)
-        card = create(:card, deck:)
+        card = create(:basic_card, deck:)
         update_card(deck:, card:)
 
         expect(response).to have_http_status(:ok)
@@ -84,7 +84,7 @@ RSpec.describe CardsController do
     context "when update fails" do
       it "does not update the card" do
         deck = create(:deck)
-        card = create(:card, deck:, front: "Original Front")
+        card = create(:basic_card, deck:, front: "Original Front")
 
         expect { update_card(deck:, card:, front: "") }
           .not_to(change { card.reload.front })
@@ -92,7 +92,7 @@ RSpec.describe CardsController do
 
       it "rejects a blank back" do
         deck = create(:deck)
-        card = create(:card, deck:)
+        card = create(:basic_card, deck:)
         update_card(deck:, card:, back: "")
 
         expect(response).to have_http_status(:unprocessable_content)
@@ -100,7 +100,7 @@ RSpec.describe CardsController do
 
       it "rejects an example front without an example back" do
         deck = create(:deck)
-        card = create(:card, deck:)
+        card = create(:basic_card, deck:)
         update_card(deck:, card:, example_front: "Bonjour")
 
         expect(response).to have_http_status(:unprocessable_content)
@@ -108,7 +108,7 @@ RSpec.describe CardsController do
 
       it "rejects an example back without an example front" do
         deck = create(:deck)
-        card = create(:card, deck:)
+        card = create(:basic_card, deck:)
         update_card(deck:, card:, example_back: "Hello")
 
         expect(response).to have_http_status(:unprocessable_content)
@@ -116,7 +116,7 @@ RSpec.describe CardsController do
 
       it "returns unprocessable content status" do
         deck = create(:deck)
-        card = create(:card, deck:)
+        card = create(:basic_card, deck:)
         update_card(deck:, card:, front: "")
 
         expect(response).to have_http_status(:unprocessable_content)
@@ -124,7 +124,7 @@ RSpec.describe CardsController do
 
       it "renders validation errors" do
         deck = create(:deck)
-        card = create(:card, deck:)
+        card = create(:basic_card, deck:)
         update_card(deck:, card:, front: "")
 
         expect(rendered).to have_css(".error-explanation")
@@ -132,7 +132,7 @@ RSpec.describe CardsController do
 
       it "re-renders the edit form frame" do
         deck = create(:deck)
-        card = create(:card, deck:)
+        card = create(:basic_card, deck:)
         update_card(deck:, card:, front: "")
 
         expect(rendered).to have_css("turbo-frame#card_edit_form")
@@ -141,8 +141,8 @@ RSpec.describe CardsController do
 
     it "returns unprocessable content for duplicates" do
       deck = create(:deck)
-      create(:card, deck:, front: "Existing Front")
-      card = create(:card, deck:, front: "Other Front")
+      create(:basic_card, deck:, front: "Existing Front")
+      card = create(:basic_card, deck:, front: "Other Front")
       update_card(deck:, card:, front: "Existing Front")
 
       expect(response).to have_http_status(:unprocessable_content)
@@ -150,7 +150,7 @@ RSpec.describe CardsController do
 
     it "prevents updating another user's card" do
       other_deck = create(:deck, user: create(:user))
-      other_card = create(:card, deck: other_deck)
+      other_card = create(:basic_card, deck: other_deck)
       login_as(default_user)
       patch_card(other_deck, other_card, front: "Hacked")
 
@@ -208,7 +208,7 @@ RSpec.describe CardsController do
       end
 
       it "creates no suggestion when the card has no source_card" do
-        card = create(:card, deck: default_deck)
+        card = create(:basic_card, deck: default_deck)
 
         expect { patch_suggesting(default_deck, card) }
           .not_to change(CardSuggestion, :count)
@@ -233,7 +233,7 @@ RSpec.describe CardsController do
   describe "#destroy" do
     it "deletes the card" do
       deck = create(:deck)
-      card = create(:card, deck:)
+      card = create(:basic_card, deck:)
       login_as(default_user)
 
       expect { delete(deck_card_path(deck, card)) }
@@ -241,7 +241,7 @@ RSpec.describe CardsController do
     end
 
     it "removes the card's items on delete" do
-      card = create(:card, back: "x")
+      card = create(:basic_card, back: "x")
       deck = card.deck
       login_as(default_user)
       delete(deck_card_path(deck, card))
@@ -251,7 +251,7 @@ RSpec.describe CardsController do
 
     it "redirects to the deck study path" do
       deck = create(:deck)
-      card = create(:card, deck:)
+      card = create(:basic_card, deck:)
       login_as(default_user)
 
       delete(deck_card_path(deck, card))
@@ -261,7 +261,7 @@ RSpec.describe CardsController do
 
     it "sets a success flash" do
       deck = create(:deck)
-      card = create(:card, deck:)
+      card = create(:basic_card, deck:)
       login_as(default_user)
 
       delete(deck_card_path(deck, card))
@@ -271,7 +271,7 @@ RSpec.describe CardsController do
 
     it "returns not_found for another user's card" do
       other_deck = create(:deck, user: create(:user))
-      other_card = create(:card, deck: other_deck)
+      other_card = create(:basic_card, deck: other_deck)
       login_as(default_user)
       delete(deck_card_path(other_deck, other_card))
 
@@ -280,7 +280,7 @@ RSpec.describe CardsController do
 
     it "does not delete another user's card" do
       other_deck = create(:deck, user: create(:user))
-      other_card = create(:card, deck: other_deck)
+      other_card = create(:basic_card, deck: other_deck)
       login_as(default_user)
 
       expect { delete(deck_card_path(other_deck, other_card)) }
@@ -291,7 +291,7 @@ RSpec.describe CardsController do
   context "when not authenticated" do
     it "redirects to sign in" do
       deck = create(:deck)
-      card = create(:card, deck:)
+      card = create(:basic_card, deck:)
       patch_card(deck, card, front: "New Front")
 
       expect(response).to redirect_to(new_session_path)

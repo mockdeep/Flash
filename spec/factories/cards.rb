@@ -21,7 +21,9 @@ module FactoryCardContent
 end
 
 FactoryBot.define do
-  factory(:card, class: "TextCard") do
+  # Abstract: create cards through the typed sub-factories below so the card
+  # class matches the deck's card_type.
+  factory(:card, class: "Card") do
     deck { default_deck }
     item { association(:item, data_set: deck.data_set) }
 
@@ -40,22 +42,21 @@ FactoryBot.define do
     trait(:done) do
       correct_streak { deck.level }
     end
-  end
 
-  factory(:music_card, class: "MusicCard") do
-    deck { default_music_deck }
-    item { association(:item, data_set: deck.data_set) }
+    factory(:basic_card, class: "BasicCard")
 
-    transient do
-      sequence(:front, 100) { |n| "Music Card #{n}" }
-      sequence(:back, 1) { |n| "#{FactoryCardContent::NOTES[n % 7]}3" }
-      category { "Notes" }
-      distractors { [] }
-      reading { nil }
-      example_front { nil }
-      example_back { nil }
+    factory(:reading_card, class: "ReadingCard") do
+      deck { association(:reading_deck) }
     end
 
-    after(:create) { |card, attrs| FactoryCardContent.project(card, attrs) }
+    factory(:music_card, class: "MusicCard") do
+      deck { default_music_deck }
+
+      transient do
+        sequence(:front, 100) { |n| "Music Card #{n}" }
+        sequence(:back, 1) { |n| "#{FactoryCardContent::NOTES[n % 7]}3" }
+        category { "Notes" }
+      end
+    end
   end
 end

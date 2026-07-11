@@ -3,7 +3,7 @@
 RSpec.describe "study reading" do
   def start_study
     deck = create(:deck, user: default_user)
-    create_list(:card, 5, deck:, reading: "liǎng")
+    create_list(:basic_card, 5, deck:, reading: "liǎng")
     sign_in(default_user)
     visit(deck_study_path(deck))
   end

@@ -2,7 +2,7 @@
 
 RSpec.describe "finding pending suggestions" do
   def seed_pending_for(deck)
-    card = create(:card, deck:)
+    card = create(:basic_card, deck:)
     create(:card_suggestion, card:)
   end
 

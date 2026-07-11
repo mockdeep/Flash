@@ -2,12 +2,18 @@
 
 require "rails_helper"
 
-RSpec.describe ReverseTextCard do
+RSpec.describe WritingCard do
+  describe ".model_name" do
+    it "returns the Card model name for routing" do
+      expect(described_class.model_name.route_key).to eq("cards")
+    end
+  end
+
   # Reverse a forward deck holding a single (single-gloss) card and return its
   # one reverse card.
   def reverse_card(**forward)
     deck = create(:reading_deck)
-    create(:card, deck:, **forward)
+    create(:reading_card, deck:, **forward)
     Decks::CreateReverse.call(source: deck).record.cards.sole
   end
 
@@ -22,8 +28,8 @@ RSpec.describe ReverseTextCard do
 
   it "joins multiple paired fronts as the answer" do
     deck = create(:reading_deck)
-    create(:card, deck:, front: "明白", back: "understand")
-    create(:card, deck:, front: "清楚", back: "understand")
+    create(:reading_card, deck:, front: "明白", back: "understand")
+    create(:reading_card, deck:, front: "清楚", back: "understand")
     rev = Decks::CreateReverse.call(source: deck).record
     expect(rev.cards.sole.back).to eq("明白; 清楚")
   end

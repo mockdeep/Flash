@@ -11,7 +11,7 @@ RSpec.describe "deck replacement" do
   end
 
   def seed_card(deck, front, back)
-    create(:card, deck:, front:, back:)
+    create(:basic_card, deck:, front:, back:)
   end
 
   def start_replacement

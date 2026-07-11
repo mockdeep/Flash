@@ -57,7 +57,7 @@ RSpec.describe DecksController do
     it "shows card count for each deck" do
       login_as(default_user)
       deck = create(:deck, user: default_user)
-      create(:card, deck:)
+      create(:basic_card, deck:)
 
       get(decks_path)
 
@@ -75,7 +75,7 @@ RSpec.describe DecksController do
 
     it "shows stats for deck with cards" do
       deck = create(:deck, user: default_user)
-      create(:card, deck:)
+      create(:basic_card, deck:)
       login_as(default_user)
 
       get(decks_path)
@@ -85,7 +85,7 @@ RSpec.describe DecksController do
 
     it "shows filled stars for completed levels" do
       deck = create(:deck, user: default_user, level: 3)
-      create(:card, deck:)
+      create(:basic_card, deck:)
       login_as(default_user)
 
       get(decks_path)
@@ -95,7 +95,7 @@ RSpec.describe DecksController do
 
     context "with pending suggestions" do
       def seed_pending_for(deck)
-        card = create(:card, deck:)
+        card = create(:basic_card, deck:)
         create(:card_suggestion, card:)
       end
 
@@ -199,7 +199,7 @@ RSpec.describe DecksController do
 
     it "shows card table when deck has cards" do
       deck = create(:deck)
-      create(:card, deck:, front: "Test Front", back: "Test Back")
+      create(:basic_card, deck:, front: "Test Front", back: "Test Back")
       login_as(default_user)
 
       get(deck_path(deck))
@@ -209,7 +209,7 @@ RSpec.describe DecksController do
 
     it "shows study link when deck has cards" do
       deck = create(:deck)
-      create(:card, deck:)
+      create(:basic_card, deck:)
       login_as(default_user)
 
       get(deck_path(deck))
@@ -218,7 +218,7 @@ RSpec.describe DecksController do
     end
 
     def deck_with_card
-      create(:card, deck: create(:reading_deck)).deck
+      create(:reading_card, deck: create(:reading_deck)).deck
     end
 
     it "shows the topic form when the deck has no topic" do
@@ -389,7 +389,7 @@ RSpec.describe DecksController do
 
     it "deletes the deck's cards" do
       deck = create(:deck, user: default_user)
-      create(:card, deck:)
+      create(:basic_card, deck:)
       login_as(default_user)
 
       expect { delete(deck_path(deck)) }.to change(Card, :count).by(-1)
@@ -397,7 +397,7 @@ RSpec.describe DecksController do
 
     it "deletes the deck's incoming suggestions" do
       deck = create(:deck, user: default_user)
-      create(:card_suggestion, card: create(:card, deck:))
+      create(:card_suggestion, card: create(:basic_card, deck:))
       login_as(default_user)
 
       expect { delete(deck_path(deck)) }

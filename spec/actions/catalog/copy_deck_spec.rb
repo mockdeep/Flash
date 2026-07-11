@@ -13,7 +13,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "returns success result" do
       source = build_public_deck
-      create(:card, deck: source, front: "Q1", back: "A1")
+      create(:basic_card, deck: source, front: "Q1", back: "A1")
       result = described_class.call(user: create(:user), deck: source)
 
       expect(result.success?).to be(true)
@@ -50,8 +50,8 @@ RSpec.describe Catalog::CopyDeck do
 
     it "copies two cards from the source deck" do
       source = build_public_deck
-      create(:card, deck: source, front: "Q1", back: "A1")
-      create(:card, deck: source, front: "Q2", back: "A2")
+      create(:basic_card, deck: source, front: "Q1", back: "A1")
+      create(:basic_card, deck: source, front: "Q2", back: "A2")
       result = described_class.call(user: create(:user), deck: source)
 
       expect(result.record.cards.count).to eq(2)
@@ -59,7 +59,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "mirrors the copied cards into a data_set" do
       source = build_public_deck
-      create(:card, deck: source, front: "Q1", back: "A1;A2")
+      create(:basic_card, deck: source, front: "Q1", back: "A1;A2")
       result = described_class.call(user: create(:user), deck: source)
 
       expect(first_content(result).back).to eq("A1; A2")
@@ -67,7 +67,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "copies card front" do
       source = build_public_deck
-      create(:card, deck: source, front: "Q", back: "Paris")
+      create(:basic_card, deck: source, front: "Q", back: "Paris")
       result = described_class.call(user: create(:user), deck: source)
 
       expect(first_content(result).front).to eq("Q")
@@ -75,7 +75,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "copies card back" do
       source = build_public_deck
-      create(:card, deck: source, front: "Q", back: "Paris")
+      create(:basic_card, deck: source, front: "Q", back: "Paris")
       result = described_class.call(user: create(:user), deck: source)
 
       expect(first_content(result).back).to eq("Paris")
@@ -83,7 +83,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "copies card category" do
       source = build_public_deck
-      create(:card, deck: source, front: "Q", back: "A", category: "Geo")
+      create(:basic_card, deck: source, front: "Q", back: "A", category: "Geo")
       result = described_class.call(user: create(:user), deck: source)
 
       expect(first_content(result).category).to eq("Geo")
@@ -91,7 +91,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "zeroes correct_count" do
       source = build_public_deck
-      create(:card, deck: source, front: "Q", back: "A", correct_count: 5)
+      create(:basic_card, deck: source, front: "Q", back: "A", correct_count: 5)
       result = described_class.call(user: create(:user), deck: source)
 
       expect(result.record.cards.first.correct_count).to eq(0)
@@ -99,7 +99,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "zeroes correct_streak" do
       source = build_public_deck
-      create(:card, deck: source, front: "Q", back: "A", correct_streak: 3)
+      create(:basic_card, deck: source, correct_streak: 3)
       result = described_class.call(user: create(:user), deck: source)
 
       expect(result.record.cards.first.correct_streak).to eq(0)
@@ -107,7 +107,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "zeroes view_count" do
       source = build_public_deck
-      create(:card, deck: source, front: "Q", back: "A", view_count: 10)
+      create(:basic_card, deck: source, front: "Q", back: "A", view_count: 10)
       result = described_class.call(user: create(:user), deck: source)
 
       expect(result.record.cards.first.view_count).to eq(0)
@@ -116,7 +116,7 @@ RSpec.describe Catalog::CopyDeck do
     it "resets level to 1" do
       source = build_public_deck
       source.update!(level: 3)
-      create(:card, deck: source, front: "Q", back: "A")
+      create(:basic_card, deck: source, front: "Q", back: "A")
       result = described_class.call(user: create(:user), deck: source)
 
       expect(result.record.level).to eq(1)
@@ -133,7 +133,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "does not create cards when deck save fails" do
       source = build_public_deck(name: "Dup")
-      create(:card, deck: source, front: "Q", back: "A")
+      create(:basic_card, deck: source, front: "Q", back: "A")
       user = create(:user).tap { |u| create(:deck, user: u, name: "Dup") }
 
       expect { described_class.call(user:, deck: source) }
@@ -165,7 +165,7 @@ RSpec.describe Catalog::CopyDeck do
     it "copies card distractors when source pool is preset" do
       source = build_public_deck
       source.update!(distractor_pool: "preset")
-      create(:card, deck: source, front: "Q", back: "A", distractors: ["W"])
+      create(:basic_card, deck: source, distractors: ["W"])
       result = described_class.call(user: create(:user), deck: source)
 
       expect(first_content(result).distractors).to eq(["W"])
@@ -173,7 +173,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "does not copy card distractors when source pool is category" do
       source = build_public_deck
-      create(:card, deck: source, front: "Q", back: "A", distractors: ["W"])
+      create(:basic_card, deck: source, distractors: ["W"])
       result = described_class.call(user: create(:user), deck: source)
 
       expect(first_content(result).distractors).to eq([])
@@ -181,7 +181,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "caps copied cards when card_limit is set" do
       source = build_public_deck
-      3.times { |i| create(:card, deck: source, front: "Q#{i}", back: "A#{i}") }
+      create_list(:basic_card, 3, deck: source)
       user = create(:user)
       result = described_class.call(user:, deck: source, card_limit: 2)
 
@@ -190,7 +190,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "copies all cards when card_limit exceeds card count" do
       source = build_public_deck
-      create(:card, deck: source, front: "Q", back: "A")
+      create(:basic_card, deck: source, front: "Q", back: "A")
       user = create(:user)
       result = described_class.call(user:, deck: source, card_limit: 10)
 
@@ -199,7 +199,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "links each copied card back to its source card" do
       source = build_public_deck
-      source_card = create(:card, deck: source, front: "Q", back: "A")
+      source_card = create(:basic_card, deck: source, front: "Q", back: "A")
       result = described_class.call(user: create(:user), deck: source)
 
       expect(result.record.cards.first.source_card_id).to eq(source_card.id)
@@ -223,7 +223,7 @@ RSpec.describe Catalog::CopyDeck do
 
     it "copies the card reading" do
       source = build_public_deck
-      create(:card, deck: source, front: "两", back: "two", reading: "liǎng")
+      create(:basic_card, deck: source, reading: "liǎng")
       result = described_class.call(user: create(:user), deck: source)
 
       expect(first_content(result).reading).to eq("liǎng")

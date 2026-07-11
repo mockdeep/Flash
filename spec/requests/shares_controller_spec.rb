@@ -27,7 +27,7 @@ RSpec.describe SharesController do
 
     it "shows card front in preview" do
       deck = shared_deck
-      create(:card, deck:, front: "Question 1", back: "Answer 1")
+      create(:basic_card, deck:, front: "Question 1", back: "Answer 1")
 
       get(shared_deck_path(deck.share_token))
 
@@ -36,7 +36,7 @@ RSpec.describe SharesController do
 
     it "shows card back in preview" do
       deck = shared_deck
-      create(:card, deck:, front: "Question 1", back: "Answer 1")
+      create(:basic_card, deck:, front: "Question 1", back: "Answer 1")
 
       get(shared_deck_path(deck.share_token))
 
@@ -53,7 +53,7 @@ RSpec.describe SharesController do
 
     it "shows card count" do
       deck = shared_deck
-      create(:card, deck:)
+      create(:basic_card, deck:)
 
       get(shared_deck_path(deck.share_token))
 
@@ -105,7 +105,7 @@ RSpec.describe SharesController do
 
     it "limits preview to 5 cards" do
       deck = shared_deck
-      6.times { |i| create(:card, deck:, front: "Q#{i}", back: "A#{i}") }
+      6.times { |i| create(:basic_card, deck:, front: "Q#{i}", back: "A#{i}") }
 
       get(shared_deck_path(deck.share_token))
 
@@ -149,7 +149,7 @@ RSpec.describe SharesController do
   describe "#try" do
     it "creates a guest user without authentication" do
       deck = shared_deck
-      create(:card, deck:, front: "Q", back: "A")
+      create(:basic_card, deck:, front: "Q", back: "A")
       params = { time_zone: "UTC" }
 
       expect { post(try_shared_deck_path(deck.share_token), params:) }
@@ -158,7 +158,7 @@ RSpec.describe SharesController do
 
     it "assigns the guest role to the new user" do
       deck = shared_deck
-      create(:card, deck:, front: "Q", back: "A")
+      create(:basic_card, deck:, front: "Q", back: "A")
 
       post(try_shared_deck_path(deck.share_token), params: { time_zone: "UTC" })
 
@@ -167,7 +167,7 @@ RSpec.describe SharesController do
 
     it "copies the shared deck to the guest user" do
       deck = shared_deck
-      create(:card, deck:, front: "Q", back: "A")
+      create(:basic_card, deck:, front: "Q", back: "A")
 
       post(try_shared_deck_path(deck.share_token), params: { time_zone: "UTC" })
 
@@ -185,7 +185,7 @@ RSpec.describe SharesController do
 
     it "redirects to the study page" do
       deck = shared_deck
-      create(:card, deck:, front: "Q", back: "A")
+      create(:basic_card, deck:, front: "Q", back: "A")
 
       post(try_shared_deck_path(deck.share_token), params: { time_zone: "UTC" })
 
@@ -194,7 +194,7 @@ RSpec.describe SharesController do
 
     it "sets the demo session flag" do
       deck = shared_deck
-      create(:card, deck:, front: "Q", back: "A")
+      create(:basic_card, deck:, front: "Q", back: "A")
       post(try_shared_deck_path(deck.share_token), params: { time_zone: "UTC" })
 
       follow_redirect!
@@ -205,7 +205,7 @@ RSpec.describe SharesController do
     it "caps the copied cards at Demo::CreateGuestUser::CARD_LIMIT" do
       stub_const("Demo::CreateGuestUser::CARD_LIMIT", 2)
       deck = shared_deck
-      3.times { |i| create(:card, deck:, front: "Q#{i}", back: "A#{i}") }
+      3.times { |i| create(:basic_card, deck:, front: "Q#{i}", back: "A#{i}") }
 
       post(try_shared_deck_path(deck.share_token), params: { time_zone: "UTC" })
 
@@ -230,7 +230,7 @@ RSpec.describe SharesController do
 
     it "copies the deck and redirects to decks index" do
       deck = shared_deck
-      create(:card, deck:, front: "Q", back: "A")
+      create(:basic_card, deck:, front: "Q", back: "A")
       login_as(default_user)
 
       post(copy_shared_deck_path(deck.share_token))

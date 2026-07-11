@@ -18,15 +18,15 @@ RSpec.describe StudiesController do
 
   def complete_milestone_goal
     deck = create(:deck, study_goal: 3)
-    cards = create_list(:card, 3, deck:, back: "Paris", correct_streak: 0)
-    create(:card, deck:)
+    cards = create_list(:basic_card, 3, deck:, back: "Paris", correct_streak: 0)
+    create(:basic_card, deck:)
     cards.each { |card| submit_answer(card:, answer: "Paris") }
     deck
   end
 
   describe "#show" do
     it "renders the study page", :aggregate_failures do
-      card = create(:card)
+      card = create(:basic_card)
       get(deck_study_path(card.deck))
 
       expect(rendered).to have_text("completed")
@@ -34,14 +34,14 @@ RSpec.describe StudiesController do
 
     it "shows filled stars for completed levels" do
       deck = create(:deck, level: 3)
-      create(:card, deck:)
+      create(:basic_card, deck:)
       get(deck_study_path(deck))
 
       expect(rendered).to have_css(".star--filled", count: 2)
     end
 
     it "does not show the demo banner" do
-      card = create(:card)
+      card = create(:basic_card)
       get(deck_study_path(card.deck))
 
       expect(rendered).to have_no_css(".demo-banner")
@@ -49,7 +49,7 @@ RSpec.describe StudiesController do
 
     it "wires the font controller on a Mandarin deck", :aggregate_failures do
       deck = create(:reading_deck)
-      create(:card, deck:, front: "他", back: "he; him")
+      create(:reading_card, deck:, front: "他", back: "he; him")
       get(deck_study_path(deck))
 
       expect(rendered).to have_css(".study-frame[data-controller~='font']")
@@ -57,7 +57,7 @@ RSpec.describe StudiesController do
     end
 
     it "omits the font controller on a deck without a language" do
-      card = create(:card)
+      card = create(:basic_card)
       get(deck_study_path(card.deck))
 
       expect(rendered).to have_no_css(".study-frame[data-controller~='font']")
@@ -65,7 +65,7 @@ RSpec.describe StudiesController do
 
     it "embeds the deck's hanzi for font prewarming on full page loads" do
       deck = create(:reading_deck)
-      create(:card, deck:, front: "他", back: "he; him")
+      create(:reading_card, deck:, front: "他", back: "he; him")
       get(deck_study_path(deck))
 
       expect(rendered).to have_css("[data-font-hanzi-value='他']")
@@ -73,14 +73,14 @@ RSpec.describe StudiesController do
 
     it "omits the hanzi payload on turbo frame navigations" do
       deck = create(:reading_deck)
-      create(:card, deck:, front: "他", back: "he; him")
+      create(:reading_card, deck:, front: "他", back: "he; him")
       get(deck_study_path(deck), headers: { "Turbo-Frame" => "study" })
 
       expect(rendered).to have_no_css("[data-font-hanzi-value]")
     end
 
     it "resets completed counter when visiting on a new day" do
-      card = create(:card, back: "Paris")
+      card = create(:basic_card, back: "Paris")
       submit_answer(card:, answer: "London")
       travel_to(1.day.from_now)
       get(deck_study_path(card.deck))
@@ -91,8 +91,8 @@ RSpec.describe StudiesController do
     context "when the UTC day changes but the user's local day does not" do
       before do
         default_user.update!(time_zone: "America/Los_Angeles")
-        card = create(:card, back: "Paris", correct_streak: 0)
-        create(:card, deck: card.deck)
+        card = create(:basic_card, back: "Paris", correct_streak: 0)
+        create(:basic_card, deck: card.deck)
         # Both instants fall on the same calendar day in Los Angeles.
         travel_to(Time.utc(2026, 5, 29, 23)) do
           submit_answer(card:, answer: "Paris")
@@ -110,8 +110,8 @@ RSpec.describe StudiesController do
     context "when the user's local day changes" do
       before do
         default_user.update!(time_zone: "America/Los_Angeles")
-        card = create(:card, back: "Paris", correct_streak: 0)
-        create(:card, deck: card.deck)
+        card = create(:basic_card, back: "Paris", correct_streak: 0)
+        create(:basic_card, deck: card.deck)
         # The second instant crosses midnight in Los Angeles.
         travel_to(Time.utc(2026, 5, 30, 5)) do
           submit_answer(card:, answer: "Paris")
@@ -127,8 +127,8 @@ RSpec.describe StudiesController do
     end
 
     it "resets completed counter when reset_session param is present" do
-      card = create(:card, back: "Paris", correct_streak: 0)
-      create(:card, deck: card.deck)
+      card = create(:basic_card, back: "Paris", correct_streak: 0)
+      create(:basic_card, deck: card.deck)
       submit_answer(card:, answer: "Paris")
       get(deck_study_path(card.deck, reset_session: true))
 
@@ -173,7 +173,7 @@ RSpec.describe StudiesController do
   describe "demo mode" do
     def start_demo
       deck = create(:deck, user: create(:user), visibility: "public")
-      create(:card, deck:, front: "Q", back: "A")
+      create(:basic_card, deck:, front: "Q", back: "A")
       post(demo_path, params: { deck_id: deck.id, time_zone: "UTC" })
     end
 
@@ -232,8 +232,8 @@ RSpec.describe StudiesController do
         follow_redirect!
         guest_deck.update!(study_goal: 3)
         guest_deck.cards.first.update!(correct_streak: 0)
-        create_list(:card, 2, deck: guest_deck, back: "A", correct_streak: 0)
-        create(:card, deck: guest_deck)
+        create_list(:basic_card, 2, deck: guest_deck, back: "A")
+        create(:basic_card, deck: guest_deck)
         answer_all_pending(guest_deck)
         get(deck_study_path(guest_deck))
       end
@@ -256,8 +256,8 @@ RSpec.describe StudiesController do
 
   describe "#update" do
     it "increments completed counter when card becomes done" do
-      card = create(:card, back: "Paris", correct_streak: 0)
-      create(:card, deck: card.deck)
+      card = create(:basic_card, back: "Paris", correct_streak: 0)
+      create(:basic_card, deck: card.deck)
       submit_answer(card:, answer: "Paris")
 
       expect(rendered).to have_text("1 / 50 completed")
@@ -290,7 +290,7 @@ RSpec.describe StudiesController do
     end
 
     it "shows level complete screen when last card is answered" do
-      card = create(:card, back: "Paris", correct_streak: 0)
+      card = create(:basic_card, back: "Paris", correct_streak: 0)
       submit_answer(card:, answer: "Paris")
 
       expect(rendered).to have_css("h2", text: "Level 1 Complete!")
@@ -298,7 +298,7 @@ RSpec.describe StudiesController do
 
     it "advances deck level when last card is completed" do
       deck = create(:deck)
-      card = create(:card, deck:, back: "Paris", correct_streak: 0)
+      card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
 
       expect { submit_answer(card:, answer: "Paris") }
         .to change_record(deck, :level).from(1).to(2)
@@ -306,38 +306,38 @@ RSpec.describe StudiesController do
 
     context "when answer is correct" do
       it "increments correct count" do
-        card = create(:card, back: "Paris", correct_count: 0)
+        card = create(:basic_card, back: "Paris", correct_count: 0)
 
         expect { submit_answer(card:, answer: "Paris") }
           .to change_record(card, :correct_count).from(0).to(1)
       end
 
       it "increments correct streak" do
-        card = create(:card, back: "Paris", correct_streak: 0)
+        card = create(:basic_card, back: "Paris", correct_streak: 0)
 
         expect { submit_answer(card:, answer: "Paris") }
           .to change_record(card, :correct_streak).from(0).to(1)
       end
 
       it "highlights the correct answer" do
-        card = create(:card, back: "Paris")
-        create(:card, deck: card.deck)
+        card = create(:basic_card, back: "Paris")
+        create(:basic_card, deck: card.deck)
         submit_answer(card:, answer: "Paris")
 
         expect(rendered).to have_css(".answer-correct", text: "Paris")
       end
 
       it "fades the other answers" do
-        card = create(:card, back: "Paris")
-        create(:card, deck: card.deck)
+        card = create(:basic_card, back: "Paris")
+        create(:basic_card, deck: card.deck)
         submit_answer(card:, answer: "Paris")
 
         expect(rendered).to have_css(".answer-faded", text: "London")
       end
 
       it "does not show streak pips at level 1" do
-        card = create(:card, back: "Paris", correct_streak: 0)
-        create(:card, deck: card.deck)
+        card = create(:basic_card, back: "Paris", correct_streak: 0)
+        create(:basic_card, deck: card.deck)
         submit_answer(card:, answer: "Paris")
 
         expect(rendered).to have_no_css(".answer-streak")
@@ -345,8 +345,8 @@ RSpec.describe StudiesController do
 
       it "shows streak progress at level 2" do
         deck = create(:deck, level: 2)
-        card = create(:card, deck:, back: "Paris", correct_streak: 0)
-        create(:card, deck:)
+        card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
+        create(:basic_card, deck:)
         submit_answer(card:, answer: "Paris")
 
         expect(rendered).to have_css(".answer-streak", text: "1/2")
@@ -354,8 +354,8 @@ RSpec.describe StudiesController do
 
       it "fills one pip per correct answer in a row" do
         deck = create(:deck, level: 2)
-        card = create(:card, deck:, back: "Paris", correct_streak: 0)
-        create(:card, deck:)
+        card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
+        create(:basic_card, deck:)
         submit_answer(card:, answer: "Paris")
 
         expect(rendered).to have_css(".streak-pip--filled", count: 1)
@@ -363,8 +363,8 @@ RSpec.describe StudiesController do
 
       it "shows all pips filled when the card clears" do
         deck = create(:deck, level: 2)
-        card = create(:card, deck:, back: "Paris", correct_streak: 1)
-        create(:card, deck:, correct_streak: 0)
+        card = create(:basic_card, deck:, back: "Paris", correct_streak: 1)
+        create(:basic_card, deck:, correct_streak: 0)
         submit_answer(card:, answer: "Paris")
 
         expect(rendered).to have_css(".streak-pip--filled", count: 2)
@@ -373,14 +373,14 @@ RSpec.describe StudiesController do
 
     context "when answer is incorrect" do
       it "resets correct streak" do
-        card = create(:card, back: "Paris", correct_streak: 5)
+        card = create(:basic_card, back: "Paris", correct_streak: 5)
 
         expect { submit_answer(card:, answer: "London") }
           .to change_record(card, :correct_streak).to(0)
       end
 
       it "adds wrong answer to card" do
-        card = create(:card, back: "Paris")
+        card = create(:basic_card, back: "Paris")
 
         expect { submit_answer(card:, answer: "London") }
           .to change { card.reload.distractors }
@@ -388,14 +388,14 @@ RSpec.describe StudiesController do
       end
 
       it "marks the wrong answer" do
-        card = create(:card, back: "Paris")
+        card = create(:basic_card, back: "Paris")
         submit_answer(card:, answer: "London")
 
         expect(rendered).to have_css(".answer-incorrect", text: "London")
       end
 
       it "reveals the correct answer" do
-        card = create(:card, back: "Paris")
+        card = create(:basic_card, back: "Paris")
         submit_answer(card:, answer: "London")
 
         expect(rendered).to have_css(".answer-correct", text: "Paris")
@@ -403,15 +403,15 @@ RSpec.describe StudiesController do
 
       it "does not show streak pips" do
         deck = create(:deck, level: 2)
-        card = create(:card, deck:, back: "Paris")
+        card = create(:basic_card, deck:, back: "Paris")
         submit_answer(card:, answer: "London")
 
         expect(rendered).to have_no_css(".answer-streak")
       end
 
       it "shows the next card link" do
-        card = create(:card, back: "Paris")
-        create(:card, deck: card.deck)
+        card = create(:basic_card, back: "Paris")
+        create(:basic_card, deck: card.deck)
         submit_answer(card:, answer: "London")
 
         expect(rendered).to have_link("Next Card")
@@ -532,7 +532,7 @@ RSpec.describe StudiesController do
     end
 
     it "still renders the multiple-choice UI for non-music decks" do
-      card = create(:card)
+      card = create(:basic_card)
 
       get(deck_study_path(card.deck))
 
@@ -543,7 +543,7 @@ RSpec.describe StudiesController do
   describe "reading stage" do
     def reading_card(**attrs)
       deck = create(:deck, level: 2)
-      create(:card, deck:, reading: "liǎng", **attrs)
+      create(:basic_card, deck:, reading: "liǎng", **attrs)
     end
 
     def submit_reading(card:, answer:)
@@ -654,14 +654,14 @@ RSpec.describe StudiesController do
 
   describe "reading" do
     it "renders the card reading after answering" do
-      card = create(:card, back: "two", reading: "liǎng")
+      card = create(:basic_card, back: "two", reading: "liǎng")
       submit_answer(card:, answer: "wrong")
 
       expect(rendered).to have_css("#card-reading", text: "liǎng")
     end
 
     it "does not render a reading before answering" do
-      card = create(:card, reading: "liǎng")
+      card = create(:basic_card, reading: "liǎng")
       get(deck_study_path(card.deck))
 
       expect(rendered).to have_no_css("#card-reading")

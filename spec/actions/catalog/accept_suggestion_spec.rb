@@ -3,7 +3,7 @@
 RSpec.describe Catalog::AcceptSuggestion do
   describe ".call" do
     def build_suggestion(**overrides)
-      card = create(:card, front: "Old", back: "Old back", category: "Old cat")
+      card = create(:basic_card, front: "Old", back: "Old back")
       create(
         :card_suggestion,
         card:,
@@ -57,8 +57,8 @@ RSpec.describe Catalog::AcceptSuggestion do
 
     def build_colliding_suggestion
       deck = create(:deck)
-      create(:card, deck:, front: "Existing")
-      target = create(:card, deck:, front: "Target", back: "Original")
+      create(:basic_card, deck:, front: "Existing")
+      target = create(:basic_card, deck:, front: "Target", back: "Original")
       create(
         :card_suggestion,
         card: target,

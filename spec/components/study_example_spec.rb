@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe Components::StudyExample do
   def render_for(front, back)
-    card = build(:card)
+    card = build(:basic_card)
     card.item = build(:item, example: front, paired_example: back)
     described_class.new(card:).call
   end

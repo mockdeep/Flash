@@ -15,7 +15,7 @@ RSpec.describe Decks::Replace do
 
     def card_with_progress(deck, front:, back:, **overrides)
       create(
-        :card,
+        :basic_card,
         deck:,
         front:,
         back:,
@@ -182,7 +182,7 @@ RSpec.describe Decks::Replace do
     context "when CSV drops the distractors column" do
       it "re-derives distractor_pool to 'category'" do
         deck = create(:deck, distractor_pool: "preset")
-        create(:card, deck:, front: "Q", back: "A", distractors: ["W1"])
+        create(:basic_card, deck:, front: "Q", back: "A", distractors: ["W1"])
         replace_with(deck, "front,back,category\nQ,A,C\n")
 
         expect(deck.reload.distractor_pool).to eq("category")

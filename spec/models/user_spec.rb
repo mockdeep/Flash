@@ -172,7 +172,7 @@ RSpec.describe User do
   describe "#pending_incoming_suggestions?" do
     def seed_pending_suggestion(user:, **overrides)
       deck = create(:deck, user:)
-      card = create(:card, deck:)
+      card = create(:basic_card, deck:)
       create(:card_suggestion, card:, **overrides)
     end
 
@@ -206,7 +206,7 @@ RSpec.describe User do
 
   describe "#pending_suggestion_counts_per_deck" do
     def seed_pending_suggestion(deck:, **overrides)
-      card = create(:card, deck:)
+      card = create(:basic_card, deck:)
       create(:card_suggestion, card:, **overrides)
     end
 
