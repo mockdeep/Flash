@@ -14,6 +14,7 @@ class StudiesController < ApplicationController
   def update
     deck = current_user.decks.find(params.expect(:deck_id))
     result = Study.for(deck:).record_answer(params)
+    deck.update!(last_studied_at: Time.current)
     increment_counters(result)
     if result.reading_passed?
       render_translation_stage(deck, result.card)
