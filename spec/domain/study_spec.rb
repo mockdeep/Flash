@@ -36,7 +36,7 @@ RSpec.describe Study do
   describe "#pick_next_card" do
     it "returns a card when not-done cards exist" do
       deck = create(:deck)
-      create(:card, deck:)
+      create(:basic_card, deck:)
 
       study = described_class.new(deck:)
 
@@ -46,7 +46,7 @@ RSpec.describe Study do
     it "limits cards to threshold" do
       stub_const("Study::ACTIVE_CARD_THRESHOLD", 5)
       deck = create(:deck, level: 1)
-      create_list(:card, 10, deck:)
+      create_list(:basic_card, 10, deck:)
       card = described_class.new(deck:).next_card
 
       expect(deck.cards.not_done(1).ordered.limit(5)).to include(card)
@@ -62,7 +62,7 @@ RSpec.describe Study do
 
     it "does not return done cards as next card" do
       deck = create(:deck)
-      create(:card, :done, deck:)
+      create(:basic_card, :done, deck:)
 
       study = described_class.new(deck:)
 
@@ -72,7 +72,7 @@ RSpec.describe Study do
     it "does not return cards beyond the threshold" do
       stub_const("Study::ACTIVE_CARD_THRESHOLD", 5)
       deck = create(:deck, level: 1)
-      create_list(:card, 10, deck:)
+      create_list(:basic_card, 10, deck:)
       card = described_class.new(deck:).next_card
 
       expect(deck.cards.not_done(1).ordered.offset(5)).not_to include(card)
@@ -80,7 +80,7 @@ RSpec.describe Study do
 
     it "excludes the given card when others are available" do
       deck = create(:deck)
-      create_list(:card, 3, deck:)
+      create_list(:basic_card, 3, deck:)
       excluded = deck.cards.first
       card = described_class.new(deck:, exclude_card_id: excluded.id).next_card
 
@@ -89,7 +89,7 @@ RSpec.describe Study do
 
     it "returns the excluded card when it is the only one left" do
       deck = create(:deck)
-      excluded = create(:card, deck:)
+      excluded = create(:basic_card, deck:)
 
       study = described_class.new(deck:, exclude_card_id: excluded.id)
 
@@ -98,8 +98,8 @@ RSpec.describe Study do
 
     it "pins next_card to the given card_id" do
       deck = create(:deck)
-      card = create(:card, deck:)
-      create(:card, deck:)
+      card = create(:basic_card, deck:)
+      create(:basic_card, deck:)
 
       study = described_class.new(deck:, card_id: card.id)
 
@@ -134,14 +134,14 @@ RSpec.describe Study do
 
       it "returns :reading when the next card has a reading" do
         deck = reading_level_deck
-        create(:card, deck:, reading: "liǎng")
+        create(:basic_card, deck:, reading: "liǎng")
 
         expect(described_class.new(deck:).presentation_mode).to eq(:reading)
       end
 
       it "returns :multiple_choice when the next card has no reading" do
         deck = reading_level_deck
-        create(:card, deck:)
+        create(:basic_card, deck:)
 
         expect(described_class.new(deck:).presentation_mode)
           .to eq(:multiple_choice)
@@ -149,7 +149,7 @@ RSpec.describe Study do
 
       it "returns :multiple_choice when pinned to a card by card_id" do
         deck = reading_level_deck
-        card = create(:card, deck:, reading: "liǎng")
+        card = create(:basic_card, deck:, reading: "liǎng")
 
         study = described_class.new(deck:, card_id: card.id)
 
@@ -158,7 +158,13 @@ RSpec.describe Study do
 
       def reverse_deck_with_reading
         source = create(:reading_deck)
-        create(:card, deck: source, front: "两", back: "two", reading: "liǎng")
+        create(
+          :reading_card,
+          deck: source,
+          front: "两",
+          back: "two",
+          reading: "liǎng",
+        )
         reverse = Decks::CreateReverse.call(source:).record
         reverse.tap { |deck| deck.update!(level: Study::READING_LEVEL) }
       end
@@ -173,7 +179,7 @@ RSpec.describe Study do
 
     it "returns :multiple_choice below the reading level" do
       deck = create(:deck, level: described_class::READING_LEVEL - 1)
-      create(:card, deck:, reading: "liǎng")
+      create(:basic_card, deck:, reading: "liǎng")
 
       expect(described_class.new(deck:).presentation_mode)
         .to eq(:multiple_choice)
@@ -190,7 +196,7 @@ RSpec.describe Study do
 
     it "includes the correct answer" do
       deck = create(:deck)
-      create(:card, deck:, back: "Paris")
+      create(:basic_card, deck:, back: "Paris")
 
       study = described_class.new(deck:)
 
@@ -199,7 +205,7 @@ RSpec.describe Study do
 
     it "includes first wrong answer from card history" do
       deck = create(:deck)
-      create(:card, deck:, distractors: ["London", "Berlin"])
+      create(:basic_card, deck:, distractors: ["London", "Berlin"])
 
       study = described_class.new(deck:)
 
@@ -208,7 +214,7 @@ RSpec.describe Study do
 
     it "includes second wrong answer from card history" do
       deck = create(:deck)
-      create(:card, deck:, distractors: ["London", "Berlin"])
+      create(:basic_card, deck:, distractors: ["London", "Berlin"])
 
       study = described_class.new(deck:)
 
@@ -217,8 +223,8 @@ RSpec.describe Study do
 
     it "includes cards from same category" do
       deck = create(:deck)
-      create(:card, deck:, back: "Paris", category: "Geography")
-      create(:card, deck:, back: "London", category: "Geography")
+      create(:basic_card, deck:, back: "Paris", category: "Geography")
+      create(:basic_card, deck:, back: "London", category: "Geography")
 
       study = described_class.new(deck:)
 
@@ -228,8 +234,8 @@ RSpec.describe Study do
     context "when wrong answer matches a same-category card" do
       it "does not duplicate the answer" do
         deck = create(:deck)
-        create(:card, deck:, category: "Geo", distractors: ["B"])
-        create(:card, deck:, category: "Geo", back: "B")
+        create(:basic_card, deck:, category: "Geo", distractors: ["B"])
+        create(:basic_card, deck:, category: "Geo", back: "B")
 
         answers = described_class.new(deck:).possible_answers
 
@@ -239,7 +245,7 @@ RSpec.describe Study do
 
     it "samples at most 4 wrong answers from the card's distractors" do
       deck = create(:deck)
-      create(:card, deck:, distractors: ["A", "B", "C", "D", "E"])
+      create(:basic_card, deck:, distractors: ["A", "B", "C", "D", "E"])
 
       study = described_class.new(deck:)
 
@@ -248,8 +254,8 @@ RSpec.describe Study do
 
     it "includes cards from other categories when needed" do
       deck = create(:deck)
-      create(:card, deck:, back: "Paris", category: "Geography")
-      create(:card, deck:, back: "Four", category: "Math")
+      create(:basic_card, deck:, back: "Paris", category: "Geography")
+      create(:basic_card, deck:, back: "Four", category: "Math")
 
       study = described_class.new(deck:)
 
@@ -261,10 +267,14 @@ RSpec.describe Study do
         create(:deck, level: Study::FUZZY_FIND_LEVEL)
       end
 
+      def almost_done_card(deck, back)
+        create(:basic_card, deck:, back:, correct_streak: deck.level - 1)
+      end
+
       it "returns all back values for cards in the deck" do
         deck = fuzzy_find_deck
-        create(:card, deck:, back: "Paris", correct_streak: deck.level - 1)
-        create(:card, :done, deck:, back: "London")
+        almost_done_card(deck, "Paris")
+        create(:basic_card, :done, deck:, back: "London")
 
         answers = described_class.new(deck:).possible_answers
 
@@ -273,8 +283,8 @@ RSpec.describe Study do
 
       it "deduplicates repeated back values" do
         deck = fuzzy_find_deck
-        create(:card, deck:, back: "Paris", correct_streak: deck.level - 1)
-        create(:card, :done, deck:, back: "Paris")
+        almost_done_card(deck, "Paris")
+        create(:basic_card, :done, deck:, back: "Paris")
 
         answers = described_class.new(deck:).possible_answers
 
@@ -286,7 +296,7 @@ RSpec.describe Study do
       # A reading-level deck holding the prompt card the study will pick.
       def deck_with_prompt(front:, reading:)
         deck = create(:deck, level: Study::READING_LEVEL)
-        create(:card, deck:, front:, reading:)
+        create(:basic_card, deck:, front:, reading:)
         deck
       end
 
@@ -298,7 +308,7 @@ RSpec.describe Study do
 
       it "uses sibling readings as decoys" do
         deck = deck_with_prompt(front: "两", reading: "liǎng")
-        create(:card, :done, deck:, reading: "sān")
+        create(:basic_card, :done, deck:, reading: "sān")
 
         expect(described_class.new(deck:).possible_answers)
           .to contain_exactly("liǎng", "sān")
@@ -306,22 +316,22 @@ RSpec.describe Study do
 
       it "excludes sibling readings equal to the card's own" do
         deck = deck_with_prompt(front: "是", reading: "shì")
-        create(:card, :done, deck:, reading: "shì")
+        create(:basic_card, :done, deck:, reading: "shì")
 
         expect(described_class.new(deck:).possible_answers).to eq(["shì"])
       end
 
       it "skips siblings without a reading" do
         deck = deck_with_prompt(front: "两", reading: "liǎng")
-        create(:card, :done, deck:)
+        create(:basic_card, :done, deck:)
 
         expect(described_class.new(deck:).possible_answers).to eq(["liǎng"])
       end
 
       it "deduplicates repeated sibling readings" do
         deck = deck_with_prompt(front: "两", reading: "liǎng")
-        create(:card, :done, deck:, reading: "sān")
-        create(:card, :done, deck:, reading: "sān")
+        create(:basic_card, :done, deck:, reading: "sān")
+        create(:basic_card, :done, deck:, reading: "sān")
 
         answers = described_class.new(deck:).possible_answers
 
@@ -329,12 +339,12 @@ RSpec.describe Study do
       end
 
       def create_siblings(deck, readings)
-        readings.each { |reading| create(:card, :done, deck:, reading:) }
+        readings.each { |reading| create(:basic_card, :done, deck:, reading:) }
       end
 
       it "prefers decoys whose front matches the prompt's character count" do
         deck = deck_with_prompt(front: "学生", reading: "abcd")
-        create(:card, :done, deck:, front: "九十百千万", reading: "uvwx")
+        create(:basic_card, :done, deck:, front: "九十百千万", reading: "uvwx")
         create_filler_siblings(deck)
 
         expect(described_class.new(deck:).possible_answers)
@@ -350,7 +360,7 @@ RSpec.describe Study do
 
       def create_reading_siblings(deck, pairs)
         pairs.each do |front, reading|
-          create(:card, :done, deck:, front:, reading:)
+          create(:basic_card, :done, deck:, front:, reading:)
         end
       end
 
@@ -370,7 +380,7 @@ RSpec.describe Study do
 
       it "anchors a decoy on the prompt's first character" do
         deck = deck_with_prompt(front: "学生", reading: "abcd")
-        create(:card, :done, deck:, front: "学校", reading: "abzzzz")
+        create(:basic_card, :done, deck:, front: "学校", reading: "abzzzz")
         create_filler_siblings(deck)
 
         expect(described_class.new(deck:).possible_answers).to include("abzzzz")
@@ -378,7 +388,7 @@ RSpec.describe Study do
 
       it "anchors a decoy on the prompt's last character" do
         deck = deck_with_prompt(front: "学生", reading: "abcd")
-        create(:card, :done, deck:, front: "先生", reading: "zzzzcd")
+        create(:basic_card, :done, deck:, front: "先生", reading: "zzzzcd")
         create_filler_siblings(deck)
 
         expect(described_class.new(deck:).possible_answers).to include("zzzzcd")
@@ -386,7 +396,7 @@ RSpec.describe Study do
 
       it "does not anchor decoys for a single-character prompt" do
         deck = deck_with_prompt(front: "人", reading: "abcd")
-        create(:card, :done, deck:, front: "人们", reading: "abzzzz")
+        create(:basic_card, :done, deck:, front: "人们", reading: "abzzzz")
         create_single_char_fillers(deck)
 
         expect(described_class.new(deck:).possible_answers)
@@ -395,7 +405,7 @@ RSpec.describe Study do
 
       it "does not anchor a shared-character sibling of a different count" do
         deck = deck_with_prompt(front: "学生", reading: "abcd")
-        create(:card, :done, deck:, front: "学校图书馆", reading: "abzzzz")
+        create(:basic_card, :done, deck:, front: "学校图书馆", reading: "abzzzz")
         create_filler_siblings(deck)
 
         expect(described_class.new(deck:).possible_answers)
@@ -404,7 +414,7 @@ RSpec.describe Study do
 
       it "does not duplicate a sibling matching both ends of the prompt" do
         deck = deck_with_prompt(front: "人中人", reading: "aa")
-        create(:card, :done, deck:, front: "人间人", reading: "bb")
+        create(:basic_card, :done, deck:, front: "人间人", reading: "bb")
 
         answers = described_class.new(deck:).possible_answers
 
@@ -413,10 +423,14 @@ RSpec.describe Study do
     end
 
     context "when deck distractor_pool is 'preset'" do
+      def paris_card(deck, distractors)
+        create(:basic_card, deck:, back: "Paris", distractors:)
+      end
+
       it "uses only the card's own distractors" do
         deck = create(:deck, distractor_pool: "preset")
-        create(:card, deck:, back: "Paris", distractors: ["London", "Berlin"])
-        create(:card, :done, deck:, back: "Madrid")
+        paris_card(deck, ["London", "Berlin"])
+        create(:basic_card, :done, deck:, back: "Madrid")
 
         answers = described_class.new(deck:).possible_answers
 
@@ -425,8 +439,8 @@ RSpec.describe Study do
 
       it "shows fewer than 4 wrong choices when card has fewer distractors" do
         deck = create(:deck, distractor_pool: "preset")
-        create(:card, deck:, back: "Paris", distractors: ["London"])
-        create(:card, :done, deck:, back: "Madrid", category: "Geography")
+        paris_card(deck, ["London"])
+        create(:basic_card, :done, deck:, back: "Madrid", category: "Geography")
 
         answers = described_class.new(deck:).possible_answers
 
@@ -435,8 +449,8 @@ RSpec.describe Study do
 
       it "shows only the correct answer when card has no distractors" do
         deck = create(:deck, distractor_pool: "preset")
-        create(:card, deck:, back: "Paris", distractors: [])
-        create(:card, :done, deck:, back: "Madrid")
+        paris_card(deck, [])
+        create(:basic_card, :done, deck:, back: "Madrid")
 
         answers = described_class.new(deck:).possible_answers
 
@@ -448,7 +462,7 @@ RSpec.describe Study do
   describe "#answer_reading" do
     def reading_card(**attrs)
       deck = create(:deck, level: Study::READING_LEVEL)
-      create(:card, deck:, reading: "liǎng", **attrs)
+      create(:basic_card, deck:, reading: "liǎng", **attrs)
     end
 
     def answer_reading(card:, answer:)
@@ -555,7 +569,7 @@ RSpec.describe Study do
     context "when answer is correct" do
       it "increments view count" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris", view_count: 0)
+        card = create(:basic_card, deck:, back: "Paris", view_count: 0)
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "Paris")
@@ -565,7 +579,7 @@ RSpec.describe Study do
 
       it "increments correct count" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris", correct_count: 0)
+        card = create(:basic_card, deck:, back: "Paris", correct_count: 0)
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "Paris")
@@ -575,7 +589,7 @@ RSpec.describe Study do
 
       it "increments correct streak" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+        card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "Paris")
@@ -585,8 +599,8 @@ RSpec.describe Study do
 
       it "marks card as done when streak reaches deck level" do
         deck = create(:deck, level: 1)
-        card = create(:card, deck:, back: "Paris")
-        create(:card, deck:)
+        card = create(:basic_card, deck:, back: "Paris")
+        create(:basic_card, deck:)
         answer_card(deck:, card:)
 
         expect(card.reload.done?).to be(true)
@@ -594,7 +608,7 @@ RSpec.describe Study do
 
       it "keeps card not done when streak below deck level" do
         deck = create(:deck, level: 5)
-        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+        card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "Paris")
@@ -604,7 +618,7 @@ RSpec.describe Study do
 
       it "returns card_completed true when streak meets deck level" do
         deck = create(:deck, level: 1)
-        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+        card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
@@ -614,7 +628,7 @@ RSpec.describe Study do
 
       it "returns card_completed false when streak below deck level" do
         deck = create(:deck, level: 5)
-        card = create(:card, deck:, back: "Paris", correct_streak: 0)
+        card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
@@ -624,7 +638,7 @@ RSpec.describe Study do
 
       it "returns level_completed true when last card is completed" do
         deck = create(:deck, level: 1)
-        card = create(:card, deck:, back: "Paris")
+        card = create(:basic_card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
@@ -634,7 +648,7 @@ RSpec.describe Study do
 
       it "advances deck level when last card is completed" do
         deck = create(:deck, level: 1)
-        card = create(:card, deck:, back: "Paris")
+        card = create(:basic_card, deck:, back: "Paris")
         answer_card(deck:, card:)
 
         expect(deck.reload.level).to eq(2)
@@ -642,8 +656,8 @@ RSpec.describe Study do
 
       it "returns level_completed false when other cards remain" do
         deck = create(:deck, level: 1)
-        card = create(:card, deck:, back: "Paris")
-        create(:card, deck:)
+        card = create(:basic_card, deck:, back: "Paris")
+        create(:basic_card, deck:)
 
         result = answer_card(deck:, card:)
 
@@ -652,8 +666,8 @@ RSpec.describe Study do
 
       it "does not advance deck level when other cards remain" do
         deck = create(:deck, level: 1)
-        card = create(:card, deck:, back: "Paris")
-        create(:card, deck:)
+        card = create(:basic_card, deck:, back: "Paris")
+        create(:basic_card, deck:)
         answer_card(deck:, card:)
 
         expect(deck.reload.level).to eq(1)
@@ -661,7 +675,7 @@ RSpec.describe Study do
 
       it "returns result with correct true" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris")
+        card = create(:basic_card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
@@ -671,7 +685,7 @@ RSpec.describe Study do
 
       it "returns result with correct answer" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris")
+        card = create(:basic_card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
@@ -681,7 +695,7 @@ RSpec.describe Study do
 
       it "returns result with question" do
         deck = create(:deck)
-        card = create(:card, deck:, front: "Capital?", back: "Paris")
+        card = create(:basic_card, deck:, front: "Capital?", back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
@@ -691,7 +705,7 @@ RSpec.describe Study do
 
       it "returns result with the answered card" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris")
+        card = create(:basic_card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
@@ -701,7 +715,7 @@ RSpec.describe Study do
 
       it "includes the correct answer in result possible_answers" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris")
+        card = create(:basic_card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "Paris")
@@ -713,7 +727,7 @@ RSpec.describe Study do
     context "when answer is incorrect" do
       it "increments view count" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris", view_count: 0)
+        card = create(:basic_card, deck:, back: "Paris", view_count: 0)
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "London")
@@ -723,7 +737,7 @@ RSpec.describe Study do
 
       it "resets correct streak" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris", correct_streak: 5)
+        card = create(:basic_card, deck:, back: "Paris", correct_streak: 5)
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "London")
@@ -733,7 +747,7 @@ RSpec.describe Study do
 
       it "adds wrong answer to card" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris")
+        card = create(:basic_card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         study.answer_card(card_id: card.id, answer: "London")
@@ -742,7 +756,7 @@ RSpec.describe Study do
       end
 
       it "records the new distractor in the data_set" do
-        card = create(:card, back: "Paris")
+        card = create(:basic_card, back: "Paris")
         described_class.new(deck: card.deck)
           .answer_card(card_id: card.id, answer: "London")
 
@@ -750,7 +764,7 @@ RSpec.describe Study do
       end
 
       it "adds the wrong answer to the existing distractors" do
-        card = create(:card, back: "Paris", distractors: ["Berlin"])
+        card = create(:basic_card, back: "Paris", distractors: ["Berlin"])
         study = described_class.new(deck: card.deck)
 
         study.answer_card(card_id: card.id, answer: "London")
@@ -759,7 +773,7 @@ RSpec.describe Study do
       end
 
       it "removes duplicate wrong answers" do
-        card = create(:card, back: "Paris", distractors: ["London"])
+        card = create(:basic_card, back: "Paris", distractors: ["London"])
         study = described_class.new(deck: card.deck)
 
         study.answer_card(card_id: card.id, answer: "London")
@@ -769,7 +783,7 @@ RSpec.describe Study do
 
       it "returns result with card_completed false" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris")
+        card = create(:basic_card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "London")
@@ -779,7 +793,7 @@ RSpec.describe Study do
 
       it "returns result with correct false" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris")
+        card = create(:basic_card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "London")
@@ -789,7 +803,7 @@ RSpec.describe Study do
 
       it "returns result with correct answer" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris")
+        card = create(:basic_card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "London")
@@ -799,7 +813,7 @@ RSpec.describe Study do
 
       it "returns result with question" do
         deck = create(:deck)
-        card = create(:card, deck:, front: "Capital?", back: "Paris")
+        card = create(:basic_card, deck:, front: "Capital?", back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "London")
@@ -809,7 +823,7 @@ RSpec.describe Study do
 
       it "returns result with the answered card" do
         deck = create(:deck)
-        card = create(:card, deck:, back: "Paris")
+        card = create(:basic_card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "London")
@@ -818,7 +832,7 @@ RSpec.describe Study do
       end
 
       it "includes the correct answer in result possible_answers" do
-        card = create(:card, back: "Paris")
+        card = create(:basic_card, back: "Paris")
         result = answer_card(deck: card.deck, card:, answer: "London")
 
         expect(result.possible_answers).to include("Paris")

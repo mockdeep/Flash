@@ -3,7 +3,7 @@
 RSpec.describe "organizing decks into topics" do
   def deck_named(name)
     deck = create(:deck, name:, user: default_user)
-    create(:card, deck:)
+    create(:basic_card, deck:)
     deck
   end
 

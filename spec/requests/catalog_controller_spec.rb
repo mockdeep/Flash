@@ -32,7 +32,7 @@ RSpec.describe CatalogController do
 
     it "shows card count" do
       deck = public_deck
-      create(:card, deck:)
+      create(:basic_card, deck:)
 
       get(catalog_index_path)
 
@@ -99,7 +99,7 @@ RSpec.describe CatalogController do
 
     it "shows card front in preview" do
       deck = public_deck
-      create(:card, deck:, front: "Question 1", back: "Answer 1")
+      create(:basic_card, deck:, front: "Question 1", back: "Answer 1")
 
       get(catalog_path(deck))
 
@@ -108,7 +108,7 @@ RSpec.describe CatalogController do
 
     it "shows card back in preview" do
       deck = public_deck
-      create(:card, deck:, front: "Question 1", back: "Answer 1")
+      create(:basic_card, deck:, front: "Question 1", back: "Answer 1")
 
       get(catalog_path(deck))
 
@@ -125,7 +125,7 @@ RSpec.describe CatalogController do
 
     it "shows card count" do
       deck = public_deck
-      create(:card, deck:)
+      create(:basic_card, deck:)
 
       get(catalog_path(deck))
 
@@ -175,7 +175,7 @@ RSpec.describe CatalogController do
 
     it "limits preview to 5 cards" do
       deck = public_deck
-      6.times { |i| create(:card, deck:, front: "Q#{i}", back: "A#{i}") }
+      6.times { |i| create(:basic_card, deck:, front: "Q#{i}", back: "A#{i}") }
 
       get(catalog_path(deck))
 
@@ -220,7 +220,7 @@ RSpec.describe CatalogController do
 
     it "copies the deck and redirects to decks index" do
       deck = public_deck
-      create(:card, deck:, front: "Q", back: "A")
+      create(:basic_card, deck:, front: "Q", back: "A")
       login_as(default_user)
 
       post(copy_catalog_path(deck))

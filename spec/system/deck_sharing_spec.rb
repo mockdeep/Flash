@@ -4,7 +4,13 @@ RSpec.describe "deck sharing" do
   def owner_deck
     owner = create(:user, password: "super-secure")
     deck = create(:deck, user: owner, name: "My Spanish Deck")
-    create(:card, deck:, front: "hola", back: "hello", category: "greetings")
+    create(
+      :basic_card,
+      deck:,
+      front: "hola",
+      back: "hello",
+      category: "greetings",
+    )
     deck
   end
 

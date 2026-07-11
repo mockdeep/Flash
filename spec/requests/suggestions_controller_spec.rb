@@ -10,7 +10,7 @@ RSpec.describe SuggestionsController do
   end
 
   def build_pending_suggestion(deck: own_catalog_deck, **overrides)
-    card = create(:card, deck:)
+    card = create(:basic_card, deck:)
     create(:card_suggestion, card:, **overrides)
   end
 
@@ -119,8 +119,8 @@ RSpec.describe SuggestionsController do
     end
 
     def build_colliding_suggestion(deck)
-      create(:card, deck:, front: "Existing")
-      target = create(:card, deck:, front: "Target")
+      create(:basic_card, deck:, front: "Existing")
+      target = create(:basic_card, deck:, front: "Target")
       create(:card_suggestion, card: target, front: "Existing")
     end
 

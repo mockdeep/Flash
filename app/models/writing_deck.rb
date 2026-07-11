@@ -7,7 +7,7 @@
 class WritingDeck < LanguageDeck
   def name = "#{data_set.name} (reversed)"
 
-  def card_type = "ReverseTextCard"
+  def card_type = "WritingCard"
 
   def anchor_side = "Back"
 

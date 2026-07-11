@@ -18,7 +18,7 @@ RSpec.describe "editing a card" do
   def create_card
     default_deck.update!(level: 2)
     create(
-      :card,
+      :basic_card,
       deck: default_deck,
       front: "Original question",
       back: "Correct answer",
@@ -116,7 +116,7 @@ RSpec.describe "editing a card" do
 
     def build_source_card
       catalog = create(:deck, user: create(:user), visibility: "public")
-      create(:card, deck: catalog)
+      create(:basic_card, deck: catalog)
     end
 
     it "shows the suggest-to-catalog checkbox in the edit modal" do

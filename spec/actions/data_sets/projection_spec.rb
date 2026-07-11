@@ -57,22 +57,22 @@ RSpec.describe DataSets::Projection do
 
   describe ".project" do
     it "reconciles a changed back, removing the orphaned Back item" do
-      card = create(:card, front: "明白", back: "understand")
+      card = create(:basic_card, front: "明白", back: "understand")
       described_class.project(card, row(front: "明白", back: "clear"))
 
       expect(back_texts(card.deck)).to contain_exactly("clear")
     end
 
     it "keeps a Back item still shared by another card" do
-      create(:card, front: "清楚", back: "clear")
-      card = create(:card, front: "明白", back: "clear")
+      create(:basic_card, front: "清楚", back: "clear")
+      card = create(:basic_card, front: "明白", back: "clear")
       described_class.project(card, row(front: "明白", back: "bright"))
 
       expect(back_texts(card.deck)).to include("clear")
     end
 
     it "discards the old Front item when the front changes" do
-      card = create(:card, front: "明白", back: "understand")
+      card = create(:basic_card, front: "明白", back: "understand")
       described_class.project(card, row(front: "懂", back: "understand"))
 
       expect(front_texts(card.deck)).to contain_exactly("懂")
@@ -81,7 +81,7 @@ RSpec.describe DataSets::Projection do
 
   describe ".add_distractor" do
     it "records a wrong guess as a referenced Back item" do
-      card = create(:card, front: "a", back: "b")
+      card = create(:basic_card, front: "a", back: "b")
       described_class.add_distractor(card, "wrong")
 
       expect(card.item.distractors.pluck(:text)).to include("wrong")
@@ -90,7 +90,7 @@ RSpec.describe DataSets::Projection do
 
   describe ".remove_card" do
     it "removes the card's Front item and orphaned Back items" do
-      card = create(:card, front: "a", back: "b")
+      card = create(:basic_card, front: "a", back: "b")
       described_class.remove_card(card)
       card.destroy!
 
@@ -98,8 +98,8 @@ RSpec.describe DataSets::Projection do
     end
 
     it "keeps Back items still used by another card" do
-      create(:card, front: "x", back: "shared")
-      card = create(:card, front: "y", back: "shared")
+      create(:basic_card, front: "x", back: "shared")
+      card = create(:basic_card, front: "y", back: "shared")
       described_class.remove_card(card)
       card.destroy!
 
@@ -107,8 +107,8 @@ RSpec.describe DataSets::Projection do
     end
 
     it "keeps a Back item still referenced as a distractor" do
-      create(:card, front: "a", back: "z", distractors: ["x"])
-      card = create(:card, front: "b", back: "x")
+      create(:basic_card, front: "a", back: "z", distractors: ["x"])
+      card = create(:basic_card, front: "b", back: "x")
       described_class.remove_card(card)
       card.destroy!
 
@@ -119,7 +119,7 @@ RSpec.describe DataSets::Projection do
   describe "reverse-deck sync" do
     def with_reverse(forward_cards)
       fwd = create(:reading_deck)
-      forward_cards.each { |attrs| create(:card, deck: fwd, **attrs) }
+      forward_cards.each { |attrs| create(:reading_card, deck: fwd, **attrs) }
       [fwd, Decks::CreateReverse.call(source: fwd).record]
     end
 

@@ -2,7 +2,7 @@
 
 FactoryBot.define do
   factory(:card_suggestion) do
-    card
+    card(factory: :basic_card)
     user
     front { "Suggested front" }
     back { "Suggested back" }

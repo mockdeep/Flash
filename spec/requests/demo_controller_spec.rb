@@ -3,7 +3,7 @@
 RSpec.describe DemoController do
   def demo_deck_with_card
     deck = create(:deck, visibility: "public")
-    create(:card, deck:, front: "Q", back: "A")
+    create(:basic_card, deck:, front: "Q", back: "A")
     deck
   end
 

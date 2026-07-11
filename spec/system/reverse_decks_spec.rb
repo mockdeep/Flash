@@ -3,7 +3,7 @@
 RSpec.describe "reverse decks" do
   def forward_deck
     deck = create(:reading_deck, name: "Mandarin", user: default_user)
-    create(:card, deck:, front: "明白", back: "understand")
+    create(:reading_card, deck:, front: "明白", back: "understand")
     deck
   end
 

@@ -13,16 +13,16 @@ RSpec.describe Card do
   describe ".done" do
     it "returns cards with correct_streak at or above the given level" do
       deck = create(:deck)
-      done_card = create(:card, :done, deck:)
-      create(:card, deck:)
+      done_card = create(:basic_card, :done, deck:)
+      create(:basic_card, deck:)
 
       expect(deck.cards.done(1)).to eq([done_card])
     end
 
     it "respects a custom level argument" do
       deck = create(:deck, level: 3)
-      done_card = create(:card, deck:, correct_streak: 3)
-      create(:card, deck:, correct_streak: 2)
+      done_card = create(:basic_card, deck:, correct_streak: 3)
+      create(:basic_card, deck:, correct_streak: 2)
 
       expect(deck.cards.done(3)).to eq([done_card])
     end
@@ -31,16 +31,16 @@ RSpec.describe Card do
   describe ".not_done" do
     it "returns cards with correct_streak below the given level" do
       deck = create(:deck)
-      not_done_card = create(:card, deck:)
-      create(:card, :done, deck:)
+      not_done_card = create(:basic_card, deck:)
+      create(:basic_card, :done, deck:)
 
       expect(deck.cards.not_done(1)).to eq([not_done_card])
     end
 
     it "respects a custom level argument" do
       deck = create(:deck, level: 3)
-      not_done_card = create(:card, deck:, correct_streak: 2)
-      create(:card, deck:, correct_streak: 3)
+      not_done_card = create(:basic_card, deck:, correct_streak: 2)
+      create(:basic_card, deck:, correct_streak: 3)
 
       expect(deck.cards.not_done(3)).to eq([not_done_card])
     end
@@ -49,8 +49,8 @@ RSpec.describe Card do
   describe ".ordered" do
     it "returns cards ordered by id" do
       deck = create(:deck)
-      card1 = create(:card, deck:)
-      card2 = create(:card, deck:)
+      card1 = create(:basic_card, deck:)
+      card2 = create(:basic_card, deck:)
 
       expect(deck.cards.ordered).to eq([card1, card2])
     end
@@ -59,14 +59,14 @@ RSpec.describe Card do
   describe "#done?" do
     it "returns true when correct_streak meets deck level" do
       deck = create(:deck, level: 2)
-      card = create(:card, deck:, correct_streak: 2)
+      card = create(:basic_card, deck:, correct_streak: 2)
 
       expect(card.done?).to be(true)
     end
 
     it "returns false when correct_streak is below deck level" do
       deck = create(:deck, level: 2)
-      card = create(:card, deck:, correct_streak: 1)
+      card = create(:basic_card, deck:, correct_streak: 1)
 
       expect(card.done?).to be(false)
     end
@@ -74,9 +74,9 @@ RSpec.describe Card do
 
   describe "#suggestable_to_catalog?" do
     def build_catalog_copy(catalog_deck:, user:)
-      catalog_card = create(:card, deck: catalog_deck)
+      catalog_card = create(:basic_card, deck: catalog_deck)
       copy_deck = create(:deck, user:)
-      create(:card, deck: copy_deck, source_card: catalog_card)
+      create(:basic_card, deck: copy_deck, source_card: catalog_card)
     end
 
     it "returns true when card has a public source deck owned by another" do
@@ -87,7 +87,7 @@ RSpec.describe Card do
     end
 
     it "returns false when the card has no source_card" do
-      card = create(:card)
+      card = create(:basic_card)
 
       expect(card.suggestable_to_catalog?).to be(false)
     end
@@ -111,31 +111,31 @@ RSpec.describe Card do
 
   describe "content reconstructed from the item" do
     it "reads the front from the item" do
-      card = create(:card, front: "明白")
+      card = create(:basic_card, front: "明白")
 
       expect(card.front).to eq("明白")
     end
 
     it "rejoins a semicolon back from the item's glosses" do
-      card = create(:card, back: "understand;clear")
+      card = create(:basic_card, back: "understand;clear")
 
       expect(card.back).to eq("understand; clear")
     end
 
     it "reads the distractors from the item" do
-      card = create(:card, distractors: ["happy", "run"])
+      card = create(:basic_card, distractors: ["happy", "run"])
 
       expect(card.distractors).to contain_exactly("happy", "run")
     end
 
     it "reads reading and category from the item" do
-      card = create(:card, reading: "míngbai")
+      card = create(:basic_card, reading: "míngbai")
 
       expect(card).to have_attributes(reading: "míngbai", category: "General")
     end
 
     it "reads the example pair from the item" do
-      card = create(:card, example_front: "ef", example_back: "eb")
+      card = create(:basic_card, example_front: "ef", example_back: "eb")
 
       expect(card).to have_attributes(example_front: "ef", example_back: "eb")
     end

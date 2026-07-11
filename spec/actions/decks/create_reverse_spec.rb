@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe Decks::CreateReverse do
   def source_deck(cards: [{ front: "明白", back: "understand;clear" }])
     deck = create(:reading_deck)
-    cards.each { |attrs| create(:card, deck:, **attrs) }
+    cards.each { |attrs| create(:reading_card, deck:, **attrs) }
     deck
   end
 
@@ -25,7 +25,7 @@ RSpec.describe Decks::CreateReverse do
 
     it "names it after the source" do
       source = create(:reading_deck, name: "HSK 1")
-      create(:card, deck: source)
+      create(:reading_card, deck: source)
       result = described_class.call(source:)
 
       expect(result.record.name).to eq("HSK 1 (reversed)")
