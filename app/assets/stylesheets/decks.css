@@ -239,15 +239,6 @@
   background: none;
 }
 
-.rail-stars {
-  display: flex;
-  gap: 2px;
-}
-
-.rail-stars .star {
-  font-size: 1.125rem;
-}
-
 .rail-meta {
   display: flex;
   gap: 0.4rem;

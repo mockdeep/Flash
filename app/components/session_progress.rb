@@ -11,23 +11,12 @@ module Components
 
     def view_template
       div(class: "session-progress") do
-        render_deck_progress
+        render(Components::LevelProgress.new(deck: @deck))
         render_session_bar
       end
     end
 
     private
-
-    def render_deck_progress
-      div(class: "deck-progress-row") do
-        render_stars(@deck.level - 1)
-        progress(
-          value: @deck.cards.done(@deck.level).count,
-          max: @deck.cards.count,
-          class: "progress-deck",
-        )
-      end
-    end
 
     def render_session_bar
       div(class: progress_bar_classes, data: { controller: "dialog" }) do
@@ -62,19 +51,6 @@ module Components
           data: { action: "click->dialog#open" },
         ) { @study_goal.to_s }
         span(class: "progress-label__suffix") { " completed" }
-      end
-    end
-
-    def render_stars(completed_levels)
-      div(class: "level-stars") do
-        3.times do |i|
-          if i < completed_levels
-            span(class: "star star--filled") { "★" }
-          else
-            span(class: "star star--empty") { "★" }
-          end
-        end
-        span(class: "level-label") { "Level #{completed_levels + 1}" }
       end
     end
   end

@@ -47,7 +47,7 @@ module Views
             h2(class: "accent-box__heading") do
               "Level #{completed_level} Complete!"
             end
-            render_stars(completed_level)
+            render(Components::LevelProgress.new(deck:))
             p(class: "accent-box__text") do
               "You've mastered all the cards at this level."
             end
@@ -65,19 +65,6 @@ module Views
             class: "session-milestone-secondary",
             data: { turbo_frame: "_top" },
           )
-        end
-      end
-
-      def render_stars(completed_levels)
-        div(class: "level-stars") do
-          3.times do |i|
-            if i < completed_levels
-              span(class: "star star--filled") { "★" }
-            else
-              span(class: "star star--empty") { "★" }
-            end
-          end
-          span(class: "level-label") { "Level #{completed_levels + 1}" }
         end
       end
 

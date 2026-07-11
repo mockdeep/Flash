@@ -225,23 +225,6 @@ body {
   background: var(--color-background-elevated);
 }
 
-/* Deck-wide progress bar - spans both columns, de-emphasized */
-.content-container .progress-deck {
-  grid-column: 1 / -1;
-  height: 6px;
-  border: none;
-  box-shadow: none;
-  opacity: 0.6;
-}
-
-.content-container .progress-deck::-webkit-progress-value {
-  background: var(--stripe-diagonal);
-}
-
-.content-container .progress-deck::-moz-progress-bar {
-  background: var(--stripe-diagonal);
-}
-
 /* Session progress bars */
 .session-progress-bar progress {
   height: 16px;
@@ -1029,71 +1012,61 @@ body {
     0 2px 8px var(--color-shadow-warm);
 }
 
-.deck-progress-row {
+.level-track {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: 8px;
 }
 
-.deck-progress-row .progress-deck {
+.level-segments {
+  display: flex;
   flex: 1;
+  gap: 3px;
 }
 
-.level-stars {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
+.level-segment {
+  position: relative;
+  flex: 1;
+  height: 9px;
+  overflow: hidden;
+  background: var(--color-background-subtle);
+  border: 2px solid var(--color-border-medium);
 }
 
-.star {
-  font-size: 1.25rem;
-  line-height: 1;
+.level-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--color-accent);
 }
 
-.star--filled {
-  color: var(--color-accent);
-}
-
-.star--empty {
-  color: var(--color-border-medium);
-  opacity: 0.35;
-}
-
-.level-label {
+.level-fill--done {
   width: 100%;
+  background: var(--color-success-border);
+}
+
+.level-track--complete .level-segment {
+  border-color: var(--color-success-dark);
+}
+
+.level-tag {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.5px;
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-align: center;
-}
-
-.deck-progress-row .level-stars {
-  flex-wrap: nowrap;
   white-space: nowrap;
 }
 
-.deck-progress-row .star {
-  font-size: 1rem;
+.level-tag--complete {
+  color: var(--color-success-dark);
 }
 
-.deck-progress-row .level-label {
-  width: auto;
-  margin-left: 4px;
-  font-size: 11px;
-}
-
-.accent-box .level-stars {
-  justify-content: center;
-  margin: 0.5rem 0;
-}
-
-.accent-box .star {
-  font-size: 1.5rem;
+.accent-box .level-track {
+  max-width: 280px;
+  margin: 0.5rem auto;
 }
 
 /* Responsive design */
@@ -1155,43 +1128,28 @@ body {
   }
 
   .session-progress {
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 1fr auto;
     align-items: center;
     gap: 4px var(--spacing-xs);
     padding: 6px var(--spacing-xs);
   }
 
-  .deck-progress-row,
   .session-progress-bar {
     display: contents;
   }
 
-  .session-progress .level-stars {
-    grid-row: 1;
-    grid-column: 1;
+  .session-progress .level-track {
+    grid-column: 1 / -1;
   }
 
   .session-progress .progress-completed {
-    grid-row: 1;
-    grid-column: 2;
     margin-bottom: 0;
-  }
-
-  .session-progress .progress-label {
-    grid-row: 1;
-    grid-column: 3;
-  }
-
-  .session-progress .progress-deck {
-    grid-row: 2;
-    grid-column: 1 / -1;
   }
 
   .session-progress-bar-complete .progress-completed {
     animation: progress-glow 1s ease-out;
   }
 
-  .session-progress .level-label,
   .progress-label__suffix {
     display: none;
   }
