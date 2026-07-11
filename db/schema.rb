@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_12_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_12_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -59,6 +59,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_12_000000) do
     t.datetime "created_at", null: false
     t.bigint "data_set_id", null: false
     t.string "distractor_pool", null: false
+    t.datetime "last_studied_at"
     t.integer "level", null: false
     t.boolean "ordered", default: false, null: false
     t.string "share_token"

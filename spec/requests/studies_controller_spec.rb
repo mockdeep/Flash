@@ -289,6 +289,22 @@ RSpec.describe StudiesController do
       end
     end
 
+    it "stamps the deck's last studied time" do
+      card = create(:basic_card, back: "Paris")
+      create(:basic_card, deck: card.deck)
+
+      expect { submit_answer(card:, answer: "Paris") }
+        .to change_record(card.deck, :last_studied_at).from(nil)
+    end
+
+    it "stamps the deck's last studied time on an incorrect answer" do
+      card = create(:basic_card, back: "Paris")
+      create(:basic_card, deck: card.deck)
+
+      expect { submit_answer(card:, answer: "London") }
+        .to change_record(card.deck, :last_studied_at).from(nil)
+    end
+
     it "shows level complete screen when last card is answered" do
       card = create(:basic_card, back: "Paris", correct_streak: 0)
       submit_answer(card:, answer: "Paris")
@@ -460,6 +476,14 @@ RSpec.describe StudiesController do
 
       expect(rendered)
         .to have_css("[data-music-study-sequence-value='C4,E4,G4']")
+    end
+
+    it "stamps the deck's last studied time" do
+      deck = music_deck
+      seed_notes(deck, ["C4", "E4"])
+
+      expect { submit_music_window(deck, answer: "C4") }
+        .to change_record(deck, :last_studied_at).from(nil)
     end
 
     it "renders the music-result UI after a correct answer" do
