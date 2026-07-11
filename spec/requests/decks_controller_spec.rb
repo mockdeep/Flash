@@ -204,6 +204,80 @@ RSpec.describe DecksController do
       expect(rendered).to have_no_css(".rail-card--mru")
     end
 
+    it "renders type tabs when a section mixes deck types" do
+      login_as(default_user)
+      reversible_pair
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".rail-tab", text: "Writing")
+    end
+
+    it "counts each type in its tab" do
+      login_as(default_user)
+      reversible_pair
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".rail-tab", text: /All\s*2/)
+    end
+
+    it "marks the All tab active on render" do
+      login_as(default_user)
+      reversible_pair
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".rail-tab--active", text: "All")
+    end
+
+    it "omits the tab bar when a section has one deck type" do
+      login_as(default_user)
+      create(:deck, user: default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_no_css(".rail-tab")
+    end
+
+    it "tags each card with its deck type for filtering" do
+      login_as(default_user)
+      create(:deck, user: default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".rail-card[data-filter-value='Basic']")
+    end
+
+    it "keys the filter controller by topic for remembered tabs" do
+      login_as(default_user)
+      deck = deck_in_topic("Mandarin")
+
+      get(decks_path)
+
+      expect(rendered)
+        .to have_css("[data-filter-key-value='topic-#{deck.topic.id}']")
+    end
+
+    it "keys the topicless section as 'other'" do
+      login_as(default_user)
+      create(:deck, user: default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_css("[data-filter-key-value='other']")
+    end
+
+    it "renders the scroll arrows hidden for the controller to reveal" do
+      login_as(default_user)
+      create(:deck, user: default_user)
+
+      get(decks_path)
+
+      expect(rendered)
+        .to have_css(".rail-arrow[hidden]", count: 2, visible: :hidden)
+    end
+
     it "spotlights per topic, not across the whole page" do
       login_as(default_user)
       deck_in_topic("Mandarin").update!(last_studied_at: 1.hour.ago)

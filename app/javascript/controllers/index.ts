@@ -30,6 +30,9 @@ application.register("disclosure", DisclosureController);
 import FileUploadController from "./file_upload_controller";
 application.register("file-upload", FileUploadController);
 
+import FilterController from "./filter_controller";
+application.register("filter", FilterController);
+
 import FontController from "./font_controller";
 application.register("font", FontController);
 
@@ -44,6 +47,9 @@ application.register("mobile-nav", MobileNavController);
 
 import MusicStudyController from "./music_study_controller";
 application.register("music-study", MusicStudyController);
+
+import RailController from "./rail_controller";
+application.register("rail", RailController);
 
 import TimezoneController from "./timezone_controller";
 application.register("timezone", TimezoneController);
