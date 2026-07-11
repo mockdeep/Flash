@@ -227,7 +227,7 @@ module Views
           render_mru_label(deck) if mru
           div(class: "rail-type") { deck.type_label }
           render_rail_title(deck)
-          render_stars(deck.level - 1)
+          render(Components::LevelProgress.new(deck:))
           render_rail_meta(deck, remaining)
         end
       end
@@ -275,15 +275,6 @@ module Views
           deck_suggestions_path(deck),
           class: "deck-suggestion-badge",
         )
-      end
-
-      def render_stars(completed_levels)
-        div(class: "rail-stars") do
-          3.times do |i|
-            css = i < completed_levels ? "star star--filled" : "star star--empty"
-            span(class: css) { "★" }
-          end
-        end
       end
     end
   end

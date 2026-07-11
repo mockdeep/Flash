@@ -32,12 +32,12 @@ RSpec.describe StudiesController do
       expect(rendered).to have_text("completed")
     end
 
-    it "shows filled stars for completed levels" do
+    it "shows filled segments for completed levels" do
       deck = create(:deck, level: 3)
       create(:basic_card, deck:)
       get(deck_study_path(deck))
 
-      expect(rendered).to have_css(".star--filled", count: 2)
+      expect(rendered).to have_css(".level-fill--done", count: 2)
     end
 
     it "does not show the demo banner" do
@@ -310,6 +310,13 @@ RSpec.describe StudiesController do
       submit_answer(card:, answer: "Paris")
 
       expect(rendered).to have_css("h2", text: "Level 1 Complete!")
+    end
+
+    it "shows the earned segment on the level complete screen" do
+      card = create(:basic_card, back: "Paris", correct_streak: 0)
+      submit_answer(card:, answer: "Paris")
+
+      expect(rendered).to have_css(".level-fill--done", count: 1)
     end
 
     it "advances deck level when last card is completed" do
