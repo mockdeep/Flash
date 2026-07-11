@@ -238,12 +238,12 @@ end
 - `BasicDataSet` — forbids a language; builds `BasicDeck`.
 
 **Deck/Card STI subclasses** (deck class names match their UI representation — the future topic-page tabs):
-- `ReadingDeck < LanguageDeck < Deck` / `TextCard < Card` — forward study of a language data set: multiple-choice (or fuzzy-find) recognition. The only `reversible?` deck. `LanguageDeck` (abstract) holds `mandarin?` and `hanzi_chars` (font features); the base `Deck#mandarin?` is `false`.
-- `WritingDeck < LanguageDeck` / `ReverseTextCard < TextCard` — studies an existing language data set in the opposite direction (Back items become prompts, paired Front items the answers). Shares the source deck's data set — no re-upload. `anchor_side` flips to `"Back"` and `anchor_pairing_column` to `:paired_item_id`; a reverse of a reverse is not allowed. See Reverse Decks below.
-- `BasicDeck < Deck` / `TextCard` — plain forward flashcards over a `BasicDataSet`; not reversible.
+- `ReadingDeck < LanguageDeck < Deck` / `ReadingCard < Card` — forward study of a language data set: multiple-choice (or fuzzy-find) recognition. The only `reversible?` deck. `LanguageDeck` (abstract) holds `mandarin?` and `hanzi_chars` (font features); the base `Deck#mandarin?` is `false`.
+- `WritingDeck < LanguageDeck` / `WritingCard < Card` — studies an existing language data set in the opposite direction (Back items become prompts, paired Front items the answers). Shares the source deck's data set — no re-upload. `anchor_side` flips to `"Back"` and `anchor_pairing_column` to `:paired_item_id`; a reverse of a reverse is not allowed. See Reverse Decks below.
+- `BasicDeck < Deck` / `BasicCard < Card` — plain forward flashcards over a `BasicDataSet`; not reversible.
 - `MusicDeck < Deck` / `MusicCard < Card` — microphone-driven music study. Each `MusicCard.back` is a **single** note validated against `MusicCard::NOTE_REGEXP` (e.g. `C4`, `F#3`); sequences are formed at study time by windowing (see Music Decks). `MusicDeck` defaults `distractor_pool` to `"none"`.
 
-`ReadingDeck` and `BasicDeck` are `replaceable?` (CSV re-import). Card classes still carry the older Text/ReverseText names; renaming them to match the decks is a planned consistency step (see NOTES.md).
+`ReadingDeck` and `BasicDeck` are `replaceable?` (CSV re-import). Card classes mirror the deck classes one-to-one; each deck declares its card class via `card_type` (no base-class default). Only `WritingCard` carries behavior — the others exist for naming symmetry. In specs, the `:card` factory is abstract: create cards through `:basic_card` / `:reading_card` / `:music_card`.
 
 **STI convention — `model_name` override:** every Deck/Card subclass overrides `self.model_name` to return the parent's so `form_with(model: reading_deck)` keeps routing to `decks_path` (not `reading_decks_path`). Apply this to any new STI subclass.
 
@@ -381,8 +381,9 @@ app/
 │   ├── basic_deck.rb       # STI subclass — plain flashcards; replaceable, not reversible
 │   ├── music_deck.rb       # STI subclass — defaults distractor_pool to "none"
 │   ├── card.rb             # STI base — thin progress anchor; content from item
-│   ├── text_card.rb        # STI subclass — overrides model_name
-│   ├── reverse_text_card.rb # STI subclass of TextCard — answer/back come from paired Front item
+│   ├── basic_card.rb       # STI subclass — overrides model_name only
+│   ├── reading_card.rb     # STI subclass — overrides model_name only
+│   ├── writing_card.rb     # STI subclass — answer/back come from paired Front item
 │   ├── music_card.rb       # STI subclass — NOTE_REGEXP (single note)
 │   ├── card_suggestion.rb  # Proposed edit from a copied card back to its catalog source
 │   └── subscription.rb
@@ -719,7 +720,7 @@ Microphone-driven music study (target: guitar / ukulele). Public music decks app
 A reverse deck studies an existing text deck's content in the opposite direction — the answers become prompts — **without re-uploading**. Both decks share one `data_set`; only the reading direction differs.
 
 - **Create**: on the deck-show page, a `ReadingDeck` that is `reversible?` and has no reverse yet shows a "create reverse deck" action → `POST /decks/:deck_id/reversal` → `ReversalsController#create` → `Decks::CreateReverse`. It builds a `WritingDeck` on the same `data_set` and generates its cards via `DataSets::Projection.reconcile_deck` (one card per paired Back item). At most one reverse per data set (`Deck#reverse_present?`), and a reverse can't be reversed again. Basic and music decks are not reversible.
-- **Direction knobs**: `WritingDeck` overrides `anchor_side` to `"Back"` and `anchor_pairing_column` to `:paired_item_id`. `ReverseTextCard` anchors a Back item; its `front` is that item's text, while `back` / `reading` / `category` / examples come from the paired **Front** item (via `answer_item`). Category-pool distractors reach the category through the pairing (`cards_in_category` override).
+- **Direction knobs**: `WritingDeck` overrides `anchor_side` to `"Back"` and `anchor_pairing_column` to `:paired_item_id`. `WritingCard` anchors a Back item; its `front` is that item's text, while `back` / `reading` / `category` / examples come from the paired **Front** item (via `answer_item`). Category-pool distractors reach the category through the pairing (`cards_in_category` override).
 - **Staying in sync**: because forward and reverse share a data set, any content change (edit, replace, delete, add-distractor) reconciles sibling decks — `DataSets::Projection` snapshots sibling card state and calls `reconcile_deck` so both directions stay consistent.
 
 ### Reading (pronunciation gloss)

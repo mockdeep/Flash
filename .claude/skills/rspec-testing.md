@@ -33,12 +33,12 @@ end
 ```ruby
 # Bad
 let(:deck) { create(:deck) }
-let(:card) { create(:card, deck: deck) }
+let(:card) { create(:basic_card, deck: deck) }
 
 # Good - inline setup
 it "does something" do
   deck = create(:deck)
-  card = create(:card, deck: deck)
+  card = create(:basic_card, deck: deck)
 
   expect(card.deck).to eq(deck)
 end
@@ -70,14 +70,14 @@ create(:subscription)
 
 ```ruby
 # Bad
-create(:card, status: "active")
+create(:basic_card, status: "active")
 
 # Good
-create(:card, :active)
+create(:basic_card, :active)
 
 # Traits must come before keyword arguments
-create(:card, :active, deck: my_deck)  # Correct
-create(:card, deck: my_deck, :active)  # Syntax error!
+create(:basic_card, :active, deck: my_deck)  # Correct
+create(:basic_card, deck: my_deck, :active)  # Syntax error!
 ```
 
 **Factory Caching Pattern:**
@@ -469,7 +469,7 @@ RSpec.describe Study do
   describe "#initialize" do
     it "picks the next card" do
       deck = create(:deck)
-      create(:card, :active, deck: deck)
+      create(:basic_card, :active, deck: deck)
 
       study = described_class.new(deck: deck)
 
