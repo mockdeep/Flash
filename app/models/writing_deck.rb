@@ -9,6 +9,10 @@ class WritingDeck < LanguageDeck
 
   def card_type = "WritingCard"
 
+  def type_label = "Writing"
+
+  def type_position = 2
+
   def anchor_side = "Back"
 
   def anchor_pairing_column = :paired_item_id

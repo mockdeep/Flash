@@ -5,6 +5,8 @@
 class ReadingDeck < LanguageDeck
   def card_type = "ReadingCard"
 
+  def type_label = "Reading"
+
   def reversible? = true
 
   def replaceable? = true

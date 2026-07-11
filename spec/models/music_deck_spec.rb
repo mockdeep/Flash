@@ -9,6 +9,10 @@ RSpec.describe MusicDeck do
     end
   end
 
+  it "is labeled Practice on the decks index" do
+    expect(described_class.new.type_label).to eq("Practice")
+  end
+
   describe "#distractor_pool" do
     it "defaults to 'none'" do
       expect(described_class.new.distractor_pool).to eq("none")
