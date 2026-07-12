@@ -141,8 +141,13 @@
   gap: 0.9rem;
   padding: 4px 4px 14px;
   overflow-x: auto;
-  scroll-snap-type: x proximity;
   scroll-padding-inline: 4px;
+}
+
+@media (pointer: coarse) {
+  .rail {
+    scroll-snap-type: x proximity;
+  }
 }
 
 .rail::-webkit-scrollbar {
