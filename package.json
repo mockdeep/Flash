@@ -22,7 +22,7 @@
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@types/hotwired__turbo": "^8.0.12",
-    "@types/node": "^25.9.3",
+    "@types/node": "^26.1.1",
     "@types/rails__actioncable": "^8.0.3",
     "@typescript-eslint/eslint-plugin": "^8.62.1",
     "@typescript-eslint/parser": "^8.62.1",
