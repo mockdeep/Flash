@@ -9,15 +9,6 @@ const config: Linter.Config[] = [
   // Offense count: 1
   {
     files: [
-      "spec/javascript/controllers/fuzzy_find_controller_spec.ts",
-    ],
-    rules: {
-      "max-lines": "off",
-    },
-  },
-  // Offense count: 1
-  {
-    files: [
       "app/javascript/controllers/confirm_submit_controller.ts",
     ],
     rules: {
