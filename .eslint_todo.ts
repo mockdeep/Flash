@@ -6,15 +6,6 @@
 import type {Linter} from "eslint";
 
 const config: Linter.Config[] = [
-  // Offense count: 7
-  {
-    files: [
-      "app/javascript/music/note_utils.ts",
-    ],
-    rules: {
-      "id-length": "off",
-    },
-  },
   // Offense count: 1
   {
     files: [
