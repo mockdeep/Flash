@@ -68,10 +68,6 @@ function possibleAnswerInputEl(): HTMLInputElement {
   return findEl(document, "input", possibleSel);
 }
 
-function formEl(): HTMLFormElement {
-  return findEl(document, "form");
-}
-
 function matchTexts(): string[] {
   return [...resultsEl().querySelectorAll("button")].map((button) => {
     return ensure(button.textContent);
@@ -80,7 +76,7 @@ function matchTexts(): string[] {
 
 function stubSubmit(): SubmitFn {
   const stub = vi.fn<SubmitFn>();
-  formEl().requestSubmit = stub;
+  findEl(document, "form").requestSubmit = stub;
 
   return stub;
 }
@@ -117,39 +113,33 @@ function wrapInStudyFrame(): HTMLElement {
   return frame;
 }
 
-describe("connect on a mobile viewport", () => {
-  it("scrolls the study frame to the top of the screen", async () => {
-    mockMobileViewport();
-    setupDOM(["Paris"]);
-    const frame = wrapInStudyFrame();
-    const scroll = vi.fn<(options?: ScrollIntoViewOptions) => void>();
-    frame.scrollIntoView = scroll;
+it("scrolls the study frame to the top on mobile connect", async () => {
+  mockMobileViewport();
+  setupDOM(["Paris"]);
+  const frame = wrapInStudyFrame();
+  const scroll = vi.fn<(options?: ScrollIntoViewOptions) => void>();
+  frame.scrollIntoView = scroll;
 
-    await bootStimulus("fuzzy-find", FuzzyFindController);
+  await bootStimulus("fuzzy-find", FuzzyFindController);
 
-    expect(scroll).toHaveBeenCalledWith({behavior: "instant", block: "start"});
-  });
+  expect(scroll).toHaveBeenCalledWith({behavior: "instant", block: "start"});
 });
 
-describe("filter with no input", () => {
-  it("shows nothing when input is empty", async () => {
-    const controller = await boot(["Paris", "London"]);
+it("shows nothing when filtering with empty input", async () => {
+  const controller = await boot(["Paris", "London"]);
 
-    await typeAndFilter(controller, "");
+  await typeAndFilter(controller, "");
 
-    expect(matchTexts()).toStrictEqual([]);
-    expect(noMatchesEl().hidden).toBe(true);
-  });
+  expect(matchTexts()).toStrictEqual([]);
+  expect(noMatchesEl().hidden).toBe(true);
 });
 
-describe("filter rendering", () => {
-  it("renders the matching answers in ranked order", async () => {
-    const controller = await boot(["caterpillar", "cat", "candy"]);
+it("renders matching answers in ranked order when filtering", async () => {
+  const controller = await boot(["caterpillar", "cat", "candy"]);
 
-    await typeAndFilter(controller, "ca");
+  await typeAndFilter(controller, "ca");
 
-    expect(matchTexts()).toStrictEqual(["cat", "candy", "caterpillar"]);
-  });
+  expect(matchTexts()).toStrictEqual(["cat", "candy", "caterpillar"]);
 });
 
 describe("filter no-matches state", () => {
@@ -172,17 +162,15 @@ describe("filter no-matches state", () => {
   });
 });
 
-describe("selectMatch", () => {
-  it("submits the form with the clicked match", async () => {
-    const controller = await boot(["Paris", "London"]);
-    await typeAndFilter(controller, "p");
-    const submit = stubSubmit();
+it("submits the form with the clicked match", async () => {
+  const controller = await boot(["Paris", "London"]);
+  await typeAndFilter(controller, "p");
+  const submit = stubSubmit();
 
-    topMatchButton().click();
+  topMatchButton().click();
 
-    expect(submit).toHaveBeenCalledWith();
-    expect(answerInputEl().value).toBe("Paris");
-  });
+  expect(submit).toHaveBeenCalledWith();
+  expect(answerInputEl().value).toBe("Paris");
 });
 
 function keydown(key: string): KeyboardEvent {
@@ -224,9 +212,7 @@ describe("submitSelected", () => {
 
 function selectedTexts(): string[] {
   return [...resultsEl().querySelectorAll(".answer-button.is-selected")].
-    map((button) => {
-      return ensure(button.textContent);
-    });
+    map((button) => { return ensure(button.textContent); });
 }
 
 describe("arrow-key highlight movement", () => {
