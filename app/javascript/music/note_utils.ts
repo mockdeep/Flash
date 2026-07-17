@@ -5,13 +5,28 @@ const A4_MIDI = 69;
 const SEMITONES_PER_OCTAVE = 12;
 const CENTS_PER_SEMITONE = 100;
 
-const LETTER_TO_OFFSET: {[letter: string]: number} = {
-  A: 9, B: 11, C: 0, D: 2, E: 4, F: 5, G: 7,
-};
+interface PitchClass {
+  accidental: string;
+  letter: string;
+  semitone: number;
+}
 
-const NOTE_NAMES = "C C# D D# E F F# G G# A A# B".split(" ");
+const PITCH_CLASSES: PitchClass[] = [
+  {accidental: "", letter: "C", semitone: 0},
+  {accidental: "#", letter: "C", semitone: 1},
+  {accidental: "", letter: "D", semitone: 2},
+  {accidental: "#", letter: "D", semitone: 3},
+  {accidental: "", letter: "E", semitone: 4},
+  {accidental: "", letter: "F", semitone: 5},
+  {accidental: "#", letter: "F", semitone: 6},
+  {accidental: "", letter: "G", semitone: 7},
+  {accidental: "#", letter: "G", semitone: 8},
+  {accidental: "", letter: "A", semitone: 9},
+  {accidental: "#", letter: "A", semitone: 10},
+  {accidental: "", letter: "B", semitone: 11},
+];
 
-const NOTE_REGEXP = /^(?<letter>[A-G])(?<sharp>#?)(?<octave>\d)$/u;
+const NOTE_REGEXP = /^(?<letter>[A-G])(?<accidental>#?)(?<octave>\d)$/u;
 
 interface PitchMatch {
   cents: number;
@@ -23,21 +38,23 @@ function noteToMidi(note: string): number {
   if (!groups) {
     throw new Error(`Invalid note: ${note}`);
   }
-  const offset = ensure(LETTER_TO_OFFSET[ensure(groups.letter)]);
-  let sharpStep = 0;
-  if (groups.sharp === "#") {
-    sharpStep = 1;
-  }
+  const pitchClass = ensure(PITCH_CLASSES.find((candidate) => {
+    return candidate.letter === groups.letter &&
+      candidate.accidental === groups.accidental;
+  }));
   const octave = Number(ensure(groups.octave));
 
-  return offset + sharpStep + (octave + 1) * SEMITONES_PER_OCTAVE;
+  return pitchClass.semitone + (octave + 1) * SEMITONES_PER_OCTAVE;
 }
 
 function midiToNote(midi: number): string {
   const octave = Math.floor(midi / SEMITONES_PER_OCTAVE) - 1;
-  const name = ensure(NOTE_NAMES[midi % SEMITONES_PER_OCTAVE]);
+  const semitone = midi % SEMITONES_PER_OCTAVE;
+  const pitchClass = ensure(PITCH_CLASSES.find((candidate) => {
+    return candidate.semitone === semitone;
+  }));
 
-  return `${name}${octave}`;
+  return `${pitchClass.letter}${pitchClass.accidental}${octave}`;
 }
 
 function noteToFrequency(note: string): number {
