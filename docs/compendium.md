@@ -32,6 +32,7 @@ erDiagram
     senses ||--o{ skill_scores : ""
     senses ||--o{ sense_examples : ""
     senses ||--o{ sense_distractors : ""
+    users ||--o{ sense_distractors : ""
 
     lexicons {
         string language "unique; zh, ja, es..."
@@ -76,12 +77,13 @@ erDiagram
         bigint sense_id FK
         string sentence
         string translation
-        bigint text_id FK "source, when quoted from a text"
-        boolean shareable "false when quoted from copyrighted upload"
     }
     sense_distractors {
+        bigint user_id FK
         bigint sense_id FK
         bigint distractor_sense_id FK
+        integer miss_count
+        datetime last_missed_at
     }
     skill_scores {
         bigint user_id FK
@@ -90,7 +92,6 @@ erDiagram
         integer correct_count
         integer correct_streak
         integer view_count
-        datetime last_studied_at
     }
     decks {
         bigint word_list_id FK "the selection"
@@ -98,6 +99,7 @@ erDiagram
         string type "ReadingDeck | WritingDeck"
         string name
         string visibility
+        integer level "streak-window selection, as today"
     }
 ```
 
@@ -109,7 +111,7 @@ Key uniques:
 | senses | — (rank orders within entry) |
 | sense_memberships | (sense_id, word_list_id) |
 | skill_scores | (user_id, sense_id, skill) |
-| sense_distractors | (sense_id, distractor_sense_id) |
+| sense_distractors | (user_id, sense_id, distractor_sense_id) |
 
 ## Core concepts
 
@@ -147,6 +149,11 @@ plus study settings. Consequences:
   language decks. (Basic and Music decks stay on that machinery for now — their
   progress model is similar but their source data is not; schema follow-up needed.
   No polymorphic tables.)
+- Users never author gloss content into the compendium. A language deck is
+  created by selecting existing words/lists, or by supplying words or a text
+  that run the content pipeline (senses CEDICT-grounded and LLM-generated).
+  Freeform front/back uploads are Basic decks — full freedom, no lexicon
+  contact.
 
 ### Study semantics
 
@@ -157,16 +164,32 @@ plus study settings. Consequences:
   for what HSK 1 taught).
 - **Credit fans out.** Answering that card correctly advances the streak of every
   member sense. Grouping is a study-time construct; nothing about it is stored.
-- **Card due-ness = weakest member sense.** A card mixing a mastered and a new
-  sense behaves like a new card.
-- **Grading is entry-wide, not membership-wide.** A typed/chosen answer is checked
-  against all of the entry's senses (register permitting), and credit lands on the
-  sense that matched. A user answering "to like" when the list references only the
-  "to be fond of" facet is right, not wrong. This rule is load-bearing: it is what
-  makes facet-level rows and narrow chapter memberships safe.
+- **A card studies at the level of its weakest member sense.** A card mixing a
+  mastered and a new sense behaves like a new card. (No time-based scheduling —
+  selection stays streak-based, as today; a `last_studied_at` on skill_scores is
+  a trivial later addition if spaced repetition ever arrives.)
+- **Grading is member-scoped.** A typed or chosen answer is checked against the
+  union of the card's member senses — the same set the card displays. Multiple
+  choice and fuzzy find both target this union (fuzzy find matches the full
+  joined gloss, not one sense). Synonym-facet safety comes from seeding, not
+  grading: facets semicolon-split from one seed row enter lists together, so
+  they are usually co-members. A narrow chapter list that links only one facet
+  will mark a synonym facet wrong — accepted; the chapter taught a specific
+  usage.
+- **Distractors are generated; misses are remembered.** No curated distractor
+  lists for language decks: option lists build on the fly from sibling entries in
+  the deck (length-matched, register permitting). When a user picks a wrong
+  option, every member sense the card displayed is linked to every member sense
+  the chosen option displayed — cross-product fan-out, mirroring credit fan-out,
+  because the displayed grouping is deck-contextual and not stored. Rows are
+  per-user (sense_distractors) with a miss count; accumulated misses bias future
+  option selection toward that user's actual confusions. A global
+  "commonly confused" signal can be derived later by aggregating across users.
 - **Cards are not rows.** A study session enumerates the list's senses, joins the
-  user's skill_scores for the deck's skill, and picks what's due. Any user can
-  study any visible deck; their progress is their own.
+  user's skill_scores for the deck's skill, and applies the existing
+  level/streak-window selection. Any user can study any visible deck; their
+  progress is their own. Deck-level recency (`decks.last_studied_at`) stays where
+  it is, as today.
 
 ### Progress
 
@@ -176,6 +199,14 @@ independently; both persist across every deck containing the sense.
 Known wrinkle, deliberately deferred: writing ability is arguably per *entry* (or
 per character — writing 银行 is writing 银 + 行) rather than per sense. Keying both
 skills to sense is the consistent v1; revisit if writing decks feel wrong.
+
+### Examples
+
+`sense_examples` holds teaching sentences only, shown on card reveal (today's
+items.example / paired_example). Rows enter solely from trusted sources —
+seed-account curation, Tatoeba, generated sentences — so everything in the table
+is shareable by construction; no flag needed. Quoted-from-text occurrence
+evidence is a separate, deferred concept (see Open questions).
 
 ## Content pipeline (build-time, per text or list)
 
@@ -216,6 +247,36 @@ skills to sense is the consistent v1; revisit if writing decks feel wrong.
 - Useful community data: [drkameleon/complete-hsk-vocabulary](https://github.com/drkameleon/complete-hsk-vocabulary)
   (MIT; both HSK versions, frequency, POS, traditional, cleaned CEDICT glosses).
 
+## Deck migration
+
+1. **Seed first.** Entries and senses come from the curated HSK import (see
+   Seeding), so most matching targets exist before any deck migrates.
+2. **Catalog-derived data_sets collapse.** Every copy of a catalog HSK data_set —
+   modified or not — maps to the shared system hsk_level word_list. Copy-era
+   modifications are discarded (dumped to a migration log, not silently lost).
+   Users edit selections, not senses; personal gloss edits have no home in the
+   new model (per-user overrides are parked — see Open questions). This removes
+   the premise of the copy-and-suggest-back catalog
+   flow — its successor, if any, is sense-level edit proposals.
+3. **Other LanguageDataSets become curated word_lists** owned by the same user.
+   Each item resolves to an entry by headword + the card's stored reading
+   (CEDICT fallback when reading is missing). The gloss's fate depends on whose
+   data_set it is:
+   - **Seed account** (the app owner's — a migration-time account list, not
+     schema): glosses are trusted curation and import verbatim as senses
+     (source: curated), same standing as the HSK seed.
+   - **Anyone else**: the gloss is a matching hint only. Usages no existing
+     sense covers get pipeline-generated senses (CEDICT-grounded, source: llm,
+     status: auto); user wording never enters the lexicon. A data_set whose
+     items mostly don't resolve to real words was never a language deck — it
+     migrates as a Basic deck.
+   - Items' example / paired_example follow the same trust split: seed-account
+     examples import as sense_examples rows, fanned out to the same senses the
+     item's gloss mapped to; other accounts' examples are dropped.
+4. **Decks repoint** from data_set_id to word_list_id. Deck STI (Reading/
+   Writing) is unchanged.
+5. **Scores migrate last** (next section), once the card → sense mapping exists.
+
 ## Progress scoring migration
 
 Existing card progress (`correct_count`, `correct_streak`, `view_count`) must move
@@ -232,8 +293,20 @@ Deck type determines skill (ReadingDeck → reading, WritingDeck → writing).
 - **Missed-words / tap-to-collect lists**: per-user dynamic word_lists (kind:
   missed?) — mechanism sketched, not designed.
 - **Word_list governance**: who may edit a system list vs. a user list referenced
-  by others' decks; deletion of referenced lists.
+  by others' decks; deletion of referenced lists. More broadly, what a user may
+  modify at all: current stance is selections yes, senses/glosses no — whether
+  sense-level edit proposals ever earn a place is open.
+- **Per-user gloss overrides**: parked. Gloss wording is the one fork-era freedom
+  this model drops, and the Basic-deck escape hatch prices it at the entire
+  language machinery (readings, fuzzy find, per-sense progress). Candidate
+  design: (user, sense, wording) rows that change only that user's card display
+  and grading acceptance — canonical senses, memberships, and progress untouched;
+  a personal-mnemonic layer, and a signal source for edit proposals. Nothing in
+  the schema blocks adding it later.
 - **Gloss language**: glosses are English today; multi-gloss-language support
   would hang off senses later.
-- **sense_examples sourcing**: generated vs. Tatoeba vs. quoted-from-text, and the
-  shareable flag's interaction with copyrighted uploads.
+- **Occurrence evidence**: quoted-from-text sentences were cut from
+  sense_examples — they belong to sense × text occurrence and inherit the text's
+  copyright status. Two future consumers would revive them: auditing an LLM
+  gloss against the sentence that produced it, and chapter pre-study context
+  ("the sentence where chapter 3 uses this word"). Design when one exists.
