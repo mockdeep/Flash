@@ -46,21 +46,16 @@ module Views
 
         def confirm_data
           {
-            controller: "confirm-submit",
-            confirm_submit_message_value: confirm_message,
-            action: "submit->confirm-submit#confirm",
+            controller: "confirm-dialog",
+            action: "submit->confirm-dialog#intercept",
           }
-        end
-
-        def confirm_message
-          "Replace cards? Cards removed from the CSV will be deleted, and " \
-            "cards with a changed answer will reset to zero progress."
         end
 
         def render_form_body(form)
           render(Components::ErrorExplanation.new(errors: deck.errors))
           render_csv_field(form)
           render_actions(form)
+          render(Components::ReplaceCardsDialog.new)
         end
 
         def render_csv_field(form)

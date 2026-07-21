@@ -9,15 +9,6 @@ const config: Linter.Config[] = [
   // Offense count: 1
   {
     files: [
-      "app/javascript/controllers/confirm_submit_controller.ts",
-    ],
-    rules: {
-      "no-alert": "off",
-    },
-  },
-  // Offense count: 1
-  {
-    files: [
       "app/javascript/application.ts",
     ],
     rules: {

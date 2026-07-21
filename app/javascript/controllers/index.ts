@@ -15,8 +15,8 @@ application.register("text-size", TextSizeController);
 import ClipboardController from "./clipboard_controller";
 application.register("clipboard", ClipboardController);
 
-import ConfirmSubmitController from "./confirm_submit_controller";
-application.register("confirm-submit", ConfirmSubmitController);
+import ConfirmDialogController from "./confirm_dialog_controller";
+application.register("confirm-dialog", ConfirmDialogController);
 
 import DeckTypeController from "./deck_type_controller";
 application.register("deck-type", DeckTypeController);
