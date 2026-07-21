@@ -29,7 +29,7 @@ describe("connect with empty storage", () => {
   it("marks the other options as unchecked", async () => {
     await boot();
 
-    for (const choice of ["song", "kai", "hand", "mix"] as const) {
+    for (const choice of ["song", "kai", "hand", "random"] as const) {
       expect(option(choice).getAttribute("aria-checked")).toBe("false");
     }
   });
@@ -60,17 +60,27 @@ describe("connect with garbage in storage", () => {
   });
 });
 
-describe("connect with mix stored", () => {
+describe("connect with random stored", () => {
   it("applies one of the concrete fonts to the frame", async () => {
-    await boot("mix");
+    await boot("random");
 
     expect(["hei", "song", "kai", "hand"]).toContain(element().dataset.font);
   });
 
-  it("marks the mix option as checked", async () => {
-    await boot("mix");
+  it("marks the random option as checked", async () => {
+    await boot("random");
 
-    expect(option("mix").getAttribute("aria-checked")).toBe("true");
+    expect(option("random").getAttribute("aria-checked")).toBe("true");
+  });
+});
+
+describe("connect with the legacy mix value stored", () => {
+  it("treats it as random", async () => {
+    localStorage.setItem(STORAGE_KEY, "mix");
+
+    await boot();
+
+    expect(option("random").getAttribute("aria-checked")).toBe("true");
   });
 });
 
@@ -100,12 +110,12 @@ describe("setFont from a menu option", () => {
     expect(option("hei").getAttribute("aria-checked")).toBe("false");
   });
 
-  it("persists mix rather than the rolled font", async () => {
+  it("persists random rather than the rolled font", async () => {
     await boot();
 
-    controller().setFont(selectEvent("mix"));
+    controller().setFont(selectEvent("random"));
 
-    expect(localStorage.getItem(STORAGE_KEY)).toBe("mix");
+    expect(localStorage.getItem(STORAGE_KEY)).toBe("random");
   });
 });
 
@@ -130,8 +140,8 @@ describe("setFont defensive guards", () => {
 });
 
 describe("a new card connecting", () => {
-  it("rerolls the font when mix is chosen", async () => {
-    await boot("mix");
+  it("rerolls the font when random is chosen", async () => {
+    await boot("random");
     controller().cardTargetConnected(buildCard("1"));
     vi.spyOn(Math, "random").mockReturnValue(0.99);
 
@@ -141,7 +151,7 @@ describe("a new card connecting", () => {
   });
 
   it("keeps the font when the same card reconnects", async () => {
-    await boot("mix");
+    await boot("random");
     controller().cardTargetConnected(buildCard("1"));
     const asked = element().dataset.font;
     vi.spyOn(Math, "random").mockReturnValue(0.99);
@@ -152,7 +162,7 @@ describe("a new card connecting", () => {
   });
 
   it("ignores cards without an id", async () => {
-    await boot("mix");
+    await boot("random");
     controller().cardTargetConnected(buildCard("1"));
     const asked = element().dataset.font;
     vi.spyOn(Math, "random").mockReturnValue(0.99);
@@ -212,18 +222,18 @@ describe("prewarming", () => {
   });
 });
 
-describe("prewarming under mix", () => {
+describe("prewarming under random", () => {
   it("warms every family", async () => {
     const fonts = stubFonts();
 
-    await boot("mix", "你");
+    await boot("random", "你");
 
     expect(fonts.load).toHaveBeenCalledTimes(4);
   });
 
   it("does not warm again when a card rerolls the font", async () => {
     const fonts = stubFonts();
-    await boot("mix", "你");
+    await boot("random", "你");
 
     controller().cardTargetConnected(buildCard("1"));
 
@@ -242,13 +252,13 @@ describe("options re-rendered by a frame swap", () => {
     expect(fresh.getAttribute("aria-checked")).toBe("true");
   });
 
-  it("checks the mix option itself, not the rolled font", async () => {
-    await boot("mix");
-    const freshMix = buildOption("mix");
+  it("checks the random option itself, not the rolled font", async () => {
+    await boot("random");
+    const freshRandom = buildOption("random");
 
-    element().appendChild(freshMix);
+    element().appendChild(freshRandom);
     await Promise.resolve();
 
-    expect(freshMix.getAttribute("aria-checked")).toBe("true");
+    expect(freshRandom.getAttribute("aria-checked")).toBe("true");
   });
 });

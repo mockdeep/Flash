@@ -14,7 +14,7 @@ module Components
       "song" => "Song",
       "kai" => "Kai",
       "hand" => "Calligraphy",
-      "mix" => "Mix",
+      "random" => "Random",
     }.freeze
 
     def initialize(font_menu: false)
