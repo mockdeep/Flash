@@ -62,15 +62,15 @@ RSpec.describe "study font" do
     expect(page).to have_css(".study-frame[data-font='song']")
   end
 
-  def pick_mix_and_read_font
+  def pick_random_and_read_font
     open_card_menu
-    pick_font("mix")
+    pick_font("random")
     find(".study-frame")["data-font"]
   end
 
-  it "keeps the mixed font while answering a card" do
+  it "keeps the rolled font while answering a card" do
     visit_hanzi_study_page
-    asked = pick_mix_and_read_font
+    asked = pick_random_and_read_font
 
     first(".answer-button").click
 

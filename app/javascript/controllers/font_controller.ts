@@ -4,7 +4,7 @@ import {ensure} from "helpers/ensure";
 
 const FONTS = ["hei", "song", "kai", "hand"] as const;
 type Font = (typeof FONTS)[number];
-type Choice = Font | "mix";
+type Choice = Font | "random";
 
 const DEFAULT_CHOICE: Choice = "hei";
 
@@ -22,7 +22,7 @@ function isFont(value: string | null | undefined): value is Font {
 }
 
 function isChoice(value: string | null | undefined): value is Choice {
-  return value === "mix" || isFont(value);
+  return value === "random" || isFont(value);
 }
 
 function randomFont(): Font {
@@ -35,6 +35,8 @@ function storageKey(deckId: string): string {
 
 function loadChoice(deckId: string): Choice {
   const raw = localStorage.getItem(storageKey(deckId));
+  // "random" was previously stored as "mix".
+  if (raw === "mix") { return "random"; }
   if (isChoice(raw)) { return raw; }
 
   return DEFAULT_CHOICE;
@@ -73,7 +75,7 @@ export default class extends Controller<HTMLElement> {
   }
 
   /*
-   * Mix picks a fresh font per card, not per Turbo frame swap: answering
+   * Random picks a fresh font per card, not per Turbo frame swap: answering
    * re-renders the frame with the same card's result, and that card must keep
    * the font it was asked in. Card elements carry their card id, so a reroll
    * only happens when a different card connects.
@@ -82,7 +84,7 @@ export default class extends Controller<HTMLElement> {
     const {cardId} = card.dataset;
     if (cardId === undefined || cardId === this.lastCardId) { return; }
     this.lastCardId = cardId;
-    if (this.choice !== "mix") { return; }
+    if (this.choice !== "random") { return; }
     this.applyFont(randomFont());
   }
 
@@ -93,7 +95,7 @@ export default class extends Controller<HTMLElement> {
   private applyChoice(choice: Choice): void {
     this.choice = choice;
     this.optionTargets.forEach((option) => { this.syncOption(option); });
-    if (choice === "mix") {
+    if (choice === "random") {
       this.applyFont(randomFont());
       FONTS.forEach((font) => { this.warm(font); });
     } else {

@@ -6,10 +6,10 @@ import FontController from "controllers/font_controller";
 import {ensure} from "helpers/ensure";
 
 type Font = "hei" | "song" | "kai" | "hand";
-type Choice = Font | "mix";
+type Choice = Font | "random";
 type EventTargetName = "target" | "currentTarget";
 
-const CHOICES: readonly Choice[] = ["hei", "song", "kai", "hand", "mix"];
+const CHOICES: readonly Choice[] = ["hei", "song", "kai", "hand", "random"];
 const DECK_ID = "42";
 const STORAGE_KEY = `font:${DECK_ID}`;
 const ROOT_SEL = "[data-controller='font']";
