@@ -22,6 +22,10 @@ RSpec.describe ReplacementsController do
     "front,back,category\nQ,A,C\n"
   end
 
+  def replacement_dialog_css
+    'form[data-controller~="confirm-dialog"] dialog'
+  end
+
   describe "#new" do
     it "requires authentication" do
       deck = create(:deck)
@@ -40,12 +44,12 @@ RSpec.describe ReplacementsController do
       expect(rendered).to have_text("Replace cards in My Deck")
     end
 
-    it "renders a confirmation prompt on the form" do
+    it "renders a confirmation dialog on the form" do
       login_as(default_user)
 
       get(new_deck_replacement_path(create(:deck, user: default_user)))
 
-      expect(rendered).to have_css('form[data-controller~="confirm-submit"]')
+      expect(rendered).to have_css(replacement_dialog_css, visible: :all)
     end
 
     it "returns not found for another user's deck" do
