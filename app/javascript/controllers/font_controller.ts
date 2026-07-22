@@ -36,8 +36,6 @@ function storageKey(deckId: string): string {
 
 function loadChoice(deckId: string): Choice {
   const raw = localStorage.getItem(storageKey(deckId));
-  // "random" was previously stored as "mix".
-  if (raw === "mix") { return "random"; }
   if (isChoice(raw)) { return raw; }
 
   return DEFAULT_CHOICE;
