@@ -14,6 +14,7 @@ module Components
       "song" => "Song",
       "kai" => "Kai",
       "hand" => "Calligraphy",
+      "semantic" => "Semantic",
       "random" => "Random",
     }.freeze
 

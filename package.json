@@ -15,6 +15,7 @@
     "@hotwired/turbo-rails": "^8.0.23",
     "@rails/actioncable": "^8.1.300",
     "@rails/activestorage": "^8.1.300",
+    "flash-font-hanzi-semantic": "^0.1.0",
     "lxgw-wenkai-webfont": "^1.7.0"
   },
   "devDependencies": {

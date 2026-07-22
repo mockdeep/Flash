@@ -29,7 +29,8 @@ describe("connect with empty storage", () => {
   it("marks the other options as unchecked", async () => {
     await boot();
 
-    for (const choice of ["song", "kai", "hand", "random"] as const) {
+    const others = ["song", "kai", "hand", "semantic", "random"] as const;
+    for (const choice of others) {
       expect(option(choice).getAttribute("aria-checked")).toBe("false");
     }
   });
@@ -50,6 +51,23 @@ describe("connect with a stored font", () => {
   });
 });
 
+describe("the semantic font", () => {
+  it("applies like any fixed font", async () => {
+    await boot("semantic");
+
+    expect(element().dataset.font).toBe("semantic");
+  });
+
+  it("warms the Flash Hanzi Semantic family", async () => {
+    const fonts = stubFonts();
+
+    await boot("semantic", "河");
+
+    expect(fonts.load).
+      toHaveBeenCalledWith("1em \"Flash Hanzi Semantic\"", "河");
+  });
+});
+
 describe("connect with garbage in storage", () => {
   it("falls back to the hei default", async () => {
     localStorage.setItem(STORAGE_KEY, "wingdings");
@@ -64,7 +82,8 @@ describe("connect with random stored", () => {
   it("applies one of the concrete fonts to the frame", async () => {
     await boot("random");
 
-    expect(["hei", "song", "kai", "hand"]).toContain(element().dataset.font);
+    expect(["hei", "song", "kai", "hand", "semantic"]).
+      toContain(element().dataset.font);
   });
 
   it("marks the random option as checked", async () => {
@@ -147,7 +166,7 @@ describe("a new card connecting", () => {
 
     controller().cardTargetConnected(buildCard("2"));
 
-    expect(element().dataset.font).toBe("hand");
+    expect(element().dataset.font).toBe("semantic");
   });
 
   it("keeps the font when the same card reconnects", async () => {
@@ -228,7 +247,7 @@ describe("prewarming under random", () => {
 
     await boot("random", "你");
 
-    expect(fonts.load).toHaveBeenCalledTimes(4);
+    expect(fonts.load).toHaveBeenCalledTimes(5);
   });
 
   it("does not warm again when a card rerolls the font", async () => {
@@ -237,7 +256,7 @@ describe("prewarming under random", () => {
 
     controller().cardTargetConnected(buildCard("1"));
 
-    expect(fonts.load).toHaveBeenCalledTimes(4);
+    expect(fonts.load).toHaveBeenCalledTimes(5);
   });
 });
 
