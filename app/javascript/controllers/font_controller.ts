@@ -2,7 +2,7 @@ import {Controller} from "@hotwired/stimulus";
 
 import {ensure} from "helpers/ensure";
 
-const FONTS = ["hei", "song", "kai", "hand"] as const;
+const FONTS = ["hei", "song", "kai", "hand", "semantic"] as const;
 type Font = (typeof FONTS)[number];
 type Choice = Font | "random";
 
@@ -13,12 +13,13 @@ const FAMILIES: {[font in Font]: string} = {
   hand: "Ma Shan Zheng",
   hei: "Noto Sans SC",
   kai: "LXGW WenKai",
+  semantic: "Flash Hanzi Semantic",
   song: "Noto Serif SC",
 };
 
 function isFont(value: string | null | undefined): value is Font {
   return value === "hei" || value === "song" ||
-    value === "kai" || value === "hand";
+    value === "kai" || value === "hand" || value === "semantic";
 }
 
 function isChoice(value: string | null | undefined): value is Choice {

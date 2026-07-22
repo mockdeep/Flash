@@ -32,6 +32,9 @@ importers:
       '@rails/activestorage':
         specifier: ^8.1.300
         version: 8.1.300
+      flash-font-hanzi-semantic:
+        specifier: ^0.1.0
+        version: 0.1.0
       lxgw-wenkai-webfont:
         specifier: ^1.7.0
         version: 1.7.0
@@ -1530,6 +1533,9 @@ packages:
   find-up@5.0.0:
     resolution: {integrity: sha512-78/PXT1wlLLDgTzDs7sjq9hzz0vXD+zn+7wypEe4fXQxCmdmqfGsEPQxmiCSQI3ajFV91bVSsvNtrJRiW6nGng==}
     engines: {node: '>=10'}
+
+  flash-font-hanzi-semantic@0.1.0:
+    resolution: {integrity: sha512-zfTzJSyz+KHuqAKXCzeaigDwUFST3uDxl4uFqlnoWQZDwwD+w0jpO3yH79addSUOixGO/lkgDHCkhP2isYzeeA==}
 
   flat-cache@4.0.1:
     resolution: {integrity: sha512-f7ccFPK3SXFHpx15UIGyRJ/FJQctuKZ0zVuN3frBo4HnK3cay9VEW0R6yPYFHC0AgqhukPzKjq22t5DmAyqGyw==}
@@ -3999,6 +4005,8 @@ snapshots:
     dependencies:
       locate-path: 6.0.0
       path-exists: 4.0.0
+
+  flash-font-hanzi-semantic@0.1.0: {}
 
   flat-cache@4.0.1:
     dependencies:

@@ -52,6 +52,15 @@ RSpec.describe "study font" do
     expect(page).to have_css(".study-frame[data-font='kai']")
   end
 
+  it "applies the semantic radicals font" do
+    visit_hanzi_study_page
+    open_card_menu
+
+    pick_font("semantic")
+
+    expect(page).to have_css(".study-frame[data-font='semantic']")
+  end
+
   it "persists the selected font across page reloads" do
     deck = visit_hanzi_study_page
     open_card_menu

@@ -3,6 +3,7 @@
 @import '@fontsource/noto-serif-sc/400.css';
 @import 'lxgw-wenkai-webfont/lxgwwenkai-regular.css';
 @import '@fontsource/ma-shan-zheng/400.css';
+@import 'flash-font-hanzi-semantic/index.css';
 
 :root {
   /* Color Palette - Terminal Scholar */
@@ -317,6 +318,7 @@ body {
 .study-frame[data-font="song"] { --hanzi-font: 'Noto Serif SC'; }
 .study-frame[data-font="kai"] { --hanzi-font: 'LXGW WenKai'; }
 .study-frame[data-font="hand"] { --hanzi-font: 'Ma Shan Zheng'; }
+.study-frame[data-font="semantic"] { --hanzi-font: 'Flash Hanzi Semantic', 'Noto Sans SC'; }
 
 /* The Latin face leads each stack so only hanzi (absent from it) fall
  * through; the hanzi face must precede the generics, which always match. */
@@ -432,6 +434,7 @@ body {
 .card-front__menu-option[data-font="song"] .card-front__menu-option-letter { font-family: 'Noto Serif SC', serif; }
 .card-front__menu-option[data-font="kai"]  .card-front__menu-option-letter { font-family: 'LXGW WenKai', sans-serif; }
 .card-front__menu-option[data-font="hand"] .card-front__menu-option-letter { font-family: 'Ma Shan Zheng', cursive; }
+.card-front__menu-option[data-font="semantic"] .card-front__menu-option-letter { font-family: 'Flash Hanzi Semantic', sans-serif; }
 
 .study-answers-grid li:has(.answer-button) {
   animation: answer-appear var(--transition-slow) backwards;

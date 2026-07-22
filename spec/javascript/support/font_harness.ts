@@ -5,11 +5,12 @@ import {bootStimulus, getController} from "support/stimulus";
 import FontController from "controllers/font_controller";
 import {ensure} from "helpers/ensure";
 
-type Font = "hei" | "song" | "kai" | "hand";
+type Font = "hei" | "song" | "kai" | "hand" | "semantic";
 type Choice = Font | "random";
 type EventTargetName = "target" | "currentTarget";
 
-const CHOICES: readonly Choice[] = ["hei", "song", "kai", "hand", "random"];
+const CHOICES: readonly Choice[] =
+  ["hei", "song", "kai", "hand", "semantic", "random"];
 const DECK_ID = "42";
 const STORAGE_KEY = `font:${DECK_ID}`;
 const ROOT_SEL = "[data-controller='font']";
