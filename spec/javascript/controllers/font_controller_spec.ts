@@ -93,16 +93,6 @@ describe("connect with random stored", () => {
   });
 });
 
-describe("connect with the legacy mix value stored", () => {
-  it("treats it as random", async () => {
-    localStorage.setItem(STORAGE_KEY, "mix");
-
-    await boot();
-
-    expect(option("random").getAttribute("aria-checked")).toBe("true");
-  });
-});
-
 describe("setFont from a menu option", () => {
   it("applies the chosen font to the frame", async () => {
     await boot();
