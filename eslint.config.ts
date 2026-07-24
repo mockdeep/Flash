@@ -71,6 +71,7 @@ export default defineConfig([
       "no-inline-comments": "off",
       "no-magic-numbers": "off",
       "no-undefined": "off",
+      "no-void": ["error", {allowAsStatement: true}],
       "one-var": ["error", "never"],
       "perfectionist/sort-objects":
         ["error", {ignoreCase: true, order: "asc", type: "natural"}],
