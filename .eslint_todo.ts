@@ -6,15 +6,6 @@
 import type {Linter} from "eslint";
 
 const config: Linter.Config[] = [
-  // Offense count: 1
-  {
-    files: [
-      "app/javascript/application.ts",
-    ],
-    rules: {
-      "no-void": "off",
-    },
-  },
   // Offense count: 3
   {
     files: [
