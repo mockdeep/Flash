@@ -24,6 +24,7 @@ gem "puma"
 gem "stimulus-rails"
 gem "strong_migrations"
 gem "turbo-rails"
+gem "tzinfo-data"
 
 group :development, :test do
   gem "bundler-audit", require: false
