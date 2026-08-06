@@ -2,7 +2,8 @@
 
 Design for a single shared vocabulary store ("the compendium") that all language
 decks select from, replacing per-deck language data_sets. Status: **design only —
-nothing here is built.**
+nothing app-side is built.** The content pipeline was prototyped against real
+texts in 2026-08 (see Prototype findings).
 
 ## Goals
 
@@ -141,7 +142,10 @@ Key uniques:
   same no-blanks basis, glossed as function ("的 — possessive marker") — weak
   cards that teach recognition rather than mastery, but a weak card beats a
   blank, and past the earliest levels they're already mastered and drop out of
-  study on their own.
+  study on their own. The same logic keeps compositional-but-dictionary-listed
+  collocations (不再, 几天) in lists: common-phrase reinforcement beats filtering,
+  streaks retire them fast, and the only requirement is that their glosses are
+  verified correct — no triviality filter.
 - `register` keeps literary/archaic senses (e.g. from Journey to the West) from
   polluting modern decks, and vice versa.
 
@@ -219,27 +223,77 @@ evidence is a separate, deferred concept (see Open questions).
 
 ## Content pipeline (build-time, per text or list)
 
-1. **Segment** the text into words (jieba for modern text; LLM-assisted for
-   classical).
+1. **Segment** the text into words (jieba). Modern prose only for v1: jieba's
+   modern dictionary welds classical function words (故曰, 谓之 — ~25% of unique
+   tokens in a 西游记 trial chapter), and a classical chapter yields ~900 new
+   studyable words anyway — wrong segmenter *and* wrong deck economics. Classical
+   texts are deferred, not designed around.
 2. **Lexicon lookup first** — known senses cost nothing and inherit user progress.
    Lookup indexes both headword and script_variant, so traditional and simplified
    sources both match.
-3. **New words → contextual glossing**: the LLM receives the sentence plus the
+3. **Verified pre-split** — before any LLM call, lookup misses are re-segmented
+   deterministically: closed-pattern rules (number+X, X + aspect/locative/particle
+   suffix, reduplication AA, A不A / V一V) that apply only when every part itself
+   resolves; the occurrence fans out to the parts. Kills ~40% of misses on modern
+   text at zero cost. Pure-number tokens drop entirely; era spellings with a
+   modern form (甚么 → 什么) map as variants rather than splitting.
+4. **New words → contextual glossing**: the LLM receives the sentence plus the
    CC-CEDICT entry and picks/trims the sense that fits. CEDICT (a ~9 MB reference
    table server-side, never user-facing) is there for gloss *convergence*, cheap
    verification, the not-a-word tripwire, and pinyin — not because the LLM can't
    translate.
-4. **Match step**: does an existing sense cover this usage? Link it; otherwise
-   create a sense (source: llm, status: auto). The sense inventory grows lazily
-   from real usage.
-5. **Misses route, they don't fail**: not-in-CEDICT means proper noun (→ into
+5. **Match step**: does an existing sense cover this usage? Link it; otherwise
+   create a sense (source: llm, status: auto), with `register` set from the
+   text's context so literary senses stay out of modern decks. The sense
+   inventory grows lazily from real usage.
+6. **Misses route, they don't fail**: not-in-CEDICT means proper noun (→ into
    the chapter list, glossed contextually), segmentation artifact (→ re-segment
    check), or a real rare word
    (→ ungrounded gloss with heavier checks: "real word / name / artifact?" asked
    explicitly, cross-occurrence agreement, back-translation, review queue).
-6. **Chapter word_lists** get sense_memberships with first-occurrence positions;
+7. **Propose → confirm**: every LLM assertion (new-sense claims, glosses, miss
+   routing) is proposed by one model and independently confirmed by a tier-above
+   judge, calibrated to actually reject — the flash-csvs pattern. Prototype rates:
+   ~43% of new-sense proposals rejected on modern text, ~10% of glosses fixed.
+   Nothing enters the compendium on a single model's say-so.
+8. **Chapter word_lists** get sense_memberships with first-occurrence positions;
    dedup against earlier chapters happens by construction (the sense already
    exists and the user may already have scores).
+
+One discovered failure mode is invisible to lookup-first routing: jieba can weld
+*across* a word boundary into a real dictionary word (靠着火 → 着火 "catch fire"),
+which then passes lookup and skips miss routing. These surface downstream as
+match-step new-sense proposals that the confirm tier rejects as artifacts — so the
+match step doubles as a segmentation validator, and rejected proposals feed a
+re-segmentation check rather than being discarded.
+
+## Prototype findings (2026-08)
+
+A throwaway prototype ([compendium_prototype/](compendium_prototype/); claude-CLI
+scripts in the flash-csvs idiom, intermediates regenerate into tmp/) ran the full
+content pipeline — segment → lookup →
+pre-split → gloss/match/route (Sonnet) → confirm (Opus) — over two public-domain
+texts, with the HSK 1–7 deck standing in as the lexicon:
+
+- **孔乙己 (Lu Xun, 1919 — modern)**: 1,382 tokens, 605 studyable words; 75% of
+  tokens already on HSK cards; ~200-word new-vocab chapter deck. After confirm,
+  8.8% of known words genuinely needed a new sense (散 "knock off work", 文 the
+  coin, 道 "said"). Pre-split killed 57/137 CEDICT misses, all correctly. This is
+  the product the doc describes, working.
+- **西游记 ch. 1 (Ming)**: token coverage 49%; 719 CEDICT misses, mostly welded
+  classical function words; ~900 new words in one chapter. Glossing judgment held
+  up fully (earthly-branch senses of 子/丑/未, classical 也, cípái titles, 须菩提
+  as Subhuti) — the blockers are segmentation and deck economics, not the LLM,
+  hence the classical deferral in step 1.
+- **Entry resolution** (`resolve.rb`, read-only dry run of migration step 3):
+  100% of dev-DB zh fronts resolve cleanly by headword + reading, with a toneless
+  fallback absorbing sandhi differences. Production run still pending — dev data
+  is mostly the seed resolving against itself, so the risky buckets
+  (reading_mismatch, unresolved) never fired.
+
+Net: the pipeline — the design's largest unknown — is de-risked for modern text.
+Still untested: study-time semantics (credit fan-out, card grouping), which are
+ordinary app code, and cross-chapter lexicon growth over a full book.
 
 ## Seeding
 
@@ -252,8 +306,10 @@ evidence is a separate, deferred concept (see Open questions).
   memberships.
 - HSK official lists carry no sentences or sense annotations; context for
   list-sourced words comes from Tatoeba, level-constrained LLM-generated
-  sentences, or community datasets. The existing curated decks double as the
-  validation set for the sense engine (diff engine output vs. curation).
+  sentences, or community datasets. (The curated decks canNOT double as an
+  engine validation set — they are themselves output of the flash-csvs
+  pipeline, so the diff would be circular. Engine validation came from the
+  2026-08 text-prototype runs instead; see Prototype findings.)
 - Useful community data: [drkameleon/complete-hsk-vocabulary](https://github.com/drkameleon/complete-hsk-vocabulary)
   (MIT; both HSK versions, frequency, POS, traditional, cleaned CEDICT glosses).
 
