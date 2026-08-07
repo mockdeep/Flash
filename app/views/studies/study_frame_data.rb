@@ -4,19 +4,30 @@ module Views
   module Studies
     module StudyFrameData
       def study_frame_data
-        data = {
+        data = mix(text_size_data, wake_lock_data)
+        return data unless deck.mandarin?
+
+        mix(data, font_data)
+      end
+
+      def text_size_data
+        {
           controller: "text-size",
           text_size_deck_id_value: deck.id,
           size: "m",
         }
-        return data unless deck.mandarin?
-
-        data.merge(font_frame_data)
       end
 
-      def font_frame_data
+      def wake_lock_data
         {
-          controller: "text-size font",
+          controller: "wake-lock",
+          action: "visibilitychange@document->wake-lock#refresh",
+        }
+      end
+
+      def font_data
+        {
+          controller: "font",
           font_deck_id_value: deck.id,
         }
       end

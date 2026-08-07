@@ -63,6 +63,13 @@ RSpec.describe StudiesController do
       expect(rendered).to have_no_css(".study-frame[data-controller~='font']")
     end
 
+    it "wires the wake-lock controller on the study frame" do
+      card = create(:basic_card)
+      get(deck_study_path(card.deck))
+
+      expect(rendered).to have_css(".study-frame[data-controller~='wake-lock']")
+    end
+
     it "embeds the deck's hanzi for font prewarming on full page loads" do
       deck = create(:reading_deck)
       create(:reading_card, deck:, front: "他", back: "he; him")
@@ -474,6 +481,15 @@ RSpec.describe StudiesController do
       get(deck_study_path(deck))
 
       expect(rendered).to have_css("[data-controller='music-study']")
+    end
+
+    it "wires the wake-lock controller on the study frame" do
+      deck = music_deck
+      create(:music_card, deck:, back: "C4")
+
+      get(deck_study_path(deck))
+
+      expect(rendered).to have_css("turbo-frame[data-controller~='wake-lock']")
     end
 
     it "exposes the joined card window to Stimulus on #show" do
