@@ -223,49 +223,60 @@ evidence is a separate, deferred concept (see Open questions).
 
 ## Content pipeline (build-time, per text or list)
 
-1. **Segment** the text into words (jieba). Modern prose only for v1: jieba's
-   modern dictionary welds classical function words (故曰, 谓之 — ~25% of unique
-   tokens in a 西游记 trial chapter), and a classical chapter yields ~900 new
-   studyable words anyway — wrong segmenter *and* wrong deck economics. Classical
-   texts are deferred, not designed around.
+1. **Segment** the text into words — LLM segmentation (Sonnet-class, sentences
+   batched), **mechanically verified**: the tokens joined back together must
+   reproduce the sentence's Han characters exactly (punctuation and quote-glyph
+   normalization ignored — the only failure mode ever observed). The check
+   guarantees partition *integrity* — no character dropped, invented, or
+   substituted — NOT boundary correctness; boundaries are validated semantically
+   downstream (steps 4–5). Failed sentences retry singly; a deterministic floor
+   (character-level tokens, or jieba) exists but went unreached in prototype
+   runs — 517/517 sentences across both registers verified. This handles modern
+   and classical text with one mechanism (jieba's classical welds — 故曰, 谓之 —
+   don't occur); classical texts stay deferred on deck economics alone (~900 new
+   studyable words per 西游记 chapter), no longer on segmentation.
 2. **Lexicon lookup first** — known senses cost nothing and inherit user progress.
    Lookup indexes both headword and script_variant, so traditional and simplified
-   sources both match.
-3. **Verified pre-split** — before any LLM call, lookup misses are re-segmented
-   deterministically: closed-pattern rules (number+X, X + aspect/locative/particle
-   suffix, reduplication AA, A不A / V一V) that apply only when every part itself
-   resolves; the occurrence fans out to the parts. Kills ~40% of misses on modern
-   text at zero cost. Pure-number tokens drop entirely; era spellings with a
-   modern form (甚么 → 什么) map as variants rather than splitting.
-4. **New words → contextual glossing**: the LLM receives the sentence plus the
+   sources both match. Pure-number tokens drop; era spellings with a modern form
+   (甚么 → 什么) map as variants.
+3. **New words → contextual glossing**: the LLM receives the sentence plus the
    CC-CEDICT entry and picks/trims the sense that fits. CEDICT (a ~9 MB reference
    table server-side, never user-facing) is there for gloss *convergence*, cheap
    verification, the not-a-word tripwire, and pinyin — not because the LLM can't
    translate.
-5. **Match step**: does an existing sense cover this usage? Link it; otherwise
-   create a sense (source: llm, status: auto), with `register` set from the
-   text's context so literary senses stay out of modern decks. The sense
-   inventory grows lazily from real usage.
-6. **Misses route, they don't fail**: not-in-CEDICT means proper noun (→ into
+4. **Match step**: which existing sense does this usage select? Selection is the
+   real question (memberships attach at the sense level, and picking the sense
+   resolves homograph readings as a side effect); measured at 100% for
+   same-reading splits, ~96% when a tone-pair reading is at stake (see Prototype
+   findings). If no sense fits, create one (source: llm, status: auto), with
+   `register` set from the text's context so literary senses stay out of modern
+   decks. The sense inventory grows lazily from real usage.
+5. **Misses route, they don't fail**: not-in-CEDICT means proper noun (→ into
    the chapter list, glossed contextually), segmentation artifact (→ re-segment
    check), or a real rare word
    (→ ungrounded gloss with heavier checks: "real word / name / artifact?" asked
    explicitly, cross-occurrence agreement, back-translation, review queue).
-7. **Propose → confirm**: every LLM assertion (new-sense claims, glosses, miss
+6. **Propose → confirm**: every LLM assertion (new-sense claims, glosses, miss
    routing) is proposed by one model and independently confirmed by a tier-above
    judge, calibrated to actually reject — the flash-csvs pattern. Prototype rates:
    ~43% of new-sense proposals rejected on modern text, ~10% of glosses fixed.
    Nothing enters the compendium on a single model's say-so.
-8. **Chapter word_lists** get sense_memberships with first-occurrence positions;
+7. **Chapter word_lists** get sense_memberships with first-occurrence positions;
    dedup against earlier chapters happens by construction (the sense already
    exists and the user may already have scores).
 
-One discovered failure mode is invisible to lookup-first routing: jieba can weld
-*across* a word boundary into a real dictionary word (靠着火 → 着火 "catch fire"),
-which then passes lookup and skips miss routing. These surface downstream as
-match-step new-sense proposals that the confirm tier rejects as artifacts — so the
-match step doubles as a segmentation validator, and rejected proposals feed a
-re-segmentation check rather than being discarded.
+Because step 1 verifies integrity but not boundaries, boundary errors are the one
+class that reaches later stages, and each kind meets a net: an over-merge either
+fails lookup (→ routed as artifact) or accidentally forms a real dictionary word
+(靠着火 → 着火) and then surfaces as a match-step proposal whose sense doesn't fit
+the sentence — the confirm tier rejects it and feeds a re-segmentation check. An
+over-split whose pieces are real words is the weakest-checked case: a piece whose
+gloss clashes with the context still trips the match step, but a contextually
+plausible split passes silently — worst case an *omitted* compound card, never a
+wrong one. (Under jieba segmentation these welds were common and the machinery
+below existed to fight them — a deterministic "verified pre-split" stage plus
+weld-pattern rules; LLM segmentation produced none of the dangerous welds in
+either test text, so that stage is retired. See Prototype findings.)
 
 ## Prototype findings (2026-08)
 
@@ -280,20 +291,49 @@ texts, with the HSK 1–7 deck standing in as the lexicon:
   8.8% of known words genuinely needed a new sense (散 "knock off work", 文 the
   coin, 道 "said"). Pre-split killed 57/137 CEDICT misses, all correctly. This is
   the product the doc describes, working.
-- **西游记 ch. 1 (Ming)**: token coverage 49%; 719 CEDICT misses, mostly welded
-  classical function words; ~900 new words in one chapter. Glossing judgment held
-  up fully (earthly-branch senses of 子/丑/未, classical 也, cípái titles, 须菩提
-  as Subhuti) — the blockers are segmentation and deck economics, not the LLM,
-  hence the classical deferral in step 1.
+- **西游记 ch. 1 (Ming)**: under jieba, token coverage 49%; 719 CEDICT misses,
+  mostly welded classical function words; ~900 new words in one chapter. Glossing
+  judgment held up fully (earthly-branch senses of 子/丑/未, classical 也, cípái
+  titles, 须菩提 as Subhuti) — the blockers were segmentation (since solved, next
+  bullet) and deck economics, which alone sustains the classical deferral.
+- **LLM vs jieba segmentation** (`01b-segment-llm.rb` + `05-seg-diff.rb`): Sonnet
+  segments sentences under the Han-reconstruction check — 517/517 sentences
+  verified across both texts once quote-glyph normalization (the only failure
+  cause ever logged; zero Han-content errors) was excluded from comparison.
+  Unique-word miss rate: modern 21.6% → 6.5%, classical 42.5% → 17.9%; none of
+  the dangerous cross-boundary welds occurred; names and idioms arrive whole
+  (咸亨酒店, 东胜神洲, 好喝懒做). The diff also exposed the deterministic
+  pre-split over-firing on classical (三才, 万劫, 千岁 wrongly split by the
+  number rule). Consequence: step 1 is LLM-primary; jieba and the pre-split
+  stage are retired to a never-reached deterministic floor.
+- **Full chain over LLM segmentation** (slug `kongyiji-llm`): machine-verifies
+  the segmentation claims that the diff reports made by inspection. All 12
+  match-step rejections were sense-nuance; zero were disguised boundary errors
+  (the jieba baseline had 4). Routing found no real artifacts (2 verdicts, both
+  overturned by the confirm tier as real words), no shrapnel-type misses, and
+  match proposals were fewer and more precise than the jieba baseline (36 vs 56
+  judged; 67% vs 57% confirm precision). Span-scoped re-segmentation repair is
+  understood (boundary-shift errors implicate neighbors; artifact parts that
+  don't resolve are the tell) but stays unbuilt — no observed need.
+- **Sense selection** (`06-sense-select.rb`): the match step's "which sense?"
+  judgment, measured against flash-csvs ground truth (85 multi-level headwords
+  with disjoint glosses × their judge-verified example sentences, 124 items).
+  Sonnet single-pass: 96.8% overall; **100% on same-reading sense splits** — the
+  case memberships and credit fan-out depend on; 95.6% on homograph/reading
+  resolution, with all 4 misses being tone-pair readings whose senses nearly
+  coincide (转 zhuǎn/zhuàn, 炸 fry/explode). No confirm tier needed for
+  selection; adjacent-sense homographs are the only escalation candidates.
 - **Entry resolution** (`resolve.rb`, read-only dry run of migration step 3):
   100% of dev-DB zh fronts resolve cleanly by headword + reading, with a toneless
   fallback absorbing sandhi differences. Production run still pending — dev data
   is mostly the seed resolving against itself, so the risky buckets
   (reading_mismatch, unresolved) never fired.
 
-Net: the pipeline — the design's largest unknown — is de-risked for modern text.
-Still untested: study-time semantics (credit fan-out, card grouping), which are
-ordinary app code, and cross-chapter lexicon growth over a full book.
+Net: every LLM judgment in the pipeline is now measured — segmentation
+(mechanically verified), sense creation (propose→confirm), glossing, routing,
+and sense selection. Still untested: study-time semantics (credit fan-out, card
+grouping), which are ordinary app code, and cross-chapter lexicon growth over a
+full book.
 
 ## Seeding
 

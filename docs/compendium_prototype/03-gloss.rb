@@ -19,7 +19,7 @@ OUT_DIR = File.join(OUTPUT_ROOT, "#{SLUG}/03-gloss")
 OUT     = File.join(OUT_DIR, "gloss.jsonl")
 FileUtils.mkdir_p(OUT_DIR)
 MODEL = "sonnet"
-BATCH = 20
+BATCH = (ENV["BATCH"] || 20).to_i
 
 def call_claude(prompt, model: MODEL, attempts: 5)
   attempts.times do |i|

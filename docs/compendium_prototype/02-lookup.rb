@@ -73,6 +73,7 @@ by_word = rows.to_h { |r| [r["word"], r] }
 
 splits = []
 rows.each do |r|
+  break if ENV["NO_PRESPLIT"] # retired stage; skip when validating LLM segmentation
   next if resolves.(r["word"])
   rule, parts = try_split(r["word"], resolves)
   next unless rule
