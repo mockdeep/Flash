@@ -30,6 +30,30 @@ class Card < ApplicationRecord
 
   def done? = correct_streak >= deck.level
 
+  def record_correct!
+    self.view_count += 1
+    self.correct_count += 1
+    self.correct_streak += 1
+    save!
+  end
+
+  # A miss resets the streak; when the chosen answer is given it's also
+  # remembered as a distractor for future option lists (the reading stage
+  # passes none - a reading miss never records a translation distractor).
+  def record_miss!(chosen_answer = nil)
+    self.view_count += 1
+    self.correct_streak = 0
+    ActiveRecord::Base.transaction do
+      save!
+      DataSets::Projection.add_distractor(self, chosen_answer) if chosen_answer
+    end
+  end
+
+  def record_view!
+    self.view_count += 1
+    save!
+  end
+
   # The card's studyable content, reconstructed from its data_set item (the card
   # itself is a thin progress anchor). Back is the item's glosses rejoined.
   def front = item.text

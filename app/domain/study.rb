@@ -85,11 +85,7 @@ class Study
   def answer_reading(card_id:, answer:, possible_answers: [])
     card = deck.cards.find(card_id)
     correct = card.reading == answer
-    unless correct
-      card.view_count += 1
-      card.correct_streak = 0
-      card.save!
-    end
+    card.record_miss! unless correct
     Result.new(
       card:,
       correct:,
@@ -105,13 +101,10 @@ class Study
 
   def answer_card(card_id:, answer:, possible_answers: [])
     card = deck.cards.find(card_id)
-    card.view_count += 1
     result_answers = [*possible_answers, card.back].uniq
     if card.back == answer
-      card.correct_count += 1
-      card.correct_streak += 1
+      card.record_correct!
       card_completed = card.done?
-      card.save!
       level_completed = card_completed && deck.cards.not_done(deck.level).none?
       deck.update!(level: deck.level + 1) if level_completed
       Result.new(
@@ -125,11 +118,7 @@ class Study
         level_completed:,
       )
     else
-      ActiveRecord::Base.transaction do
-        card.correct_streak = 0
-        card.save!
-        DataSets::Projection.add_distractor(card, answer)
-      end
+      card.record_miss!(answer)
       Result.new(
         card:,
         correct: false,
@@ -186,9 +175,8 @@ class Study
   # Sibling (front, reading) pairs with a reading; homophones of the correct
   # reading are excluded so a decoy can't also be right.
   def sibling_pool(correct)
-    siblings = deck.cards.where.not(id: next_card.id)
-    pairs = siblings.joins(:item).pluck("items.text", "items.reading")
-    pairs.select { |_, reading| reading.present? && reading != correct }
+    deck.reading_pairs(except: next_card)
+      .select { |_, reading| reading.present? && reading != correct }
   end
 
   def multiple_choice_answers

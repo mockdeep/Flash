@@ -26,13 +26,12 @@ class MusicStudy < Study
 
   def answer_window(card_ids:, answer:)
     cards = card_ids.map { |id| studied_cards.find(id) }
-    cards.each { |c| c.view_count += 1 }
     expected = sequence(cards)
 
     if expected == answer
       record_correct(cards, answer)
     else
-      cards.each(&:save!)
+      cards.each(&:record_view!)
       build_result(cards, answer, correct: false, level_completed: false)
     end
   end
@@ -53,11 +52,7 @@ class MusicStudy < Study
   end
 
   def record_correct(cards, answer)
-    cards.each do |card|
-      card.correct_count += 1
-      card.correct_streak += 1
-    end
-    cards.each(&:save!)
+    cards.each(&:record_correct!)
     level_completed = deck.cards.not_done(deck.level).none?
     deck.update!(level: deck.level + 1) if level_completed
     build_result(cards, answer, correct: true, level_completed:)

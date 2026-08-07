@@ -57,6 +57,13 @@ class Deck < ApplicationRecord
     cards.joins(:item).where(items: { category: })
   end
 
+  # Sibling (front, reading) pairs for the reading stage's decoy pool; the
+  # study engine filters and ranks them.
+  def reading_pairs(except:)
+    cards.where.not(id: except.id)
+      .joins(:item).pluck("items.text", "items.reading")
+  end
+
   # Gates the study page's Mandarin font menu; only language decks can be.
   def mandarin? = false
 
