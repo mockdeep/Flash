@@ -23,10 +23,12 @@ texts in 2026-08 (see Prototype findings).
 ```mermaid
 erDiagram
     lexicons ||--o{ entries : ""
+    lexicons ||--o{ word_lists : ""
     entries ||--o{ senses : ""
     senses ||--o{ sense_memberships : ""
     word_lists ||--o{ sense_memberships : ""
-    texts ||--o{ word_lists : "chapter lists"
+    texts ||--o{ chapters : ""
+    chapters ||--o{ word_lists : "chapter lists"
     word_lists ||--o{ decks : "selection"
     users ||--o{ decks : owns
     users ||--o{ skill_scores : ""
@@ -59,13 +61,18 @@ erDiagram
         string title
         string author
         bigint user_id FK "null = system/public-domain"
-        boolean hosted "text readable in-app"
+    }
+    chapters {
+        bigint text_id FK
+        integer position
+        string title
+        text body "retained source; re-runs, audit, future reader"
     }
     word_lists {
+        bigint lexicon_id FK "one language per list; drives fonts"
         string kind "hsk_level | chapter | curated"
         integer hsk_level "when kind = hsk_level"
-        bigint text_id FK "when kind = chapter"
-        integer position "chapter number"
+        bigint chapter_id FK "when kind = chapter"
         bigint user_id FK "null = system"
         string name
     }
@@ -96,6 +103,7 @@ erDiagram
     }
     decks {
         bigint word_list_id FK "the selection"
+        bigint data_set_id FK "Basic/Music decks only"
         bigint user_id FK
         string type "ReadingDeck | WritingDeck"
         string name
@@ -109,6 +117,7 @@ Key uniques:
 | Table | Unique on |
 |---|---|
 | entries | (lexicon_id, headword, reading) |
+| chapters | (text_id, position) |
 | senses | — (rank orders within entry) |
 | sense_memberships | (sense_id, word_list_id) |
 | skill_scores | (user_id, sense_id, skill) |
@@ -155,26 +164,69 @@ A deck owns no content: it points at a word_list (HSK level, book chapter, or a
 hand-curated list) and contributes the *form* — reading vs. writing (existing STI),
 plus study settings. Consequences:
 
-- Sharing a deck is a visibility flag. No copying, no forking of content on add.
-  Fork = copy the word_list, only needed to *edit* the selection.
+- Sharing a deck is a visibility flag. No copying, no forking of content on add:
+  adding a shared deck creates the adder's own deck row over the same word_list
+  (their own level and study settings). Fork = copy the word_list, only needed
+  to *edit* the selection — and progress carries across a fork automatically,
+  since scores key to senses, not lists.
+- Shared lists are living selections: the owner's edits propagate to every
+  referencing deck. Safe by construction — progress is keyed to user × sense,
+  so list edits can't touch it, and since users never author glosses, a shared
+  deck exposes only a selection over canonical senses (the moderation surface
+  is list names).
+- Revoking a share stops discovery only: the link and preview die, no new adds.
+  Decks that already reference the word_list keep working — same outcome the
+  old fork-on-add design gave, without the copy.
 - HSK levels, chapters, and personal lists are one mechanism.
 - The current `data_sets`/`items`/`pairings`/`cards` tables are not needed for
-  language decks. (Basic and Music decks stay on that machinery for now — their
-  progress model is similar but their source data is not; schema follow-up needed.
-  No polymorphic tables.)
+  language decks. Basic and Music decks stay on that machinery (see Coexistence).
 - Users never author gloss content into the compendium. A language deck is
   created by selecting existing words/lists, or by supplying words or a text
   that run the content pipeline (senses CEDICT-grounded and LLM-generated).
   Freeform front/back uploads are Basic decks — full freedom, no lexicon
   contact.
 
+### Coexistence with Basic and Music
+
+The compendium replaces `data_sets`/`items`/`pairings`/`cards` for language
+decks only. Basic and Music keep that machinery, so two study engines run side
+by side — language decks enumerate word_list senses joined to skill_scores,
+Basic/Music decks read cards with embedded scores. Rules for the dual state:
+
+- **Three families, three schemas — a direction, not a transition.** Basic is
+  freeform: cards owning their content is the correct model, not legacy debt,
+  and its eventual pass is a *simplification* (the data_set/items/pairings
+  indirection is language-shaped reuse machinery). Music's domain is more
+  canonical than language's — a small fixed inventory of pitches and notation
+  that nobody authors — so its eventual schema echoes the compendium *shape*
+  (canonical unit + per-user × unit × skill score) without sharing its tables.
+  No polymorphism. Neither pass blocks the language migration.
+- **Deck FK invariant.** `decks` carries two nullable FKs: Reading/Writing
+  decks set `word_list_id`, Basic/Music decks set `data_set_id` — exactly one,
+  determined by STI family, enforced as a validation.
+- **Topics repoint.** Topics attach via `data_sets.topic_id` today; language
+  decks lose their data_set, so topic assignment moves to `decks` (which
+  matches the deck-page assignment UX). One mechanism across all families.
+- **One study engine, per-family interface.** Study-mode code stays single:
+  each family answers "what are your studyable units, their prompts and
+  answers, and their score handle." New study features build against that
+  interface or are consciously scoped to one family (fuzzy find and the
+  reading test are language-only).
+
 ### Study semantics
 
-- **One card per entry per deck.** If a deck's list contains several senses of one
-  entry, study mode presents a single card whose back is the union of those
+- **One card per headword per deck.** If a deck's list contains several senses of
+  one entry, study mode presents a single card whose back is the union of those
   senses' glosses, rejoined with "; " — the same display as today. The deck itself
   is the disambiguating context for the prompt (seeing 花 in an HSK 1 deck asks
-  for what HSK 1 taught).
+  for what HSK 1 taught). Grouping is by written form, not entry: homograph
+  entries (还 hái / 还 huán) would otherwise yield two visually identical fronts —
+  an unanswerable prompt, with each card's true answer sitting in the other's
+  distractor pool. Merged, the back shows each reading labeled with its glosses,
+  and the reading test's correct option is the union of member readings
+  ("hái; huán"), with distractors shape-matched by composing pairs from sibling
+  cards' readings so a two-reading option isn't a giveaway. Writing decks are
+  unaffected — their prompts are glosses, which don't collide.
 - **Credit fans out.** Answering that card correctly advances the streak of every
   member sense. Grouping is a study-time construct; nothing about it is stored.
 - **A card studies at the level of its weakest member sense.** A card mixing a
@@ -190,7 +242,7 @@ plus study settings. Consequences:
   will mark a synonym facet wrong — accepted; the chapter taught a specific
   usage.
 - **Distractors are generated; misses are remembered.** No curated distractor
-  lists for language decks: option lists build on the fly from sibling entries in
+  lists for language decks: option lists build on the fly from sibling cards in
   the deck (length-matched, register permitting). When a user picks a wrong
   option, every member sense the card displayed is linked to every member sense
   the chosen option displayed — cross-product fan-out, mirroring credit fan-out,
@@ -323,11 +375,22 @@ texts, with the HSK 1–7 deck standing in as the lexicon:
   resolution, with all 4 misses being tone-pair readings whose senses nearly
   coincide (转 zhuǎn/zhuàn, 炸 fry/explode). No confirm tier needed for
   selection; adjacent-sense homographs are the only escalation candidates.
-- **Entry resolution** (`resolve.rb`, read-only dry run of migration step 3):
+- **Entry resolution** (`resolve.rb`, read-only dry run of the migration's
+  entry-resolution step):
   100% of dev-DB zh fronts resolve cleanly by headword + reading, with a toneless
-  fallback absorbing sandhi differences. Production run still pending — dev data
-  is mostly the seed resolving against itself, so the risky buckets
-  (reading_mismatch, unresolved) never fired.
+  fallback absorbing sandhi differences. **Production run (2026-08, 31,312 zh
+  fronts via CSV export)**: after two mechanical text normalizations — stripping
+  parenthesized traditional variants ("枪 (槍)", 3,914 rows, maps to
+  `script_variant`) and homograph superscripts ("过⁰", 19 rows, an artifact of
+  the unique-front index) — only **7 fronts fail to resolve**, all copies of 3
+  compositional phrases from old seed decks (车上, 放到, 能不能),
+  pipeline-glossable. Zero reading_mismatch anywhere: items either carry exact
+  seed readings or no reading at all. The one sizable bucket is
+  no_reading_ambiguous (2,209 rows — multi-reading characters like 的/了/和 in
+  decks that never stored readings), and it mostly dissolves: those decks are
+  largely forks that collapse to system word_lists without item-level
+  resolution, and headword-grouped cards absorb the rest (a reading-less 的
+  maps to the merged 的 card regardless of which entry was "meant").
 
 Net: every LLM judgment in the pipeline is now measured — segmentation
 (mechanically verified), sense creation (propose→confirm), glossing, routing,
@@ -357,31 +420,42 @@ full book.
 
 1. **Seed first.** Entries and senses come from the curated HSK import (see
    Seeding), so most matching targets exist before any deck migrates.
-2. **Catalog-derived data_sets collapse.** Every copy of a catalog HSK data_set —
-   modified or not — maps to the shared system hsk_level word_list. Copy-era
-   modifications are discarded (dumped to a migration log, not silently lost).
-   Users edit selections, not senses; personal gloss edits have no home in the
-   new model (per-user overrides are parked — see Open questions). This removes
-   the premise of the copy-and-suggest-back catalog
-   flow — its successor, if any, is sense-level edit proposals.
-3. **Other LanguageDataSets become curated word_lists** owned by the same user.
-   Each item resolves to an entry by headword + the card's stored reading
-   (CEDICT fallback when reading is missing). The gloss's fate depends on whose
-   data_set it is:
-   - **Seed account** (the app owner's — a migration-time account list, not
-     schema): glosses are trusted curation and import verbatim as senses
-     (source: curated), same standing as the HSK seed.
-   - **Anyone else**: the gloss is a matching hint only. Usages no existing
-     sense covers get pipeline-generated senses (CEDICT-grounded, source: llm,
-     status: auto); user wording never enters the lexicon. A data_set whose
-     items mostly don't resolve to real words was never a language deck — it
-     migrates as a Basic deck.
-   - Items' example / paired_example follow the same trust split: seed-account
-     examples import as sense_examples rows, fanned out to the same senses the
-     item's gloss mapped to; other accounts' examples are dropped.
-4. **Decks repoint** from data_set_id to word_list_id. Deck STI (Reading/
+2. **Forks of catalog data_sets collapse.** Nearly every non-seed data_set is a
+   copy of a seed-account catalog deck. Identify them by provenance where it
+   exists — a majority of the deck's cards tracing via `cards.source_card_id`
+   to a seed-account card (column added 2026-05; older forks lack it) — with
+   exact name match against seed data_sets as the fallback, since the copy flow
+   copies the source's name verbatim. Matched forks map to the corresponding
+   system word_list — the *current* seed version, not the era the copy forked
+   from: stale copies (parenthesized-traditional fronts, missing readings,
+   since-removed words like 车上) collapse to today's list all the same. Study
+   counts still carry as best they can: scores migrate per resolved front (see
+   Progress scoring migration) and key to senses, not lists, so progress on a
+   word the updated list dropped persists as skill_scores and resurfaces in any
+   deck containing that sense. Copy-era modifications are discarded (dumped to
+   a migration log, not silently lost). Users edit selections, not senses;
+   personal gloss edits have no home in the new model (per-user overrides are
+   parked — see Open questions). This removes the premise of the
+   copy-and-suggest-back catalog flow — its successor, if any, is sense-level
+   edit proposals.
+3. **Seed-account LanguageDataSets that aren't HSK levels** become curated
+   word_lists. Items resolve to entries by headword + stored reading (CEDICT
+   fallback when reading is missing); glosses are trusted curation and import
+   verbatim as senses (source: curated), same standing as the HSK seed. Items'
+   example / paired_example import as sense_examples rows, fanned out to the
+   same senses the item's gloss mapped to.
+4. **The residue is handled by hand, not policy.** With the current user base,
+   data_sets that are neither seed-owned nor identifiable forks number a
+   handful at most. The migration dry-runs them and prints a report; each is
+   settled manually — word-shaped items resolve through the pipeline
+   (CEDICT-grounded, source: llm, status: auto; the user's gloss is a matching
+   hint only, and user wording never enters the lexicon), and sets that were
+   never word-shaped convert to Basic decks. No thresholds or automated
+   mixed-set rules; the trust split is guidance for the manual pass, not an
+   algorithm.
+5. **Decks repoint** from data_set_id to word_list_id. Deck STI (Reading/
    Writing) is unchanged.
-5. **Scores migrate last** (next section), once the card → sense mapping exists.
+6. **Scores migrate last** (next section), once the card → sense mapping exists.
 
 ## Progress scoring migration
 
@@ -392,14 +466,15 @@ Deck type determines skill (ReadingDeck → reading, WritingDeck → writing).
 
 ## Open questions
 
-- **Basic / Music progress**: same scoring shape, very different source data.
-  Needs its own schema pass; explicitly not solved by this doc (and not via
-  polymorphism).
+- **Basic / Music schema passes**: direction set (see Coexistence) — Basic
+  simplifies toward cards-own-content, Music gets its own canonical-inventory
+  schema. Timing open; neither blocks the migration.
 - **Writing skill grain**: sense vs. entry vs. character (see wrinkle above).
 - **Missed-words / tap-to-collect lists**: per-user dynamic word_lists (kind:
   missed?) — mechanism sketched, not designed.
 - **Word_list governance**: who may edit a system list vs. a user list referenced
-  by others' decks; deletion of referenced lists. More broadly, what a user may
+  by others' decks; deletion of a referenced list (likely just blocked, or
+  soft-hidden from the owner, while references exist). More broadly, what a user may
   modify at all: current stance is selections yes, senses/glosses no — whether
   sense-level edit proposals ever earn a place is open.
 - **Per-user gloss overrides**: parked. Gloss wording is the one fork-era freedom
@@ -411,6 +486,10 @@ Deck type determines skill (ReadingDeck → reading, WritingDeck → writing).
   the schema blocks adding it later.
 - **Gloss language**: glosses are English today; multi-gloss-language support
   would hang off senses later.
+- **In-app reader**: chapters retain their source bodies, so a reader is
+  storage-ready, but the feature itself — display, and what "hosted" means for
+  copyright and visibility — is undesigned. (An earlier `texts.hosted` flag was
+  dropped as machinery-free.)
 - **Occurrence evidence**: quoted-from-text sentences were cut from
   sense_examples — they belong to sense × text occurrence and inherit the text's
   copyright status. Two future consumers would revive them: auditing an LLM
