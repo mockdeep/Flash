@@ -3,6 +3,8 @@
 module Views
   module Studies
     class MusicShow < Views::Base
+      include StudyFrameData
+
       attr_accessor :deck, :study, :completed, :study_goal, :demo
 
       def initialize(deck:, study:, completed:, study_goal:, demo: false)
@@ -18,7 +20,7 @@ module Views
         div(class: "content-container") do
           render_header
           h1 { deck.name }
-          turbo_frame_tag("study") do
+          turbo_frame_tag("study", data: wake_lock_data) do
             render_frame
           end
         end

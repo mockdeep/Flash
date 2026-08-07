@@ -53,3 +53,6 @@ application.register("rail", RailController);
 
 import TimezoneController from "./timezone_controller";
 application.register("timezone", TimezoneController);
+
+import WakeLockController from "./wake_lock_controller";
+application.register("wake-lock", WakeLockController);
