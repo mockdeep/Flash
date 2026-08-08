@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "csv"
-
 module Decks
   module Replace
     extend self
@@ -9,15 +7,15 @@ module Decks
     Summary = Struct.new(:added, :removed, :reset, :kept)
 
     def call(deck:, cards_csv:)
-      csv = Decks::Create.parse_csv(cards_csv)
+      csv = CardsCsv.parse(cards_csv)
 
-      error = Decks::Create.validate_csv(csv)
+      error = CardsCsv.validate(csv)
       return failure(deck, error) if error
 
       summary = nil
       ActiveRecord::Base.transaction do
         deck.update!(distractor_pool: derive_distractor_pool(csv))
-        rows = Decks::Create.collect_cards_data(csv)
+        rows = CardsCsv.rows(csv)
         summary = Summary.new(**DataSets::Projection.replace(deck, rows))
       end
 
@@ -27,26 +25,12 @@ module Decks
     private
 
     def derive_distractor_pool(csv)
-      Decks::Create.distractors_column?(csv) ? "preset" : "category"
+      CardsCsv.distractors_column?(csv) ? "preset" : "category"
     end
 
     def failure(deck, error)
       deck.errors.add(:cards_csv, error)
       Result.new(success: false, record: deck, summary: nil)
-    end
-
-    class Result
-      attr_accessor :success, :record, :summary
-
-      def initialize(success:, record:, summary:)
-        self.success = success
-        self.record = record
-        self.summary = summary
-      end
-
-      def success?
-        success
-      end
     end
   end
 end

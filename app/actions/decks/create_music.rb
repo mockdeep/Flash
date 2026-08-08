@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "csv"
-
 module Decks
   module CreateMusic
     extend self
@@ -12,7 +10,7 @@ module Decks
         study_goal: user.study_goal,
         data_set: MusicDataSet.new(user:, name:),
       )
-      csv = CSV.parse(cards_csv.read, headers: true)
+      csv = CardsCsv.parse(cards_csv)
 
       error = validate_csv(csv)
       return failure(deck, error) if error
@@ -38,23 +36,10 @@ module Decks
     end
 
     def validate_csv(csv)
-      validate_headers(csv) ||
-        validate_present(csv) ||
+      CardsCsv.validate_headers(csv) ||
+        CardsCsv.validate_present(csv) ||
         validate_rows(csv) ||
-        validate_unique_fronts(csv)
-    end
-
-    def validate_present(csv)
-      return unless csv.empty?
-
-      "must include at least one row"
-    end
-
-    def validate_headers(csv)
-      headers = csv.headers.map { |h| h.to_s.strip.downcase }
-      return if headers.include?("front") && headers.include?("back")
-
-      "must include 'front' and 'back' columns"
+        CardsCsv.validate_unique_fronts(csv)
     end
 
     def validate_rows(csv)
@@ -77,14 +62,6 @@ module Decks
       "row #{index + 1}: '#{back}' is not a valid note"
     end
 
-    def validate_unique_fronts(csv)
-      fronts = csv.map { |row| row["front"].squish }
-      duplicates = fronts.tally.select { |_, count| count > 1 }.keys
-      return if duplicates.empty?
-
-      "duplicate 'front' values: #{duplicates.join(", ")}"
-    end
-
     def card_rows(csv)
       csv.map do |row|
         {
@@ -92,19 +69,6 @@ module Decks
           back: row["back"].squish,
           category: row["category"].to_s.squish,
         }
-      end
-    end
-
-    class Result
-      attr_accessor :success, :record
-
-      def initialize(success:, record:)
-        self.success = success
-        self.record = record
-      end
-
-      def success?
-        success
       end
     end
   end
