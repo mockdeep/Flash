@@ -14,6 +14,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_100001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
+  create_table "card_distractors", force: :cascade do |t|
+    t.bigint "card_id", null: false
+    t.datetime "created_at", null: false
+    t.string "text", null: false
+    t.datetime "updated_at", null: false
+    t.index ["card_id", "text"], name: "index_card_distractors_on_card_id_and_text", unique: true
+  end
+
   create_table "card_suggestions", force: :cascade do |t|
     t.string "back", null: false
     t.bigint "card_id", null: false
@@ -29,11 +37,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_100001) do
   end
 
   create_table "cards", force: :cascade do |t|
+    t.string "back"
+    t.string "category"
     t.integer "correct_count", default: 0, null: false
     t.integer "correct_streak", default: 0, null: false
     t.datetime "created_at", null: false
     t.bigint "deck_id", null: false
+    t.string "example_back"
+    t.string "example_front"
+    t.string "front"
     t.bigint "item_id", null: false
+    t.string "reading"
     t.bigint "source_card_id"
     t.string "type", null: false
     t.datetime "updated_at", null: false
@@ -140,6 +154,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_100001) do
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 
+  add_foreign_key "card_distractors", "cards", on_delete: :cascade
   add_foreign_key "card_suggestions", "cards", on_delete: :cascade
   add_foreign_key "card_suggestions", "users", on_delete: :cascade
   add_foreign_key "cards", "cards", column: "source_card_id", on_delete: :nullify
