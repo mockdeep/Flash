@@ -9,6 +9,8 @@ class BasicDeck < Deck
 
   def card_type = "BasicCard"
 
+  def flat_cards? = true
+
   def type_label = "Basic"
 
   def replaceable? = true

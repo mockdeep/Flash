@@ -16,6 +16,7 @@ class Card < ApplicationRecord
   belongs_to :item, optional: false
   belongs_to :source_card, class_name: "Card"
   has_many :suggestions, class_name: "CardSuggestion", dependent: :destroy
+  has_many :card_distractors, dependent: :delete_all
 
   validates :deck_id, presence: true
   validates :correct_count, presence: true

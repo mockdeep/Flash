@@ -11,6 +11,8 @@ class MusicDeck < Deck
 
   def card_type = "MusicCard"
 
+  def flat_cards? = true
+
   def type_label = "Practice"
 
   private

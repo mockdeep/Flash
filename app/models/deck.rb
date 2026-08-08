@@ -26,6 +26,10 @@ class Deck < ApplicationRecord
 
   def music? = false
 
+  # Whether this family's cards own their content directly (the flat-card
+  # model); language decks read content through data_set items.
+  def flat_cards? = false
+
   # Where the deck sorts among its data_set's siblings on the decks index
   # rail; forward study comes first, so only reverse decks push later.
   def type_position = 1
