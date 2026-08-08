@@ -19,13 +19,13 @@ RSpec.describe TopicAssignmentsController do
       expect { post_assignment(deck) }.to change(Topic, :count).by(1)
     end
 
-    it "assigns the deck's data_set to the topic" do
+    it "assigns the deck to the topic" do
       deck = create(:deck, user: default_user)
       login_as(default_user)
 
       post_assignment(deck, name: "Mandarin")
 
-      expect(deck.data_set.reload.topic.name).to eq("Mandarin")
+      expect(deck.reload.topic.name).to eq("Mandarin")
     end
 
     it "reuses an existing topic with the same name" do
@@ -81,19 +81,19 @@ RSpec.describe TopicAssignmentsController do
   end
 
   describe "#destroy" do
-    it "releases the data_set from its topic" do
+    it "releases the deck from its topic" do
       deck = create(:deck, user: default_user)
-      deck.data_set.update!(topic: create(:topic, user: default_user))
+      deck.update!(topic: create(:topic, user: default_user))
       login_as(default_user)
 
       delete(deck_topic_assignment_path(deck))
 
-      expect(deck.data_set.reload.topic).to be_nil
+      expect(deck.reload.topic).to be_nil
     end
 
     it "sets a success flash" do
       deck = create(:deck, user: default_user)
-      deck.data_set.update!(topic: create(:topic, user: default_user))
+      deck.update!(topic: create(:topic, user: default_user))
       login_as(default_user)
 
       delete(deck_topic_assignment_path(deck))

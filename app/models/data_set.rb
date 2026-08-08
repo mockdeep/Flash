@@ -3,8 +3,10 @@
 # STI base for a set of study content. Subclasses (Language, Music, Basic)
 # declare their own rules; the base class is never instantiated.
 class DataSet < ApplicationRecord
+  # Topic assignment moved to decks; the column drops in a follow-up migration.
+  self.ignored_columns += ["topic_id"]
+
   belongs_to :user
-  belongs_to :topic
   has_many :items, dependent: :destroy
   has_many :decks, dependent: :destroy
 

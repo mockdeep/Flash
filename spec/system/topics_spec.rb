@@ -9,7 +9,7 @@ RSpec.describe "organizing decks into topics" do
 
   def mandarin_deck
     topic = create(:topic, name: "Mandarin", user: default_user)
-    deck_named("HSK 1").tap { |deck| deck.data_set.update!(topic:) }
+    deck_named("HSK 1").tap { |deck| deck.update!(topic:) }
   end
 
   def visit_deck(deck)

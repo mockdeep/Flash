@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_12_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_07_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -64,11 +64,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_12_000001) do
     t.boolean "ordered", default: false, null: false
     t.string "share_token"
     t.integer "study_goal", null: false
+    t.bigint "topic_id"
     t.string "type", null: false
     t.datetime "updated_at", null: false
     t.string "visibility", default: "private", null: false
     t.index ["data_set_id"], name: "index_decks_on_data_set_id"
     t.index ["share_token"], name: "index_decks_on_share_token", unique: true
+    t.index ["topic_id"], name: "index_decks_on_topic_id"
     t.index ["type"], name: "index_decks_on_type"
     t.index ["visibility"], name: "index_decks_on_visibility"
   end
@@ -148,6 +150,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_12_000001) do
   add_foreign_key "data_sets", "topics", on_delete: :nullify
   add_foreign_key "data_sets", "users", on_delete: :cascade
   add_foreign_key "decks", "data_sets", on_delete: :cascade
+  add_foreign_key "decks", "topics", on_delete: :nullify
   add_foreign_key "item_distractors", "items", column: "distractor_item_id", on_delete: :cascade
   add_foreign_key "item_distractors", "items", on_delete: :cascade
   add_foreign_key "items", "data_sets", on_delete: :cascade

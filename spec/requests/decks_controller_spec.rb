@@ -22,7 +22,7 @@ RSpec.describe DecksController do
     def deck_in_topic(name)
       deck = create(:deck, user: default_user)
       topic = create(:topic, name:, user: default_user)
-      deck.data_set.update!(topic:)
+      deck.update!(topic:)
       deck
     end
 
@@ -463,7 +463,7 @@ RSpec.describe DecksController do
     def deck_in_topic(name)
       deck = deck_with_card
       topic = create(:topic, name:, user: default_user)
-      deck.data_set.update!(topic:)
+      deck.update!(topic:)
       deck
     end
 
