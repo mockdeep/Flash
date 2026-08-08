@@ -9,6 +9,20 @@ RSpec.describe LanguageDeck do
     end
   end
 
+  describe "#name" do
+    it "reads through the data_set" do
+      deck = create(:reading_deck, name: "HSK 1")
+
+      expect(deck.name).to eq("HSK 1")
+    end
+
+    it "leaves the deck's own name column empty" do
+      deck = create(:reading_deck, name: "HSK 1")
+
+      expect(deck[:name]).to be_nil
+    end
+  end
+
   describe "#cards_in_category" do
     it "finds cards through the item layer" do
       deck = create(:reading_deck)

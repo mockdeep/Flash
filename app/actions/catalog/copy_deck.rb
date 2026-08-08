@@ -20,6 +20,8 @@ module Catalog
 
     def build_new_deck(user:, source:)
       source.class.new(
+        user:,
+        name: source.flat_cards? ? source.name : nil,
         study_goal: user.study_goal,
         distractor_pool: source.distractor_pool,
         data_set: source.data_set.class.new(

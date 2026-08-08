@@ -5,11 +5,14 @@ class Deck < ApplicationRecord
   DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
 
   belongs_to :data_set, optional: false
+  belongs_to :user
   belongs_to :topic
   has_many :cards, dependent: :delete_all
   has_many :incoming_suggestions, through: :cards, source: :suggestions
 
-  delegate :name, :user, :user_id, :language, to: :data_set
+  # Flat-card decks own their name (the column); language decks override the
+  # reader to go through the data_set until the compendium rename.
+  delegate :language, to: :data_set
 
   attribute(:level, :integer, default: 1)
   attribute(:visibility, :string, default: "private")
@@ -21,7 +24,8 @@ class Deck < ApplicationRecord
   validate(:data_set_name_valid, if: -> { data_set&.new_record? })
   validate(:type_allowed_by_data_set)
 
-  scope :ordered, -> { joins(:data_set).order("data_sets.name") }
+  NAME_SOURCE = Arel.sql("COALESCE(decks.name, data_sets.name)")
+  scope :ordered, -> { left_joins(:data_set).order(NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
 
   def music? = false

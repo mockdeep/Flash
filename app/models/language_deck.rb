@@ -8,6 +8,8 @@ class LanguageDeck < Deck
     Deck.model_name
   end
 
+  delegate :name, to: :data_set
+
   def mandarin? = language == "zh"
 
   # Language card content still lives on data_set items, so the category and

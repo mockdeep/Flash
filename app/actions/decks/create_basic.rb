@@ -5,10 +5,7 @@ module Decks
     extend self
 
     def call(user:, name:, cards_csv:)
-      deck = BasicDeck.new(
-        study_goal: user.study_goal,
-        data_set: BasicDataSet.new(user:, name:),
-      )
+      deck = build_deck(user:, name:)
       csv = CardsCsv.parse(cards_csv)
 
       error = CardsCsv.validate(csv)
@@ -20,6 +17,15 @@ module Decks
     end
 
     private
+
+    def build_deck(user:, name:)
+      BasicDeck.new(
+        name:,
+        user:,
+        study_goal: user.study_goal,
+        data_set: BasicDataSet.new(user:, name:),
+      )
+    end
 
     def persist(deck, csv)
       ActiveRecord::Base.transaction do

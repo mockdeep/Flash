@@ -5,11 +5,7 @@ module Decks
     extend self
 
     def call(user:, name:, cards_csv:, ordered: false)
-      deck = MusicDeck.new(
-        ordered:,
-        study_goal: user.study_goal,
-        data_set: MusicDataSet.new(user:, name:),
-      )
+      deck = build_deck(user:, name:, ordered:)
       csv = CardsCsv.parse(cards_csv)
 
       error = validate_csv(csv)
@@ -19,6 +15,16 @@ module Decks
     end
 
     private
+
+    def build_deck(user:, name:, ordered:)
+      MusicDeck.new(
+        name:,
+        user:,
+        ordered:,
+        study_goal: user.study_goal,
+        data_set: MusicDataSet.new(user:, name:),
+      )
+    end
 
     def persist(deck, csv)
       ActiveRecord::Base.transaction do

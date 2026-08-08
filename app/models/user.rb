@@ -24,7 +24,7 @@ class User < ApplicationRecord
   validates :time_zone, inclusion: { in: VALID_TIME_ZONES }
 
   has_many :data_sets, dependent: :destroy
-  has_many :decks, through: :data_sets
+  has_many :decks, dependent: :destroy
   has_many :topics, dependent: :destroy
   has_many :card_suggestions, dependent: :destroy
   has_one :subscription, dependent: :destroy
