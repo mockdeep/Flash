@@ -11,6 +11,10 @@ RSpec.describe BasicDeck do
     expect(described_class.new.type_label).to eq("Basic")
   end
 
+  it "has flat cards" do
+    expect(described_class.new.flat_cards?).to be(true)
+  end
+
   describe ".model_name" do
     it "returns the Deck model name for routing" do
       expect(described_class.model_name.route_key).to eq("decks")

@@ -13,6 +13,10 @@ RSpec.describe MusicDeck do
     expect(described_class.new.type_label).to eq("Practice")
   end
 
+  it "has flat cards" do
+    expect(described_class.new.flat_cards?).to be(true)
+  end
+
   describe "#distractor_pool" do
     it "defaults to 'none'" do
       expect(described_class.new.distractor_pool).to eq("none")

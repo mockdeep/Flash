@@ -21,6 +21,7 @@ module DataSets
       data_set = reset_data_set(deck)
       item_ids = insert_data(data_set, rows)
       insert_cards(deck, rows, item_ids)
+      FlatCardSync.sync_deck(deck) if deck.flat_cards?
     end
 
     # Replace ingest: rebuild items from the new rows while preserving the
@@ -34,24 +35,22 @@ module DataSets
       summary = reconcile_cards(deck, rows, item_ids, former)
       prune_items(data_set, item_ids.values)
       reconcile_siblings(deck, sibling_formers)
-      deck.cards.reset
+      refresh_deck_cards(deck)
       summary
     end
 
     # Re-project a single card from edited content (edit / accept suggestion).
     def project(card, content)
       sibling_formers = sibling_former_states(card.deck)
-      data_set = card.deck.data_set
       former_front = card.item
       former_backs = back_items_for(former_front)
 
-      front = upsert_front(data_set, content)
-      rebuild_links(data_set, front, content)
-      card.update_column(:item_id, front.id)
+      front = repoint_card(card, content)
 
       former_front.destroy! if former_front != front
       discard_orphans(former_backs)
       reconcile_siblings(card.deck, sibling_formers)
+      FlatCardSync.sync_card(card) if card.deck.flat_cards?
     end
 
     # Whether another card in the deck already owns a Front item with this text
@@ -69,6 +68,7 @@ module DataSets
       decoy_side = prompt.side == FRONT ? BACK : FRONT
       decoy = prompt.data_set.items.find_or_create_by!(side: decoy_side, text:)
       ItemDistractor.find_or_create_by!(item: prompt, distractor_item: decoy)
+      FlatCardSync.add_distractor(card, text) if card.deck.flat_cards?
     end
 
     def remove_card(card)
@@ -93,6 +93,19 @@ module DataSets
     end
 
     private
+
+    def repoint_card(card, content)
+      data_set = card.deck.data_set
+      front = upsert_front(data_set, content)
+      rebuild_links(data_set, front, content)
+      card.update_column(:item_id, front.id)
+      front
+    end
+
+    def refresh_deck_cards(deck)
+      deck.cards.reset
+      FlatCardSync.sync_deck(deck) if deck.flat_cards?
+    end
 
     def preserve_omitted(rows, former)
       rows.map do |row|
