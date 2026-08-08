@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-# Assigns a deck's data_set to a topic (creating the topic on first use) or
-# releases it. Topics group data_sets, so sibling decks move together.
+# Assigns a deck to a topic (creating the topic on first use) or releases it.
+# Assignment is per deck: sibling decks over the same data_set move
+# independently.
 class TopicAssignmentsController < ApplicationController
   def create
     name = topic_params[:name].squish
@@ -15,7 +16,7 @@ class TopicAssignmentsController < ApplicationController
   end
 
   def destroy
-    deck.data_set.update!(topic: nil)
+    deck.update!(topic: nil)
     flash[:success] = t(".success")
     redirect_to(deck_path(deck))
   end
@@ -24,7 +25,7 @@ class TopicAssignmentsController < ApplicationController
 
   def assign_topic(name)
     topic = current_user.topics.find_or_create_by!(name:)
-    deck.data_set.update!(topic:)
+    deck.update!(topic:)
   end
 
   def deck
