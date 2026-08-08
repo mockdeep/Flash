@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_07_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_07_100001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -47,11 +47,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_000000) do
     t.datetime "created_at", null: false
     t.string "language"
     t.string "name", null: false
-    t.bigint "topic_id"
     t.string "type", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["topic_id"], name: "index_data_sets_on_topic_id"
     t.index ["user_id", "name"], name: "index_data_sets_on_user_id_and_name", unique: true
   end
 
@@ -147,7 +145,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_000000) do
   add_foreign_key "cards", "cards", column: "source_card_id", on_delete: :nullify
   add_foreign_key "cards", "decks"
   add_foreign_key "cards", "items", on_delete: :cascade
-  add_foreign_key "data_sets", "topics", on_delete: :nullify
   add_foreign_key "data_sets", "users", on_delete: :cascade
   add_foreign_key "decks", "data_sets", on_delete: :cascade
   add_foreign_key "decks", "topics", on_delete: :nullify
