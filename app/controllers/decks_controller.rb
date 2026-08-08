@@ -26,7 +26,7 @@ class DecksController < ApplicationController
   def create
     return language_missing_error if language_missing?
 
-    result = create_action.call(**create_params, user: current_user)
+    result = create_deck
     result.success? ? deck_created : deck_create_failed(result.record)
   end
 
@@ -47,12 +47,17 @@ class DecksController < ApplicationController
     params[:filter] == "pending_suggestions"
   end
 
-  def create_action
-    deck_params[:deck_type] == "music" ? Decks::CreateMusic : Decks::Create
-  end
-
-  def create_params
-    deck_params.except(:deck_type)
+  # Each family's create action takes only the params its form section offers.
+  def create_deck
+    shared = { user: current_user, **deck_params.slice(:name, :cards_csv) }
+    case deck_params[:deck_type]
+    when "music"
+      Decks::CreateMusic.call(**shared, **deck_params.slice(:ordered))
+    when "language"
+      Decks::CreateLanguage.call(**shared, language: deck_params[:language])
+    else
+      Decks::CreateBasic.call(**shared)
+    end
   end
 
   # The language select is disabled unless the Language deck type is chosen,

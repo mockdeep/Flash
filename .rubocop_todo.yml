@@ -46,7 +46,6 @@ I18n/GetText/DecorateString:
     - 'app/views/studies/show.rb'
     - 'app/views/subscriptions/show.rb'
     - 'app/views/welcome/index.rb'
-    - 'spec/actions/decks/create_spec.rb'
     - 'spec/rails_helper.rb'
     - 'spec/requests/catalog_controller_spec.rb'
     - 'spec/requests/studies_controller_spec.rb'
@@ -69,7 +68,6 @@ I18n/RailsI18n/DecorateString:
     - 'app/views/studies/show.rb'
     - 'app/views/subscriptions/show.rb'
     - 'app/views/welcome/index.rb'
-    - 'spec/actions/decks/create_spec.rb'
     - 'spec/rails_helper.rb'
     - 'spec/requests/catalog_controller_spec.rb'
     - 'spec/requests/studies_controller_spec.rb'
@@ -160,7 +158,6 @@ Metrics/ClassLength:
 Metrics/MethodLength:
   Exclude:
     - 'app/actions/creem/create_checkout.rb'
-    - 'app/actions/decks/create.rb'
     - 'app/controllers/subscriptions_controller.rb'
     - 'app/domain/study.rb'
     - 'app/views/accounts/new.rb'
@@ -226,7 +223,6 @@ Rails/SkipsModelValidations:
   Exclude:
     - 'app/actions/catalog/copy_deck.rb'
     - 'app/actions/data_sets/projection.rb'
-    - 'app/actions/decks/create.rb'
     - 'app/actions/decks/create_music.rb'
     - 'app/actions/decks/replace.rb'
     - 'db/migrate/20251215211527_add_service_name_to_active_storage_blobs.active_storage.rb'

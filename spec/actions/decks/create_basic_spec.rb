@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Decks::Create do
+RSpec.describe Decks::CreateBasic do
   describe ".call" do
     def csv_file(content)
       file = Tempfile.new(["deck", ".csv"])
@@ -107,16 +107,7 @@ RSpec.describe Decks::Create do
         expect(deck.cards.first.back).to eq("understand; clear")
       end
 
-      it "stores the selected language on the data_set" do
-        user = create(:user)
-        csv = csv_file("front,back\n明白,understand\n")
-        deck = described_class
-          .call(user:, name: "T", cards_csv: csv, language: "zh").record
-
-        expect(deck.data_set.language).to eq("zh")
-      end
-
-      it "leaves the language empty when none is selected" do
+      it "leaves the language empty" do
         user = create(:user)
         csv = csv_file("front,back\nQ,A\n")
         deck = described_class.call(user:, name: "T", cards_csv: csv).record
@@ -124,34 +115,7 @@ RSpec.describe Decks::Create do
         expect(deck.data_set.language).to be_nil
       end
 
-      it "normalizes a blank language to nil" do
-        user = create(:user)
-        csv = csv_file("front,back\nQ,A\n")
-        deck = described_class
-          .call(user:, name: "T", cards_csv: csv, language: "").record
-
-        expect(deck.data_set.language).to be_nil
-      end
-
-      it "builds a LanguageDataSet when a language is given" do
-        user = create(:user)
-        csv = csv_file("front,back\n明白,understand\n")
-        deck = described_class
-          .call(user:, name: "T", cards_csv: csv, language: "zh").record
-
-        expect(deck.data_set).to be_a(LanguageDataSet)
-      end
-
-      it "builds a ReadingDeck when a language is given" do
-        user = create(:user)
-        csv = csv_file("front,back\n明白,understand\n")
-        deck = described_class
-          .call(user:, name: "T", cards_csv: csv, language: "zh").record
-
-        expect(deck).to be_a(ReadingDeck)
-      end
-
-      it "builds a BasicDataSet without a language" do
+      it "builds a BasicDataSet" do
         user = create(:user)
         csv = csv_file("front,back\nQ,A\n")
         deck = described_class.call(user:, name: "T", cards_csv: csv).record
@@ -159,7 +123,7 @@ RSpec.describe Decks::Create do
         expect(deck.data_set).to be_a(BasicDataSet)
       end
 
-      it "builds a BasicDeck without a language" do
+      it "builds a BasicDeck" do
         user = create(:user)
         csv = csv_file("front,back\nQ,A\n")
         deck = described_class.call(user:, name: "T", cards_csv: csv).record
