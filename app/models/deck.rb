@@ -56,17 +56,16 @@ class Deck < ApplicationRecord
   end
 
   # Cards whose studied answer carries the given category, for category-pool
-  # distractors. Forward decks read it off the anchored Front item; a reverse
-  # deck overrides this to look through the pairing to the answer item.
+  # distractors. Flat-card families read the card column; language decks
+  # override to look through the item layer.
   def cards_in_category(category)
-    cards.joins(:item).where(items: { category: })
+    cards.where(category:)
   end
 
   # Sibling (front, reading) pairs for the reading stage's decoy pool; the
   # study engine filters and ranks them.
   def reading_pairs(except:)
-    cards.where.not(id: except.id)
-      .joins(:item).pluck("items.text", "items.reading")
+    cards.where.not(id: except.id).pluck(:front, :reading)
   end
 
   # Gates the study page's Mandarin font menu; only language decks can be.

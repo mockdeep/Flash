@@ -109,35 +109,65 @@ RSpec.describe Card do
     end
   end
 
-  describe "content reconstructed from the item" do
-    it "reads the front from the item" do
+  describe "content from the card's own columns" do
+    it "reads the front" do
       card = create(:basic_card, front: "明白")
 
       expect(card.front).to eq("明白")
     end
 
-    it "rejoins a semicolon back from the item's glosses" do
+    it "reads a semicolon back rejoined from its glosses" do
       card = create(:basic_card, back: "understand;clear")
 
       expect(card.back).to eq("understand; clear")
     end
 
-    it "reads the distractors from the item" do
+    it "reads the distractors from card_distractors" do
       card = create(:basic_card, distractors: ["happy", "run"])
 
       expect(card.distractors).to contain_exactly("happy", "run")
     end
 
-    it "reads reading and category from the item" do
+    it "reads reading and category" do
       card = create(:basic_card, reading: "míngbai")
 
       expect(card).to have_attributes(reading: "míngbai", category: "General")
     end
 
-    it "reads the example pair from the item" do
+    it "reads the example pair" do
       card = create(:basic_card, example_front: "ef", example_back: "eb")
 
       expect(card).to have_attributes(example_front: "ef", example_back: "eb")
+    end
+
+    it "does not read through the item" do
+      card = create(:basic_card, front: "Q")
+      card.item.update!(text: "changed")
+
+      expect(card.front).to eq("Q")
+    end
+  end
+
+  describe "#record_miss!" do
+    it "records the chosen answer as a card distractor" do
+      card = create(:basic_card)
+      card.record_miss!("wrong")
+
+      expect(card.card_distractors.pluck(:text)).to contain_exactly("wrong")
+    end
+
+    it "does not write the item layer" do
+      card = create(:basic_card)
+
+      expect { card.record_miss!("wrong") }
+        .not_to change(ItemDistractor, :count)
+    end
+
+    it "records no distractor without a chosen answer" do
+      card = create(:basic_card)
+      card.record_miss!
+
+      expect(card.card_distractors).to be_empty
     end
   end
 end

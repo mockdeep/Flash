@@ -68,22 +68,6 @@ RSpec.describe DataSets::FlatCardSync do
         .to contain_exactly("x", "y")
     end
 
-    it "mirrors a recorded miss" do
-      card = create(:basic_card)
-      DataSets::Projection.add_distractor(card, "wrong")
-
-      expect(card.card_distractors.pluck(:text)).to contain_exactly("wrong")
-    end
-
-    it "does not mirror a language deck's miss" do
-      deck = create(:reading_deck)
-      DataSets::Projection.build(deck, [row(front: "明白", back: "understand")])
-      card = deck.cards.sole
-      DataSets::Projection.add_distractor(card, "wrong")
-
-      expect(card.card_distractors).to be_empty
-    end
-
     it "removes mirrored rows the item layer no longer has" do
       card = create(:basic_card, front: "Q", back: "A", distractors: ["x"])
       DataSets::Projection.project(

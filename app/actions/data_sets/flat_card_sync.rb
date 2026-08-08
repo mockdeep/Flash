@@ -29,16 +29,12 @@ module DataSets
       sync_distractors(card, item)
     end
 
-    def add_distractor(card, text)
-      card.card_distractors.find_or_create_by!(text:)
-    end
-
     private
 
     def sync_distractors(card, item)
       texts = item.distractors.map(&:text)
       card.card_distractors.where.not(text: texts).delete_all
-      texts.each { |text| add_distractor(card, text) }
+      texts.each { |text| card.card_distractors.find_or_create_by!(text:) }
     end
   end
 end
