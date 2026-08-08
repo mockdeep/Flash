@@ -5,13 +5,6 @@ class Card < ApplicationRecord
 
   SEPARATOR = "; "
 
-  # Edit validation adds errors keyed to content fields that now live on
-  # data_set items, not card columns. ActiveModel reads the attribute to build
-  # the error message, so resolve these virtual keys to nil instead of raising.
-  CONTENT_FIELDS = [
-    :front, :back, :category, :reading, :example_front, :example_back
-  ].freeze
-
   belongs_to :deck
   belongs_to :item, optional: false
   belongs_to :source_card, class_name: "Card"
@@ -26,8 +19,6 @@ class Card < ApplicationRecord
   scope :done, ->(level) { where(correct_streak: level..) }
   scope :not_done, ->(level) { where(correct_streak: ...level) }
   scope :ordered, -> { order(:id) }
-
-  delegate :reading, :category, to: :item
 
   def done? = correct_streak >= deck.level
 
@@ -46,7 +37,7 @@ class Card < ApplicationRecord
     self.correct_streak = 0
     ActiveRecord::Base.transaction do
       save!
-      DataSets::Projection.add_distractor(self, chosen_answer) if chosen_answer
+      record_distractor(chosen_answer) if chosen_answer
     end
   end
 
@@ -55,13 +46,9 @@ class Card < ApplicationRecord
     save!
   end
 
-  # The card's studyable content, reconstructed from its data_set item (the card
-  # itself is a thin progress anchor). Back is the item's glosses rejoined.
-  def front = item.text
-  def back = item.glosses.join(SEPARATOR)
-  def example_front = item.example
-  def example_back = item.paired_example
-  def distractors = item.distractors.map(&:text)
+  # Content reads the card's own columns (the flat-card model); LanguageCard
+  # overrides the readers to go through the data_set item instead.
+  def distractors = card_distractors.map(&:text)
 
   def to_row
     {
@@ -75,14 +62,16 @@ class Card < ApplicationRecord
     }
   end
 
-  def read_attribute_for_validation(key)
-    CONTENT_FIELDS.include?(key.to_sym) ? nil : super
-  end
-
   def suggestable_to_catalog?
     return false unless source_card
 
     source_card.deck.visibility == "public" &&
       source_card.deck.user_id != deck.user_id
+  end
+
+  private
+
+  def record_distractor(text)
+    card_distractors.find_or_create_by!(text:)
   end
 end

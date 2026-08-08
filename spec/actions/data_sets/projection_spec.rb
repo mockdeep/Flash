@@ -81,7 +81,7 @@ RSpec.describe DataSets::Projection do
 
   describe ".add_distractor" do
     it "records a wrong guess as a referenced Back item" do
-      card = create(:basic_card, front: "a", back: "b")
+      card = create(:reading_card, front: "两", back: "two")
       described_class.add_distractor(card, "wrong")
 
       expect(card.item.distractors.pluck(:text)).to include("wrong")

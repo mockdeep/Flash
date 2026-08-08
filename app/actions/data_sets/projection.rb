@@ -60,15 +60,15 @@ module DataSets
         .where(items: { text: front }).where.not(id: card.id).exists?
     end
 
-    # Record a wrong-guess distractor as an item reference. The decoy lives on
-    # the side opposite the prompt (a reverse miss is a Front-side decoy), so it
-    # stays an unpaired item and never spawns a card.
+    # Record a language card's wrong-guess distractor as an item reference.
+    # The decoy lives on the side opposite the prompt (a reverse miss is a
+    # Front-side decoy), so it stays an unpaired item and never spawns a card.
+    # Flat-card misses never reach here; they write card_distractors directly.
     def add_distractor(card, text)
       prompt = card.item
       decoy_side = prompt.side == FRONT ? BACK : FRONT
       decoy = prompt.data_set.items.find_or_create_by!(side: decoy_side, text:)
       ItemDistractor.find_or_create_by!(item: prompt, distractor_item: decoy)
-      FlatCardSync.add_distractor(card, text) if card.deck.flat_cards?
     end
 
     def remove_card(card)

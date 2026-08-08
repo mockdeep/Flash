@@ -48,6 +48,27 @@ RSpec.describe Deck do
     end
   end
 
+  describe "#cards_in_category" do
+    it "finds cards by their category column" do
+      deck = create(:deck)
+      card = create(:basic_card, deck:, category: "Math")
+      create(:basic_card, deck:, category: "Art")
+
+      expect(deck.cards_in_category("Math")).to contain_exactly(card)
+    end
+  end
+
+  describe "#reading_pairs" do
+    it "reads sibling (front, reading) pairs from the card columns" do
+      deck = create(:deck)
+      create(:basic_card, deck:, front: "两", reading: "liǎng")
+      excluded = create(:basic_card, deck:, front: "三", reading: "sān")
+
+      expect(deck.reading_pairs(except: excluded))
+        .to contain_exactly(["两", "liǎng"])
+    end
+  end
+
   describe "#mandarin?" do
     it "is true when the data_set language is Mandarin" do
       deck = create(:reading_deck, language: "zh")
