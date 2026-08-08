@@ -2,10 +2,9 @@
 
 RSpec.describe Deck do
   it { is_expected.to belong_to(:data_set).required }
+  it { is_expected.to belong_to(:user) }
   it { is_expected.to have_many(:cards).dependent(:delete_all) }
-  it { is_expected.to delegate_method(:name).to(:data_set) }
-  it { is_expected.to delegate_method(:user).to(:data_set) }
-  it { is_expected.to delegate_method(:user_id).to(:data_set) }
+  it { is_expected.to delegate_method(:language).to(:data_set) }
 
   describe "#name" do
     it "surfaces the data_set's name errors on create" do
@@ -13,6 +12,13 @@ RSpec.describe Deck do
       deck.valid?
 
       expect(deck.errors[:name]).to include("can't be blank")
+    end
+
+    it "reads a flat deck's name from its own column" do
+      deck = create(:deck, name: "Mine")
+      deck.data_set.update!(name: "Other")
+
+      expect(deck.reload.name).to eq("Mine")
     end
   end
 
@@ -31,6 +37,22 @@ RSpec.describe Deck do
       alpha = create(:deck, name: "Alpha", user: zebra.user)
 
       expect(described_class.ordered).to eq([alpha, zebra])
+    end
+
+    it "sorts flat and language decks together by name" do
+      zebra = create(:deck, name: "Zebra")
+      alpha = create(:reading_deck, name: "Alpha", user: zebra.user)
+
+      expect(described_class.ordered).to eq([alpha, zebra])
+    end
+  end
+
+  describe "#user" do
+    it "reads the deck's own user, not the data_set's" do
+      deck = create(:deck)
+      deck.data_set.update!(user: create(:user))
+
+      expect(deck.reload.user_id).not_to eq(deck.data_set.user_id)
     end
   end
 
