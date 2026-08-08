@@ -10,7 +10,7 @@ module Catalog
       ActiveRecord::Base.transaction do
         return Result.new(success: false, record: new_deck) unless new_deck.save
 
-        DataSets::Projection.build(new_deck, copy_rows(deck, card_limit))
+        new_deck.card_writer.build(new_deck, copy_rows(deck, card_limit))
       end
 
       Result.new(success: true, record: new_deck)
@@ -19,14 +19,19 @@ module Catalog
     private
 
     def build_new_deck(user:, source:)
-      source.class.new(
+      attrs = {
         user:,
-        name: source.flat_cards? ? source.name : nil,
         study_goal: user.study_goal,
         distractor_pool: source.distractor_pool,
-        data_set: source.data_set.class.new(
-          user:, name: source.name, language: source.language,
-        ),
+      }
+      return source.class.new(name: source.name, **attrs) if source.flat_cards?
+
+      source.class.new(**attrs, data_set: copied_data_set(user, source))
+    end
+
+    def copied_data_set(user, source)
+      source.data_set.class.new(
+        user:, name: source.name, language: source.language,
       )
     end
 

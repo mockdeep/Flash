@@ -21,7 +21,7 @@ RSpec.describe "importing a deck with example sentences" do
   end
 
   def card_for(front)
-    default_user.decks.last.cards.joins(:item).find_by(items: { text: front })
+    default_user.decks.last.cards.find_by(front:)
   end
 
   it "leaves example fields nil when both row values are blank" do

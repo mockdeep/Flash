@@ -19,7 +19,7 @@ module Catalog
     def apply_to_card(suggestion)
       card = suggestion.card
       ensure_front_available!(card, suggestion.front)
-      DataSets::Projection.project(card, suggested_content(suggestion))
+      card.deck.card_writer.project(card, suggested_content(suggestion))
     end
 
     def suggested_content(suggestion)
@@ -31,7 +31,7 @@ module Catalog
     end
 
     def ensure_front_available!(card, front)
-      return unless DataSets::Projection.front_taken?(card, front)
+      return unless card.deck.card_writer.front_taken?(card, front)
 
       card.errors.add(:front, :taken)
       raise ActiveRecord::RecordInvalid, card

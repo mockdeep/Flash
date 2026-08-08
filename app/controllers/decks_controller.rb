@@ -19,8 +19,7 @@ class DecksController < ApplicationController
   end
 
   def new
-    deck = BasicDeck.new(data_set: BasicDataSet.new)
-    render(Views::Decks::New.new(deck:))
+    render(Views::Decks::New.new(deck: BasicDeck.new))
   end
 
   def create
@@ -67,10 +66,7 @@ class DecksController < ApplicationController
   end
 
   def language_missing_error
-    deck = BasicDeck.new(
-      name: deck_params[:name],
-      data_set: BasicDataSet.new(name: deck_params[:name]),
-    )
+    deck = BasicDeck.new(name: deck_params[:name])
     deck.errors.add(:base, "Please select a language")
     deck_create_failed(deck)
   end

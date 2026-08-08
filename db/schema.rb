@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_07_300000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_07_400000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -46,12 +46,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_300000) do
     t.string "example_back"
     t.string "example_front"
     t.string "front"
-    t.bigint "item_id", null: false
+    t.bigint "item_id"
     t.string "reading"
     t.bigint "source_card_id"
     t.string "type", null: false
     t.datetime "updated_at", null: false
     t.integer "view_count", default: 0, null: false
+    t.index ["deck_id", "front"], name: "index_cards_on_deck_id_and_front", unique: true, where: "(front IS NOT NULL)"
     t.index ["item_id"], name: "index_cards_on_item_id"
     t.index ["source_card_id"], name: "index_cards_on_source_card_id"
     t.index ["type"], name: "index_cards_on_type"
@@ -69,7 +70,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_300000) do
 
   create_table "decks", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.bigint "data_set_id", null: false
+    t.bigint "data_set_id"
     t.string "distractor_pool", null: false
     t.datetime "last_studied_at"
     t.integer "level", null: false

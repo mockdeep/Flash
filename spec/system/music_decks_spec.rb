@@ -54,7 +54,7 @@ RSpec.describe "creating a music deck" do
     visit_new_deck
     submit_music_form(name: "Twinkle", style: "Ordered melody or scale")
 
-    deck = MusicDeck.joins(:data_set).find_by(data_sets: { name: "Twinkle" })
+    deck = MusicDeck.find_by(name: "Twinkle")
     expect(deck).to be_ordered
   end
 
@@ -62,8 +62,7 @@ RSpec.describe "creating a music deck" do
     visit_new_deck
     submit_music_form(name: "Open Strings", style: "Unordered note pool")
 
-    deck = MusicDeck.joins(:data_set)
-      .find_by(data_sets: { name: "Open Strings" })
+    deck = MusicDeck.find_by(name: "Open Strings")
     expect(deck).not_to be_ordered
   end
 
@@ -71,7 +70,6 @@ RSpec.describe "creating a music deck" do
     visit_new_deck
     submit_text_form(name: "Basic")
 
-    expect(BasicDeck.joins(:data_set).find_by(data_sets: { name: "Basic" }))
-      .to be_present
+    expect(BasicDeck.find_by(name: "Basic")).to be_present
   end
 end

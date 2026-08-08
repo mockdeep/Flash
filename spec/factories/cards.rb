@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-# Cards are thin item_id+progress anchors; their content lives on data_set
-# items. The factory accepts content as transient attributes and projects it
-# into items after the card is created.
+# Language cards are thin item_id+progress anchors; their content lives on
+# data_set items. The language factory accepts content as transient
+# attributes and projects it into items after the card is created.
 module FactoryCardContent
   NOTES = ["C", "D", "E", "F", "G", "A", "B"].freeze
 
@@ -21,10 +21,35 @@ module FactoryCardContent
 end
 
 FactoryBot.define do
-  # Abstract: create cards through the typed sub-factories below so the card
-  # class matches the deck's card_type.
-  factory(:card, class: "Card") do
+  # Flat-card families: content lives on the card's own columns.
+  factory(:basic_card, class: "BasicCard") do
     deck { default_deck }
+    sequence(:front, 100) { |n| "Card Front #{n}" }
+    sequence(:back, 100) { |n| "Card Back #{n}" }
+    category { "General" }
+
+    transient do
+      distractors { [] }
+    end
+
+    after(:create) do |card, attrs|
+      attrs.distractors.each { |text| card.card_distractors.create!(text:) }
+    end
+
+    trait(:done) do
+      correct_streak { deck.level }
+    end
+
+    factory(:music_card, class: "MusicCard") do
+      deck { default_music_deck }
+      sequence(:front, 100) { |n| "Music Card #{n}" }
+      sequence(:back, 1) { |n| "#{FactoryCardContent::NOTES[n % 7]}3" }
+      category { "Notes" }
+    end
+  end
+
+  factory(:reading_card, class: "ReadingCard") do
+    deck { association(:reading_deck) }
     item { association(:item, data_set: deck.data_set) }
 
     transient do
@@ -41,22 +66,6 @@ FactoryBot.define do
 
     trait(:done) do
       correct_streak { deck.level }
-    end
-
-    factory(:basic_card, class: "BasicCard")
-
-    factory(:reading_card, class: "ReadingCard") do
-      deck { association(:reading_deck) }
-    end
-
-    factory(:music_card, class: "MusicCard") do
-      deck { default_music_deck }
-
-      transient do
-        sequence(:front, 100) { |n| "Music Card #{n}" }
-        sequence(:back, 1) { |n| "#{FactoryCardContent::NOTES[n % 7]}3" }
-        category { "Notes" }
-      end
     end
   end
 end

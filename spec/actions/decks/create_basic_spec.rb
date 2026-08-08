@@ -25,13 +25,13 @@ RSpec.describe Decks::CreateBasic do
 
       it "handles a non-ASCII upload read as binary" do
         user = create(:user)
-        # Uploaded files read back as ASCII-8BIT; a multi-byte front must still
-        # round-trip into a pairing (regression: nil item_id NotNullViolation).
+        # Uploaded files read back as ASCII-8BIT; a multi-byte front must
+        # still round-trip intact.
         csv = StringIO.new("front,back\n爱,to love\n".b)
 
         result = described_class.call(user:, name: "中文", cards_csv: csv)
 
-        expect(result.record.cards.first.item.text).to eq("爱")
+        expect(result.record.cards.first.front).to eq("爱")
       end
 
       it "creates deck with correct name" do
@@ -98,8 +98,8 @@ RSpec.describe Decks::CreateBasic do
       end
     end
 
-    context "when mirroring to a data_set" do
-      it "builds the data_set content from the cards" do
+    context "when building the deck" do
+      it "normalizes a multi-gloss back onto the card" do
         user = create(:user)
         csv = csv_file("front,back\n明白,understand;clear\n")
         deck = described_class.call(user:, name: "T", cards_csv: csv).record
@@ -107,28 +107,28 @@ RSpec.describe Decks::CreateBasic do
         expect(deck.cards.first.back).to eq("understand; clear")
       end
 
-      it "leaves the language empty" do
+      it "builds no data_set" do
         user = create(:user)
         csv = csv_file("front,back\nQ,A\n")
         deck = described_class.call(user:, name: "T", cards_csv: csv).record
 
-        expect(deck.data_set.language).to be_nil
+        expect(deck.data_set).to be_nil
       end
 
-      it "builds a BasicDataSet" do
+      it "creates no items" do
         user = create(:user)
         csv = csv_file("front,back\nQ,A\n")
-        deck = described_class.call(user:, name: "T", cards_csv: csv).record
 
-        expect(deck.data_set).to be_a(BasicDataSet)
+        expect { described_class.call(user:, name: "T", cards_csv: csv) }
+          .not_to change(Item, :count)
       end
 
-      it "builds a BasicDeck" do
+      it "builds a BasicDeck owned by the user" do
         user = create(:user)
         csv = csv_file("front,back\nQ,A\n")
         deck = described_class.call(user:, name: "T", cards_csv: csv).record
 
-        expect(deck).to be_a(BasicDeck)
+        expect(deck).to be_a(BasicDeck) & have_attributes(user:)
       end
     end
 

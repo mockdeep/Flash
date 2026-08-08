@@ -19,6 +19,15 @@ RSpec.describe DecksController do
       expect(rendered).to have_text("My Test Deck")
     end
 
+    it "titles a rail card for a deck without a data_set" do
+      login_as(default_user)
+      create(:deck, user: default_user, name: "Flat Deck", data_set: nil)
+
+      get(decks_path)
+
+      expect(rendered).to have_link("Flat Deck")
+    end
+
     def deck_in_topic(name)
       deck = create(:deck, user: default_user)
       topic = create(:topic, name:, user: default_user)

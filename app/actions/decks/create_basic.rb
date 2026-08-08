@@ -19,19 +19,14 @@ module Decks
     private
 
     def build_deck(user:, name:)
-      BasicDeck.new(
-        name:,
-        user:,
-        study_goal: user.study_goal,
-        data_set: BasicDataSet.new(user:, name:),
-      )
+      BasicDeck.new(name:, user:, study_goal: user.study_goal)
     end
 
     def persist(deck, csv)
       ActiveRecord::Base.transaction do
         return failure(deck) unless deck.save
 
-        DataSets::Projection.build(deck, CardsCsv.rows(csv))
+        FlatCards.build(deck, CardsCsv.rows(csv))
       end
 
       Result.new(success: true, record: deck)

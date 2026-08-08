@@ -3,8 +3,9 @@
 class Deck < ApplicationRecord
   VISIBILITIES = ["public", "private"].freeze
   DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
+  NAME_SOURCE = Arel.sql("COALESCE(decks.name, data_sets.name)")
 
-  belongs_to :data_set, optional: false
+  belongs_to :data_set
   belongs_to :user
   belongs_to :topic
   has_many :cards, dependent: :delete_all
@@ -12,7 +13,7 @@ class Deck < ApplicationRecord
 
   # Flat-card decks own their name (the column); language decks override the
   # reader to go through the data_set until the compendium rename.
-  delegate :language, to: :data_set
+  def language = nil
 
   attribute(:level, :integer, default: 1)
   attribute(:visibility, :string, default: "private")
@@ -21,10 +22,14 @@ class Deck < ApplicationRecord
   validates :distractor_pool, inclusion: { in: DISTRACTOR_POOLS }
   validates :study_goal,
             numericality: { greater_than_or_equal_to: 1, only_integer: true }
+  validates :name,
+            presence: true,
+            uniqueness: { scope: :user_id },
+            if: :flat_cards?
+  validates :data_set, presence: true, unless: :flat_cards?
   validate(:data_set_name_valid, if: -> { data_set&.new_record? })
   validate(:type_allowed_by_data_set)
 
-  NAME_SOURCE = Arel.sql("COALESCE(decks.name, data_sets.name)")
   scope :ordered, -> { left_joins(:data_set).order(NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
 
@@ -33,6 +38,10 @@ class Deck < ApplicationRecord
   # Whether this family's cards own their content directly (the flat-card
   # model); language decks read content through data_set items.
   def flat_cards? = false
+
+  # The write path for this family's card content; the two writers share an
+  # interface (build / replace / project / remove_card / front_taken?).
+  def card_writer = Decks::FlatCards
 
   # Where the deck sorts among its data_set's siblings on the decks index
   # rail; forward study comes first, so only reverse decks push later.

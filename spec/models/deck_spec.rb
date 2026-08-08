@@ -1,10 +1,33 @@
 # frozen_string_literal: true
 
 RSpec.describe Deck do
-  it { is_expected.to belong_to(:data_set).required }
   it { is_expected.to belong_to(:user) }
   it { is_expected.to have_many(:cards).dependent(:delete_all) }
-  it { is_expected.to delegate_method(:language).to(:data_set) }
+
+  def flat_deck_attributes
+    {
+      name: "T",
+      user: build(:user),
+      study_goal: 1,
+      distractor_pool: "category",
+    }
+  end
+
+  describe "#data_set" do
+    it "is not required for a flat-card deck" do
+      deck = BasicDeck.new(flat_deck_attributes)
+
+      expect(deck.valid?).to be(true)
+    end
+
+    it "is required for a language deck" do
+      deck = ReadingDeck.new(user: build(:user), study_goal: 1)
+
+      deck.valid?
+
+      expect(deck.errors[:data_set]).to be_present
+    end
+  end
 
   describe "#name" do
     it "surfaces the data_set's name errors on create" do

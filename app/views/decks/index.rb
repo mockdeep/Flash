@@ -192,10 +192,14 @@ module Views
         end
       end
 
+      # Sibling sets only exist for language decks (reading + writing over
+      # one data_set); flat-card decks each stand alone.
       def deck_sets(section_decks)
         section_decks
-          .sort_by { |deck| [deck.data_set.name, deck.type_position] }
-          .chunk_while { |a, b| a.data_set_id == b.data_set_id }
+          .sort_by { |deck| [deck.name, deck.type_position] }
+          .chunk_while do |a, b|
+            a.data_set_id.present? && a.data_set_id == b.data_set_id
+          end
       end
 
       # The divider carries the spotlight deck's type so the two hide together
@@ -245,9 +249,11 @@ module Views
         end
       end
 
+      # Language decks title with the data_set's base name (a reverse deck
+      # drops its "(reversed)" suffix on the shared rail card).
       def render_rail_title(deck)
         h3(class: "rail-title") do
-          link_to(deck.data_set.name, deck_path(deck))
+          link_to(deck.data_set&.name || deck.name, deck_path(deck))
           catalog_badge if deck.publicly_visible?
         end
       end
