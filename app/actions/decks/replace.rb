@@ -16,7 +16,7 @@ module Decks
       ActiveRecord::Base.transaction do
         deck.update!(distractor_pool: derive_distractor_pool(csv))
         rows = CardsCsv.rows(csv)
-        summary = Summary.new(**DataSets::Projection.replace(deck, rows))
+        summary = Summary.new(**deck.card_writer.replace(deck, rows))
       end
 
       Result.new(success: true, record: deck, summary:)

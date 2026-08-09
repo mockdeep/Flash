@@ -8,7 +8,9 @@ class LanguageDeck < Deck
     Deck.model_name
   end
 
-  delegate :name, to: :data_set
+  delegate :name, :language, to: :data_set
+
+  def card_writer = DataSets::Projection
 
   def mandarin? = language == "zh"
 

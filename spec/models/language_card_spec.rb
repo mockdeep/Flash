@@ -6,6 +6,14 @@ require "rails_helper"
 # directly. Language cards keep nil content columns; everything reads
 # through the data_set item.
 RSpec.describe LanguageCard do
+  it "requires an item" do
+    card = ReadingCard.new(deck: build(:reading_deck))
+
+    card.valid?
+
+    expect(card.errors[:item]).to be_present
+  end
+
   it "reads the front from the item despite nil columns" do
     card = create(:reading_card, front: "明白")
 

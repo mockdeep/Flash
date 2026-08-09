@@ -5,11 +5,20 @@ class Card < ApplicationRecord
 
   SEPARATOR = "; "
 
+  # A multi-gloss back stores its display form: semicolon parts squished,
+  # deduped, and rejoined with the separator.
+  NORMALIZE_BACK =
+    lambda do |back|
+      back.split(";").map(&:squish).compact_blank.uniq.join(SEPARATOR)
+    end
+
   belongs_to :deck
-  belongs_to :item, optional: false
+  belongs_to :item
   belongs_to :source_card, class_name: "Card"
   has_many :suggestions, class_name: "CardSuggestion", dependent: :destroy
   has_many :card_distractors, dependent: :delete_all
+
+  normalizes :back, with: NORMALIZE_BACK
 
   validates :deck_id, presence: true
   validates :correct_count, presence: true

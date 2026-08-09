@@ -222,8 +222,8 @@ Rails/FindByOrAssignmentMemoization:
 Rails/SkipsModelValidations:
   Exclude:
     - 'app/actions/catalog/copy_deck.rb'
-    - 'app/actions/data_sets/flat_card_sync.rb'
     - 'app/actions/data_sets/projection.rb'
+    - 'app/actions/decks/flat_cards.rb'
     - 'app/actions/decks/create_music.rb'
     - 'app/actions/decks/replace.rb'
     - 'db/migrate/20251215211527_add_service_name_to_active_storage_blobs.active_storage.rb'

@@ -27,21 +27,21 @@ RSpec.describe Decks::Replace do
     end
 
     def card_fronts(deck)
-      deck.cards.includes(:item).map { |card| card.item.text }
+      deck.cards.map(&:front)
     end
 
     def content_of(card)
       card.reload
     end
 
-    context "when mirroring to a data_set" do
-      it "rebuilds the data_set to match the replaced cards" do
+    context "when rebuilding content" do
+      it "rewrites the cards to match the replaced CSV" do
         deck = create(:deck)
         card_with_progress(deck, front: "Q", back: "old", category: "C")
         replace_with(deck, "front,back,category\nQ,new;fresh,C\nR,new2,C\n")
 
-        expect(deck.reload.data_set.items.where(side: "Back").pluck(:text))
-          .to contain_exactly("new", "fresh", "new2")
+        expect(deck.reload.cards.map(&:back))
+          .to contain_exactly("new; fresh", "new2")
       end
     end
 

@@ -9,6 +9,8 @@ class LanguageCard < Card
     Card.model_name
   end
 
+  validates :item, presence: true
+
   delegate :reading, :category, to: :item
 
   def front = item.text

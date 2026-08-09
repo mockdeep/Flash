@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-# Edits and deletes write to the card's data_set items, not the card itself
-# (the card is a thin progress anchor). Edit content comes from the form params;
-# distractors aren't editable, so they're carried over from the existing item.
+# Edits and deletes go through the deck family's card writer (flat columns
+# or data_set items). Edit content comes from the form params; distractors
+# aren't editable, so they're carried over from the existing card.
 module ProjectsCards
   extend ActiveSupport::Concern
 
@@ -13,15 +13,14 @@ module ProjectsCards
     ActiveRecord::Base.transaction do
       next false unless valid_edit?(card, content)
 
-      DataSets::Projection.project(card, content)
+      card.deck.card_writer.project(card, content)
       true
     end
   end
 
   def destroy_card(card)
     ActiveRecord::Base.transaction do
-      DataSets::Projection.remove_card(card)
-      card.destroy!
+      card.deck.card_writer.remove_card(card)
     end
   end
 
@@ -52,6 +51,6 @@ module ProjectsCards
   end
 
   def front_collision?(card, front)
-    front.present? && DataSets::Projection.front_taken?(card, front)
+    front.present? && card.deck.card_writer.front_taken?(card, front)
   end
 end
