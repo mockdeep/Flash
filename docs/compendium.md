@@ -1,9 +1,12 @@
 # Compendium
 
 Design for a single shared vocabulary store ("the compendium") that all language
-decks select from, replacing per-deck language data_sets. Status: **design only —
-nothing app-side is built.** The content pipeline was prototyped against real
-texts in 2026-08 (see Prototype findings).
+decks select from, replacing per-deck language data_sets. Status: **phases 1–2
+of Build sequencing are shipped** (2026-08: study-engine interface extraction,
+then the Basic/Music flat-card pass — `data_sets`/`items`/`pairings` are now
+language-only). The compendium evolution itself (phase 3) is unbuilt. The
+content pipeline was prototyped against real texts in 2026-08 (see Prototype
+findings).
 
 ## Goals
 
@@ -177,9 +180,10 @@ plus study settings. Consequences:
   Decks that already reference the word_list keep working — same outcome the
   old fork-on-add design gave, without the copy.
 - HSK levels, chapters, and personal lists are one mechanism.
-- The current `data_sets`/`items`/`pairings`/`cards` tables are not needed for
-  language decks. Basic and Music exit them onto flat deck-owned cards before
-  the compendium lands (see Coexistence and Build sequencing).
+- The `data_sets`/`items`/`pairings` tables are not needed for language decks
+  either, once decks select over the compendium. Basic and Music have already
+  exited them onto flat deck-owned cards (phase 2, shipped), so the item
+  machinery is language-only today.
 - Users never author gloss content into the compendium. A language deck is
   created by selecting existing words/lists, or by supplying words or a text
   that run the content pipeline (senses CEDICT-grounded and LLM-generated).
@@ -189,13 +193,15 @@ plus study settings. Consequences:
 ### Coexistence with Basic and Music
 
 The compendium replaces `data_sets`/`items`/`pairings` for language decks;
-Basic and Music exit that machinery first (see Build sequencing) onto one
-shared flat model: cards own their content and their progress directly
-(`deck_id`, front, back, category, the score counts), no data_set indirection.
-The families differ by STI type and validation (music backs must match the
-note format), not table structure. Two study engines then run side by side —
-language decks enumerate word_list senses joined to skill_scores, Basic/Music
-decks read cards with embedded scores. Rules:
+Basic and Music exited that machinery first (phase 2, **shipped 2026-08**)
+onto one shared flat model: cards own their content and their progress
+directly (`deck_id`, front, back, category, reading, examples, the score
+counts, plus a `card_distractors` table for uploaded and miss-recorded
+decoys), no data_set indirection. The families differ by STI type and
+validation (music backs must match the note format), not table structure. Two
+study engines then run side by side — language decks enumerate word_list
+senses joined to skill_scores, Basic/Music decks read cards with embedded
+scores. Rules:
 
 - **One flat card model for Basic and Music, not a schema each.** Basic is
   freeform: cards owning their content is the correct model, not legacy debt
@@ -212,15 +218,24 @@ decks read cards with embedded scores. Rules:
   than a validated string.
 - **Deck FK invariant.** Reading/Writing decks set `word_list_id`; Basic/Music
   decks set no content FK at all — their cards reference `deck_id` directly.
-  Presence of `word_list_id` iff language family, enforced as a validation.
-- **Topics repoint.** Topics attach via `data_sets.topic_id` today; topic
-  assignment moves to `decks` for every family during the flat-card pass
-  (matching the deck-page assignment UX). One mechanism across all families.
+  Presence of `word_list_id` iff language family. *Shipped* as a
+  presence/absence validation pair on `data_set_id` (the FK renames with the
+  table in step 3.5).
+- **Topics repoint.** *Shipped.* Topic assignment lives on `decks` for every
+  family (matching the deck-page assignment UX). One mechanism across all
+  families — and truly per-deck: sibling Reading/Writing decks no longer move
+  together as they did when the topic sat on the shared data_set.
 - **One study engine, per-family interface.** Study-mode code stays single:
   each family answers "what are your studyable units, their prompts and
   answers, and their score handle." New study features build against that
   interface or are consciously scoped to one family (fuzzy find and the
-  reading test are language-only).
+  reading test are language-only). *Shipped* as: content readers and the
+  score handle (`record_correct!`/`record_miss!`) on Card, with a
+  `LanguageCard` STI intermediate keeping the item-backed readers; deck-level
+  option pools (`cards_in_category`, `reading_pairs`) overridden by
+  `LanguageDeck`; and a write-side mirror, `deck.card_writer`, dispatching
+  edits/replaces to `Decks::FlatCards` or `DataSets::Projection`. Step 3.6
+  swaps the language implementations behind these same seams.
 
 ### Study semantics
 
@@ -334,24 +349,20 @@ the sentence — the confirm tier rejects it and feeds a re-segmentation check. 
 over-split whose pieces are real words is the weakest-checked case: a piece whose
 gloss clashes with the context still trips the match step, but a contextually
 plausible split passes silently — worst case an *omitted* compound card, never a
-wrong one. (Under jieba segmentation these welds were common and the machinery
-below existed to fight them — a deterministic "verified pre-split" stage plus
-weld-pattern rules; LLM segmentation produced none of the dangerous welds in
-either test text, so that stage is retired. See Prototype findings.)
+wrong one.
 
 ## Prototype findings (2026-08)
 
 A throwaway prototype ([compendium_prototype/](compendium_prototype/); claude-CLI
 scripts in the flash-csvs idiom, intermediates regenerate into tmp/) ran the full
-content pipeline — segment → lookup →
-pre-split → gloss/match/route (Sonnet) → confirm (Opus) — over two public-domain
-texts, with the HSK 1–7 deck standing in as the lexicon:
+content pipeline — segment → lookup → gloss/match/route (Sonnet) → confirm
+(Opus) — over two public-domain texts, with the HSK 1–7 deck standing in as the
+lexicon:
 
 - **孔乙己 (Lu Xun, 1919 — modern)**: 1,382 tokens, 605 studyable words; 75% of
   tokens already on HSK cards; ~200-word new-vocab chapter deck. After confirm,
   8.8% of known words genuinely needed a new sense (散 "knock off work", 文 the
-  coin, 道 "said"). Pre-split killed 57/137 CEDICT misses, all correctly. This is
-  the product the doc describes, working.
+  coin, 道 "said"). This is the product the doc describes, working.
 - **西游记 ch. 1 (Ming)**: under jieba, token coverage 49%; 719 CEDICT misses,
   mostly welded classical function words; ~900 new words in one chapter. Glossing
   judgment held up fully (earthly-branch senses of 子/丑/未, classical 也, cípái
@@ -363,10 +374,8 @@ texts, with the HSK 1–7 deck standing in as the lexicon:
   cause ever logged; zero Han-content errors) was excluded from comparison.
   Unique-word miss rate: modern 21.6% → 6.5%, classical 42.5% → 17.9%; none of
   the dangerous cross-boundary welds occurred; names and idioms arrive whole
-  (咸亨酒店, 东胜神洲, 好喝懒做). The diff also exposed the deterministic
-  pre-split over-firing on classical (三才, 万劫, 千岁 wrongly split by the
-  number rule). Consequence: step 1 is LLM-primary; jieba and the pre-split
-  stage are retired to a never-reached deterministic floor.
+  (咸亨酒店, 东胜神洲, 好喝懒做). Consequence: step 1 is LLM-primary; jieba
+  is retired to a never-reached deterministic floor.
 - **Full chain over LLM segmentation** (slug `kongyiji-llm`): machine-verifies
   the segmentation claims that the diff reports made by inspection. All 12
   match-step rejections were sense-nuance; zero were disguised boundary errors
@@ -430,8 +439,8 @@ full book.
 Executes inside the Build sequencing ladder (phase 3), not as a one-shot event.
 
 1. **Seeding is the backfill.** Entries and senses backfill directly from the
-   curated HSK data_sets (steps 3.1–3.2, see Seeding), so matching targets
-   exist by construction before any fork row resolves.
+   curated HSK data_sets (steps 3.2 and 3.4, see Seeding), so matching
+   targets exist by construction before any fork row resolves.
 2. **Forks of catalog data_sets resolve, then collapse.** Nearly every
    non-seed data_set is a copy of a seed-account catalog deck. During the
    backfills their rows resolve to the same entries and senses as the
@@ -442,7 +451,7 @@ Executes inside the Build sequencing ladder (phase 3), not as a one-shot event.
    resolved front (see Progress scoring migration) and key to senses, not
    lists, so progress on a word a list dropped persists as skill_scores and
    resurfaces in any deck containing that sense. Collapsing the now-redundant
-   fork word_lists onto system lists is cleanup (step 3.5), identified by
+   fork word_lists onto system lists is cleanup (step 3.7), identified by
    provenance — a majority of the deck's cards tracing via
    `cards.source_card_id` to a seed-account card (column added 2026-05; older
    forks lack it) — with exact name match as the fallback, since the copy
@@ -460,22 +469,22 @@ Executes inside the Build sequencing ladder (phase 3), not as a one-shot event.
    same senses the item's gloss mapped to.
 4. **The residue is handled by hand, not policy.** With the current user base,
    data_sets that are neither seed-owned nor identifiable forks number a
-   handful at most. The step-3.2 dry-run report lists them; each is
+   handful at most. The step-3.4 dry-run report lists them; each is
    settled manually — word-shaped items resolve through the pipeline
    (CEDICT-grounded, source: llm, status: auto; the user's gloss is a matching
    hint only, and user wording never enters the lexicon), and sets that were
    never word-shaped convert to Basic decks. No thresholds or automated
    mixed-set rules; the trust split is guidance for the manual pass, not an
    algorithm.
-5. **No deck repoint.** data_sets *become* word_lists (the step-3.3 rename);
+5. **No deck repoint.** data_sets *become* word_lists (the step-3.5 rename);
    decks keep their FK under the new name. Deck STI (Reading/Writing) is
    unchanged.
-6. **Scores migrate at step 3.4** (next section), once the card → sense
+6. **Scores migrate at step 3.6** (next section), once the card → sense
    mapping exists.
 
 ## Progress scoring migration
 
-Step 3.4 of the Build sequencing ladder. Existing card progress
+Step 3.6 of the Build sequencing ladder. Existing card progress
 (`correct_count`, `correct_streak`, `view_count`) must move
 to skill_scores keyed by the senses each card's item maps to (fan-out: a card
 covering multiple glosses seeds each matched sense's row; conflicts keep max).
@@ -483,19 +492,25 @@ Deck type determines skill (ReadingDeck → reading, WritingDeck → writing).
 
 ## Build sequencing
 
-Four phases. The first two are user-invisible groundwork; phase 3 then evolves
-the language tables *in place* — no parallel system, no cutover event — and
-phase 4 builds the new capability on the stable result.
+Four phases. The first two — user-invisible groundwork — are **shipped**;
+phase 3 evolves the language tables *in place* — no parallel system, no
+cutover event — and phase 4 builds the new capability on the stable result.
+The shipped phases set the working pattern for phase 3: many single-concern
+PRs, each merged and deployed before the next, dry-run/verification checks
+around every backfill.
 
-1. **Study-engine interface extraction.** Pure refactor, no schema change:
-   study modes ask a deck family for its studyable units, their prompts and
-   answers, and their score handle (the interface from Coexistence). Extracted
-   while every family still sits on the data_set model, so the refactor is
-   behavior-preserving by construction.
-2. **Flat-card pass (Basic + Music together).** Content (front, back, category)
-   copies from items back onto cards; scores are already on cards and stay
-   put; topics repoint from data_sets to decks for every family; Basic/Music
-   decks drop their data_set. Nearly mechanical, no user-visible change.
+1. **Study-engine interface extraction.** ✅ *Shipped 2026-08-07.* Pure
+   refactor, no schema change: study modes ask a deck family for its studyable
+   units, their prompts and answers, and their score handle (the interface
+   from Coexistence). Extracted while every family still sat on the data_set
+   model, so the refactor was behavior-preserving by construction.
+2. **Flat-card pass (Basic + Music together).** ✅ *Shipped 2026-08-08* as a
+   ladder of single-concern PRs, each deployed before the next (details in
+   git history). Content moved from items onto cards (plus
+   `card_distractors`), topics repointed to decks, decks gained `name` (flat
+   families) and `user_id` (*every* family — owners never change, and
+   phase 3 wants it), and the Basic/Music data_sets and items were deleted.
+   No user-visible change beyond per-deck topic assignment.
 3. **Compendium evolution.** After phase 2 the data_set machinery is
    language-only, and its tables map nearly 1:1 onto the compendium: items
    (front side) → entries, pairings + back items → senses + memberships,
@@ -503,40 +518,59 @@ phase 4 builds the new capability on the stable result.
    add → backfill → switch reads/writes → drop-old step, deployed and
    verified before the next. The Deck migration section's concerns execute
    inside these backfills rather than as a one-shot event.
-   1. **Canonicalize entries.** Add `lexicons` + `entries`; backfill by
+   1. **Dry-run report tooling.** Port the prototype's read-only resolvers
+      into the app as report tasks (entry resolution first; sense resolution
+      follows for 3.4) before any write exists. Every backfill below ships
+      only after its report runs clean against production — the discipline
+      the flat-card pass followed with ad-hoc queries, made reusable.
+   2. **Canonicalize entries.** Add `lexicons` + `entries`; backfill by
       deduping front items across data_sets (the resolution `resolve.rb`
       proved: 31,312 production fronts, 7 failures); items point at their
       entry. Enrichment (script_variant, frequency_rank) joins from the
       community HSK dataset. No behavior change.
-   2. **Extract senses.** Backfill `senses` from back items — the trust split
+   3. **Upload resolution.** Language CSV ingest resolves words against
+      entries from here on — reject-with-message for unresolvable words
+      first; a pipeline-lite gloss step can upgrade it later. Its own rung
+      so the decision lands before sense extraction depends on it, not
+      inside it.
+   4. **Extract senses.** Backfill `senses` from back items — the trust split
       runs here: seed-account rows import as canonical (source: curated),
       fork rows resolve to them, residue data_sets settle by hand (see Deck
       migration). Pairings become sense_memberships (list × sense, position).
       One sense per back item initially; the semicolon split comes later
-      (step 3.5). Display unchanged.
-   3. **Rename data_sets → word_lists** (+ `kind`, `hsk_level`). Decks keep
+      (step 3.7). Display unchanged.
+   5. **Rename data_sets → word_lists** (+ `kind`, `hsk_level`). Decks keep
       their FK under the new name — no repoint.
-   4. **Globalize progress.** Backfill `skill_scores` from cards (max per
-      user × sense × skill; deck STI gives the skill), switch study to
-      skill_scores, drop language rows from `cards`. Headword grouping,
-      credit fan-out, and weakest-member selection land here — this is the
-      step where scores stop being per-card.
-   5. **Semantic upgrades, one step each:** semicolon sense-splitting
+   6. **Globalize progress** — the lumpiest step, so it runs as the phase-2
+      ladder: (a) add `skill_scores` and backfill from cards (max per
+      user × sense × skill; deck STI gives the skill), study dual-writes
+      while card counters stay authoritative; (b) switch study reads to
+      sense enumeration — headword grouping, credit fan-out, and
+      weakest-member selection land here, verifiable against the still-live
+      card counters; (c) drop language rows from `cards`. This is the step
+      where scores stop being per-card.
+   7. **Semantic upgrades, one step each:** semicolon sense-splitting
       (display already joins with "; ", so invisible); generated distractors
       + `sense_distractors`, dropping `item_distractors`; sharing by
       reference (possible once progress has left the cards); collapsing fork
       word_lists onto system lists — now optional dedup, not a load-bearing
       migration.
-4. **Text companion.** `texts`/`chapters`, the content pipeline productionized
-   (API structured output, not the prototype's claude-CLI), chapter
-   word_lists. New capability, built only once the model beneath it is
-   stable.
+   8. **Retire the item layer.** Language edit/replace flows move off the
+      projection onto sense selections, then `items`/`pairings` and the
+      projection itself drop. Unscheduled anywhere else, and it can't ride
+      along with 3.6 — the edit flows still write items until this rung.
+4. **Text companion.** New capability, built only once the model beneath it
+   is stable, in three rungs: productionize the content pipeline (API
+   structured output, not the prototype's claude-CLI) and run it
+   *out-of-band* first, landing its output as ordinary curated word_lists —
+   real chapter decks ship before any new schema; then add
+   `texts`/`chapters` and first-occurrence positions so runs become
+   first-class; then the chapter-study UX (leveling, cross-chapter dedup
+   surfaced to the reader).
 
-Two disciplines the in-place path demands. Every backfill is global — a bug
-touches all language decks at once — so each rung ships with a dry-run report
-before the write. And from step 3.2 onward, CSV upload must resolve words to
-entries/senses, so unresolvable words need an answer (a pipeline-lite gloss
-step, or reject-with-message) earlier than a parallel build would have forced.
+One discipline the in-place path demands, restated: every backfill is
+global — a bug touches all language decks at once — so each rung ships with
+a dry-run report (the 3.1 tooling) before the write.
 
 ## Open questions
 
