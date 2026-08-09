@@ -240,8 +240,8 @@ RSpec.describe CardsController do
         .to change(Card, :count).by(-1)
     end
 
-    it "removes the card's items on delete" do
-      card = create(:basic_card, back: "x")
+    it "removes a language card's items on delete" do
+      card = create(:reading_card, back: "x")
       deck = card.deck
       login_as(default_user)
       delete(deck_card_path(deck, card))

@@ -27,21 +27,33 @@ RSpec.describe Deck do
 
       expect(deck.errors[:data_set]).to be_present
     end
+
+    it "must be absent for a flat-card deck" do
+      deck = BasicDeck.new(
+        **flat_deck_attributes, data_set: create(:data_set),
+      )
+
+      deck.valid?
+
+      expect(deck.errors[:data_set]).to be_present
+    end
   end
 
   describe "#name" do
-    it "surfaces the data_set's name errors on create" do
+    it "is required for a flat-card deck" do
       deck = build(:deck, name: "")
       deck.valid?
 
       expect(deck.errors[:name]).to include("can't be blank")
     end
 
-    it "reads a flat deck's name from its own column" do
-      deck = create(:deck, name: "Mine")
-      deck.data_set.update!(name: "Other")
+    it "must be unique among the user's decks" do
+      existing = create(:deck, name: "Mine")
+      deck = build(:deck, name: "Mine", user: existing.user)
 
-      expect(deck.reload.name).to eq("Mine")
+      deck.valid?
+
+      expect(deck.errors[:name]).to include("has already been taken")
     end
   end
 
@@ -67,15 +79,6 @@ RSpec.describe Deck do
       alpha = create(:reading_deck, name: "Alpha", user: zebra.user)
 
       expect(described_class.ordered).to eq([alpha, zebra])
-    end
-  end
-
-  describe "#user" do
-    it "reads the deck's own user, not the data_set's" do
-      deck = create(:deck)
-      deck.data_set.update!(user: create(:user))
-
-      expect(deck.reload.user_id).not_to eq(deck.data_set.user_id)
     end
   end
 
@@ -148,20 +151,6 @@ RSpec.describe Deck do
       create(:reading_card, deck:, front: "hola", back: "hello")
 
       expect(deck.hanzi_chars).to eq("")
-    end
-  end
-
-  describe "#type_allowed_by_data_set" do
-    it "rejects a deck class the data_set can't build" do
-      deck = build(:deck, data_set: create(:language_data_set))
-
-      expect(deck).not_to be_valid
-    end
-
-    it "accepts a deck class the data_set can build" do
-      deck = build(:reading_deck)
-
-      expect(deck).to be_valid
     end
   end
 

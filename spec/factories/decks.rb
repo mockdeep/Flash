@@ -4,8 +4,6 @@ FactoryBot.define do
   factory(:deck, class: "BasicDeck") do
     sequence(:name, 100) { |n| "Deck #{n}" }
     user { default_user }
-
-    data_set { association(:data_set, user:, name:) }
     study_goal { 50 }
     distractor_pool { "category" }
   end
@@ -37,8 +35,6 @@ FactoryBot.define do
   factory(:music_deck, class: "MusicDeck") do
     sequence(:name, 100) { |n| "Music Deck #{n}" }
     user { default_user }
-
-    data_set { association(:music_data_set, user:, name:) }
     study_goal { 50 }
     distractor_pool { "none" }
   end

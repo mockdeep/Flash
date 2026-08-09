@@ -27,8 +27,8 @@ class Deck < ApplicationRecord
             uniqueness: { scope: :user_id },
             if: :flat_cards?
   validates :data_set, presence: true, unless: :flat_cards?
+  validates :data_set, absence: true, if: :flat_cards?
   validate(:data_set_name_valid, if: -> { data_set&.new_record? })
-  validate(:type_allowed_by_data_set)
 
   scope :ordered, -> { left_joins(:data_set).order(NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
@@ -100,11 +100,5 @@ class Deck < ApplicationRecord
 
   def data_set_name_valid
     errors.merge!(data_set.errors) unless data_set.valid?
-  end
-
-  def type_allowed_by_data_set
-    return if data_set.nil? || data_set.deck_classes.include?(self.class)
-
-    errors.add(:type, "can't be built on a #{data_set.class.name}")
   end
 end
