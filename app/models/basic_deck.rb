@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# Plain forward flashcards over a BasicDataSet: no language features, no
-# reverse form.
+# Plain forward flashcards over flat deck-owned cards: no language
+# features, no reverse form.
 class BasicDeck < Deck
   def self.model_name
     Deck.model_name

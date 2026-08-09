@@ -1,15 +1,12 @@
 # frozen_string_literal: true
 
-# STI base for a set of study content. Subclasses (Language, Music, Basic)
-# declare their own rules; the base class is never instantiated.
+# STI base for a set of language study content; LanguageDataSet is the only
+# subclass since Basic and Music moved to flat deck-owned cards. Becomes the
+# compendium's word_lists table when the language machinery evolves.
 class DataSet < ApplicationRecord
   belongs_to :user
   has_many :items, dependent: :destroy
   has_many :decks, dependent: :destroy
 
   validates :name, presence: true, uniqueness: { scope: :user_id }
-
-  # The deck classes that can be built over this data_set; each subclass
-  # declares its own.
-  def deck_classes = []
 end

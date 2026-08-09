@@ -16,11 +16,6 @@ RSpec.describe LanguageDataSet do
       .not_to allow_value("xx", "zho", "Spanish").for(:language)
   end
 
-  it "builds reading and writing decks" do
-    expect(described_class.new.deck_classes)
-      .to contain_exactly(ReadingDeck, WritingDeck)
-  end
-
   describe "LANGUAGES" do
     it "keys each language by its shortest available code" do
       expect(described_class::LANGUAGES["zh"]).to eq("Chinese")
