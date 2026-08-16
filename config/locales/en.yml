@@ -55,6 +55,7 @@ en:
     destroy:
       success: "Card deleted"
       confirm: "Delete this card? This cannot be undone."
+    unsupported: "Editing cards is only available for basic and music decks"
   decks:
     create:
       success: "Deck created successfully"

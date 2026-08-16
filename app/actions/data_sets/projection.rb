@@ -3,8 +3,12 @@
 # Builds a deck's data_set (items, pairings, item_distractors) and its thin
 # cards from content rows. A "row" is a hash of card content
 # ({ front:, back:, category:, distractors:, reading:, example_front:,
-# example_back:, source_card_id? }) -- the same shape a CSV row or the edit
-# form produces. Items are the source of truth; cards are item_id + progress.
+# example_back:, source_card_id? }) -- the same shape a CSV row produces.
+# Items are the source of truth; cards are item_id + progress.
+#
+# Language content is being frozen ahead of the compendium migration, so this
+# writer is shrinking: per-card editing and deletion are gone, leaving ingest
+# (build / replace), reverse-deck card generation, and miss-recorded decoys.
 module DataSets
   module Projection
     extend self
@@ -38,26 +42,6 @@ module DataSets
       summary
     end
 
-    # Re-project a single card from edited content.
-    def project(card, content)
-      sibling_formers = sibling_former_states(card.deck)
-      former_front = card.item
-      former_backs = back_items_for(former_front)
-
-      front = repoint_card(card, content)
-
-      former_front.destroy! if former_front != front
-      discard_orphans(former_backs)
-      reconcile_siblings(card.deck, sibling_formers)
-    end
-
-    # Whether another card in the deck already owns a Front item with this text
-    # (front must stay 1:1 with a card).
-    def front_taken?(card, front)
-      card.deck.cards.joins(:item)
-        .where(items: { text: front }).where.not(id: card.id).exists?
-    end
-
     # Record a language card's wrong-guess distractor as an item reference.
     # The decoy lives on the side opposite the prompt (a reverse miss is a
     # Front-side decoy), so it stays an unpaired item and never spawns a card.
@@ -67,15 +51,6 @@ module DataSets
       decoy_side = prompt.side == FRONT ? BACK : FRONT
       decoy = prompt.data_set.items.find_or_create_by!(side: decoy_side, text:)
       ItemDistractor.find_or_create_by!(item: prompt, distractor_item: decoy)
-    end
-
-    def remove_card(card)
-      front = card.item
-      sibling_formers = sibling_former_states(card.deck)
-      backs = back_items_for(front)
-      front.destroy!
-      discard_orphans(backs)
-      reconcile_siblings(card.deck, sibling_formers)
     end
 
     # Ensure a deck has exactly one card per paired item on its anchor side,
@@ -91,14 +66,6 @@ module DataSets
     end
 
     private
-
-    def repoint_card(card, content)
-      data_set = card.deck.data_set
-      front = upsert_front(data_set, content)
-      rebuild_links(data_set, front, content)
-      card.update_column(:item_id, front.id)
-      front
-    end
 
     def preserve_omitted(rows, former)
       rows.map do |row|
@@ -344,19 +311,6 @@ module DataSets
       deck.card_type.constantize.create!(deck:, item:)
     end
 
-    def upsert_front(data_set, content)
-      front =
-        data_set.items.find_or_initialize_by(side: FRONT, text: content[:front])
-      front.update!(front_attributes(content))
-      front
-    end
-
-    def rebuild_links(data_set, front, content)
-      clear_links(front)
-      pair_glosses(data_set, front, glosses(content))
-      link_distractors(data_set, front, terms(content[:distractors]))
-    end
-
     def front_attributes(content)
       {
         category: content[:category],
@@ -366,47 +320,12 @@ module DataSets
       }
     end
 
-    def clear_links(front)
-      Pairing.where(item_id: front.id).delete_all
-      ItemDistractor.where(item_id: front.id).delete_all
-    end
-
-    def pair_glosses(data_set, front, glosses)
-      glosses.each do |gloss|
-        back = data_set.items.find_or_create_by!(side: BACK, text: gloss)
-        Pairing.create!(item: front, paired_item: back)
-      end
-    end
-
-    def link_distractors(data_set, front, distractors)
-      distractors.each do |distractor|
-        back = data_set.items.find_or_create_by!(side: BACK, text: distractor)
-        ItemDistractor.create!(item: front, distractor_item: back)
-      end
-    end
-
     def glosses(content)
       terms(content[:back].to_s.split(";"))
     end
 
     def terms(values)
       Array(values).map { |value| value.to_s.squish }.compact_blank.uniq
-    end
-
-    def back_items_for(front)
-      paired = Pairing.where(item_id: front.id).select(:paired_item_id)
-      decoys =
-        ItemDistractor.where(item_id: front.id).select(:distractor_item_id)
-      Item.where(id: paired).or(Item.where(id: decoys)).to_a
-    end
-
-    def discard_orphans(items)
-      items.each do |item|
-        next if Pairing.exists?(paired_item_id: item.id)
-        next if ItemDistractor.exists?(distractor_item_id: item.id)
-
-        item.destroy!
-      end
     end
   end
 end

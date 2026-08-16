@@ -3,8 +3,9 @@
 class CardsController < ApplicationController
   include ProjectsCards
 
+  before_action(:ensure_editable_deck)
+
   def update
-    deck = current_user.decks.find(params.expect(:deck_id))
     card = deck.cards.find(params.expect(:id))
 
     if save_card(card)
@@ -15,7 +16,6 @@ class CardsController < ApplicationController
   end
 
   def destroy
-    deck = current_user.decks.find(params.expect(:deck_id))
     destroy_card(deck.cards.find(params.expect(:id)))
 
     flash[:success] = t(".success")
@@ -23,6 +23,19 @@ class CardsController < ApplicationController
   end
 
   private
+
+  def deck
+    @deck ||= current_user.decks.find(params.expect(:deck_id))
+  end
+
+  # Only the flat-card families own editable card content; a language card's
+  # front and back live on shared data_set items.
+  def ensure_editable_deck
+    return if deck.flat_cards?
+
+    flash[:error] = t("cards.unsupported")
+    redirect_to(deck_study_path(deck))
+  end
 
   def update_succeeded(deck, card)
     render(turbo_stream: success_streams(card:, deck:))

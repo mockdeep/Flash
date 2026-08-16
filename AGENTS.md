@@ -351,7 +351,7 @@ app/
 │   ├── catalog_listings_controller.rb # Publish / unpublish a deck to the catalog
 │   ├── concerns/
 │   │   ├── demo_session.rb            # Demo guest-session helpers
-│   │   └── projects_cards.rb          # save_card/destroy_card → deck.card_writer (edit validation)
+│   │   └── projects_cards.rb          # save_card/destroy_card → deck.card_writer (flat decks only)
 │   ├── decks_controller.rb            # `#create` dispatches CreateBasic / CreateLanguage / CreateMusic on :deck_type
 │   ├── demo_controller.rb             # Starts a guest demo study session
 │   ├── milestones_controller.rb       # Updates a deck's study goal
@@ -513,15 +513,17 @@ Controllers call actions and branch on `result.success?`.
 
 ### Card writers
 
-Two writers share one interface — `build` / `replace` / `project` / `remove_card` / `front_taken?` — and a deck picks between them with `Deck#card_writer`. Both consume the same "row": a hash of the shape a CSV row or the edit form produces, `{ front:, back:, category:, distractors:, reading:, example_front:, example_back:, source_card_id? }`. Callers (`Decks::Replace`, the `ProjectsCards` controller concern, `Catalog::CopyDeck`) go through `deck.card_writer` and never name a writer directly.
+Two writers exist, and a deck picks between them with `Deck#card_writer`. Both consume the same "row": a hash of the shape a CSV row or the edit form produces, `{ front:, back:, category:, distractors:, reading:, example_front:, example_back:, source_card_id? }`. Callers (`Decks::Replace`, the `ProjectsCards` controller concern, `Catalog::CopyDeck`) go through `deck.card_writer` and never name a writer directly.
+
+`build` and `replace` are the shared entry points. `project` / `remove_card` / `front_taken?` are **flat-only** — language decks no longer support per-card editing (`CardsController` turns them away and the study view hides the edit button), so those methods exist on `Decks::FlatCards` alone.
 
 **`Decks::FlatCards`** (`app/actions/decks/flat_cards.rb`) — the writer for Basic and Music. Rows become card columns plus `card_distractors` rows; there is no indirection to reconcile. `replace` matches rows to existing cards by `front`, preserves the progress of any card whose `back` survives unchanged (a changed back zeroes the counters), and carries over `PRESERVED` fields (`reading`, `example_front`, `example_back`) when the CSV omits those columns.
 
 **`DataSets::Projection`** (`app/actions/data_sets/projection.rb`) — the writer for language decks. It translates rows into the item/pairing/distractor graph plus the thin cards that anchor to it; items are the source of truth and the card is just `item_id` + progress. It carries two entry points the flat writer has no need for:
 - `add_distractor(card, text)` — a wrong guess accretes the guessed text as an unpaired decoy item + `ItemDistractor` (never spawns a card). The flat families write `card_distractors` from `Card#record_distractor` instead.
-- `reconcile_deck(deck, formers)` — ensures a deck has exactly one card per paired item on its `anchor_side`, preserving progress by item text. Used to build a reverse deck's cards and to keep **sibling decks** (other decks over the same data set) in sync after any content change.
+- `reconcile_deck(deck, formers)` — ensures a deck has exactly one card per paired item on its `anchor_side`, preserving progress by item text. Used to build a reverse deck's cards and to keep **sibling decks** (other decks over the same data set) in sync after a re-import.
 
-Because language decks can share a data set, most projection methods snapshot sibling card state up front and call `reconcile_siblings` at the end so a forward-deck edit propagates to its reverse (and vice versa). Flat cards belong to exactly one deck, so nothing there needs syncing.
+Because language decks can share a data set, `replace` snapshots sibling card state up front and calls `reconcile_siblings` at the end so a re-import propagates to the deck's reverse (and vice versa). Flat cards belong to exactly one deck, so nothing there needs syncing.
 
 ### Authentication
 

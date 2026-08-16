@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
 # Card writer for the flat-card families (Basic, Music): cards own their
-# content columns and distractors directly, no data_set projection. Mirrors
-# DataSets::Projection's interface - decks dispatch to one or the other via
-# Deck#card_writer. A "row" is the same content hash the projection consumes.
+# content columns and distractors directly, no data_set projection. Decks
+# dispatch to this or DataSets::Projection via Deck#card_writer, and a "row"
+# is the same content hash both consume. The shared entry points are build
+# and replace; project / remove_card / front_taken? are flat-only, since
+# language decks no longer support per-card editing.
 module Decks
   module FlatCards
     extend self
