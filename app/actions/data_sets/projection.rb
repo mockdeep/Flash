@@ -18,8 +18,9 @@ module DataSets
     FRONT = "Front"
     BACK = "Back"
 
-    # Fresh build for ingest (CreateLanguage / CopyDeck): rebuild the data_set
-    # from the rows and create one thin card per row.
+    # Fresh build for a copied deck (Catalog::CopyDeck, the last caller now
+    # that language upload is gone): fill the data_set from the rows and
+    # create one thin card per row.
     def build(deck, rows)
       data_set = reset_data_set(deck)
       item_ids = insert_data(data_set, rows)

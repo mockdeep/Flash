@@ -16,8 +16,6 @@ class DecksController < ApplicationController
   end
 
   def create
-    return language_missing_error if language_missing?
-
     result = create_deck
     result.success? ? deck_created : deck_create_failed(result.record)
   end
@@ -31,28 +29,15 @@ class DecksController < ApplicationController
   private
 
   # Each family's create action takes only the params its form section offers.
+  # Language decks are not creatable: their content comes from the catalog,
+  # and a freeform CSV upload is a Basic deck.
   def create_deck
     shared = { user: current_user, **deck_params.slice(:name, :cards_csv) }
-    case deck_params[:deck_type]
-    when "music"
+    if deck_params[:deck_type] == "music"
       Decks::CreateMusic.call(**shared, **deck_params.slice(:ordered))
-    when "language"
-      Decks::CreateLanguage.call(**shared, language: deck_params[:language])
     else
       Decks::CreateBasic.call(**shared)
     end
-  end
-
-  # The language select is disabled unless the Language deck type is chosen,
-  # so a blank value only arrives when browser validation is bypassed.
-  def language_missing?
-    deck_params[:deck_type] == "language" && deck_params[:language].blank?
-  end
-
-  def language_missing_error
-    deck = BasicDeck.new(name: deck_params[:name])
-    deck.errors.add(:base, "Please select a language")
-    deck_create_failed(deck)
   end
 
   def deck_created
@@ -70,7 +55,7 @@ class DecksController < ApplicationController
   end
 
   def deck_params
-    params.expect(deck: [:name, :cards_csv, :deck_type, :ordered, :language])
+    params.expect(deck: [:name, :cards_csv, :deck_type, :ordered])
       .to_h.symbolize_keys
   end
 end
