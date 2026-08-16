@@ -1,22 +1,30 @@
 # frozen_string_literal: true
 
 # Language cards are thin item_id+progress anchors; their content lives on
-# data_set items. The language factory accepts content as transient
-# attributes and projects it into items after the card is created.
+# data_set items. The language factory takes content as transient attributes,
+# builds the front item from them, and links the back side after create.
 module FactoryCardContent
   NOTES = ["C", "D", "E", "F", "G", "A", "B"].freeze
 
-  def self.project(card, attrs)
-    content = {
-      front: attrs.front,
-      back: attrs.back,
-      category: attrs.category,
-      distractors: attrs.distractors,
-      reading: attrs.reading,
-      example_front: attrs.example_front,
-      example_back: attrs.example_back,
-    }
-    DataSets::Projection.project(card, content)
+  # Pairs the card's front item to one Back item per gloss and links any
+  # distractors as unpaired decoys.
+  def self.link_backs(card, attrs)
+    glosses(attrs.back).each do |text|
+      Pairing.create!(item: card.item, paired_item: back_item(card, text))
+    end
+    Array(attrs.distractors).each do |text|
+      ItemDistractor.create!(
+        item: card.item, distractor_item: back_item(card, text),
+      )
+    end
+  end
+
+  def self.back_item(card, text)
+    card.deck.data_set.items.find_or_create_by!(side: "Back", text:)
+  end
+
+  def self.glosses(back)
+    back.to_s.split(";").map(&:squish).compact_blank.uniq
   end
 end
 
@@ -49,9 +57,6 @@ FactoryBot.define do
   end
 
   factory(:reading_card, class: "ReadingCard") do
-    deck { association(:reading_deck) }
-    item { association(:item, data_set: deck.data_set) }
-
     transient do
       sequence(:front, 100) { |n| "Card Front #{n}" }
       sequence(:back, 100) { |n| "Card Back #{n}" }
@@ -62,7 +67,20 @@ FactoryBot.define do
       example_back { nil }
     end
 
-    after(:create) { |card, attrs| FactoryCardContent.project(card, attrs) }
+    deck { association(:reading_deck) }
+    item do
+      association(
+        :item,
+        data_set: deck.data_set,
+        text: front,
+        category:,
+        reading:,
+        example: example_front,
+        paired_example: example_back,
+      )
+    end
+
+    after(:create) { |card, attrs| FactoryCardContent.link_backs(card, attrs) }
 
     trait(:done) do
       correct_streak { deck.level }

@@ -82,7 +82,7 @@ module Views
               card_id: card.id,
             }
             render(Components::CardFront.new(**args))
-            unless demo
+            if editable?
               button(
                 type: "button",
                 class: "edit-card__trigger",
@@ -111,7 +111,7 @@ module Views
             end
           end
 
-          unless demo
+          if editable?
             dialog(
               class: "dialog",
               data: {
@@ -144,6 +144,10 @@ module Views
           end
         end
       end
+
+      # Card editing is a flat-card affair: language cards read their content
+      # from shared data_set items, so there is nothing card-local to edit.
+      def editable? = !demo && deck.flat_cards?
 
       def show_streak_pips?(answer)
         answer == result.correct_answer && result.correct? && deck.level > 1

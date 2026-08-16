@@ -270,6 +270,20 @@ RSpec.describe StudiesController do
       expect(rendered).to have_text("1 / 50 completed")
     end
 
+    it "offers the edit button on a flat-card deck" do
+      card = create(:basic_card, back: "Paris")
+      submit_answer(card:, answer: "London")
+
+      expect(rendered).to have_button("Edit card")
+    end
+
+    it "omits the edit button on a language deck" do
+      card = create(:reading_card, back: "Paris")
+      submit_answer(card:, answer: "London")
+
+      expect(rendered).to have_no_button("Edit card")
+    end
+
     context "when completed reaches milestone goal" do
       it "does not show the milestone prompt" do
         complete_milestone_goal

@@ -55,31 +55,6 @@ RSpec.describe DataSets::Projection do
     end
   end
 
-  describe ".project" do
-    it "reconciles a changed back, removing the orphaned Back item" do
-      card = create(:reading_card, front: "明白", back: "understand")
-      described_class.project(card, row(front: "明白", back: "clear"))
-
-      expect(back_texts(card.deck)).to contain_exactly("clear")
-    end
-
-    it "keeps a Back item still shared by another card" do
-      deck = create(:reading_deck)
-      create(:reading_card, deck:, front: "清楚", back: "clear")
-      card = create(:reading_card, deck:, front: "明白", back: "clear")
-      described_class.project(card, row(front: "明白", back: "bright"))
-
-      expect(back_texts(card.deck)).to include("clear")
-    end
-
-    it "discards the old Front item when the front changes" do
-      card = create(:reading_card, front: "明白", back: "understand")
-      described_class.project(card, row(front: "懂", back: "understand"))
-
-      expect(front_texts(card.deck)).to contain_exactly("懂")
-    end
-  end
-
   describe ".replace" do
     def progress_counters(card)
       card.slice(:correct_streak, :correct_count, :view_count).values
@@ -113,55 +88,12 @@ RSpec.describe DataSets::Projection do
     end
   end
 
-  describe ".front_taken?" do
-    it "is true when another card in the deck owns the front" do
-      deck = create(:reading_deck)
-      create(:reading_card, deck:, front: "明白", back: "understand")
-      card = create(:reading_card, deck:, front: "懂", back: "get it")
-
-      expect(described_class.front_taken?(card, "明白")).to be(true)
-    end
-
-    it "is false for the card's own front" do
-      card = create(:reading_card, front: "明白", back: "understand")
-
-      expect(described_class.front_taken?(card, "明白")).to be(false)
-    end
-  end
-
   describe ".add_distractor" do
     it "records a wrong guess as a referenced Back item" do
       card = create(:reading_card, front: "两", back: "two")
       described_class.add_distractor(card, "wrong")
 
       expect(card.item.distractors.pluck(:text)).to include("wrong")
-    end
-  end
-
-  describe ".remove_card" do
-    it "removes the card's Front item and orphaned Back items" do
-      card = create(:reading_card, front: "两", back: "two")
-      described_class.remove_card(card)
-
-      expect(card.deck.reload.data_set.items).to be_empty
-    end
-
-    it "keeps Back items still used by another card" do
-      deck = create(:reading_deck)
-      create(:reading_card, deck:, front: "x", back: "shared")
-      card = create(:reading_card, deck:, front: "y", back: "shared")
-      described_class.remove_card(card)
-
-      expect(back_texts(card.deck)).to contain_exactly("shared")
-    end
-
-    it "keeps a Back item still referenced as a distractor" do
-      deck = create(:reading_deck)
-      create(:reading_card, deck:, front: "a", back: "z", distractors: ["x"])
-      card = create(:reading_card, deck:, front: "b", back: "x")
-      described_class.remove_card(card)
-
-      expect(back_texts(card.deck)).to include("x")
     end
   end
 
@@ -191,24 +123,17 @@ RSpec.describe DataSets::Projection do
 
     it "adds a reverse card when the source gains a gloss" do
       fwd, rev = with_reverse([{ front: "明白", back: "understand" }])
-      content = row(front: "明白", back: "understand;clear")
-      described_class.project(fwd.cards.sole, content)
+      rows = [row(front: "明白", back: "understand;clear")]
+      described_class.replace(fwd, rows)
 
       expect(reverse_prompts(rev)).to contain_exactly("understand", "clear")
     end
 
     it "removes a reverse card when the source loses a gloss" do
       fwd, rev = with_reverse([{ front: "明白", back: "understand;clear" }])
-      described_class.project(fwd.cards.sole, row(front: "明白", back: "clear"))
+      described_class.replace(fwd, [row(front: "明白", back: "clear")])
 
       expect(reverse_prompts(rev)).to contain_exactly("clear")
-    end
-
-    it "destroys reverse cards when the source card is removed" do
-      fwd, rev = with_reverse([{ front: "明白", back: "understand" }])
-      described_class.remove_card(fwd.cards.sole)
-
-      expect(reverse_prompts(rev)).to be_empty
     end
 
     it "reconciles reverse cards after a source replace" do
@@ -229,8 +154,7 @@ RSpec.describe DataSets::Projection do
     it "resets reverse progress when the answer changes" do
       fwd, rev = with_reverse([{ front: "明白", back: "understand" }])
       rev.cards.sole.update!(correct_streak: 3)
-      renamed = row(front: "懂", back: "understand")
-      described_class.project(fwd.cards.sole, renamed)
+      described_class.replace(fwd, [row(front: "懂", back: "understand")])
 
       expect(rev.cards.sole.correct_streak).to eq(0)
     end

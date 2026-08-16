@@ -131,6 +131,33 @@ RSpec.describe CardsController do
 
       expect(response).to have_http_status(:not_found)
     end
+
+    context "with a language deck" do
+      it "leaves the card's content untouched" do
+        card = create(:reading_card, front: "明白", back: "understand")
+        login_as(default_user)
+        patch_card(card.deck, card, front: "懂")
+
+        expect(card.reload.front).to eq("明白")
+      end
+
+      it "redirects back to the study page" do
+        card = create(:reading_card)
+        login_as(default_user)
+        patch_card(card.deck, card, front: "懂")
+
+        expect(response).to redirect_to(deck_study_path(card.deck))
+      end
+
+      it "explains why in a flash" do
+        card = create(:reading_card)
+        login_as(default_user)
+        patch_card(card.deck, card, front: "懂")
+
+        expect(flash[:error])
+          .to eq("Editing cards is only available for basic and music decks")
+      end
+    end
   end
 
   describe "#destroy" do
@@ -143,13 +170,12 @@ RSpec.describe CardsController do
         .to change(Card, :count).by(-1)
     end
 
-    it "removes a language card's items on delete" do
+    it "leaves a language deck's card in place" do
       card = create(:reading_card, back: "x")
-      deck = card.deck
       login_as(default_user)
-      delete(deck_card_path(deck, card))
 
-      expect(deck.reload.data_set.items).to be_empty
+      expect { delete(deck_card_path(card.deck, card)) }
+        .not_to change(Card, :count)
     end
 
     it "redirects to the deck study path" do

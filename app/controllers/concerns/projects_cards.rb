@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
-# Edits and deletes go through the deck family's card writer (flat columns
-# or data_set items). Edit content comes from the form params; distractors
-# aren't editable, so they're carried over from the existing card.
+# Edits and deletes go through the deck family's card writer. Only the
+# flat-card families reach here now (CardsController turns language decks
+# away), so the writer is always Decks::FlatCards. Edit content comes from
+# the form params; distractors aren't editable, so they're carried over from
+# the existing card.
 module ProjectsCards
   extend ActiveSupport::Concern
 
@@ -33,8 +35,8 @@ module ProjectsCards
     card.errors.empty?
   end
 
-  # All content (and its validation) moved off the card onto data_set items, so
-  # the edit is validated here against the submitted content.
+  # The edit is validated here against the submitted content rather than on
+  # the card, so a rejected edit never has to be rolled back.
   def add_content_errors(card, content)
     card.errors.add(:front, :blank) if content[:front].blank?
     card.errors.add(:back, :blank) if content[:back].blank?
