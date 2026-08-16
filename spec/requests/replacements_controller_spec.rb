@@ -74,7 +74,16 @@ RSpec.describe ReplacementsController do
 
       get(new_deck_replacement_path(create(:music_deck, user: default_user)))
 
-      expect(flash[:error]).to eq("Replace is only available for text decks")
+      expect(flash[:error]).to eq("Replace is only available for basic decks")
+    end
+
+    it "redirects with an error for a language deck" do
+      deck = create(:reading_deck, user: default_user)
+      login_as(default_user)
+
+      get(new_deck_replacement_path(deck))
+
+      expect(response).to redirect_to(deck_path(deck))
     end
   end
 
@@ -146,6 +155,15 @@ RSpec.describe ReplacementsController do
       post_replace(deck, valid_csv)
 
       expect(response).to redirect_to(deck_path(deck))
+    end
+
+    it "leaves a language deck's cards untouched" do
+      card = create(:reading_card, front: "明白", back: "understand")
+      login_as(default_user)
+
+      post_replace(card.deck, valid_csv)
+
+      expect(card.deck.cards.reload.map(&:front)).to contain_exactly("明白")
     end
   end
 end

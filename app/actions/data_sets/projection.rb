@@ -7,39 +7,23 @@
 # Items are the source of truth; cards are item_id + progress.
 #
 # Language content is being frozen ahead of the compendium migration, so this
-# writer is shrinking: per-card editing and deletion are gone, leaving ingest
-# (build / replace), reverse-deck card generation, and miss-recorded decoys.
+# writer is shrinking: per-card editing, deletion, and re-import are gone,
+# leaving first ingest, reverse-deck card generation, and miss-recorded
+# decoys. Nothing mutates an existing data_set's items any more, which is why
+# sibling-deck reconciliation went with them.
 module DataSets
   module Projection
     extend self
 
     FRONT = "Front"
     BACK = "Back"
-    SEPARATOR = "; "
-    # Fields a Replace preserves on a kept card when the CSV omits the column.
-    PRESERVED = [:reading, :example_front, :example_back].freeze
 
-    # Fresh build for ingest (Create / CopyDeck): rebuild the data_set from the
-    # rows and create one thin card per row.
+    # Fresh build for ingest (CreateLanguage / CopyDeck): rebuild the data_set
+    # from the rows and create one thin card per row.
     def build(deck, rows)
       data_set = reset_data_set(deck)
       item_ids = insert_data(data_set, rows)
       insert_cards(deck, rows, item_ids)
-    end
-
-    # Replace ingest: rebuild items from the new rows while preserving the
-    # progress of cards whose front survives (matched by front text).
-    def replace(deck, rows)
-      sibling_formers = sibling_former_states(deck)
-      former = former_states(deck)
-      rows = preserve_omitted(rows, former)
-      data_set = deck.data_set
-      item_ids = upsert_data(data_set, rows)
-      summary = reconcile_cards(deck, rows, item_ids, former)
-      prune_items(data_set, item_ids.values)
-      reconcile_siblings(deck, sibling_formers)
-      deck.cards.reset
-      summary
     end
 
     # Record a language card's wrong-guess distractor as an item reference.
@@ -53,30 +37,16 @@ module DataSets
       ItemDistractor.find_or_create_by!(item: prompt, distractor_item: decoy)
     end
 
-    # Ensure a deck has exactly one card per paired item on its anchor side,
-    # preserving progress for survivors (matched by item text). Also builds a
-    # reverse deck's cards on creation (formers empty, no existing cards).
-    def reconcile_deck(deck, formers)
-      wanted = anchor_items(deck).index_by(&:text)
-      existing = existing_by_text(deck, formers)
-      sync_wanted(deck, wanted, existing, formers)
-      (existing.keys - wanted.keys).each { |text| existing[text].destroy! }
-      # Cards were created/destroyed outside the loaded association above.
+    # Populate a freshly created reverse deck: one card per paired item on its
+    # anchor side. Content is frozen, so there is never anything to reconcile
+    # afterwards - this runs once, on a deck with no cards yet.
+    def build_anchor_cards(deck)
+      anchor_items(deck).each { |item| create_anchor_card(deck, item) }
+      # Cards were created outside the loaded association above.
       deck.cards.reset
     end
 
     private
-
-    def preserve_omitted(rows, former)
-      rows.map do |row|
-        state = former[row[:front]]
-        next row unless state
-
-        PRESERVED.each_with_object(row.dup) do |key, merged|
-          merged[key] = state[key] unless row.key?(key)
-        end
-      end
-    end
 
     def reset_data_set(deck)
       data_set = deck.data_set
@@ -91,33 +61,6 @@ module DataSets
       insert_pairings(rows, item_ids)
       insert_distractors(rows, item_ids)
       item_ids
-    end
-
-    def upsert_data(data_set, rows)
-      item_ids = upsert_items(data_set, rows)
-      clear_all_links(data_set)
-      insert_pairings(rows, item_ids)
-      insert_distractors(rows, item_ids)
-      item_ids
-    end
-
-    def upsert_items(data_set, rows)
-      result = Item.upsert_all(
-        item_rows(data_set, rows),
-        unique_by: [:data_set_id, :side, :text],
-        returning: ["id", "side", "text"],
-      )
-      result.rows.to_h { |id, side, text| [[side, text], id] }
-    end
-
-    def clear_all_links(data_set)
-      fronts = data_set.items.select(:id)
-      Pairing.where(item_id: fronts).delete_all
-      ItemDistractor.where(item_id: fronts).delete_all
-    end
-
-    def prune_items(data_set, keep_ids)
-      data_set.items.where.not(id: keep_ids).delete_all
     end
 
     def insert_items(data_set, rows)
@@ -202,87 +145,6 @@ module DataSets
       }
     end
 
-    def former_states(deck)
-      deck.cards.to_h do |card|
-        [card.item.text, former_state(card)]
-      end
-    end
-
-    def former_state(card)
-      {
-        card:,
-        back: card.back,
-        reading: card.reading,
-        example_front: card.example_front,
-        example_back: card.example_back,
-      }
-    end
-
-    def reconcile_cards(deck, rows, item_ids, former)
-      counts = { kept: 0, reset: 0 }
-      added = []
-      rows.each do |row|
-        outcome = reconcile_existing(row, item_ids, former)
-        outcome ? counts[outcome] += 1 : added << row
-      end
-      removed = remove_vanished(rows, former)
-      insert_cards(deck, added, item_ids)
-      { added: added.size, removed:, **counts }
-    end
-
-    def remove_vanished(rows, former)
-      vanished = former.keys - rows.pluck(:front)
-      vanished.each { |front| former[front][:card].destroy! }
-      vanished.size
-    end
-
-    def reconcile_existing(row, item_ids, former)
-      state = former[row[:front]]
-      return unless state
-
-      card = state[:card]
-      card.update_column(:item_id, item_ids.fetch([FRONT, row[:front]]))
-      return :kept if state[:back] == glosses(row).join(SEPARATOR)
-
-      reset_progress(card)
-      :reset
-    end
-
-    def reset_progress(card)
-      card.update_columns(correct_streak: 0, correct_count: 0, view_count: 0)
-    end
-
-    def sibling_decks(deck)
-      deck.data_set.decks.where.not(id: deck.id)
-    end
-
-    def sibling_former_states(deck)
-      sibling_decks(deck).to_h { |sibling| [sibling.id, deck_states(sibling)] }
-    end
-
-    def deck_states(deck)
-      deck.cards.to_h do |card|
-        [card.id, { text: card.item.text, back: card.back }]
-      end
-    end
-
-    def reconcile_siblings(deck, sibling_formers)
-      sibling_decks(deck).each do |sibling|
-        reconcile_deck(sibling, sibling_formers[sibling.id] || {})
-      end
-    end
-
-    def sync_wanted(deck, wanted, existing, formers)
-      wanted.each do |text, item|
-        card = existing[text]
-        if card
-          refresh_card(card, item, formers[card.id])
-        else
-          create_anchor_card(deck, item)
-        end
-      end
-    end
-
     # Items on the deck's anchor side that participate in a pairing - a card is
     # generated only for paired items (a distractor-only item gets none).
     def anchor_items(deck)
@@ -292,19 +154,6 @@ module DataSets
 
     def pairing_anchor_ids(deck)
       Pairing.select(deck.anchor_pairing_column)
-    end
-
-    # Existing cards keyed by item text. Callers pass formers covering every
-    # card (sibling sync) or an empty deck (reverse-deck build), so a card's
-    # former text is always available.
-    def existing_by_text(deck, formers)
-      deck.cards.index_by { |card| formers.dig(card.id, :text) }
-    end
-
-    def refresh_card(card, item, former)
-      card.item = item
-      card.update_column(:item_id, item.id)
-      reset_progress(card) if former[:back] != card.back
     end
 
     def create_anchor_card(deck, item)
