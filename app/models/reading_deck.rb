@@ -8,6 +8,4 @@ class ReadingDeck < LanguageDeck
   def type_label = "Reading"
 
   def reversible? = true
-
-  def replaceable? = true
 end

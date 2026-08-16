@@ -241,7 +241,7 @@ end
 - `BasicDeck < Deck` / `BasicCard < Card` — plain forward flashcards on flat cards; not reversible.
 - `MusicDeck < Deck` / `MusicCard < Card` — microphone-driven music study on flat cards. Each `MusicCard.back` is a **single** note matching `MusicCard::NOTE_REGEXP` (e.g. `C4`, `F#3`), enforced by `Decks::CreateMusic` at import rather than by a model validation; sequences are formed at study time by windowing (see Music Decks). `MusicDeck` defaults `distractor_pool` to `"none"`.
 
-`BasicDeck` and `MusicDeck` answer `flat_cards?` true. `ReadingDeck` and `BasicDeck` are `replaceable?` (CSV re-import). Card classes mirror the deck classes one-to-one; each deck declares its card class via `card_type` (no base-class default). Behavior lives on the two abstract intermediates plus `WritingCard`; `ReadingCard`, `BasicCard`, and `MusicCard` exist for naming symmetry. In specs there is no `:card` factory — create cards through `:basic_card` / `:reading_card` / `:music_card`, and note that the `:deck` factory builds a `BasicDeck`.
+`BasicDeck` and `MusicDeck` answer `flat_cards?` true. `BasicDeck` alone is `replaceable?` (CSV re-import). Card classes mirror the deck classes one-to-one; each deck declares its card class via `card_type` (no base-class default). Behavior lives on the two abstract intermediates plus `WritingCard`; `ReadingCard`, `BasicCard`, and `MusicCard` exist for naming symmetry. In specs there is no `:card` factory — create cards through `:basic_card` / `:reading_card` / `:music_card`, and note that the `:deck` factory builds a `BasicDeck`.
 
 **STI convention — `model_name` override:** each direct subclass of `Deck` / `Card` overrides `self.model_name` to return the parent's, so `form_with(model: reading_deck)` keeps routing to `decks_path` (not `reading_decks_path`). `LanguageDeck` and `LanguageCard` carry it for their own subclasses, which inherit it. Apply this to any new STI subclass of the base.
 
@@ -378,7 +378,7 @@ app/
 │   ├── card_distractor.rb  # Card-owned decoy text (flat-card decoys)
 │   ├── deck.rb             # STI base — user/topic/data_set; flat_cards?/card_writer/anchor_side
 │   ├── language_deck.rb    # Abstract parent of Reading/Writing — mandarin?/hanzi_chars
-│   ├── reading_deck.rb     # STI subclass — forward language study; reversible, replaceable
+│   ├── reading_deck.rb     # STI subclass — forward language study; reversible
 │   ├── writing_deck.rb     # STI subclass — studies the data set in reverse
 │   ├── basic_deck.rb       # STI subclass — plain flashcards on flat cards; replaceable
 │   ├── music_deck.rb       # STI subclass — flat cards; defaults distractor_pool to "none"
@@ -515,15 +515,15 @@ Controllers call actions and branch on `result.success?`.
 
 Two writers exist, and a deck picks between them with `Deck#card_writer`. Both consume the same "row": a hash of the shape a CSV row or the edit form produces, `{ front:, back:, category:, distractors:, reading:, example_front:, example_back:, source_card_id? }`. Callers (`Decks::Replace`, the `ProjectsCards` controller concern, `Catalog::CopyDeck`) go through `deck.card_writer` and never name a writer directly.
 
-`build` and `replace` are the shared entry points. `project` / `remove_card` / `front_taken?` are **flat-only** — language decks no longer support per-card editing (`CardsController` turns them away and the study view hides the edit button), so those methods exist on `Decks::FlatCards` alone.
+`build` is the only entry point both share. `replace` / `project` / `remove_card` / `front_taken?` are **flat-only**: language decks support neither per-card editing nor CSV re-import, so `CardsController` and `ReplacementsController` turn them away, the study view hides the edit button, and `ReadingDeck` is no longer `replaceable?`. Once a language deck exists, the only thing that still touches its content is a miss-recorded decoy.
 
 **`Decks::FlatCards`** (`app/actions/decks/flat_cards.rb`) — the writer for Basic and Music. Rows become card columns plus `card_distractors` rows; there is no indirection to reconcile. `replace` matches rows to existing cards by `front`, preserves the progress of any card whose `back` survives unchanged (a changed back zeroes the counters), and carries over `PRESERVED` fields (`reading`, `example_front`, `example_back`) when the CSV omits those columns.
 
 **`DataSets::Projection`** (`app/actions/data_sets/projection.rb`) — the writer for language decks. It translates rows into the item/pairing/distractor graph plus the thin cards that anchor to it; items are the source of truth and the card is just `item_id` + progress. It carries two entry points the flat writer has no need for:
 - `add_distractor(card, text)` — a wrong guess accretes the guessed text as an unpaired decoy item + `ItemDistractor` (never spawns a card). The flat families write `card_distractors` from `Card#record_distractor` instead.
-- `reconcile_deck(deck, formers)` — ensures a deck has exactly one card per paired item on its `anchor_side`, preserving progress by item text. Used to build a reverse deck's cards and to keep **sibling decks** (other decks over the same data set) in sync after a re-import.
+- `build_anchor_cards(deck)` — populates a freshly created reverse deck with one card per paired item on its `anchor_side`. Called once, by `Decks::CreateReverse`.
 
-Because language decks can share a data set, `replace` snapshots sibling card state up front and calls `reconcile_siblings` at the end so a re-import propagates to the deck's reverse (and vice versa). Flat cards belong to exactly one deck, so nothing there needs syncing.
+Sibling-deck reconciliation used to live here: because a forward and reverse deck share a data set, every content change had to propagate between them. Nothing mutates an existing language data_set's items any more, so that machinery is gone.
 
 ### Authentication
 
@@ -719,14 +719,14 @@ Microphone-driven music study (target: guitar / ukulele). Public music decks app
 
 A reverse deck studies an existing text deck's content in the opposite direction — the answers become prompts — **without re-uploading**. Both decks share one `data_set`; only the reading direction differs.
 
-- **Create**: on the deck-show page, a `ReadingDeck` that is `reversible?` and has no reverse yet shows a "create reverse deck" action → `POST /decks/:deck_id/reversal` → `ReversalsController#create` → `Decks::CreateReverse`. It builds a `WritingDeck` on the same `data_set` and generates its cards via `DataSets::Projection.reconcile_deck` (one card per paired Back item). At most one reverse per data set (`Deck#reverse_present?`), and a reverse can't be reversed again. Basic and music decks are not reversible.
+- **Create**: on the deck-show page, a `ReadingDeck` that is `reversible?` and has no reverse yet shows a "create reverse deck" action → `POST /decks/:deck_id/reversal` → `ReversalsController#create` → `Decks::CreateReverse`. It builds a `WritingDeck` on the same `data_set` and generates its cards via `DataSets::Projection.build_anchor_cards` (one card per paired Back item). At most one reverse per data set (`Deck#reverse_present?`), and a reverse can't be reversed again. Basic and music decks are not reversible.
 - **Direction knobs**: `WritingDeck` overrides `anchor_side` to `"Back"` and `anchor_pairing_column` to `:paired_item_id`. `WritingCard` anchors a Back item; its `front` is that item's text, while `back` / `reading` / `category` / examples come from the paired **Front** item (via `answer_item`). Category-pool distractors reach the category through the pairing (`cards_in_category` override).
-- **Staying in sync**: because forward and reverse share a data set, any content change (edit, replace, delete, add-distractor) reconciles sibling decks — `DataSets::Projection` snapshots sibling card state and calls `reconcile_deck` so both directions stay consistent.
+- **No sync needed**: forward and reverse share a data set, which used to mean every content change had to reconcile both decks. Language content is frozen now — no edit, no delete, no re-import — so the pair can only diverge if something new starts writing items.
 
 ### Reading (pronunciation gloss)
 
 Cards can carry an optional pronunciation/gloss (e.g. Mandarin pinyin) kept separate from `back`. Keeping it out of `back` keeps the multiple-choice options clean — the gloss is revealed with the card rather than baked into every answer string.
-- **Data**: `cards.reading` for the flat families; `items.reading` on the Front item for language decks, which `LanguageCard` delegates through. Imported via an optional `reading` CSV column (`Decks::CsvReading`, wired through the create actions / `Decks::Replace` / `Catalog::CopyDeck`) and editable in the card edit form (the card view is kept in sync by a `card-reading` turbo-stream replace from `CardsController`).
+- **Data**: `cards.reading` for the flat families; `items.reading` on the Front item for language decks, which `LanguageCard` delegates through. Imported via an optional `reading` CSV column (`Decks::CsvReading`, wired through the create actions / `Decks::Replace` / `Catalog::CopyDeck`) and editable in the card edit form on flat decks (the card view is kept in sync by a `card-reading` turbo-stream replace from `CardsController`).
 - **Display**: `Components::CardFront` takes an optional `reading:` and renders `Components::CardReading` *inside* the card-front box, directly under the character, so the two read as one unit. The answer (update) view passes `reading:`, and so does the question view when it re-renders after a passed reading stage (the confirmed reading stays visible while the translation is answered — see Study Algorithm). The initial pre-answer and music views omit it, so nothing shows before answering and the gloss never lands on the distractor options.
 - **Study**: the reading also powers the level-2 **reading stage** — pick the reading, then the translation (see Study Algorithm). The box border/stripe/shadow live on `.card-front-wrapper` (not the `.card-front` `<h2>`) so the character and reading share one frame. There is no show/hide configuration; a deck that shouldn't show readings simply omits the `reading` column.
 

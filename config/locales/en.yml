@@ -65,7 +65,7 @@ en:
   replacements:
     create:
       success: "Replaced cards: %{added} added, %{removed} removed, %{reset} reset, %{kept} kept"
-    unsupported: "Replace is only available for text decks"
+    unsupported: "Replace is only available for basic decks"
   reversals:
     create:
       success: "Reverse deck created"

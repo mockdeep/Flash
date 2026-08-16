@@ -13,7 +13,7 @@ module Decks
       deck = build_deck(source)
       ActiveRecord::Base.transaction do
         deck.save!
-        DataSets::Projection.reconcile_deck(deck, {})
+        DataSets::Projection.build_anchor_cards(deck)
       end
       Result.new(success: true, record: deck)
     end
