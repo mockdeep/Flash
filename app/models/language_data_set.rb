@@ -8,9 +8,10 @@ class LanguageDataSet < DataSet
 
   # Every individual ISO 639-2 language, code => display name, keyed by the
   # shortest available code (BCP 47 convention: "zh", not "zho") so stored
-  # values work as language tags for future speech features. User-selected at
-  # creation. Only zh gets dedicated study-page treatment (fonts, prewarming)
-  # so far.
+  # values work as language tags for future speech features. Nothing in the
+  # app creates a language data_set any more, so this validates what the seed
+  # account and catalog copies carry. Only zh gets dedicated study-page
+  # treatment (fonts, prewarming) so far.
   language_pairs =
     ISO_639::ISO_639_2.filter_map do |entry|
       name = entry.english_name.split(";").first
@@ -20,21 +21,6 @@ class LanguageDataSet < DataSet
       [entry.alpha2.presence || entry.alpha3, name]
     end
   LANGUAGES = language_pairs.sort_by(&:last).to_h.freeze
-
-  # Promoted to the top of the deck form's language select.
-  COMMON_LANGUAGE_CODES = [
-    "ar",
-    "zh",
-    "fr",
-    "de",
-    "hi",
-    "it",
-    "ja",
-    "ko",
-    "pt",
-    "ru",
-    "es",
-  ].freeze
 
   validates :language, presence: true, inclusion: { in: LANGUAGES.keys }
 end

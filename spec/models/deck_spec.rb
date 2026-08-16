@@ -37,6 +37,23 @@ RSpec.describe Deck do
 
       expect(deck.errors[:data_set]).to be_present
     end
+
+    def deck_over_unsaved_data_set(name:, user:)
+      ReadingDeck.new(
+        user:, study_goal: 1, data_set: build(:data_set, user:, name:),
+      )
+    end
+
+    # Catalog::CopyDeck builds a deck over a brand-new data_set, so the
+    # data_set's own errors have to surface on the deck being saved.
+    it "merges an unsaved data_set's errors onto the deck" do
+      taken = create(:data_set)
+      deck = deck_over_unsaved_data_set(name: taken.name, user: taken.user)
+
+      deck.valid?
+
+      expect(deck.errors[:name]).to include("has already been taken")
+    end
   end
 
   describe "#name" do

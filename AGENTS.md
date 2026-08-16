@@ -232,7 +232,7 @@ end
 - `Card` (STI base) - `belongs_to :deck`, `belongs_to :item` (nullable — flat cards have none), `belongs_to :source_card` (catalog-copy provenance). `has_many :card_distractors`. Owns the content columns and the progress counters (`correct_count`, `correct_streak`, `view_count`), and holds the score handle (`record_correct!`, `record_miss!`, `record_view!`). `normalizes :back` is the single back-joining rule. Unique on `[deck_id, front]` where `front` is present.
 - `Subscription` - Payment/subscription info, belongs to user.
 
-**DataSet STI:** `LanguageDataSet` is the only subclass. It requires a `language` code; `LANGUAGES` (on this class) maps every individual ISO 639-2 language to its display name, keyed by shortest available code per BCP 47 ("zh", not "zho"; "tlh" works), and `COMMON_LANGUAGE_CODES` is promoted to a "Common" optgroup in the deck form's select. Language is user-selected at creation — there is no auto-detection.
+**DataSet STI:** `LanguageDataSet` is the only subclass. It requires a `language` code; `LANGUAGES` (on this class) maps every individual ISO 639-2 language to its display name, keyed by shortest available code per BCP 47 ("zh", not "zho"; "tlh" works). Nothing in the app creates one any more — the deck form has no Language option — so the validation guards what the seed account and catalog copies carry.
 
 **Deck/Card STI subclasses** (deck class names match their UI representation — the future topic-page tabs). Both hierarchies have an abstract language intermediate:
 - `LanguageDeck < Deck` / `LanguageCard < Card` — never instantiated. `LanguageDeck` delegates `name` and `language` to the data_set, points `card_writer` at `DataSets::Projection`, holds `mandarin?` and `hanzi_chars` (font features), and overrides `cards_in_category` / `reading_pairs` to join through items. `LanguageCard` overrides the content readers to read its `item`, requires one, and records a miss as an item-side decoy rather than a `card_distractors` row. The base `Deck#mandarin?` is `false`.
@@ -302,7 +302,6 @@ app/
 │   ├── decks/
 │   │   ├── cards_csv.rb          # Shared CSV parsing/validation for all three create actions
 │   │   ├── create_basic.rb       # Basic deck CSV import → flat cards
-│   │   ├── create_language.rb    # Language deck CSV import → LanguageDataSet + ReadingDeck
 │   │   ├── create_music.rb       # Music deck CSV import (one note per card) → flat cards
 │   │   ├── create_reverse.rb     # Spins a WritingDeck over an existing deck's data set
 │   │   ├── csv_examples.rb       # Optional example_front/example_back columns
@@ -352,7 +351,7 @@ app/
 │   ├── concerns/
 │   │   ├── demo_session.rb            # Demo guest-session helpers
 │   │   └── projects_cards.rb          # save_card/destroy_card → deck.card_writer (flat decks only)
-│   ├── decks_controller.rb            # `#create` dispatches CreateBasic / CreateLanguage / CreateMusic on :deck_type
+│   ├── decks_controller.rb            # `#create` dispatches CreateMusic vs CreateBasic on :deck_type
 │   ├── demo_controller.rb             # Starts a guest demo study session
 │   ├── milestones_controller.rb       # Updates a deck's study goal
 │   ├── pages_controller.rb            # pricing / privacy / terms
@@ -370,7 +369,7 @@ app/
 │   ├── application_record.rb
 │   ├── user.rb              # has_many :data_sets, :decks (direct), :topics; has_one :subscription
 │   ├── data_set.rb          # STI base — language content set; LanguageDataSet is the only subclass
-│   ├── language_data_set.rb # STI subclass — requires language; LANGUAGES/COMMON_LANGUAGE_CODES
+│   ├── language_data_set.rb # STI subclass — requires language; LANGUAGES lookup
 │   ├── topic.rb            # User-created container grouping decks
 │   ├── item.rb             # Neutral term (side/text + Front-side metadata); glosses/distractors
 │   ├── pairing.rb          # Front item ↔ Back paired_item join
@@ -676,9 +675,11 @@ Private decks can be shared with a friend via a revocable token. The `decks.shar
 
 ### CSV Import
 
-Decks are created by uploading CSV files. The deck-creation form has a three-way "Deck Type" radio (Basic / Language / Music), and each family has its own create action: `Decks::CreateBasic`, `Decks::CreateLanguage`, `Decks::CreateMusic`. Choosing "Language" reveals a required language select (grouped: "Common" then "More languages"; disabled when hidden so it never submits); the controller rejects a language-type submission with no language. All three share `Decks::CardsCsv` for parsing and validation, then diverge on where the content lands: Basic and Music call `Decks::FlatCards.build` (card columns), Language builds a `LanguageDataSet` + `ReadingDeck` and calls `DataSets::Projection.build` (items and pairings).
+Decks are created by uploading CSV files. The deck-creation form has a two-way "Deck Type" radio (Basic / Music), with a create action each: `Decks::CreateBasic` and `Decks::CreateMusic`. Both share `Decks::CardsCsv` for parsing and validation, and both land their rows on flat cards via `Decks::FlatCards.build`.
 
-**Text decks (`Decks::CreateBasic` / `Decks::CreateLanguage`):**
+**Language decks are not creatable.** There is no Language option on the form, and anything that still submits `deck_type=language` (a stale form, a hand-rolled POST) falls through to Basic — a freeform front/back CSV is exactly what a Basic deck is for. Language decks arrive only from the catalog. `Decks::CreateLanguage` is gone; `DataSets::Projection.build` is now reached solely through `Catalog::CopyDeck`.
+
+**Text decks (`Decks::CreateBasic`):**
 - Required columns: `front`, `back`; optional: `category`, `distractors`, `reading`, `example_front`/`example_back`
 - `front` must be unique within the file; multiple `back` answers separated by `;`
 - Presence of a `distractors` column sets the deck's `distractor_pool` to `"preset"` (each row must then supply distractors); otherwise it's `"category"`

@@ -614,10 +614,9 @@ RSpec.describe DecksController do
   end
 
   describe "#create" do
-    def deck_params(name:, csv_file:, deck_type: nil, language: nil)
+    def deck_params(name:, csv_file:, deck_type: nil)
       attrs = { name:, cards_csv: csv_file }
       attrs[:deck_type] = deck_type if deck_type
-      attrs[:language] = language if language
       { deck: attrs }
     end
 
@@ -661,58 +660,29 @@ RSpec.describe DecksController do
       end
     end
 
+    # Language decks are no longer creatable; a submission naming that type
+    # (a stale form, a hand-rolled POST) falls through to Basic rather than
+    # erroring, since a freeform CSV is exactly what a Basic deck is for.
     context "when deck_type is 'language'" do
-      def post_language_deck(language: nil)
+      def post_language_deck
         csv = fixture_file_upload("decks/basic.csv", "text/csv")
         login_as(default_user)
         post(
           decks_path,
           params: deck_params(
-            name: "Vocab", csv_file: csv, deck_type: "language", language:,
+            name: "Vocab", csv_file: csv, deck_type: "language",
           ),
         )
       end
 
-      it "stores the selected language on the data_set" do
-        post_language_deck(language: "es")
-
-        expect(DataSet.find_by(name: "Vocab").language).to eq("es")
-      end
-
-      it "creates a LanguageDataSet" do
-        post_language_deck(language: "es")
-
-        expect(DataSet.find_by(name: "Vocab")).to be_a(LanguageDataSet)
-      end
-
-      it "creates a ReadingDeck" do
-        post_language_deck(language: "es")
-
-        expect(DataSet.find_by(name: "Vocab").decks.sole).to be_a(ReadingDeck)
-      end
-
-      it "re-renders the form when a language deck fails validation" do
-        create(:data_set, name: "Vocab", user: default_user)
-
-        post_language_deck(language: "es")
-
-        expect(rendered).to have_text("Create New Deck")
-      end
-
-      it "re-renders the form when no language is selected" do
+      it "creates a basic deck instead" do
         post_language_deck
 
-        expect(rendered).to have_text("Create New Deck")
+        expect(default_user.decks.sole).to be_a(BasicDeck)
       end
 
-      it "sets an error flash when no language is selected" do
-        post_language_deck
-
-        expect(flash.now[:error]).to eq("Please select a language")
-      end
-
-      it "does not create a deck when no language is selected" do
-        expect { post_language_deck }.not_to change(Deck, :count)
+      it "creates no data_set" do
+        expect { post_language_deck }.not_to change(DataSet, :count)
       end
     end
 

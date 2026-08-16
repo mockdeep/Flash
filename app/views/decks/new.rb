@@ -37,24 +37,9 @@ module Views
                     plain(" Basic")
                   end
                   label(class: "deck-type-option") do
-                    form.radio_button(:deck_type, "language", data: { deck_type_target: "radio", action: "change->deck-type#update" })
-                    plain(" Language")
-                  end
-                  label(class: "deck-type-option") do
                     form.radio_button(:deck_type, "music", data: { deck_type_target: "radio", action: "change->deck-type#update" })
                     plain(" Music (microphone required)")
                   end
-                end
-
-                fieldset(class: "form-field deck-type-toggle", data: { deck_type_target: "languageSettings" }, hidden: true, disabled: true) do
-                  form.label(:language, "Language", class: "form-label")
-                  form.select(
-                    :language,
-                    language_options,
-                    { prompt: "Select a language" },
-                    required: true,
-                    class: "form-input",
-                  )
                 end
 
                 fieldset(class: "form-field deck-type-toggle", data: { deck_type_target: "musicSettings" }, hidden: true, disabled: true) do
@@ -94,19 +79,6 @@ module Views
             end
           end
         end
-      end
-
-      private
-
-      # Optgroups: the common languages up top, everything else below.
-      # A code appears in only one group so option text stays unambiguous.
-      def language_options
-        all = LanguageDataSet::LANGUAGES
-        common = LanguageDataSet::COMMON_LANGUAGE_CODES
-        {
-          "Common" => all.slice(*common).map(&:reverse).sort,
-          "More languages" => all.except(*common).map(&:reverse),
-        }
       end
     end
   end
