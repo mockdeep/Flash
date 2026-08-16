@@ -38,7 +38,7 @@ module DataSets
       summary
     end
 
-    # Re-project a single card from edited content (edit / accept suggestion).
+    # Re-project a single card from edited content.
     def project(card, content)
       sibling_formers = sibling_former_states(card.deck)
       former_front = card.item

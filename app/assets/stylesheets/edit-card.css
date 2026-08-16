@@ -46,20 +46,3 @@
   gap: 0.75rem;
   align-items: center;
 }
-
-.edit-card__suggest {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.edit-card__suggest-label {
-  font-family: var(--font-body);
-  font-size: 15px;
-  color: var(--color-text);
-  cursor: pointer;
-}
-
-.edit-card__suggest-checkbox {
-  cursor: pointer;
-}

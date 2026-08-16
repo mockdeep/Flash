@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_08_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -20,20 +20,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_000000) do
     t.string "text", null: false
     t.datetime "updated_at", null: false
     t.index ["card_id", "text"], name: "index_card_distractors_on_card_id_and_text", unique: true
-  end
-
-  create_table "card_suggestions", force: :cascade do |t|
-    t.string "back", null: false
-    t.bigint "card_id", null: false
-    t.string "category", null: false
-    t.datetime "created_at", null: false
-    t.string "front", null: false
-    t.string "state", default: "pending", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.index ["card_id", "state"], name: "index_card_suggestions_on_card_id_and_state"
-    t.index ["card_id"], name: "index_card_suggestions_on_card_id"
-    t.index ["user_id"], name: "index_card_suggestions_on_user_id"
   end
 
   create_table "cards", force: :cascade do |t|
@@ -160,8 +146,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_08_000000) do
   end
 
   add_foreign_key "card_distractors", "cards", on_delete: :cascade
-  add_foreign_key "card_suggestions", "cards", on_delete: :cascade
-  add_foreign_key "card_suggestions", "users", on_delete: :cascade
   add_foreign_key "cards", "cards", column: "source_card_id", on_delete: :nullify
   add_foreign_key "cards", "decks"
   add_foreign_key "cards", "items", on_delete: :cascade

@@ -80,16 +80,6 @@
   border: 2px solid transparent;
 }
 
-.nav-link-dot {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  background: var(--color-accent);
-  border-radius: 50%;
-}
-
 .nav-link:hover {
   color: var(--color-primary);
   background: rgb(var(--color-primary-channels) / 8%);

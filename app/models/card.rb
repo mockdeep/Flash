@@ -15,7 +15,6 @@ class Card < ApplicationRecord
   belongs_to :deck
   belongs_to :item
   belongs_to :source_card, class_name: "Card"
-  has_many :suggestions, class_name: "CardSuggestion", dependent: :destroy
   has_many :card_distractors, dependent: :delete_all
 
   normalizes :back, with: NORMALIZE_BACK
@@ -69,13 +68,6 @@ class Card < ApplicationRecord
       example_back:,
       distractors:,
     }
-  end
-
-  def suggestable_to_catalog?
-    return false unless source_card
-
-    source_card.deck.visibility == "public" &&
-      source_card.deck.user_id != deck.user_id
   end
 
   private

@@ -34,7 +34,7 @@ module Decks
       { added: added.size, removed:, **counts }
     end
 
-    # Re-write a single card from edited content (edit / accept suggestion).
+    # Re-write a single card from edited content.
     def project(card, content)
       card.update!(content_attributes(content))
       replace_distractors(card, content[:distractors] || [])

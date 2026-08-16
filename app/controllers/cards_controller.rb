@@ -25,7 +25,6 @@ class CardsController < ApplicationController
   private
 
   def update_succeeded(deck, card)
-    create_catalog_suggestion(card) if suggest_to_catalog?
     render(turbo_stream: success_streams(card:, deck:))
   end
 
@@ -39,22 +38,6 @@ class CardsController < ApplicationController
   def card_params
     params.expect(
       card: [:front, :back, :category, :reading, :example_front, :example_back],
-    )
-  end
-
-  def suggest_to_catalog?
-    params.dig(:card, :suggest_to_catalog).to_s == "1"
-  end
-
-  def create_catalog_suggestion(card)
-    return unless card.suggestable_to_catalog?
-
-    CardSuggestion.create!(
-      card: card.source_card,
-      user: current_user,
-      front: card.front,
-      back: card.back,
-      category: card.category,
     )
   end
 

@@ -9,7 +9,6 @@ class Deck < ApplicationRecord
   belongs_to :user
   belongs_to :topic
   has_many :cards, dependent: :delete_all
-  has_many :incoming_suggestions, through: :cards, source: :suggestions
 
   # Flat-card decks own their name (the column); language decks override the
   # reader to go through the data_set until the compendium rename.

@@ -13,31 +13,6 @@ RSpec.describe CardsController do
     { front: "New Front", back: "Original Back", category: "Science" }
   end
 
-  def build_catalog_copy(deck: default_deck, owner: create(:user))
-    catalog = create(:deck, user: owner, visibility: "public")
-    source = create(:basic_card, deck: catalog)
-    copy = create(:basic_card, deck:, source_card: source)
-    [source, copy]
-  end
-
-  def patch_suggesting(deck, card, **overrides)
-    login_as(default_user)
-    patch(
-      deck_card_path(deck, card),
-      params: { card: suggest_params(**overrides) },
-    )
-  end
-
-  def suggest_params(**overrides)
-    {
-      front: "F",
-      back: "B",
-      category: "C",
-      suggest_to_catalog: "1",
-      **overrides,
-    }
-  end
-
   describe "#update" do
     context "when update succeeds" do
       it "updates the card's content" do
@@ -155,78 +130,6 @@ RSpec.describe CardsController do
       patch_card(other_deck, other_card, front: "Hacked")
 
       expect(response).to have_http_status(:not_found)
-    end
-
-    context "with suggest_to_catalog checkbox" do
-      it "creates a suggestion against the source catalog card" do
-        source, copy = build_catalog_copy
-
-        expect { patch_suggesting(default_deck, copy) }
-          .to change { source.suggestions.count }.by(1)
-      end
-
-      it "stores the updated front on the suggestion" do
-        source, copy = build_catalog_copy
-        patch_suggesting(default_deck, copy, front: "F2")
-
-        expect(source.suggestions.last.front).to eq("F2")
-      end
-
-      it "stores the updated back on the suggestion" do
-        source, copy = build_catalog_copy
-        patch_suggesting(default_deck, copy, back: "B2")
-
-        expect(source.suggestions.last.back).to eq("B2")
-      end
-
-      it "stores the updated category on the suggestion" do
-        source, copy = build_catalog_copy
-        patch_suggesting(default_deck, copy, category: "C2")
-
-        expect(source.suggestions.last.category).to eq("C2")
-      end
-
-      it "attributes the suggestion to the current user" do
-        source, copy = build_catalog_copy
-        patch_suggesting(default_deck, copy)
-
-        expect(source.suggestions.last.user).to eq(default_user)
-      end
-
-      it "creates a pending suggestion" do
-        source, copy = build_catalog_copy
-        patch_suggesting(default_deck, copy)
-
-        expect(source.suggestions.last.state).to eq("pending")
-      end
-
-      it "creates no suggestion when the checkbox is absent" do
-        _source, copy = build_catalog_copy
-
-        expect { update_card(deck: default_deck, card: copy) }
-          .not_to change(CardSuggestion, :count)
-      end
-
-      it "creates no suggestion when the card has no source_card" do
-        card = create(:basic_card, deck: default_deck)
-
-        expect { patch_suggesting(default_deck, card) }
-          .not_to change(CardSuggestion, :count)
-      end
-
-      it "creates no suggestion when the source deck is owned by the user" do
-        _source, copy = build_catalog_copy(owner: default_user)
-
-        expect { patch_suggesting(default_deck, copy) }
-          .not_to change(CardSuggestion, :count)
-      end
-
-      it "creates no suggestion when the update fails" do
-        _source, copy = build_catalog_copy
-
-        expect { patch_suggesting(default_deck, copy, front: "") }
-          .not_to change(CardSuggestion, :count)
-      end
     end
   end
 

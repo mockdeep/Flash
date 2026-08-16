@@ -72,43 +72,6 @@ RSpec.describe Card do
     end
   end
 
-  describe "#suggestable_to_catalog?" do
-    def build_catalog_copy(catalog_deck:, user:)
-      catalog_card = create(:basic_card, deck: catalog_deck)
-      copy_deck = create(:deck, user:)
-      create(:basic_card, deck: copy_deck, source_card: catalog_card)
-    end
-
-    it "returns true when card has a public source deck owned by another" do
-      catalog = create(:deck, user: create(:user), visibility: "public")
-      card = build_catalog_copy(catalog_deck: catalog, user: create(:user))
-
-      expect(card.suggestable_to_catalog?).to be(true)
-    end
-
-    it "returns false when the card has no source_card" do
-      card = create(:basic_card)
-
-      expect(card.suggestable_to_catalog?).to be(false)
-    end
-
-    it "returns false when the source deck is no longer public" do
-      catalog = create(:deck, user: create(:user), visibility: "public")
-      card = build_catalog_copy(catalog_deck: catalog, user: create(:user))
-      catalog.update!(visibility: "private")
-
-      expect(card.reload.suggestable_to_catalog?).to be(false)
-    end
-
-    it "returns false when the source deck is owned by the same user" do
-      owner = create(:user)
-      catalog = create(:deck, user: owner, visibility: "public")
-      card = build_catalog_copy(catalog_deck: catalog, user: owner)
-
-      expect(card.suggestable_to_catalog?).to be(false)
-    end
-  end
-
   describe "content from the card's own columns" do
     it "reads the front" do
       card = create(:basic_card, front: "明白")

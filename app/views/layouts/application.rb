@@ -139,15 +139,7 @@ module Views
       private
 
       def render_decks_nav_link
-        link_to(decks_path, class: "nav-link") do
-          plain("Decks")
-          if current_user.pending_incoming_suggestions?
-            span(
-              class: "nav-link-dot",
-              aria: { label: "pending suggestions" },
-            )
-          end
-        end
+        link_to("Decks", decks_path, class: "nav-link")
       end
 
       def repo_url

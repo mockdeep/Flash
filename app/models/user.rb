@@ -26,7 +26,6 @@ class User < ApplicationRecord
   has_many :data_sets, dependent: :destroy
   has_many :decks, dependent: :destroy
   has_many :topics, dependent: :destroy
-  has_many :card_suggestions, dependent: :destroy
   has_one :subscription, dependent: :destroy
 
   def self.find_by(args)
@@ -51,18 +50,5 @@ class User < ApplicationRecord
 
   def supporter?
     subscription&.active? || false
-  end
-
-  def pending_incoming_suggestions?
-    decks.joins(cards: :suggestions)
-      .exists?(card_suggestions: { state: "pending" })
-  end
-
-  def pending_suggestion_counts_per_deck
-    decks
-      .joins(cards: :suggestions)
-      .where(card_suggestions: { state: "pending" })
-      .group("decks.id")
-      .count
   end
 end
