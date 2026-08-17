@@ -148,30 +148,6 @@ RSpec.describe DecksController do
       expect(rendered).to have_link("Review →", href: deck_study_path(deck))
     end
 
-    def reversible_pair
-      reading = create(:reading_deck, user: default_user)
-      create(:writing_deck, data_set: reading.data_set)
-    end
-
-    it "orders a reading deck before the writing deck sharing its set" do
-      login_as(default_user)
-      reversible_pair
-
-      get(decks_path)
-
-      expect(rendered)
-        .to have_css(".rail-card:first-child .rail-type", text: "Reading")
-    end
-
-    it "titles a writing deck with its set name, not the reversed name" do
-      login_as(default_user)
-      reversible_pair
-
-      get(decks_path)
-
-      expect(rendered).to have_no_text("(reversed)")
-    end
-
     def studied_deck(name, at)
       create(:deck, user: default_user, name:, last_studied_at: at)
     end
@@ -213,18 +189,23 @@ RSpec.describe DecksController do
       expect(rendered).to have_no_css(".rail-card--mru")
     end
 
+    def mixed_types
+      create(:reading_deck, user: default_user)
+      create(:deck, user: default_user)
+    end
+
     it "renders type tabs when a section mixes deck types" do
       login_as(default_user)
-      reversible_pair
+      mixed_types
 
       get(decks_path)
 
-      expect(rendered).to have_css(".rail-tab", text: "Writing")
+      expect(rendered).to have_css(".rail-tab", text: "Reading")
     end
 
     it "counts each type in its tab" do
       login_as(default_user)
-      reversible_pair
+      mixed_types
 
       get(decks_path)
 
@@ -233,7 +214,7 @@ RSpec.describe DecksController do
 
     it "marks the All tab active on render" do
       login_as(default_user)
-      reversible_pair
+      mixed_types
 
       get(decks_path)
 
@@ -439,29 +420,11 @@ RSpec.describe DecksController do
         .to have_no_css("datalist option[value='Mandarin']", visible: :all)
     end
 
-    it "shows the create-reverse button for a forward deck" do
+    it "offers no create-reverse button" do
       deck = deck_with_card
       login_as(default_user)
 
       get(deck_path(deck))
-
-      expect(rendered).to have_text("Create reverse deck")
-    end
-
-    it "hides the create-reverse button once a reverse exists" do
-      deck = deck_with_card
-      Decks::CreateReverse.call(source: deck)
-      login_as(default_user)
-      get(deck_path(deck))
-
-      expect(rendered).to have_no_text("Create reverse deck")
-    end
-
-    it "hides the create-reverse button on a reverse deck" do
-      reverse = Decks::CreateReverse.call(source: deck_with_card).record
-      login_as(default_user)
-
-      get(deck_path(reverse))
 
       expect(rendered).to have_no_text("Create reverse deck")
     end

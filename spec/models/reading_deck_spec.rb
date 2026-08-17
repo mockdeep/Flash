@@ -11,10 +11,6 @@ RSpec.describe ReadingDeck do
     expect(described_class.new.type_label).to eq("Reading")
   end
 
-  it "sorts first among its set's decks" do
-    expect(described_class.new.type_position).to eq(1)
-  end
-
   it "does not have flat cards" do
     expect(described_class.new.flat_cards?).to be(false)
   end

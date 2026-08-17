@@ -218,14 +218,14 @@ end
 
 ### Data Model
 
-**Two content models, one card table.** Basic and Music decks are **flat**: the card owns its content (`front`, `back`, `category`, `reading`, `example_front`, `example_back`) and its progress counters directly, with `card_distractors` rows for decoys. Language decks (Reading/Writing) still keep content in a shared, neutral **data set** of items and pairings — `LanguageCard` overrides the column readers to go through its `item` — so one upload can be studied in both directions without re-uploading. `Deck#flat_cards?` is the switch between them, and `Deck#card_writer` selects the matching write path (`Decks::FlatCards` vs `DataSets::Projection`). The language side is slated to leave the item layer too, at which point the data_set machinery goes away entirely.
+**Two content models, one card table.** Basic and Music decks are **flat**: the card owns its content (`front`, `back`, `category`, `reading`, `example_front`, `example_back`) and its progress counters directly, with `card_distractors` rows for decoys. Language decks still keep content in a shared, neutral **data set** of items and pairings — `LanguageCard` overrides the column readers to go through its `item`. `Deck#flat_cards?` is the switch between them, and `Deck#card_writer` selects the matching write path (`Decks::FlatCards` vs `DataSets::Projection`). The language side is slated to leave the item layer too, at which point the data_set machinery goes away entirely.
 
 **Core Models:**
 - `User` - Authentication. Has `username` (unique, `/\A[a-zA-Z0-9_.]+\z/` — letters, digits, `_`, `.`), `role` (`"user"` / `"admin"` / `"guest"`), `study_goal`, `time_zone`. `has_many :data_sets`, `has_many :decks` (**direct** — every deck carries `user_id`), `has_many :topics`, `has_one :subscription`.
 - `DataSet` (STI base) - A set of language study content, reusable across decks. `belongs_to :user`, `has_many :items`, `has_many :decks`. `name` unique per user. `LanguageDataSet` is the **only** subclass — Basic and Music left this layer for flat cards, so "data set" now means "language content".
-- `Topic` - User-created container grouping **decks** (e.g. "Mandarin", "Music") so related decks collect together on the decks index. `name` unique per user; destroying a topic nullifies its decks. Assigned per deck from the deck show page (type-or-pick datalist input → `TopicAssignmentsController`, `find_or_create_by` name) — sibling Reading/Writing decks over one data_set move independently.
-- `Item` - One neutral term. Has `side` (`"Front"` / `"Back"`), `text`, and (Front-side) `category`, `reading`, `example`, `paired_example`. Belongs to a data set; unique on `[data_set_id, side, text]`. Front↔back meaning is expressed through `Pairing`; distractor candidates through `ItemDistractor`. `#glosses` / `#reverse_glosses` return the paired texts in authored order.
-- `Pairing` - Join between a Front `item` and a Back `paired_item` (one row per gloss). Reverse decks read it via `inverse_pairings`.
+- `Topic` - User-created container grouping **decks** (e.g. "Mandarin", "Music") so related decks collect together on the decks index. `name` unique per user; destroying a topic nullifies its decks. Assigned per deck from the deck show page (type-or-pick datalist input → `TopicAssignmentsController`, `find_or_create_by` name).
+- `Item` - One neutral term. Has `side` (`"Front"` / `"Back"`), `text`, and (Front-side) `category`, `reading`, `example`, `paired_example`. Belongs to a data set; unique on `[data_set_id, side, text]`. Front↔back meaning is expressed through `Pairing`; distractor candidates through `ItemDistractor`. `#glosses` returns the paired Back texts in authored order.
+- `Pairing` - Join between a Front `item` and a Back `paired_item` (one row per gloss).
 - `ItemDistractor` - Join marking a Back item as a preset distractor for a Front `item`. The language-side counterpart of `CardDistractor`.
 - `CardDistractor` - A wrong-answer option owned directly by a flat card (uploaded presets and remembered study misses). Unique on `[card_id, text]`.
 - `Deck` (STI base) - A study form. `belongs_to :user`, `belongs_to :topic` (optional), and `belongs_to :data_set` — required *unless* `flat_cards?`, forbidden *if* it is (the presence/absence pair is what keeps the two content models apart). Flat families own a `name` column (unique per user); language decks delegate `name` to the data_set, and the `ordered` scope COALESCEs the two. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"` / `"preset"` / `"none"`, NOT NULL — set by the importer), `ordered`, `study_goal`, `last_studied_at`, and nullable `share_token`.
@@ -236,12 +236,11 @@ end
 
 **Deck/Card STI subclasses** (deck class names match their UI representation — the future topic-page tabs). Both hierarchies have an abstract language intermediate:
 - `LanguageDeck < Deck` / `LanguageCard < Card` — never instantiated. `LanguageDeck` delegates `name` and `language` to the data_set, points `card_writer` at `DataSets::Projection`, holds `mandarin?` and `hanzi_chars` (font features), and overrides `cards_in_category` / `reading_pairs` to join through items. `LanguageCard` overrides the content readers to read its `item`, requires one, and records a miss as an item-side decoy rather than a `card_distractors` row. The base `Deck#mandarin?` is `false`.
-- `ReadingDeck < LanguageDeck` / `ReadingCard < LanguageCard` — forward study: multiple-choice (or fuzzy-find) recognition. The only `reversible?` deck.
-- `WritingDeck < LanguageDeck` / `WritingCard < LanguageCard` — the same data_set studied in reverse (Back items become prompts, paired Front items the answers) — no re-upload. `anchor_side` flips to `"Back"` and `anchor_pairing_column` to `:paired_item_id`; `name` reads `"<data_set name> (reversed)"`; a reverse of a reverse is not allowed. See Reverse Decks below.
-- `BasicDeck < Deck` / `BasicCard < Card` — plain forward flashcards on flat cards; not reversible.
+- `ReadingDeck < LanguageDeck` / `ReadingCard < LanguageCard` — forward study: multiple-choice (or fuzzy-find) recognition.
+- `BasicDeck < Deck` / `BasicCard < Card` — plain forward flashcards on flat cards.
 - `MusicDeck < Deck` / `MusicCard < Card` — microphone-driven music study on flat cards. Each `MusicCard.back` is a **single** note matching `MusicCard::NOTE_REGEXP` (e.g. `C4`, `F#3`), enforced by `Decks::CreateMusic` at import rather than by a model validation; sequences are formed at study time by windowing (see Music Decks). `MusicDeck` defaults `distractor_pool` to `"none"`.
 
-`BasicDeck` and `MusicDeck` answer `flat_cards?` true. `BasicDeck` alone is `replaceable?` (CSV re-import). Card classes mirror the deck classes one-to-one; each deck declares its card class via `card_type` (no base-class default). Behavior lives on the two abstract intermediates plus `WritingCard`; `ReadingCard`, `BasicCard`, and `MusicCard` exist for naming symmetry. In specs there is no `:card` factory — create cards through `:basic_card` / `:reading_card` / `:music_card`, and note that the `:deck` factory builds a `BasicDeck`.
+`BasicDeck` and `MusicDeck` answer `flat_cards?` true. `BasicDeck` alone is `replaceable?` (CSV re-import). Card classes mirror the deck classes one-to-one; each deck declares its card class via `card_type` (no base-class default). Behavior lives on the two abstract intermediates; `ReadingCard`, `BasicCard`, and `MusicCard` exist for naming symmetry. In specs there is no `:card` factory — create cards through `:basic_card` / `:reading_card` / `:music_card`, and note that the `:deck` factory builds a `BasicDeck`.
 
 **STI convention — `model_name` override:** each direct subclass of `Deck` / `Card` overrides `self.model_name` to return the parent's, so `form_with(model: reading_deck)` keeps routing to `decks_path` (not `reading_decks_path`). `LanguageDeck` and `LanguageCard` carry it for their own subclasses, which inherit it. Apply this to any new STI subclass of the base.
 
@@ -303,7 +302,6 @@ app/
 │   │   ├── cards_csv.rb          # Shared CSV parsing/validation for all three create actions
 │   │   ├── create_basic.rb       # Basic deck CSV import → flat cards
 │   │   ├── create_music.rb       # Music deck CSV import (one note per card) → flat cards
-│   │   ├── create_reverse.rb     # Spins a WritingDeck over an existing deck's data set
 │   │   ├── csv_examples.rb       # Optional example_front/example_back columns
 │   │   ├── csv_reading.rb        # Optional `reading` column
 │   │   ├── flat_cards.rb         # Card writer for Basic/Music: content lives on card columns
@@ -356,7 +354,6 @@ app/
 │   ├── milestones_controller.rb       # Updates a deck's study goal
 │   ├── pages_controller.rb            # pricing / privacy / terms
 │   ├── replacements_controller.rb     # Re-import a deck's cards (Decks::Replace)
-│   ├── reversals_controller.rb        # Create a reverse deck (Decks::CreateReverse)
 │   ├── sessions_controller.rb         # Login / logout
 │   ├── shares_controller.rb           # Owner toggle (via :deck_id) + public preview/copy/try (via :token)
 │   ├── studies_controller.rb          # Study show/update; dispatches text vs music views
@@ -375,17 +372,15 @@ app/
 │   ├── pairing.rb          # Front item ↔ Back paired_item join
 │   ├── item_distractor.rb  # Front item ↔ Back distractor_item join (language decoys)
 │   ├── card_distractor.rb  # Card-owned decoy text (flat-card decoys)
-│   ├── deck.rb             # STI base — user/topic/data_set; flat_cards?/card_writer/anchor_side
-│   ├── language_deck.rb    # Abstract parent of Reading/Writing — mandarin?/hanzi_chars
-│   ├── reading_deck.rb     # STI subclass — forward language study; reversible
-│   ├── writing_deck.rb     # STI subclass — studies the data set in reverse
+│   ├── deck.rb             # STI base — user/topic/data_set; flat_cards?/card_writer
+│   ├── language_deck.rb    # Abstract parent of the item-backed decks — mandarin?/hanzi_chars
+│   ├── reading_deck.rb     # STI subclass — forward language study
 │   ├── basic_deck.rb       # STI subclass — plain flashcards on flat cards; replaceable
 │   ├── music_deck.rb       # STI subclass — flat cards; defaults distractor_pool to "none"
 │   ├── card.rb             # STI base — owns content columns + progress counters + score handle
-│   ├── language_card.rb    # Abstract parent of Reading/Writing cards — content read from item
+│   ├── language_card.rb    # Abstract parent of the item-backed cards — content read from item
 │   ├── basic_card.rb       # STI subclass — overrides model_name only
 │   ├── reading_card.rb     # STI subclass — no behavior of its own
-│   ├── writing_card.rb     # STI subclass — answer/back come from paired Front item
 │   ├── music_card.rb       # STI subclass — NOTE_REGEXP (single note)
 │   └── subscription.rb
 ├── nulls/
@@ -410,7 +405,7 @@ app/
 │   ├── decks/
 │   │   ├── index.rb          # Decks grouped into topic sections + "Other Decks"
 │   │   ├── new.rb            # Three-way deck-type radio + language select
-│   │   ├── show.rb           # Share-link, topic assignment, "create reverse deck"
+│   │   ├── show.rb           # Share-link, topic assignment, replace link, cards table
 │   │   └── replacements/
 │   │       └── new.rb        # Re-import (replace) a deck's cards form
 │   ├── demo/
@@ -518,11 +513,11 @@ Two writers exist, and a deck picks between them with `Deck#card_writer`. Both c
 
 **`Decks::FlatCards`** (`app/actions/decks/flat_cards.rb`) — the writer for Basic and Music. Rows become card columns plus `card_distractors` rows; there is no indirection to reconcile. `replace` matches rows to existing cards by `front`, preserves the progress of any card whose `back` survives unchanged (a changed back zeroes the counters), and carries over `PRESERVED` fields (`reading`, `example_front`, `example_back`) when the CSV omits those columns.
 
-**`DataSets::Projection`** (`app/actions/data_sets/projection.rb`) — the writer for language decks. It translates rows into the item/pairing/distractor graph plus the thin cards that anchor to it; items are the source of truth and the card is just `item_id` + progress. It carries two entry points the flat writer has no need for:
+**`DataSets::Projection`** (`app/actions/data_sets/projection.rb`) — the writer for language decks. It translates rows into the item/pairing/distractor graph plus the thin cards that anchor to it; items are the source of truth and the card is just `item_id` + progress. Two entry points remain:
+- `build(deck, rows)` — reached only from `Catalog::CopyDeck`, the last thing that creates language content.
 - `add_distractor(card, text)` — a wrong guess accretes the guessed text as an unpaired decoy item + `ItemDistractor` (never spawns a card). The flat families write `card_distractors` from `Card#record_distractor` instead.
-- `build_anchor_cards(deck)` — populates a freshly created reverse deck with one card per paired item on its `anchor_side`. Called once, by `Decks::CreateReverse`.
 
-Sibling-deck reconciliation used to live here: because a forward and reverse deck share a data set, every content change had to propagate between them. Nothing mutates an existing language data_set's items any more, so that machinery is gone.
+Sibling-deck reconciliation used to live here: forward and reverse decks shared a data set, so every content change had to propagate between them. Writing decks are gone and nothing reshapes an existing data_set's items, so that machinery went with them.
 
 ### Authentication
 
@@ -687,8 +682,6 @@ Decks are created by uploading CSV files. The deck-creation form has a two-way "
 
 **Music decks (`Decks::CreateMusic`):** see Music Decks section below.
 
-Reverse decks are **not** created from a CSV — they're spun off an existing deck (see Reverse Decks).
-
 ### Music Decks
 
 Microphone-driven music study (target: guitar / ukulele). Public music decks appear in the catalog with a 🎤 badge (rendered via `Components::Base#music_badge`).
@@ -716,14 +709,6 @@ Microphone-driven music study (target: guitar / ukulele). Public music decks app
 - `getUserMedia` and `AudioContext` require HTTPS. Rails dev (`bin/dev`) defaults to plain HTTP — use a self-signed cert or staging to actually exercise the mic flow.
 - `AudioContext` autoplay policy: create/resume inside a user-gesture handler. The controller honors this by gating creation behind the explicit "Start Microphone" button.
 
-### Reverse Decks
-
-A reverse deck studies an existing text deck's content in the opposite direction — the answers become prompts — **without re-uploading**. Both decks share one `data_set`; only the reading direction differs.
-
-- **Create**: on the deck-show page, a `ReadingDeck` that is `reversible?` and has no reverse yet shows a "create reverse deck" action → `POST /decks/:deck_id/reversal` → `ReversalsController#create` → `Decks::CreateReverse`. It builds a `WritingDeck` on the same `data_set` and generates its cards via `DataSets::Projection.build_anchor_cards` (one card per paired Back item). At most one reverse per data set (`Deck#reverse_present?`), and a reverse can't be reversed again. Basic and music decks are not reversible.
-- **Direction knobs**: `WritingDeck` overrides `anchor_side` to `"Back"` and `anchor_pairing_column` to `:paired_item_id`. `WritingCard` anchors a Back item; its `front` is that item's text, while `back` / `reading` / `category` / examples come from the paired **Front** item (via `answer_item`). Category-pool distractors reach the category through the pairing (`cards_in_category` override).
-- **No sync needed**: forward and reverse share a data set, which used to mean every content change had to reconcile both decks. Language content is frozen now — no edit, no delete, no re-import — so the pair can only diverge if something new starts writing items.
-
 ### Reading (pronunciation gloss)
 
 Cards can carry an optional pronunciation/gloss (e.g. Mandarin pinyin) kept separate from `back`. Keeping it out of `back` keeps the multiple-choice options clean — the gloss is revealed with the card rather than baked into every answer string.
@@ -746,7 +731,7 @@ The study engine (`app/domain/study.rb`) manages card selection and answer proce
 - A **miss** resets `correct_streak` and bumps `view_count`, but does **not** call `add_distractor` (a wrong pinyin pick must not pollute the translation distractor pool); the regular result view renders it
 - A **pass** writes nothing; the controller re-renders the question view pinned to the same card (`Study.for(deck:, card_id:)` forces the translation stage, and the confirmed reading stays visible under the character). The translation answer then flows through `answer_card` as usual
 - **Decoys are computed, not stored**: sibling (front, reading) pairs from `deck.reading_pairs(except:)`, ranked by how close each sibling front's **character count** is to the prompt's — the learner predicts phoneme count by counting the prompt's characters, so a wrong-count option is a free elimination. Two slots prefer siblings that share the prompt's first or last character *and* match its character count exactly (knowing one character's reading then can't eliminate them). Sibling readings equal to the card's own (homophones) are excluded
-- Reverse decks skip the stage (`anchor_side` guard) — the options there are the answer characters, so a reading question would hint the answer. Cards without a `reading` behave exactly as before, even at level 2
+- Cards without a `reading` behave exactly as before, even at level 2
 
 ### Subscription Transparency
 
@@ -818,7 +803,7 @@ Things to keep in mind for future development:
 5. **Study Statistics** - More detailed progress tracking and visualizations
 6. **Accessibility** - Continue improving screen reader support
 7. **Internationalization** - Multi-language support for UI (not just study content)
-8. **Topic pages** - The decks index groups by topic; a topic show page with per-deck-type tabs (Reading/Writing/etc.) is the planned next step, then Card STI renames to match the deck names (see NOTES.md)
+8. **Topic pages** - The decks index groups by topic; a topic show page with per-deck-type tabs is the planned next step, then Card STI renames to match the deck names (see NOTES.md)
 
 ## Resources
 

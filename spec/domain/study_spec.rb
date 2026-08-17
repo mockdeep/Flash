@@ -155,26 +155,6 @@ RSpec.describe Study do
 
         expect(study.presentation_mode).to eq(:multiple_choice)
       end
-
-      def reverse_deck_with_reading
-        source = create(:reading_deck)
-        create(
-          :reading_card,
-          deck: source,
-          front: "两",
-          back: "two",
-          reading: "liǎng",
-        )
-        reverse = Decks::CreateReverse.call(source:).record
-        reverse.tap { |deck| deck.update!(level: Study::READING_LEVEL) }
-      end
-
-      it "returns :multiple_choice on a reverse deck" do
-        reverse = reverse_deck_with_reading
-
-        expect(described_class.new(deck: reverse).presentation_mode)
-          .to eq(:multiple_choice)
-      end
     end
 
     it "returns :multiple_choice below the reading level" do
