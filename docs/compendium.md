@@ -1,13 +1,13 @@
 # Compendium
 
 Design for a single shared vocabulary store ("the compendium") that all language
-decks select from, replacing per-deck language data_sets. Status: **phases 1–3
-of Build sequencing are shipped** (2026-08: study-engine interface extraction,
-the Basic/Music flat-card pass, then the language content freeze). Language
-content is now read-only and `data_sets`/`items`/`pairings` are language-only
-and static. The compendium evolution itself (phase 4) is unbuilt. The content
-pipeline was prototyped against real texts in 2026-08 (see Prototype
-findings).
+decks select from, replacing per-deck language content sets. Status: **phases
+1–3 of Build sequencing are shipped** (2026-08: study-engine interface
+extraction, the Basic/Music flat-card pass, then the language content freeze),
+and phase 4 has begun with its 4.3 rename, taken out of order. Language content
+is now read-only and `word_lists`/`items`/`pairings` are language-only and
+static. The content pipeline was prototyped against real texts in 2026-08 (see
+Prototype findings).
 
 ## Goals
 
@@ -20,7 +20,7 @@ findings).
   reader can study a chapter's vocabulary before reading it.
 - Multi-language from the start (Mandarin first). Language-specific needs live in
   nullable columns, not Mandarin-shaped tables.
-- Sharing by reference: a shared deck is a visibility flag, not a copied data_set.
+- Sharing by reference: a shared deck is a visibility flag, not a copied word_list.
 
 ## Schema
 
@@ -168,7 +168,7 @@ teaches two readings of the same word, flash-csvs'
 `09-emit.rb#disambiguate_fronts!` marks the less common reading's front: a
 superscript tone digit where the readings differ only by tone (过 guò / 过⁰ guo),
 a parenthesized reading otherwise (重 / 重 (chóng)). The mark exists only to
-satisfy `items`' unique `(data_set_id, side, text)`.
+satisfy `items`' unique `(word_list_id, side, text)`.
 
 Seed content holds **21 such rows** — 15 superscripts (过, 空, 处, 卷, 散, 吐, 挨,
 担, 缝, 晃, 圈, 闷, 蒙, 拧, 呛) and 6 parenthesized readings (得, 重, 系, 调, 露,
@@ -192,10 +192,19 @@ isn't asking for**:
 
 Both stages stay unambiguous while the cards stay separate. Merging them is the
 end state (see Study semantics) but belongs with headword grouping in phase 5;
-annotation is the small correct thing to carry until then. Retiring the marks is
-therefore data-only — `entries.headword` holds the clean form, so they stop
-displaying the moment front reads switch — plus deleting `disambiguate_fronts!`
-upstream, or the next catalog regeneration reintroduces them.
+annotation is the small correct thing to carry until then.
+
+The annotation also needs the reading stage's decoy pool to **exclude
+same-headword siblings**, or 过 would be offered with both `guò` and `guo` — the
+twin card's true reading. That exclusion restores an invariant the current code
+already documents: `Study#shared_character_decoys` notes that a single-character
+prompt can never anchor, "a same-count sibling sharing its character would be
+the prompt itself", which merging the fronts would otherwise falsify.
+
+Retiring the marks happens **before** the entries rung, on today's structure
+(see phase 4's pre-rungs), so that entries land with no display change at all.
+It also means deleting `disambiguate_fronts!` upstream, or the next catalog
+regeneration reintroduces them.
 
 ### Deck = word_list × form
 
@@ -206,7 +215,7 @@ plus study settings. Consequences:
 - Sharing a deck is a visibility flag. No copying, no forking of content on add:
   adding a shared deck creates the adder's own deck row over the same word_list
   (their own level and study settings). **Shipped at 3.6**, ahead of the rest of
-  this model — `data_sets` were already the shared container, so it needed no
+  this model — `word_lists` were already the shared container, so it needed no
   schema. Fork = copy the word_list, only needed to *edit* the selection — and
   progress carries across a fork automatically, since scores key to senses, not
   lists.
@@ -219,7 +228,7 @@ plus study settings. Consequences:
   Decks that already reference the word_list keep working — same outcome the
   old fork-on-add design gave, without the copy.
 - HSK levels, chapters, and personal lists are one mechanism.
-- The `data_sets`/`items`/`pairings` tables are not needed for language decks
+- The `word_lists`/`items`/`pairings` tables are not needed for language decks
   either, once decks select over the compendium. Basic and Music have already
   exited them onto flat deck-owned cards (phase 2, shipped), so the item
   machinery is language-only today.
@@ -234,12 +243,12 @@ plus study settings. Consequences:
 
 ### Coexistence with Basic and Music
 
-The compendium replaces `data_sets`/`items`/`pairings` for language decks;
+The compendium replaces `word_lists`/`items`/`pairings` for language decks;
 Basic and Music exited that machinery first (phase 2, **shipped 2026-08**)
 onto one shared flat model: cards own their content and their progress
 directly (`deck_id`, front, back, category, reading, examples, the score
 counts, plus a `card_distractors` table for uploaded and miss-recorded
-decoys), no data_set indirection. The families differ by STI type and
+decoys), no word_list indirection. The families differ by STI type and
 validation (music backs must match the note format), not table structure. Two
 study engines then run side by side — language decks enumerate word_list
 senses joined to skill_scores, Basic/Music decks read cards with embedded
@@ -247,7 +256,7 @@ scores. Rules:
 
 - **One flat card model for Basic and Music, not a schema each.** Basic is
   freeform: cards owning their content is the correct model, not legacy debt
-  (the data_set/items/pairings indirection is language-shaped reuse
+  (the word_list/items/pairings indirection is language-shaped reuse
   machinery). Music takes the same shape — *not* a compendium echo, though its
   pitch inventory is small and canonical — because the deck's grouping is part
   of what's studied (notes as a group, sequences as windows of cards), so
@@ -261,14 +270,14 @@ scores. Rules:
 - **Deck FK invariant.** Reading/Writing decks set `word_list_id`; Basic/Music
   decks set no content FK at all — their cards reference `deck_id` directly.
   Presence of `word_list_id` iff language family. *Shipped* as a
-  presence/absence validation pair on `data_set_id` (the FK renames with the
-  table in step 4.3), joined at 3.6 by a uniqueness rule: one deck per user
-  per data_set, scoped by `type`, so that referencing a shared list can't
+  presence/absence validation pair on `word_list_id` (named `data_set_id`
+  until the 4.3 rename), joined at 3.6 by a uniqueness rule: one deck per user
+  per word_list, scoped by `type`, so that referencing a shared list can't
   leave a user holding the same deck twice.
 - **Topics repoint.** *Shipped.* Topic assignment lives on `decks` for every
   family (matching the deck-page assignment UX). One mechanism across all
   families — and truly per-deck: sibling Reading/Writing decks no longer move
-  together as they did when the topic sat on the shared data_set.
+  together as they did when the topic sat on the shared word_list.
 - **One study engine, per-family interface.** Study-mode code stays single:
   each family answers "what are your studyable units, their prompts and
   answers, and their score handle." New study features build against that
@@ -455,7 +464,7 @@ lexicon:
     path.
   - **Everything else: 5,823 fronts in 15 forks across 11 users**, with zero
     parenthesized fronts anywhere in production. Nine of those forks are exact
-    copies of current seed content — no word absent. The other five (data_sets
+    copies of current seed content — no word absent. The other five (word_lists
     56, 61, 68, 81, 84; users 232/277/297) are copies of an older, larger HSK
     generation that stored no readings: they hold every reading-less front that
     remains (3,424) and 65 words (Level 1) or 59 (Level 3) that seed content no
@@ -471,7 +480,7 @@ full book.
 
 ## Seeding
 
-- The existing hand-curated HSK data_sets are the seed: vetted word + level +
+- The existing hand-curated HSK word_lists are the seed: vetted word + level +
   gloss rows. Their semicolon-split glosses import as individual senses (facet
   over-splitting accepted, see above).
 - Cross-level gloss differences for the same headword are *signal* — HSK levels
@@ -492,10 +501,10 @@ full book.
 Executes inside the Build sequencing ladder (phase 4), not as a one-shot event.
 
 1. **Seeding is the backfill.** Entries and senses backfill directly from the
-   curated HSK data_sets (steps 4.1 and 4.2, see Seeding), so matching
+   curated HSK word_lists (steps 4.1 and 4.2, see Seeding), so matching
    targets exist by construction before any fork row resolves.
-2. **Forks of catalog data_sets resolve, then collapse.** Nearly every
-   non-seed data_set is a copy of a seed-account catalog deck. **The set is
+2. **Forks of catalog word_lists resolve, then collapse.** Nearly every
+   non-seed word_list is a copy of a seed-account catalog deck. **The set is
    already closed**: phase 3 shipped, so copying is by reference and editing
    is gone — no new fork appears and no existing one changes. During the
    backfills their rows resolve to the same entries and senses as the
@@ -513,19 +522,19 @@ Executes inside the Build sequencing ladder (phase 4), not as a one-shot event.
    older forks. But a name match is *not* proof of equal content: the five
    legacy forks carry names identical to current seed decks over an older,
    larger generation, so collapsing them shrinks those decks. That shrink is
-   accepted — a decision about five known data_sets, not a rule. Users edit selections, not senses;
+   accepted — a decision about five known word_lists, not a rule. Users edit selections, not senses;
    personal gloss edits have no home in the new model (per-user overrides are
    parked — see Open questions). The copy-and-suggest-back catalog flow lost
    its premise here and was deleted at step 3.1; its successor, if any, is
    sense-level edit proposals.
-3. **Seed-account LanguageDataSets that aren't HSK levels** become curated
+3. **Seed-account word_lists that aren't HSK levels** become curated
    word_lists. Items resolve to entries by headword + stored reading (CEDICT
    fallback when reading is missing); glosses are trusted curation and import
    verbatim as senses (source: curated), same standing as the HSK seed. Items'
    example / paired_example import as sense_examples rows, fanned out to the
    same senses the item's gloss mapped to.
 4. **The residue is handled by hand, not policy.** Measured 2026-08-16, there
-   is none: all 15 non-seed language data_sets are forks of seed decks (see
+   is none: all 15 non-seed language word_lists are forks of seed decks (see
    Prototype findings), so this is a safety net rather than a planned step.
    The step-4.2 dry-run report lists any that appear; each is settled
    manually — words already in the compendium resolve to their entries (the
@@ -537,7 +546,8 @@ Executes inside the Build sequencing ladder (phase 4), not as a one-shot event.
    can be re-made as a language deck once the pipeline exists. No thresholds
    or automated mixed-set rules; the trust split is guidance for the manual
    pass, not an algorithm.
-5. **No deck repoint.** data_sets *become* word_lists (the step-4.3 rename);
+5. **No deck repoint.** The 4.3 rename turned data_sets into word_lists in
+   place;
    decks keep their FK under the new name. Deck STI (Reading/Writing) is
    unchanged.
 6. **Scores migrate at step 4.5** (next section), once the card → sense
@@ -565,7 +575,7 @@ before the next, dry-run/verification checks around every backfill.
 1. **Study-engine interface extraction.** ✅ *Shipped 2026-08-07.* Pure
    refactor, no schema change: study modes ask a deck family for its studyable
    units, their prompts and answers, and their score handle (the interface
-   from Coexistence). Extracted while every family still sat on the data_set
+   from Coexistence). Extracted while every family still sat on the word_list
    model, so the refactor was behavior-preserving by construction.
 2. **Flat-card pass (Basic + Music together).** ✅ *Shipped 2026-08-08* as a
    ladder of single-concern PRs, each deployed before the next (details in
@@ -588,7 +598,7 @@ before the next, dry-run/verification checks around every backfill.
    edits are discarded wholesale, a decision rather than an accident.
 
    Four results phase 4 depends on:
-   - **`DataSets::Projection` is 40 lines**, down from ~410: `build_cards`
+   - **`WordLists::Projection` is 40 lines**, down from ~410: `build_cards`
      (one card per paired Front item, for a deck created over existing
      content) and `add_distractor`. Nothing creates or reshapes items and
      pairings any more. The `Deck#card_writer` seam went too — with the
@@ -604,13 +614,13 @@ before the next, dry-run/verification checks around every backfill.
      map, not two; and 4.7 rebuilds writing decks from nothing rather than
      re-enabling a path.
    - **Copies share, they don't duplicate.** A language deck added from the
-     catalog points at the source's `data_set`; only its cards are new. A
-     `Deck` validation allows one deck per user per data_set, scoped by
+     catalog points at the source's `word_list`; only its cards are new. A
+     `Deck` validation allows one deck per user per word_list, scoped by
      `type` so a writing deck can sit beside its reading counterpart later.
      This is the end model's sharing-by-reference, landed early — it needed
-     no schema, because `data_sets` were already the shared container and
-     the 4.3 rename is cosmetic.
-   - **Card rows are still per-deck.** Sharing the data_set does not share
+     no schema, because `word_lists` were already the shared container and
+     the 4.3 rename was cosmetic.
+   - **Card rows are still per-deck.** Sharing the word_list does not share
      progress: a copy gets its own cards over the same items. That stays
      true until 4.5 drops language cards for `skill_scores`, at which point
      `build_cards` dies and adding a deck becomes a single row.
@@ -625,10 +635,11 @@ before the next, dry-run/verification checks around every backfill.
    the end model) or returns at 4.7 and phase 5 — worth saying plainly
    wherever this is announced, because "your deck is now read-only" reads as
    breakage unless the destination is named.
-4. **Compendium evolution.** After phases 2–3 the data_set machinery is
+4. **Compendium evolution.** After phases 2–3 the word_list machinery is
    language-only *and static*, and its tables map nearly 1:1 onto the
    compendium: items (front side) → entries, pairings + back items → senses +
-   memberships, data_sets → word_lists, cards → skill_scores. Each mapping is
+   memberships, cards → skill_scores (the list table itself already carries
+   its compendium name). Each mapping is
    one add → backfill → switch reads → drop-old step, deployed and verified
    before the next. Every backfill task carries a `--dry-run` mode on the
    *same code path* that performs the write, so the report cannot drift from
@@ -636,32 +647,51 @@ before the next, dry-run/verification checks around every backfill.
    migration section's concerns execute inside these backfills rather than as
    a one-shot event.
 
-   Phase 4 opens with a **pre-rung that needs no schema**: collapse the legacy
-   forks. Nine of the fifteen fork data_sets are exact copies of current seed
-   content and repoint losslessly; the other five (56, 61, 68, 81, 84) copy an
-   older, larger HSK generation, so repointing shrinks those decks to the
-   current list — accepted, since most of the dropped words are still published
-   at other levels and only 262 card views of history sit across all five.
-   Doing this first is what lets the entries rung resolve a uniform corpus: the
-   3,424 reading-less fronts leave with these data_sets, so no headword-only
-   resolution path is ever needed. Mechanically it is the 3.6 copy-by-reference
-   shape — repoint `deck.data_set_id`, delete the old cards,
-   `Projection.build_cards` over the shared set — with one collision to settle
-   by hand: user 277 holds both Level 3 (81) and Level 3 (Custom) (84), which
-   would collapse onto the same data_set and trip `one_deck_per_data_set`. Keep
-   81, the one with study history.
+   Phase 4 opens with **two pre-rungs that need no new tables**. Both run on
+   today's structure, and between them they leave the entries backfill nothing
+   to decide.
+
+   *Collapse the legacy forks.* Nine of the fifteen fork word_lists are exact
+   copies of current seed content and repoint losslessly; the other five (56,
+   61, 68, 81, 84) copy an older, larger HSK generation, so repointing shrinks
+   those decks to the current list — accepted, since most of the dropped words
+   are still published at other levels and only 262 card views of history sit
+   across all five. Doing this first is what lets the entries rung resolve a
+   uniform corpus: the 3,424 reading-less fronts leave with these word_lists,
+   so no headword-only resolution path is ever needed. Mechanically it is the
+   3.6 copy-by-reference shape — repoint `deck.word_list_id`, delete the old
+   cards, `WordLists::Projection.build_cards` over the shared list — with one
+   collision to settle by hand: user 277 holds both Level 3 (81) and Level 3
+   (Custom) (84), which would collapse onto the same word_list and trip
+   `one_deck_per_word_list`. Keep 81, the one with study history.
+
+   *Let homographs be homographs.* Replace `items`' unique
+   `(word_list_id, side, text)` with `(word_list_id, side, text, reading)`,
+   `nulls_not_distinct: true` — the NULLS clause matters, because Back items
+   carry no reading and Postgres would otherwise treat every one as distinct,
+   silently dropping the dedup `add_distractor` relies on. This is not
+   scaffolding: it is `entries`' own uniqueness rule, headword + reading,
+   asserted one table early, and the index it replaces was simply wrong about
+   what identifies a word. With the constraint gone the 21 marks are stripped
+   from `items.text`, the deck renders the disambiguator instead (see
+   Homographs and the level marks), and the reading stage stops drawing decoys
+   from same-headword siblings. Doing this *before* entries is what makes the
+   entries rung invisible: front reads switch from an already-clean
+   `items.text` to an identical `entries.headword`. Nothing creates language
+   items any more, so no writer has to learn the new shape —
+   `Decks::CardsCsv`'s duplicate-front check belongs to the Basic import path
+   alone.
    1. **Canonicalize entries, switch front-side reads.** Add `lexicons` +
-      `entries`; backfill by deduping front items across data_sets. After the
-      collapse pre-rung every remaining front is seed content or an exact copy
-      of it, and all of it resolves on headword + reading, so the measured step
+      `entries`; backfill by deduping front items across word_lists. After the
+      pre-rungs every remaining front is seed content or an exact copy of it,
+      carries no mark, and resolves on headword + reading, so the measured step
       has nothing left to fail on. Items point at their entry, and the
       front-side reads move in the same rung rather than sitting dormant:
       `LanguageCard#front` and `#reading`, `LanguageDeck#hanzi_chars`,
       `#reading_pairs`, and `#language`/`#mandarin?` (through the lexicon).
-      Display comes out byte-identical except for the 21 homograph marks, which
-      this rung retires by reading through — `entries.headword` holds the clean
-      form — paired with app-side disambiguation and the upstream deletion of
-      `disambiguate_fronts!` (see Homographs and the level marks). Enrichment
+      **Display comes out byte-identical, with no exceptions** — that is what
+      the second pre-rung bought, and it makes production traffic the
+      verification for the one backfill that was ever measured. Enrichment
       (`script_variant`, `frequency_rank`) has no reader anywhere in phase 4
       and waits until one exists.
    2. **Extract senses, switch content reads.** Backfill `senses` from back
@@ -677,8 +707,14 @@ before the next, dry-run/verification checks around every backfill.
       rows resolve to them, residue settles by hand off the dry run (see Deck
       migration). Cards keep `item_id` past this step; `add_distractor` still
       needs it until 4.4.
-   3. **Rename data_sets → word_lists** (+ `kind`, `hsk_level`). Decks keep
-      their FK under the new name — no repoint.
+   3. **Rename `data_sets` → `word_lists`.** ✅ *Shipped 2026-08-17*, ahead of the
+      rest of the ladder: it touches only names, so running it first meant
+      every later rung could be written against the final ones. Decks kept
+      their FK under the new name — no repoint. The STI went with it: with
+      Basic and Music long gone from the table, `LanguageDataSet` was the only
+      subclass, so `DataSet` + `LanguageDataSet` collapsed into one `WordList`
+      and `type` was dropped. `kind` and `hsk_level` were *not* added — nothing
+      reads them until chapter and curated lists exist in phase 5.
    4. **Generated distractors.** Sibling generation becomes the *universal*
       option source for language decks, and `sense_distractors` replaces the
       accreted pool. These are one step, not two: a `preset` deck draws
@@ -715,7 +751,7 @@ before the next, dry-run/verification checks around every backfill.
       once production held none, so this is a new `WritingDeck` over an
       existing word_list, enumerating the same senses in reverse. None of
       the old machinery comes back (no card generation, no sibling
-      reconciliation, no one-per-list rule), and the deck-per-data_set
+      reconciliation, no one-per-list rule), and the deck-per-word_list
       validation added at 3.6 is already scoped by `type` to make room for
       it. Then sharing-by-reference visibility and revocation semantics (a
       link that stops discovery without breaking decks that already
@@ -746,11 +782,11 @@ its own `--dry-run` runs clean against production.
   modify at all: current stance is selections yes, senses/glosses no — whether
   sense-level edit proposals ever earn a place is open.
   **Now concrete, not hypothetical**: since 3.6, other users' decks reference
-  the seed account's data_sets, and `DataSet has_many :decks, dependent:
-  :destroy` (plus `User has_many :data_sets, dependent: :destroy`) means
+  the seed account's word_lists, and `DataSet has_many :decks, dependent:
+  :destroy` (plus `User has_many :word_lists, dependent: :destroy`) means
   destroying one would take those decks with it. Deleting a *deck* is safe —
-  it leaves the data_set alone, which is exactly the "revoking a share stops
-  discovery only" behaviour — and no UI deletes a data_set or a seed account,
+  it leaves the word_list alone, which is exactly the "revoking a share stops
+  discovery only" behaviour — and no UI deletes a word_list or a seed account,
   so this is console-only today. Decide the rule (block while referenced, or
   nullify and let the decks die gracefully) before either gets a UI.
 - **Per-user gloss overrides**: parked. Gloss wording is the one fork-era freedom
