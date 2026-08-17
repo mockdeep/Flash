@@ -1,12 +1,12 @@
 # Compendium
 
 Design for a single shared vocabulary store ("the compendium") that all language
-decks select from, replacing per-deck language data_sets. Status: **phases 1–2
+decks select from, replacing per-deck language data_sets. Status: **phases 1–3
 of Build sequencing are shipped** (2026-08: study-engine interface extraction,
-then the Basic/Music flat-card pass — `data_sets`/`items`/`pairings` are now
-language-only). The content freeze (phase 3) and the compendium evolution
-itself (phase 4) are unbuilt. The
-content pipeline was prototyped against real texts in 2026-08 (see Prototype
+the Basic/Music flat-card pass, then the language content freeze). Language
+content is now read-only and `data_sets`/`items`/`pairings` are language-only
+and static. The compendium evolution itself (phase 4) is unbuilt. The content
+pipeline was prototyped against real texts in 2026-08 (see Prototype
 findings).
 
 ## Goals
@@ -169,9 +169,11 @@ plus study settings. Consequences:
 
 - Sharing a deck is a visibility flag. No copying, no forking of content on add:
   adding a shared deck creates the adder's own deck row over the same word_list
-  (their own level and study settings). Fork = copy the word_list, only needed
-  to *edit* the selection — and progress carries across a fork automatically,
-  since scores key to senses, not lists.
+  (their own level and study settings). **Shipped at 3.6**, ahead of the rest of
+  this model — `data_sets` were already the shared container, so it needed no
+  schema. Fork = copy the word_list, only needed to *edit* the selection — and
+  progress carries across a fork automatically, since scores key to senses, not
+  lists.
 - Shared lists are living selections: the owner's edits propagate to every
   referencing deck. Safe by construction — progress is keyed to user × sense,
   so list edits can't touch it, and since users never author glosses, a shared
@@ -189,10 +191,10 @@ plus study settings. Consequences:
   created by selecting existing words/lists, or by supplying words or a text
   that run the content pipeline (senses CEDICT-grounded and LLM-generated).
   Freeform front/back uploads are Basic decks — full freedom, no lexicon
-  contact. Note the phasing: phase 3 removes every authoring path at once,
-  and only selection exists until phase 5 restores creation-by-pipeline. The
-  freeze is not a staging area for the pipeline — it is the end-state rule,
-  shipped early.
+  contact. Note the phasing: phase 3 removed every authoring path at once, so
+  only selection exists until phase 5 adds creation-by-pipeline. The freeze
+  is not a staging area for the pipeline — it is the end-state rule, shipped
+  early.
 
 ### Coexistence with Basic and Music
 
@@ -224,7 +226,9 @@ scores. Rules:
   decks set no content FK at all — their cards reference `deck_id` directly.
   Presence of `word_list_id` iff language family. *Shipped* as a
   presence/absence validation pair on `data_set_id` (the FK renames with the
-  table in step 4.3).
+  table in step 4.3), joined at 3.6 by a uniqueness rule: one deck per user
+  per data_set, scoped by `type`, so that referencing a shared list can't
+  leave a user holding the same deck twice.
 - **Topics repoint.** *Shipped.* Topic assignment lives on `decks` for every
   family (matching the deck-page assignment UX). One mechanism across all
   families — and truly per-deck: sibling Reading/Writing decks no longer move
@@ -235,12 +239,12 @@ scores. Rules:
   interface or are consciously scoped to one family (fuzzy find and the
   reading test are language-only). *Shipped* as: content readers and the
   score handle (`record_correct!`/`record_miss!`) on Card, with a
-  `LanguageCard` STI intermediate keeping the item-backed readers; deck-level
-  option pools (`cards_in_category`, `reading_pairs`) overridden by
-  `LanguageDeck`; and a write-side mirror, `deck.card_writer`, dispatching
-  edits/replaces to `Decks::FlatCards` or `DataSets::Projection`. Phase 3
-  deletes the language write side outright; steps 4.2 and 4.5 swap the
-  language read implementations behind these same seams.
+  `LanguageCard` STI intermediate keeping the item-backed readers, and
+  deck-level option pools (`cards_in_category`, `reading_pairs`) overridden
+  by `LanguageDeck`. The write side had a matching seam, `deck.card_writer`;
+  phase 3 deleted the language writer, leaving one implementation, so the
+  seam went with it. Steps 4.2 and 4.5 swap the language *read*
+  implementations behind the surviving seams.
 
 ### Study semantics
 
@@ -447,15 +451,14 @@ Executes inside the Build sequencing ladder (phase 4), not as a one-shot event.
    curated HSK data_sets (steps 4.1 and 4.2, see Seeding), so matching
    targets exist by construction before any fork row resolves.
 2. **Forks of catalog data_sets resolve, then collapse.** Nearly every
-   non-seed data_set is a copy of a seed-account catalog deck. The set is
-   closed by the time the backfills run — step 3.6 makes copying a
-   reference, so no new forks appear — and during the backfills their rows
-   resolve to the same entries and senses as the originals: stale copies
-   (parenthesized-traditional fronts, missing readings, since-removed words
-   like 车上) resolve all the same, and copy-era modifications are discarded
-   wholesale, no log required (phase 3 froze editing, so the pool of them is
-   fixed and already known to be disposable). Study counts carry as best they
-   can: scores migrate per
+   non-seed data_set is a copy of a seed-account catalog deck. **The set is
+   already closed**: phase 3 shipped, so copying is by reference and editing
+   is gone — no new fork appears and no existing one changes. During the
+   backfills their rows resolve to the same entries and senses as the
+   originals: stale copies (parenthesized-traditional fronts, missing
+   readings, since-removed words like 车上) resolve all the same, and
+   copy-era modifications are discarded wholesale, no log required. Study
+   counts carry as best they can: scores migrate per
    resolved front (see Progress scoring migration) and key to senses, not
    lists, so progress on a word a list dropped persists as skill_scores and
    resurfaces in any deck containing that sense. Collapsing the now-redundant
@@ -466,9 +469,9 @@ Executes inside the Build sequencing ladder (phase 4), not as a one-shot event.
    flow copies the source's name verbatim. Low-stakes and optional, since
    progress keys to senses either way. Users edit selections, not senses;
    personal gloss edits have no home in the new model (per-user overrides are
-   parked — see Open questions). The copy-and-suggest-back catalog flow loses
-   its premise here and is deleted outright at step 3.1; its successor, if
-   any, is sense-level edit proposals.
+   parked — see Open questions). The copy-and-suggest-back catalog flow lost
+   its premise here and was deleted at step 3.1; its successor, if any, is
+   sense-level edit proposals.
 3. **Seed-account LanguageDataSets that aren't HSK levels** become curated
    word_lists. Items resolve to entries by headword + stored reading (CEDICT
    fallback when reading is missing); glosses are trusted curation and import
@@ -499,16 +502,18 @@ Step 4.5 of the Build sequencing ladder. Existing card progress
 (`correct_count`, `correct_streak`, `view_count`) must move
 to skill_scores keyed by the senses each card's item maps to (fan-out: a card
 covering multiple glosses seeds each matched sense's row; conflicts keep max).
-Deck type determines skill (ReadingDeck → reading, WritingDeck → writing).
+Every migrating card is a reading card — phase 3 deleted writing decks after
+production emptied of them — so the backfill maps one skill and the writing
+side starts empty, filling only as 4.7's rebuilt writing decks get studied.
 
 ## Build sequencing
 
-Five phases. The first two — user-invisible groundwork — are **shipped**;
-phase 3 freezes language content by deleting write paths; phase 4 evolves the
-language tables *in place* — no parallel system, no cutover event — and
-phase 5 builds the new capability on the stable result. The shipped phases set
-the working pattern for the rest: many single-concern PRs, each merged and
-deployed before the next, dry-run/verification checks around every backfill.
+Five phases. The first three are **shipped**: two of user-invisible
+groundwork, then the language content freeze. Phase 4 evolves the language
+tables *in place* — no parallel system, no cutover event — and phase 5 builds
+the new capability on the stable result. The shipped phases set the working
+pattern for what remains: many single-concern PRs, each merged and deployed
+before the next, dry-run/verification checks around every backfill.
 
 1. **Study-engine interface extraction.** ✅ *Shipped 2026-08-07.* Pure
    refactor, no schema change: study modes ask a deck family for its studyable
@@ -522,77 +527,57 @@ deployed before the next, dry-run/verification checks around every backfill.
    families) and `user_id` (*every* family — owners never change, and
    phase 4 wants it), and the Basic/Music data_sets and items were deleted.
    No user-visible change beyond per-deck topic assignment.
-3. **Freeze language content.** Pure deletion, no schema change. Users never
-   author gloss content in the end model, so that rule ships *first* and the
-   migration then runs against content that cannot move under it: no
+3. **Freeze language content.** ✅ *Shipped 2026-08-16* as six single-concern
+   deletions, each deployed before the next: the catalog suggestions feature
+   (all families — the model hung off `Card`), language decks out of card
+   edit/delete, out of CSV re-import, the Language option off the
+   deck-creation form (`Decks::CreateLanguage` deleted), reverse-deck
+   creation, and finally copy-by-reference. No schema change beyond dropping
+   `card_suggestions`. The point of doing it first: users never author gloss
+   content in the end model, so shipping that rule up front means phase 4
+   backfills run against content that cannot move under them — no
    unresolvable word enters mid-ladder, no backfill races an edit, and six
-   flows get deleted rather than ported onto the compendium. Copy-era deck
-   edits are discarded wholesale — a decision, not an accident (the migration
-   already dumped them to a log). Each removal is its own step, and each ends
-   by deleting a `DataSets::Projection` method once its last language caller
-   is gone.
-   1. **Delete the suggestions feature.** `CardSuggestion`,
-      `SuggestionsController`, `Catalog::AcceptSuggestion`, the review page,
-      the discoverability surfaces (nav dot, index badge, filter chip), and
-      the `card_suggestions` table. It goes for every family, not just
-      language — the model hangs off `Card` — and the compendium removes its
-      premise anyway: there is nothing to suggest back when users select over
-      canonical senses. `cards.source_card_id` stays; fork provenance still
-      wants it (see Deck migration).
-   2. **Language decks out of card edit/delete.** `ProjectsCards` keeps
-      serving the flat families; `Projection`'s `project`, `remove_card`, and
-      `front_taken?` drop with their last caller.
-   3. **Language decks out of replace.** `Decks::Replace` becomes flat-only;
-      `Projection.replace` drops.
-   4. **Language upload routes to Basic.** The deck-creation form loses its
-      Language option; a word-list CSV becomes a Basic deck — full freedom,
-      no lexicon contact, the escape hatch this model already priced.
-      `Decks::CreateLanguage` drops.
-   5. **Delete reverse-deck creation.** `Decks::CreateReverse`,
-      `ReversalsController`, the route, the show-page button, `reversible?`,
-      and `reverse_present?`. Unlike its neighbours this one is
-      remove-and-rebuild, not remove: writing decks are half the model
-      (`skill_scores.skill` is reading|writing, and the two streaks are
-      deliberately independent), and 4.7 reinstates creation. What's being
-      deleted is only the *implementation*, which has no successor —
-      `reconcile_deck` generates card rows, and 4.5 deletes language cards
-      outright. In the end model a writing deck is a `WritingDeck` row over
-      the same word_list, enumerating senses: no card generation, no sibling
-      reconciliation, no one-reverse-per-set rule. Existing writing decks are
-      untouched and keep working (content is frozen, so nothing needs
-      reconciling), and they still carry writing scores into the 4.5
-      backfill. This is the step that empties the projection: with build,
-      replace, project, and remove_card already gone, `CreateReverse` is
-      `reconcile_deck`'s last caller, so it drops along with
-      `reconcile_siblings` and `sibling_former_states`. It also dissolves
-      rather than fixes the sharing hazard in 3.6 — `reverse_present?` asks
-      whether *any* `WritingDeck` exists over the data_set, which would let
-      the first user to create a reverse lock out everyone else once decks
-      share one. Count non-seed `WritingDeck`s in production before
-      committing: that number *is* the cost of the gap, and nothing else
-      about this step is uncertain.
-   6. **Copy-by-reference for language.** `Catalog::CopyDeck` stops
-      duplicating rows and builds a deck row over the *source* `data_set` —
-      the end model's sharing-by-reference, available already because
-      `data_sets` are the shared container and the rename (4.3) is cosmetic.
-      Forks existed so owners could edit; 3.2 removed the reason.
-      `Projection.build` drops.
+   flows got deleted rather than ported onto the compendium. Copy-era deck
+   edits are discarded wholesale, a decision rather than an accident.
 
-   What survives in `DataSets::Projection` afterward: the read side and
-   `add_distractor` (swapped at 4.4). Every write path that builds or
-   reshapes language content is gone before phase 4 touches a table.
+   Four results phase 4 depends on:
+   - **`DataSets::Projection` is 40 lines**, down from ~410: `build_cards`
+     (one card per paired Front item, for a deck created over existing
+     content) and `add_distractor`. Nothing creates or reshapes items and
+     pairings any more. The `Deck#card_writer` seam went too — with the
+     language writer gone it had one implementation, so `Decks::Replace` and
+     `ProjectsCards` name `Decks::FlatCards` directly.
+   - **Writing decks are gone entirely**, not just their creation. Production
+     held none (the owner deleted the last of them), so `WritingDeck`,
+     `WritingCard`, `Item#reverse_glosses`, the `inverse_pairings`
+     association, `Deck#anchor_side`, and `Deck#type_position` all went with
+     the feature, and `add_distractor` lost its Front-side branch. Every
+     language card anchors a Front item now. Consequences: **all existing
+     progress is reading progress**, so the 4.5 backfill has one skill to
+     map, not two; and 4.7 rebuilds writing decks from nothing rather than
+     re-enabling a path.
+   - **Copies share, they don't duplicate.** A language deck added from the
+     catalog points at the source's `data_set`; only its cards are new. A
+     `Deck` validation allows one deck per user per data_set, scoped by
+     `type` so a writing deck can sit beside its reading counterpart later.
+     This is the end model's sharing-by-reference, landed early — it needed
+     no schema, because `data_sets` were already the shared container and
+     the 4.3 rename is cosmetic.
+   - **Card rows are still per-deck.** Sharing the data_set does not share
+     progress: a copy gets its own cards over the same items. That stays
+     true until 4.5 drops language cards for `skill_scores`, at which point
+     `build_cards` dies and adding a deck becomes a single row.
 
-   **What a user can do with language decks during phases 3–4**, since the
-   window is long and this is the part most easily forgotten: study them,
-   including miss-recorded distractors; add a catalog deck (now by
-   reference); rename, re-level, re-topic, and delete their own decks;
-   upload freeform CSVs as Basic decks. What they cannot do: create a
-   language deck from a CSV, edit or delete a card, replace a deck's
-   contents, spin up a writing deck, or suggest an edit. Existing writing
-   decks keep working throughout. Everything on that second list either
-   never returns (it has no place in the end model) or returns at 4.7 and
-   phase 5 — worth saying plainly wherever this is announced, because "your
-   deck is now read-only" reads as breakage unless the destination is named.
+   **What a user can do with language decks until phase 4 finishes**, since
+   the window is long and this is the part most easily forgotten: study them,
+   including miss-recorded distractors; add a catalog deck; rename, re-level,
+   re-topic, and delete their own decks; upload freeform CSVs as Basic decks.
+   What they cannot do: create a language deck from a CSV, edit or delete a
+   card, replace a deck's contents, make a writing deck, or suggest an edit.
+   Everything on that second list either never returns (it has no place in
+   the end model) or returns at 4.7 and phase 5 — worth saying plainly
+   wherever this is announced, because "your deck is now read-only" reads as
+   breakage unless the destination is named.
 4. **Compendium evolution.** After phases 2–3 the data_set machinery is
    language-only *and static*, and its tables map nearly 1:1 onto the
    compendium: items (front side) → entries, pairings + back items → senses +
@@ -644,29 +629,34 @@ deployed before the next, dry-run/verification checks around every backfill.
       switch touches most study traffic, and if they are already `category`
       it is close to a no-op.
    5. **Globalize progress** — the lumpiest step, so it runs as its own
-      sub-ladder: (a) add `skill_scores` and backfill from cards (max per
-      user × sense × skill; deck STI gives the skill), study dual-writes
-      while card counters stay authoritative; (b) switch study reads to
-      sense enumeration — headword grouping, credit fan-out, and
+      sub-ladder: (a) add `skill_scores` and backfill from cards, study
+      dual-writes while card counters stay authoritative; (b) switch study
+      reads to sense enumeration — headword grouping, credit fan-out, and
       weakest-member selection land here, verifiable against the still-live
       card counters and revertible to card reads without data loss for as
-      long as the dual-write stands; (c) drop language rows from `cards`.
-      This is the step where scores stop being per-card.
-   6. **Retire the item layer.** By now the projection is empty — its
-      authoring methods and `reconcile_deck` went in phase 3, its reads at
-      4.2, `add_distractor` at 4.4 — so this is dropping `items`/`pairings`,
-      `cards.item_id`, and the projection file itself. A cleanup rung, not a
-      migration.
-   7. **Remaining selection work.** Writing-deck creation returns (step 3.5
-      deleted the implementation, not the concept): a `WritingDeck` row over
-      an existing word_list, with none of the old machinery — no card
-      generation, no sibling reconciliation, and no one-per-list rule, since
-      nothing about a second deck over a shared list is exceptional any more.
-      Then sharing-by-reference visibility and revocation semantics (a link
-      that stops discovery without breaking decks that already reference the
-      list — the copy side landed at 3.6); and collapsing fork word_lists
-      onto system lists, now optional dedup rather than a load-bearing
-      migration, since no fork holds content that differs from its source.
+      long as the dual-write stands; (c) drop language rows from `cards`,
+      and `Projection.build_cards` with them — adding a deck becomes a
+      single row. This is the step where scores stop being per-card. The
+      backfill is simpler than first drafted: with writing decks deleted in
+      phase 3, every existing card is a reading card, so there is one skill
+      to map (max per user × sense) and the writing side starts empty.
+   6. **Retire the item layer.** By now the projection is gone —
+      `build_cards` at 4.5, `add_distractor` at 4.4, everything else in
+      phase 3 — so this is dropping `items`/`pairings`, `cards.item_id`, and
+      the projection file itself. A cleanup rung, not a migration.
+   7. **Remaining selection work.** Writing decks return — a *rebuild*, not
+      a re-enable: phase 3 deleted `WritingDeck` and `WritingCard` outright
+      once production held none, so this is a new `WritingDeck` over an
+      existing word_list, enumerating the same senses in reverse. None of
+      the old machinery comes back (no card generation, no sibling
+      reconciliation, no one-per-list rule), and the deck-per-data_set
+      validation added at 3.6 is already scoped by `type` to make room for
+      it. Then sharing-by-reference visibility and revocation semantics (a
+      link that stops discovery without breaking decks that already
+      reference the list — the copy side landed at 3.6); and collapsing fork
+      word_lists onto system lists, now optional dedup rather than a
+      load-bearing migration, since no fork holds content that differs from
+      its source.
 5. **Text companion.** New capability, built only once the model beneath it
    is stable, in three rungs: productionize the content pipeline (API
    structured output, not the prototype's claude-CLI) and run it
@@ -690,6 +680,14 @@ its own `--dry-run` runs clean against production.
   soft-hidden from the owner, while references exist). More broadly, what a user may
   modify at all: current stance is selections yes, senses/glosses no — whether
   sense-level edit proposals ever earn a place is open.
+  **Now concrete, not hypothetical**: since 3.6, other users' decks reference
+  the seed account's data_sets, and `DataSet has_many :decks, dependent:
+  :destroy` (plus `User has_many :data_sets, dependent: :destroy`) means
+  destroying one would take those decks with it. Deleting a *deck* is safe —
+  it leaves the data_set alone, which is exactly the "revoking a share stops
+  discovery only" behaviour — and no UI deletes a data_set or a seed account,
+  so this is console-only today. Decide the rule (block while referenced, or
+  nullify and let the decks die gracefully) before either gets a UI.
 - **Per-user gloss overrides**: parked. Gloss wording is the one fork-era freedom
   this model drops, and the Basic-deck escape hatch prices it at the entire
   language machinery (readings, fuzzy find, per-sense progress). Candidate
