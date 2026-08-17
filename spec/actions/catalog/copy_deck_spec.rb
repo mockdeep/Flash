@@ -35,7 +35,7 @@ RSpec.describe Catalog::CopyDeck do
     end
 
     # A language deck's words are canonical, so a copy references the source
-    # data_set rather than duplicating its items and pairings.
+    # word_list rather than duplicating its items and pairings.
     context "with a language deck" do
       def public_language_deck
         source = create(:reading_deck, visibility: "public")
@@ -43,18 +43,18 @@ RSpec.describe Catalog::CopyDeck do
         source
       end
 
-      it "references the source data_set" do
+      it "references the source word_list" do
         source = public_language_deck
         result = described_class.call(user: create(:user), deck: source)
 
-        expect(result.record.data_set).to eq(source.data_set)
+        expect(result.record.word_list).to eq(source.word_list)
       end
 
-      it "creates no new data_set" do
+      it "creates no new word_list" do
         source = public_language_deck
 
         expect { described_class.call(user: create(:user), deck: source) }
-          .not_to change(DataSet, :count)
+          .not_to change(WordList, :count)
       end
 
       it "duplicates no items" do
@@ -89,7 +89,7 @@ RSpec.describe Catalog::CopyDeck do
       expect(result.record.cards.count).to eq(2)
     end
 
-    it "mirrors the copied cards into a data_set" do
+    it "mirrors the copied cards into a word_list" do
       source = build_public_deck
       create(:basic_card, deck: source, front: "Q1", back: "A1;A2")
       result = described_class.call(user: create(:user), deck: source)
@@ -237,7 +237,7 @@ RSpec.describe Catalog::CopyDeck do
       expect(result.record.cards.first.source_card_id).to eq(source_card.id)
     end
 
-    it "copies a music deck's cards via its data_set" do
+    it "copies a music deck's cards via its word_list" do
       source = create(:music_deck)
       create(:music_card, deck: source, front: "A3 Note", back: "A3")
       result = described_class.call(user: create(:user), deck: source)

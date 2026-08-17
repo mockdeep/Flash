@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe Item do
-  it { is_expected.to belong_to(:data_set) }
+  it { is_expected.to belong_to(:word_list) }
   it { is_expected.to have_many(:cards).dependent(:destroy) }
   it { is_expected.to have_many(:paired_items).through(:pairings) }
   it { is_expected.to have_many(:distractors).through(:item_distractors) }
@@ -13,7 +13,7 @@ RSpec.describe Item do
 
   describe "#glosses" do
     def pair_back(front, text)
-      back = create(:item, :back, data_set: front.data_set, text:)
+      back = create(:item, :back, word_list: front.word_list, text:)
       create(:pairing, item: front, paired_item: back)
     end
 

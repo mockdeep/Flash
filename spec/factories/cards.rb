@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Language cards are thin item_id+progress anchors; their content lives on
-# data_set items. The language factory takes content as transient attributes,
+# word_list items. The language factory takes content as transient attributes,
 # builds the front item from them, and links the back side after create.
 module FactoryCardContent
   NOTES = ["C", "D", "E", "F", "G", "A", "B"].freeze
@@ -20,7 +20,7 @@ module FactoryCardContent
   end
 
   def self.back_item(card, text)
-    card.deck.data_set.items.find_or_create_by!(side: "Back", text:)
+    card.deck.word_list.items.find_or_create_by!(side: "Back", text:)
   end
 
   def self.glosses(back)
@@ -71,7 +71,7 @@ FactoryBot.define do
     item do
       association(
         :item,
-        data_set: deck.data_set,
+        word_list: deck.word_list,
         text: front,
         category:,
         reading:,

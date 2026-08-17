@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Edits and deletes for the flat-card families - CardsController turns
-# language decks away, since their content lives on shared data_set items.
+# language decks away, since their content lives on shared word_list items.
 # Edit content comes from the form params; distractors aren't editable, so
 # they're carried over from the existing card.
 module ProjectsCards

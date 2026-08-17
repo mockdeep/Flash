@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Item < ApplicationRecord
-  belongs_to :data_set
+  belongs_to :word_list
   has_many :cards, dependent: :destroy
 
   has_many :pairings, dependent: :destroy

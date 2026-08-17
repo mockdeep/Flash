@@ -24,7 +24,7 @@ RSpec.describe CardsController do
           .from("Original Front").to("New Front")
       end
 
-      it "edits the card's content in the data_set" do
+      it "edits the card's content in the word_list" do
         card = create(:basic_card, back: "old")
         update_card(deck: card.deck, card:, back: "new;fresh")
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_17_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -44,19 +44,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000001) do
     t.index ["type"], name: "index_cards_on_type"
   end
 
-  create_table "data_sets", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "language"
-    t.string "name", null: false
-    t.string "type", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.index ["user_id", "name"], name: "index_data_sets_on_user_id_and_name", unique: true
-  end
-
   create_table "decks", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.bigint "data_set_id"
     t.string "distractor_pool", null: false
     t.datetime "last_studied_at"
     t.integer "level", null: false
@@ -69,13 +58,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000001) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.string "visibility", default: "private", null: false
-    t.index ["data_set_id"], name: "index_decks_on_data_set_id"
+    t.bigint "word_list_id"
     t.index ["share_token"], name: "index_decks_on_share_token", unique: true
     t.index ["topic_id"], name: "index_decks_on_topic_id"
     t.index ["type"], name: "index_decks_on_type"
     t.index ["user_id", "name"], name: "index_decks_on_user_id_and_name", unique: true, where: "(name IS NOT NULL)"
     t.index ["user_id"], name: "index_decks_on_user_id"
     t.index ["visibility"], name: "index_decks_on_visibility"
+    t.index ["word_list_id"], name: "index_decks_on_word_list_id"
   end
 
   create_table "item_distractors", force: :cascade do |t|
@@ -90,14 +80,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000001) do
   create_table "items", force: :cascade do |t|
     t.string "category"
     t.datetime "created_at", null: false
-    t.bigint "data_set_id", null: false
     t.string "example"
     t.string "paired_example"
     t.string "reading"
     t.string "side", null: false
     t.string "text", null: false
     t.datetime "updated_at", null: false
-    t.index ["data_set_id", "side", "text"], name: "index_items_on_data_set_id_and_side_and_text", unique: true
+    t.bigint "word_list_id", null: false
+    t.index ["word_list_id", "side", "text"], name: "index_items_on_word_list_id_and_side_and_text", unique: true
   end
 
   create_table "pairings", force: :cascade do |t|
@@ -145,19 +135,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000001) do
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 
+  create_table "word_lists", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "language"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "name"], name: "index_word_lists_on_user_id_and_name", unique: true
+  end
+
   add_foreign_key "card_distractors", "cards", on_delete: :cascade
   add_foreign_key "cards", "cards", column: "source_card_id", on_delete: :nullify
   add_foreign_key "cards", "decks"
   add_foreign_key "cards", "items", on_delete: :cascade
-  add_foreign_key "data_sets", "users", on_delete: :cascade
-  add_foreign_key "decks", "data_sets", on_delete: :cascade
   add_foreign_key "decks", "topics", on_delete: :nullify
   add_foreign_key "decks", "users", on_delete: :cascade
+  add_foreign_key "decks", "word_lists", on_delete: :cascade
   add_foreign_key "item_distractors", "items", column: "distractor_item_id", on_delete: :cascade
   add_foreign_key "item_distractors", "items", on_delete: :cascade
-  add_foreign_key "items", "data_sets", on_delete: :cascade
+  add_foreign_key "items", "word_lists", on_delete: :cascade
   add_foreign_key "pairings", "items", column: "paired_item_id", on_delete: :cascade
   add_foreign_key "pairings", "items", on_delete: :cascade
   add_foreign_key "subscriptions", "users"
   add_foreign_key "topics", "users", on_delete: :cascade
+  add_foreign_key "word_lists", "users", on_delete: :cascade
 end

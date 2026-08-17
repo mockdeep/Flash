@@ -55,7 +55,7 @@ class Card < ApplicationRecord
   end
 
   # Content reads the card's own columns (the flat-card model); LanguageCard
-  # overrides the readers to go through the data_set item instead.
+  # overrides the readers to go through the word_list item instead.
   def distractors = card_distractors.map(&:text)
 
   def to_row

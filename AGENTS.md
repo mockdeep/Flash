@@ -218,24 +218,24 @@ end
 
 ### Data Model
 
-**Two content models, one card table.** Basic and Music decks are **flat**: the card owns its content (`front`, `back`, `category`, `reading`, `example_front`, `example_back`) and its progress counters directly, with `card_distractors` rows for decoys. Language decks still keep content in a shared, neutral **data set** of items and pairings — `LanguageCard` overrides the column readers to go through its `item`. `Deck#flat_cards?` is the switch between them. The language side is slated to leave the item layer too, at which point the data_set machinery goes away entirely.
+**Two content models, one card table.** Basic and Music decks are **flat**: the card owns its content (`front`, `back`, `category`, `reading`, `example_front`, `example_back`) and its progress counters directly, with `card_distractors` rows for decoys. Language decks still keep content in a shared, neutral **word list** of items and pairings — `LanguageCard` overrides the column readers to go through its `item`. `Deck#flat_cards?` is the switch between them. The language side is slated to leave the item layer too, at which point the item machinery goes away entirely.
 
 **Core Models:**
-- `User` - Authentication. Has `username` (unique, `/\A[a-zA-Z0-9_.]+\z/` — letters, digits, `_`, `.`), `role` (`"user"` / `"admin"` / `"guest"`), `study_goal`, `time_zone`. `has_many :data_sets`, `has_many :decks` (**direct** — every deck carries `user_id`), `has_many :topics`, `has_one :subscription`.
-- `DataSet` (STI base) - A set of language study content, reusable across decks. `belongs_to :user`, `has_many :items`, `has_many :decks`. `name` unique per user. `LanguageDataSet` is the **only** subclass — Basic and Music left this layer for flat cards, so "data set" now means "language content".
+- `User` - Authentication. Has `username` (unique, `/\A[a-zA-Z0-9_.]+\z/` — letters, digits, `_`, `.`), `role` (`"user"` / `"admin"` / `"guest"`), `study_goal`, `time_zone`. `has_many :word_lists`, `has_many :decks` (**direct** — every deck carries `user_id`), `has_many :topics`, `has_one :subscription`.
+- `WordList` - A selection of language study content, reusable across decks. `belongs_to :user`, `has_many :items`, `has_many :decks`. `name` unique per user. Requires a `language` code. Not STI: Basic and Music left this layer for flat cards, so every word list is language content, and the compendium distinguishes kinds (HSK level, chapter, curated) by column rather than by class.
 - `Topic` - User-created container grouping **decks** (e.g. "Mandarin", "Music") so related decks collect together on the decks index. `name` unique per user; destroying a topic nullifies its decks. Assigned per deck from the deck show page (type-or-pick datalist input → `TopicAssignmentsController`, `find_or_create_by` name).
-- `Item` - One neutral term. Has `side` (`"Front"` / `"Back"`), `text`, and (Front-side) `category`, `reading`, `example`, `paired_example`. Belongs to a data set; unique on `[data_set_id, side, text]`. Front↔back meaning is expressed through `Pairing`; distractor candidates through `ItemDistractor`. `#glosses` returns the paired Back texts in authored order.
+- `Item` - One neutral term. Has `side` (`"Front"` / `"Back"`), `text`, and (Front-side) `category`, `reading`, `example`, `paired_example`. Belongs to a word list; unique on `[word_list_id, side, text]`. Front↔back meaning is expressed through `Pairing`; distractor candidates through `ItemDistractor`. `#glosses` returns the paired Back texts in authored order.
 - `Pairing` - Join between a Front `item` and a Back `paired_item` (one row per gloss).
 - `ItemDistractor` - Join marking a Back item as a preset distractor for a Front `item`. The language-side counterpart of `CardDistractor`.
 - `CardDistractor` - A wrong-answer option owned directly by a flat card (uploaded presets and remembered study misses). Unique on `[card_id, text]`.
-- `Deck` (STI base) - A study form. `belongs_to :user`, `belongs_to :topic` (optional), and `belongs_to :data_set` — required *unless* `flat_cards?`, forbidden *if* it is (the presence/absence pair is what keeps the two content models apart). Flat families own a `name` column (unique per user); language decks delegate `name` to the data_set, and the `ordered` scope COALESCEs the two. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"` / `"preset"` / `"none"`, NOT NULL — set by the importer), `ordered`, `study_goal`, `last_studied_at`, and nullable `share_token`.
+- `Deck` (STI base) - A study form. `belongs_to :user`, `belongs_to :topic` (optional), and `belongs_to :word_list` — required *unless* `flat_cards?`, forbidden *if* it is (the presence/absence pair is what keeps the two content models apart). Flat families own a `name` column (unique per user); language decks delegate `name` to the word_list, and the `ordered` scope COALESCEs the two. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"` / `"preset"` / `"none"`, NOT NULL — set by the importer), `ordered`, `study_goal`, `last_studied_at`, and nullable `share_token`.
 - `Card` (STI base) - `belongs_to :deck`, `belongs_to :item` (nullable — flat cards have none), `belongs_to :source_card` (catalog-copy provenance). `has_many :card_distractors`. Owns the content columns and the progress counters (`correct_count`, `correct_streak`, `view_count`), and holds the score handle (`record_correct!`, `record_miss!`, `record_view!`). `normalizes :back` is the single back-joining rule. Unique on `[deck_id, front]` where `front` is present.
 - `Subscription` - Payment/subscription info, belongs to user.
 
-**DataSet STI:** `LanguageDataSet` is the only subclass. It requires a `language` code; `LANGUAGES` (on this class) maps every individual ISO 639-2 language to its display name, keyed by shortest available code per BCP 47 ("zh", not "zho"; "tlh" works). Nothing in the app creates one any more — the deck form has no Language option — so the validation guards what the seed account and catalog copies carry.
+**`WordList` languages:** `LANGUAGES` (on `WordList`) maps every individual ISO 639-2 language to its display name, keyed by shortest available code per BCP 47 ("zh", not "zho"; "tlh" works). Nothing in the app creates a word list any more — the deck form has no Language option — so the validation guards what the seed account and catalog copies carry.
 
 **Deck/Card STI subclasses** (deck class names match their UI representation — the future topic-page tabs). Both hierarchies have an abstract language intermediate:
-- `LanguageDeck < Deck` / `LanguageCard < Card` — never instantiated. `LanguageDeck` delegates `name` and `language` to the data_set and holds `mandarin?` and `hanzi_chars` (font features), and overrides `cards_in_category` / `reading_pairs` to join through items. `LanguageCard` overrides the content readers to read its `item`, requires one, and records a miss as an item-side decoy rather than a `card_distractors` row. The base `Deck#mandarin?` is `false`.
+- `LanguageDeck < Deck` / `LanguageCard < Card` — never instantiated. `LanguageDeck` delegates `name` and `language` to the word_list and holds `mandarin?` and `hanzi_chars` (font features), and overrides `cards_in_category` / `reading_pairs` to join through items. `LanguageCard` overrides the content readers to read its `item`, requires one, and records a miss as an item-side decoy rather than a `card_distractors` row. The base `Deck#mandarin?` is `false`.
 - `ReadingDeck < LanguageDeck` / `ReadingCard < LanguageCard` — forward study: multiple-choice (or fuzzy-find) recognition.
 - `BasicDeck < Deck` / `BasicCard < Card` — plain forward flashcards on flat cards.
 - `MusicDeck < Deck` / `MusicCard < Card` — microphone-driven music study on flat cards. Each `MusicCard.back` is a **single** note matching `MusicCard::NOTE_REGEXP` (e.g. `C4`, `F#3`), enforced by `Decks::CreateMusic` at import rather than by a model validation; sequences are formed at study time by windowing (see Music Decks). `MusicDeck` defaults `distractor_pool` to `"none"`.
@@ -244,7 +244,7 @@ end
 
 **STI convention — `model_name` override:** each direct subclass of `Deck` / `Card` overrides `self.model_name` to return the parent's, so `form_with(model: reading_deck)` keeps routing to `decks_path` (not `reading_decks_path`). `LanguageDeck` and `LanguageCard` carry it for their own subclasses, which inherit it. Apply this to any new STI subclass of the base.
 
-**`belongs_to` is optional by default** (`config.active_record.belongs_to_required_by_default = false`), so required associations are stated explicitly. `Topic` marks `user` with `optional: false`; `Deck` and `Card` use validations instead — `validates :deck_id, presence: true` on `Card`, `validates :item, presence: true` on `LanguageCard`, and the `data_set` presence/absence pair on `Deck` — backed by NOT NULL columns where the requirement is absolute.
+**`belongs_to` is optional by default** (`config.active_record.belongs_to_required_by_default = false`), so required associations are stated explicitly. `Topic` marks `user` with `optional: false`; `Deck` and `Card` use validations instead — `validates :deck_id, presence: true` on `Card`, `validates :item, presence: true` on `LanguageCard`, and the `word_list` presence/absence pair on `Deck` — backed by NOT NULL columns where the requirement is absolute.
 
 **Card Progress:**
 - A card is "done" at the current level when `correct_streak >= deck.level`
@@ -296,7 +296,7 @@ app/
 │   │   ├── cancel_subscription.rb
 │   │   ├── client.rb             # Creem HTTP client
 │   │   └── create_checkout.rb    # Creates a Creem checkout session
-│   ├── data_sets/
+│   ├── word_lists/
 │   │   └── projection.rb         # Builds/replaces/edits items+pairings+cards from content rows
 │   ├── decks/
 │   │   ├── cards_csv.rb          # Shared CSV parsing/validation for all three create actions
@@ -364,15 +364,14 @@ app/
 │   └── welcome_controller.rb          # Landing page
 ├── models/
 │   ├── application_record.rb
-│   ├── user.rb              # has_many :data_sets, :decks (direct), :topics; has_one :subscription
-│   ├── data_set.rb          # STI base — language content set; LanguageDataSet is the only subclass
-│   ├── language_data_set.rb # STI subclass — requires language; LANGUAGES lookup
+│   ├── user.rb              # has_many :word_lists, :decks (direct), :topics; has_one :subscription
+│   ├── word_list.rb          # Language content selection decks point at; LANGUAGES lookup
 │   ├── topic.rb            # User-created container grouping decks
 │   ├── item.rb             # Neutral term (side/text + Front-side metadata); glosses/distractors
 │   ├── pairing.rb          # Front item ↔ Back paired_item join
 │   ├── item_distractor.rb  # Front item ↔ Back distractor_item join (language decoys)
 │   ├── card_distractor.rb  # Card-owned decoy text (flat-card decoys)
-│   ├── deck.rb             # STI base — user/topic/data_set; flat_cards?/replaceable?
+│   ├── deck.rb             # STI base — user/topic/word_list; flat_cards?/replaceable?
 │   ├── language_deck.rb    # Abstract parent of the item-backed decks — mandarin?/hanzi_chars
 │   ├── reading_deck.rb     # STI subclass — forward language study
 │   ├── basic_deck.rb       # STI subclass — plain flashcards on flat cards; replaceable
@@ -511,13 +510,13 @@ Controllers call actions and branch on `result.success?`.
 
 `replace` matches rows to existing cards by `front`, preserves the progress of any card whose `back` survives unchanged (a changed back zeroes the counters), and carries over `PRESERVED` fields (`reading`, `example_front`, `example_back`) when the CSV omits those columns.
 
-There used to be a second writer behind a `Deck#card_writer` seam, because language decks wrote through `DataSets::Projection` instead. Language content is frozen now — no upload, edit, delete, or re-import — so the seam had one implementation and was removed.
+There used to be a second writer behind a `Deck#card_writer` seam, because language decks wrote through `WordLists::Projection` instead. Language content is frozen now — no upload, edit, delete, or re-import — so the seam had one implementation and was removed.
 
-**`DataSets::Projection`** (`app/actions/data_sets/projection.rb`) is what remains of the language write path. It creates nothing in the item graph; both entry points work over content that already exists:
-- `build_cards(deck, limit:)` — one card per paired Front item in the deck's data_set. Runs when a deck is created over existing content, i.e. a catalog copy. Unpaired items (accreted decoys) get no card.
+**`WordLists::Projection`** (`app/actions/word_lists/projection.rb`) is what remains of the language write path. It creates nothing in the item graph; both entry points work over content that already exists:
+- `build_cards(deck, limit:)` — one card per paired Front item in the deck's word_list. Runs when a deck is created over existing content, i.e. a catalog copy. Unpaired items (accreted decoys) get no card.
 - `add_distractor(card, text)` — a wrong guess accretes the guessed text as an unpaired Back item + `ItemDistractor` (never spawns a card). The flat families write `card_distractors` from `Card#record_distractor` instead.
 
-Sibling-deck reconciliation used to live here: forward and reverse decks shared a data set, so every content change had to propagate between them. Writing decks are gone and nothing reshapes an existing data_set's items, so that machinery went with them.
+Sibling-deck reconciliation used to live here: forward and reverse decks shared a word list, so every content change had to propagate between them. Writing decks are gone and nothing reshapes an existing word_list's items, so that machinery went with them.
 
 ### Authentication
 
@@ -654,7 +653,7 @@ end
 Users can browse and copy public decks at `/catalog`:
 - **Browse**: `/catalog` — grid of all public decks (no auth required)
 - **Preview**: `/catalog/:id` — card preview (first 5 cards), deck info (no auth required)
-- **Copy**: `POST /catalog/:id/copy` — adds the deck to the current user's account (auth required). A **Basic or Music** deck is duplicated, cards and all. A **language** deck is added *by reference*: the new deck points at the source's `data_set`, and only its cards (the progress anchors) are new — the words themselves are canonical and shared. A `Deck` validation blocks a second deck over the same data_set for one user, so adding twice errors instead of silently duplicating.
+- **Copy**: `POST /catalog/:id/copy` — adds the deck to the current user's account (auth required). A **Basic or Music** deck is duplicated, cards and all. A **language** deck is added *by reference*: the new deck points at the source's `word_list`, and only its cards (the progress anchors) are new — the words themselves are canonical and shared. A `Deck` validation blocks a second deck over the same word_list for one user, so adding twice errors instead of silently duplicating.
 - Deck visibility is controlled by `deck.visibility` (`"public"` / `"private"`)
 - **Admins** publish/unpublish a deck to the catalog from the deck-show page (`Components::CatalogToggleButton` → `CatalogListingsController#create`/`#destroy`, which flips `visibility`). Non-admins have no visibility UI.
 
@@ -672,7 +671,7 @@ Private decks can be shared with a friend via a revocable token. The `decks.shar
 
 Decks are created by uploading CSV files. The deck-creation form has a two-way "Deck Type" radio (Basic / Music), with a create action each: `Decks::CreateBasic` and `Decks::CreateMusic`. Both share `Decks::CardsCsv` for parsing and validation, and both land their rows on flat cards via `Decks::FlatCards.build`.
 
-**Language decks are not creatable.** There is no Language option on the form, and anything that still submits `deck_type=language` (a stale form, a hand-rolled POST) falls through to Basic — a freeform front/back CSV is exactly what a Basic deck is for. Language decks arrive only from the catalog. `Decks::CreateLanguage` is gone; `DataSets::Projection.build` is now reached solely through `Catalog::CopyDeck`.
+**Language decks are not creatable.** There is no Language option on the form, and anything that still submits `deck_type=language` (a stale form, a hand-rolled POST) falls through to Basic — a freeform front/back CSV is exactly what a Basic deck is for. Language decks arrive only from the catalog. `Decks::CreateLanguage` is gone; `WordLists::Projection.build` is now reached solely through `Catalog::CopyDeck`.
 
 **Text decks (`Decks::CreateBasic`):**
 - Required columns: `front`, `back`; optional: `category`, `distractors`, `reading`, `example_front`/`example_back`
@@ -723,7 +722,7 @@ The study engine (`app/domain/study.rb`) manages card selection and answer proce
 - **Presentation mode**: multiple-choice below level 3, **fuzzy-find** (typed-answer) at level 3+ (`FUZZY_FIND_LEVEL`); at level 2 (`READING_LEVEL`) a card with a `reading` on a forward deck gets a **reading stage** first (see below). `possible_answers` branches on the mode
 - **Multiple choice**: 4 distractors + the answer, shuffled. Distractors come from the card's own preset `distractors` (`card_distractors` rows for flat families, `ItemDistractor`s for language); a `"category"`-pool deck tops up from same-category then any sibling cards via `deck.cards_in_category`
 - On correct answer: increments `correct_count` and `correct_streak`; if the last not-done card at the level is completed, advances `deck.level`
-- On incorrect answer: `Card#record_miss!` resets `correct_streak` and records the wrong guess as a decoy via `record_distractor` — a `card_distractors` row on flat cards, an item-side decoy through `DataSets::Projection.add_distractor` on language cards
+- On incorrect answer: `Card#record_miss!` resets `correct_streak` and records the wrong guess as a decoy via `record_distractor` — a `card_distractors` row on flat cards, an item-side decoy through `WordLists::Projection.add_distractor` on language cards
 - Level advancement happens in `Study#answer_card`, not in the controller
 
 **Reading stage (level 2)**: on a forward text deck at level 2, a card with a `reading` is asked in two parts — pick the reading (multiple choice), then pick the translation. It gates the translation question but never scores it:

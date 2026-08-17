@@ -146,7 +146,7 @@ module Views
       end
 
       # Card editing is a flat-card affair: language cards read their content
-      # from shared data_set items, so there is nothing card-local to edit.
+      # from shared word_list items, so there is nothing card-local to edit.
       def editable? = !demo && deck.flat_cards?
 
       def show_streak_pips?(answer)

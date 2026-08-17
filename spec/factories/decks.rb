@@ -15,7 +15,7 @@ FactoryBot.define do
     end
 
     user { default_user }
-    data_set { association(:language_data_set, user:, name:, language:) }
+    word_list { association(:word_list, user:, name:, language:) }
     study_goal { 50 }
     distractor_pool { "category" }
   end

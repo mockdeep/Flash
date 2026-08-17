@@ -2,7 +2,20 @@
 
 require "rails_helper"
 
-RSpec.describe LanguageDataSet do
+RSpec.describe WordList do
+  it { is_expected.to belong_to(:user) }
+  it { is_expected.to have_many(:items).dependent(:destroy) }
+  it { is_expected.to have_many(:decks).dependent(:destroy) }
+
+  it { is_expected.to validate_presence_of(:name) }
+
+  it "validates uniqueness of name scoped to user" do
+    create(:word_list)
+
+    expect(described_class.new)
+      .to validate_uniqueness_of(:name).scoped_to(:user_id)
+  end
+
   it "requires a language" do
     expect(described_class.new).not_to allow_value(nil).for(:language)
   end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Assigns a deck to a topic (creating the topic on first use) or releases it.
-# Assignment is per deck: sibling decks over the same data_set move
+# Assignment is per deck: sibling decks over the same word_list move
 # independently.
 class TopicAssignmentsController < ApplicationController
   def create
