@@ -10,8 +10,6 @@ class LanguageDeck < Deck
 
   delegate :name, :language, to: :data_set
 
-  def card_writer = DataSets::Projection
-
   def mandarin? = language == "zh"
 
   # Language card content still lives on data_set items, so the category and

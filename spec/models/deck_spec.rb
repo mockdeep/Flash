@@ -38,21 +38,26 @@ RSpec.describe Deck do
       expect(deck.errors[:data_set]).to be_present
     end
 
-    def deck_over_unsaved_data_set(name:, user:)
-      ReadingDeck.new(
-        user:, study_goal: 1, data_set: build(:data_set, user:, name:),
-      )
+    def deck_sharing(existing, user:)
+      build(:reading_deck, data_set: existing.data_set, user:)
     end
 
-    # Catalog::CopyDeck builds a deck over a brand-new data_set, so the
-    # data_set's own errors have to surface on the deck being saved.
-    it "merges an unsaved data_set's errors onto the deck" do
-      taken = create(:data_set)
-      deck = deck_over_unsaved_data_set(name: taken.name, user: taken.user)
+    # Copies reference the source data_set, so adding the same catalog deck
+    # twice would otherwise leave a user with two identical decks.
+    it "rejects a second deck over the same data_set for one user" do
+      existing = create(:reading_deck)
+      deck = deck_sharing(existing, user: existing.user)
 
       deck.valid?
 
-      expect(deck.errors[:name]).to include("has already been taken")
+      expect(deck.errors[:base])
+        .to include("This deck is already in your decks")
+    end
+
+    it "allows another user a deck over the same data_set" do
+      existing = create(:reading_deck)
+
+      expect(deck_sharing(existing, user: create(:user)).valid?).to be(true)
     end
   end
 

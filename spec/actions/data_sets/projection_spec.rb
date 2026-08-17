@@ -3,51 +3,47 @@
 require "rails_helper"
 
 RSpec.describe DataSets::Projection do
-  def row(front:, back:, **extra)
-    { front:, back:, category: "", distractors: [], **extra }
-  end
-
-  def back_texts(deck)
-    deck.reload.data_set.items.where(side: "Back").pluck(:text)
-  end
-
-  describe ".build" do
-    it "splits a semicolon back into multiple Back items" do
+  describe ".build_cards" do
+    def source_deck(cards)
       deck = create(:reading_deck)
-      described_class.build(deck, [row(front: "明白", back: "understand; clear")])
-
-      expect(back_texts(deck)).to contain_exactly("understand", "clear")
+      cards.each { |attrs| create(:reading_card, deck:, **attrs) }
+      deck
     end
 
-    it "creates a thin card linked to its Front item" do
-      deck = create(:reading_deck)
-      described_class.build(deck, [row(front: "明白", back: "x")])
-
-      expect(deck.cards.sole.item.text).to eq("明白")
+    def deck_over(data_set)
+      create(:reading_deck, data_set:, user: create(:user))
     end
 
-    it "dedups a gloss shared across rows into one Back item" do
-      deck = create(:reading_deck)
-      rows = [row(front: "明白", back: "clear"), row(front: "清楚", back: "clear")]
-      described_class.build(deck, rows)
-
-      expect(back_texts(deck)).to contain_exactly("clear")
+    def two_word_deck
+      source_deck(
+        [{ front: "明白", back: "understand" }, { front: "你好", back: "hi" }],
+      )
     end
 
-    it "records distractors as referenced Back items" do
-      deck = create(:reading_deck)
-      rows = [row(front: "明白", back: "a", distractors: ["x", "y"])]
-      described_class.build(deck, rows)
+    it "creates one card per paired front item" do
+      copy = deck_over(two_word_deck.data_set)
 
-      front = deck.data_set.items.find_by(text: "明白")
-      expect(front.distractors.pluck(:text)).to contain_exactly("x", "y")
+      described_class.build_cards(copy)
+
+      expect(copy.cards.map(&:front)).to contain_exactly("明白", "你好")
     end
 
-    it "skips pairings for a row whose back has no glosses" do
-      deck = create(:reading_deck)
-      described_class.build(deck, [row(front: "a", back: ";")])
+    it "omits an unpaired decoy item" do
+      source = source_deck([{ front: "明白", back: "understand" }])
+      described_class.add_distractor(source.cards.sole, "decoy")
+      copy = deck_over(source.data_set)
 
-      expect(back_texts(deck)).to be_empty
+      described_class.build_cards(copy)
+
+      expect(copy.cards.map(&:front)).to contain_exactly("明白")
+    end
+
+    it "stops at the given limit" do
+      copy = deck_over(two_word_deck.data_set)
+
+      described_class.build_cards(copy, limit: 1)
+
+      expect(copy.cards.count).to eq(1)
     end
   end
 

@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
 # Card writer for the flat-card families (Basic, Music): cards own their
-# content columns and distractors directly, no data_set projection. Decks
-# dispatch to this or DataSets::Projection via Deck#card_writer, and a "row"
-# is the same content hash both consume. The shared entry points are build
-# and replace; project / remove_card / front_taken? are flat-only, since
-# language decks no longer support per-card editing.
+# content columns and distractors directly. A "row" is a content hash of the
+# shape a CSV row or the edit form produces. This is the only card writer
+# now - language decks no longer accept uploads, edits, or re-imports, so
+# nothing dispatches between writers any more.
 module Decks
   module FlatCards
     extend self

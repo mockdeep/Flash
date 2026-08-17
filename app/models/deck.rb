@@ -27,7 +27,7 @@ class Deck < ApplicationRecord
             if: :flat_cards?
   validates :data_set, presence: true, unless: :flat_cards?
   validates :data_set, absence: true, if: :flat_cards?
-  validate(:data_set_name_valid, if: -> { data_set&.new_record? })
+  validate(:one_deck_per_data_set, unless: :flat_cards?)
 
   scope :ordered, -> { left_joins(:data_set).order(NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
@@ -37,10 +37,6 @@ class Deck < ApplicationRecord
   # Whether this family's cards own their content directly (the flat-card
   # model); language decks read content through data_set items.
   def flat_cards? = false
-
-  # The write path for this family's card content; the two writers share an
-  # interface (build / replace / project / remove_card / front_taken?).
-  def card_writer = Decks::FlatCards
 
   # Whether the deck's content can be replaced from a fresh CSV; only Basic
   # decks support it.
@@ -76,7 +72,16 @@ class Deck < ApplicationRecord
 
   private
 
-  def data_set_name_valid
-    errors.merge!(data_set.errors) unless data_set.valid?
+  # Language decks reference a shared data_set rather than copying it, so
+  # adding the same catalog deck twice would otherwise leave a user with two
+  # identical decks. Scoped by type so a future writing deck can sit
+  # alongside its reading counterpart.
+  def one_deck_per_data_set
+    return if data_set_id.blank?
+
+    sibling = Deck.where(user_id:, data_set_id:, type:).where.not(id:)
+    return unless sibling.exists?
+
+    errors.add(:base, "This deck is already in your decks")
   end
 end

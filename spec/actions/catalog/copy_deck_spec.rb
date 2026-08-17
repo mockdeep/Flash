@@ -34,18 +34,50 @@ RSpec.describe Catalog::CopyDeck do
       expect(result.record.name).to eq("My Deck")
     end
 
-    it "copies the language from the source data_set" do
-      source = create(:reading_deck, visibility: "public")
-      result = described_class.call(user: create(:user), deck: source)
+    # A language deck's words are canonical, so a copy references the source
+    # data_set rather than duplicating its items and pairings.
+    context "with a language deck" do
+      def public_language_deck
+        source = create(:reading_deck, visibility: "public")
+        create(:reading_card, deck: source, front: "明白", back: "understand")
+        source
+      end
 
-      expect(result.record.data_set.language).to eq("zh")
-    end
+      it "references the source data_set" do
+        source = public_language_deck
+        result = described_class.call(user: create(:user), deck: source)
 
-    it "copies the data_set type from the source" do
-      source = create(:reading_deck, visibility: "public")
-      result = described_class.call(user: create(:user), deck: source)
+        expect(result.record.data_set).to eq(source.data_set)
+      end
 
-      expect(result.record.data_set).to be_a(LanguageDataSet)
+      it "creates no new data_set" do
+        source = public_language_deck
+
+        expect { described_class.call(user: create(:user), deck: source) }
+          .not_to change(DataSet, :count)
+      end
+
+      it "duplicates no items" do
+        source = public_language_deck
+
+        expect { described_class.call(user: create(:user), deck: source) }
+          .not_to change(Item, :count)
+      end
+
+      it "gives the copy its own progress anchors" do
+        source = public_language_deck
+        result = described_class.call(user: create(:user), deck: source)
+
+        expect(result.record.cards.map(&:front)).to contain_exactly("明白")
+      end
+
+      it "leaves the copy's progress independent of the source" do
+        source = public_language_deck
+        result = described_class.call(user: create(:user), deck: source)
+        result.record.cards.sole.record_correct!
+
+        expect(source.cards.sole.correct_count).to eq(0)
+      end
     end
 
     it "copies two cards from the source deck" do
