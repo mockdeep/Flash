@@ -1,6 +1,11 @@
 # Entry-resolution dry run against a production export (read-only) — the
 # production counterpart of resolve.rb, run 2026-08 over 31,312 zh fronts.
-# Results are recorded in docs/compendium.md (Prototype findings).
+#
+# SUPERSEDED: that run covered every account, including demo accounts since
+# deleted, so the bucket counts below describe data that no longer exists.
+# Re-scoped to the seed account (add `AND ds.user_id = 1` to the export query),
+# it is 10,989 fronts and 100% exact_hsk. See docs/compendium.md (Prototype
+# findings) for the current numbers.
 #
 # Local pg_dump 16 can't dump the Postgres 17 production DB, so this reads a
 # CSV exported via a read-only query instead of ActiveRecord:
