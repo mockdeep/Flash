@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe DataSets::Projection do
+RSpec.describe WordLists::Projection do
   describe ".build_cards" do
     def source_deck(cards)
       deck = create(:reading_deck)
@@ -10,8 +10,8 @@ RSpec.describe DataSets::Projection do
       deck
     end
 
-    def deck_over(data_set)
-      create(:reading_deck, data_set:, user: create(:user))
+    def deck_over(word_list)
+      create(:reading_deck, word_list:, user: create(:user))
     end
 
     def two_word_deck
@@ -21,7 +21,7 @@ RSpec.describe DataSets::Projection do
     end
 
     it "creates one card per paired front item" do
-      copy = deck_over(two_word_deck.data_set)
+      copy = deck_over(two_word_deck.word_list)
 
       described_class.build_cards(copy)
 
@@ -31,7 +31,7 @@ RSpec.describe DataSets::Projection do
     it "omits an unpaired decoy item" do
       source = source_deck([{ front: "明白", back: "understand" }])
       described_class.add_distractor(source.cards.sole, "decoy")
-      copy = deck_over(source.data_set)
+      copy = deck_over(source.word_list)
 
       described_class.build_cards(copy)
 
@@ -39,7 +39,7 @@ RSpec.describe DataSets::Projection do
     end
 
     it "stops at the given limit" do
-      copy = deck_over(two_word_deck.data_set)
+      copy = deck_over(two_word_deck.word_list)
 
       described_class.build_cards(copy, limit: 1)
 

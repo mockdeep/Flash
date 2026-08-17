@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# The forward study of a language data_set: recognize the target-language
+# The forward study of a word_list: recognize the target-language
 # prompt and recall its meaning.
 class ReadingDeck < LanguageDeck
   def card_type = "ReadingCard"

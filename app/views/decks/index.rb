@@ -163,14 +163,14 @@ module Views
         end
       end
 
-      # Decks sharing a data_set render as one rail card. Nothing creates a
+      # Decks sharing a word_list render as one rail card. Nothing creates a
       # second deck over a set today, so this groups sets of one - it stays
       # because sharing by reference will make sets real again.
       def deck_sets(section_decks)
         section_decks
           .sort_by(&:name)
           .chunk_while do |a, b|
-            a.data_set_id.present? && a.data_set_id == b.data_set_id
+            a.word_list_id.present? && a.word_list_id == b.word_list_id
           end
       end
 
@@ -221,11 +221,11 @@ module Views
         end
       end
 
-      # Language decks title with the data_set's base name (a reverse deck
+      # Language decks title with the word_list's base name (a reverse deck
       # drops its "(reversed)" suffix on the shared rail card).
       def render_rail_title(deck)
         h3(class: "rail-title") do
-          link_to(deck.data_set&.name || deck.name, deck_path(deck))
+          link_to(deck.word_list&.name || deck.name, deck_path(deck))
           catalog_badge if deck.publicly_visible?
         end
       end

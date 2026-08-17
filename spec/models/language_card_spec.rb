@@ -4,7 +4,7 @@ require "rails_helper"
 
 # Exercised through ReadingCard - LanguageCard is never instantiated
 # directly. Language cards keep nil content columns; everything reads
-# through the data_set item.
+# through the word_list item.
 RSpec.describe LanguageCard do
   it "requires an item" do
     card = ReadingCard.new(deck: build(:reading_deck))

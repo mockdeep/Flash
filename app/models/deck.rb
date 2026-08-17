@@ -3,15 +3,15 @@
 class Deck < ApplicationRecord
   VISIBILITIES = ["public", "private"].freeze
   DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
-  NAME_SOURCE = Arel.sql("COALESCE(decks.name, data_sets.name)")
+  NAME_SOURCE = Arel.sql("COALESCE(decks.name, word_lists.name)")
 
-  belongs_to :data_set
+  belongs_to :word_list
   belongs_to :user
   belongs_to :topic
   has_many :cards, dependent: :delete_all
 
   # Flat-card decks own their name (the column); language decks override the
-  # reader to go through the data_set until the compendium rename.
+  # reader to go through the word_list.
   def language = nil
 
   attribute(:level, :integer, default: 1)
@@ -25,17 +25,17 @@ class Deck < ApplicationRecord
             presence: true,
             uniqueness: { scope: :user_id },
             if: :flat_cards?
-  validates :data_set, presence: true, unless: :flat_cards?
-  validates :data_set, absence: true, if: :flat_cards?
-  validate(:one_deck_per_data_set, unless: :flat_cards?)
+  validates :word_list, presence: true, unless: :flat_cards?
+  validates :word_list, absence: true, if: :flat_cards?
+  validate(:one_deck_per_word_list, unless: :flat_cards?)
 
-  scope :ordered, -> { left_joins(:data_set).order(NAME_SOURCE) }
+  scope :ordered, -> { left_joins(:word_list).order(NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
 
   def music? = false
 
   # Whether this family's cards own their content directly (the flat-card
-  # model); language decks read content through data_set items.
+  # model); language decks read content through word_list items.
   def flat_cards? = false
 
   # Whether the deck's content can be replaced from a fresh CSV; only Basic
@@ -72,14 +72,14 @@ class Deck < ApplicationRecord
 
   private
 
-  # Language decks reference a shared data_set rather than copying it, so
+  # Language decks reference a shared word_list rather than copying it, so
   # adding the same catalog deck twice would otherwise leave a user with two
   # identical decks. Scoped by type so a future writing deck can sit
   # alongside its reading counterpart.
-  def one_deck_per_data_set
-    return if data_set_id.blank?
+  def one_deck_per_word_list
+    return if word_list_id.blank?
 
-    sibling = Deck.where(user_id:, data_set_id:, type:).where.not(id:)
+    sibling = Deck.where(user_id:, word_list_id:, type:).where.not(id:)
     return unless sibling.exists?
 
     errors.add(:base, "This deck is already in your decks")

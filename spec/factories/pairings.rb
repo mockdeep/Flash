@@ -3,10 +3,10 @@
 FactoryBot.define do
   factory(:pairing) do
     transient do
-      data_set { association(:data_set) }
+      word_list { association(:word_list) }
     end
 
-    item { association(:item, data_set:) }
-    paired_item { association(:item, :back, data_set:) }
+    item { association(:item, word_list:) }
+    paired_item { association(:item, :back, word_list:) }
   end
 end

@@ -10,7 +10,7 @@ RSpec.describe LanguageDeck do
   end
 
   describe "#name" do
-    it "reads through the data_set" do
+    it "reads through the word_list" do
       deck = create(:reading_deck, name: "HSK 1")
 
       expect(deck.name).to eq("HSK 1")

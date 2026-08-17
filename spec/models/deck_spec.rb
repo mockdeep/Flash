@@ -13,7 +13,7 @@ RSpec.describe Deck do
     }
   end
 
-  describe "#data_set" do
+  describe "#word_list" do
     it "is not required for a flat-card deck" do
       deck = BasicDeck.new(flat_deck_attributes)
 
@@ -25,26 +25,26 @@ RSpec.describe Deck do
 
       deck.valid?
 
-      expect(deck.errors[:data_set]).to be_present
+      expect(deck.errors[:word_list]).to be_present
     end
 
     it "must be absent for a flat-card deck" do
       deck = BasicDeck.new(
-        **flat_deck_attributes, data_set: create(:data_set),
+        **flat_deck_attributes, word_list: create(:word_list),
       )
 
       deck.valid?
 
-      expect(deck.errors[:data_set]).to be_present
+      expect(deck.errors[:word_list]).to be_present
     end
 
     def deck_sharing(existing, user:)
-      build(:reading_deck, data_set: existing.data_set, user:)
+      build(:reading_deck, word_list: existing.word_list, user:)
     end
 
-    # Copies reference the source data_set, so adding the same catalog deck
+    # Copies reference the source word_list, so adding the same catalog deck
     # twice would otherwise leave a user with two identical decks.
-    it "rejects a second deck over the same data_set for one user" do
+    it "rejects a second deck over the same word_list for one user" do
       existing = create(:reading_deck)
       deck = deck_sharing(existing, user: existing.user)
 
@@ -54,7 +54,7 @@ RSpec.describe Deck do
         .to include("This deck is already in your decks")
     end
 
-    it "allows another user a deck over the same data_set" do
+    it "allows another user a deck over the same word_list" do
       existing = create(:reading_deck)
 
       expect(deck_sharing(existing, user: create(:user)).valid?).to be(true)
@@ -140,7 +140,7 @@ RSpec.describe Deck do
   end
 
   describe "#mandarin?" do
-    it "is true when the data_set language is Mandarin" do
+    it "is true when the word_list language is Mandarin" do
       deck = create(:reading_deck, language: "zh")
 
       expect(deck.mandarin?).to be(true)

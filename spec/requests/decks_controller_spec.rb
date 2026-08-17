@@ -19,9 +19,9 @@ RSpec.describe DecksController do
       expect(rendered).to have_text("My Test Deck")
     end
 
-    it "titles a rail card for a deck without a data_set" do
+    it "titles a rail card for a deck without a word_list" do
       login_as(default_user)
-      create(:deck, user: default_user, name: "Flat Deck", data_set: nil)
+      create(:deck, user: default_user, name: "Flat Deck", word_list: nil)
 
       get(decks_path)
 
@@ -644,8 +644,8 @@ RSpec.describe DecksController do
         expect(default_user.decks.sole).to be_a(BasicDeck)
       end
 
-      it "creates no data_set" do
-        expect { post_language_deck }.not_to change(DataSet, :count)
+      it "creates no word_list" do
+        expect { post_language_deck }.not_to change(WordList, :count)
       end
     end
 

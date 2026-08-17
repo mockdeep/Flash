@@ -2,7 +2,7 @@
 
 FactoryBot.define do
   factory(:item) do
-    data_set
+    word_list
     side { "Front" }
     sequence(:text, 100) { |n| "Item #{n}" }
 

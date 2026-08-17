@@ -107,12 +107,12 @@ RSpec.describe Decks::CreateBasic do
         expect(deck.cards.first.back).to eq("understand; clear")
       end
 
-      it "builds no data_set" do
+      it "builds no word_list" do
         user = create(:user)
         csv = csv_file("front,back\nQ,A\n")
         deck = described_class.call(user:, name: "T", cards_csv: csv).record
 
-        expect(deck.data_set).to be_nil
+        expect(deck.word_list).to be_nil
       end
 
       it "creates no items" do

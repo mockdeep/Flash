@@ -735,7 +735,7 @@ RSpec.describe Study do
         expect(card.reload.distractors).to eq(["London"])
       end
 
-      it "records the new distractor in the data_set" do
+      it "records the new distractor in the word_list" do
         card = create(:basic_card, back: "Paris")
         described_class.new(deck: card.deck)
           .answer_card(card_id: card.id, answer: "London")
