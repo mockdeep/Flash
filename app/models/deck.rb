@@ -42,30 +42,9 @@ class Deck < ApplicationRecord
   # interface (build / replace / project / remove_card / front_taken?).
   def card_writer = Decks::FlatCards
 
-  # Where the deck sorts among its data_set's siblings on the decks index
-  # rail; forward study comes first, so only reverse decks push later.
-  def type_position = 1
-
-  # The item side a deck's cards anchor to (and study as the prompt). A reverse
-  # deck flips this to "Back"; the projection reconciles each deck's cards to
-  # the paired items on its anchor side.
-  def anchor_side = "Front"
-
-  # The pairing column whose values are this deck's anchor items (the side it
-  # studies as the answer's counterpart). Mirrors #anchor_side.
-  def anchor_pairing_column = :item_id
-
-  def reversible? = false
-
-  # Whether the deck's content can be replaced from a fresh CSV; only the
-  # forward text decks support it.
+  # Whether the deck's content can be replaced from a fresh CSV; only Basic
+  # decks support it.
   def replaceable? = false
-
-  # Whether a reverse deck already exists over this deck's data_set (one per
-  # source); used to guard creation and hide the create button.
-  def reverse_present?
-    data_set.present? && data_set.decks.exists?(type: "WritingDeck")
-  end
 
   # Cards whose studied answer carries the given category, for category-pool
   # distractors. Flat-card families read the card column; language decks

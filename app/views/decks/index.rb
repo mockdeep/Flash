@@ -93,10 +93,7 @@ module Views
       end
 
       def type_labels(section_decks)
-        section_decks
-          .sort_by { |deck| [deck.type_position, deck.type_label] }
-          .map(&:type_label)
-          .uniq
+        section_decks.map(&:type_label).uniq.sort
       end
 
       def render_rail_tab(label, count, active: false)
@@ -166,11 +163,12 @@ module Views
         end
       end
 
-      # Sibling sets only exist for language decks (reading + writing over
-      # one data_set); flat-card decks each stand alone.
+      # Decks sharing a data_set render as one rail card. Nothing creates a
+      # second deck over a set today, so this groups sets of one - it stays
+      # because sharing by reference will make sets real again.
       def deck_sets(section_decks)
         section_decks
-          .sort_by { |deck| [deck.name, deck.type_position] }
+          .sort_by(&:name)
           .chunk_while do |a, b|
             a.data_set_id.present? && a.data_set_id == b.data_set_id
           end

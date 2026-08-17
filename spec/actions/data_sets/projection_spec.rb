@@ -59,37 +59,4 @@ RSpec.describe DataSets::Projection do
       expect(card.item.distractors.pluck(:text)).to include("wrong")
     end
   end
-
-  describe ".build_anchor_cards" do
-    def with_reverse(forward_cards)
-      fwd = create(:reading_deck)
-      forward_cards.each { |attrs| create(:reading_card, deck: fwd, **attrs) }
-      [fwd, Decks::CreateReverse.call(source: fwd).record]
-    end
-
-    def reverse_prompts(rev)
-      rev.reload.cards.map(&:front)
-    end
-
-    it "creates one reverse card per paired back item" do
-      _fwd, rev = with_reverse([{ front: "明白", back: "understand;clear" }])
-
-      expect(reverse_prompts(rev)).to contain_exactly("understand", "clear")
-    end
-
-    it "omits a distractor-only back item from the reverse deck" do
-      fwd, rev = with_reverse([{ front: "明白", back: "understand" }])
-      described_class.add_distractor(fwd.cards.sole, "decoy")
-
-      expect(reverse_prompts(rev)).to contain_exactly("understand")
-    end
-
-    it "records a reverse miss as a Front-side decoy" do
-      _fwd, rev = with_reverse([{ front: "明白", back: "understand" }])
-      card = rev.cards.sole
-      described_class.add_distractor(card, "知道")
-
-      expect(card.distractors).to contain_exactly("知道")
-    end
-  end
 end

@@ -6,11 +6,12 @@
 # example_back:, source_card_id? }) -- the same shape a CSV row produces.
 # Items are the source of truth; cards are item_id + progress.
 #
-# Language content is being frozen ahead of the compendium migration, so this
-# writer is shrinking: per-card editing, deletion, and re-import are gone,
-# leaving first ingest, reverse-deck card generation, and miss-recorded
-# decoys. Nothing mutates an existing data_set's items any more, which is why
-# sibling-deck reconciliation went with them.
+# Language content is frozen ahead of the compendium migration, so this
+# writer has shrunk to two entry points: first ingest (`build`, reached only
+# from Catalog::CopyDeck) and miss-recorded decoys (`add_distractor`). Editing,
+# deletion, re-import, reverse-deck generation, and the sibling-deck
+# reconciliation they all needed are gone. Nothing reshapes an existing
+# data_set's items any more.
 module DataSets
   module Projection
     extend self
@@ -28,23 +29,13 @@ module DataSets
     end
 
     # Record a language card's wrong-guess distractor as an item reference.
-    # The decoy lives on the side opposite the prompt (a reverse miss is a
-    # Front-side decoy), so it stays an unpaired item and never spawns a card.
+    # Every language card anchors a Front item, so the decoy is a Back item -
+    # unpaired, which keeps it out of glosses and stops it spawning a card.
     # Flat-card misses never reach here; they write card_distractors directly.
     def add_distractor(card, text)
       prompt = card.item
-      decoy_side = prompt.side == FRONT ? BACK : FRONT
-      decoy = prompt.data_set.items.find_or_create_by!(side: decoy_side, text:)
+      decoy = prompt.data_set.items.find_or_create_by!(side: BACK, text:)
       ItemDistractor.find_or_create_by!(item: prompt, distractor_item: decoy)
-    end
-
-    # Populate a freshly created reverse deck: one card per paired item on its
-    # anchor side. Content is frozen, so there is never anything to reconcile
-    # afterwards - this runs once, on a deck with no cards yet.
-    def build_anchor_cards(deck)
-      anchor_items(deck).each { |item| create_anchor_card(deck, item) }
-      # Cards were created outside the loaded association above.
-      deck.cards.reset
     end
 
     private
@@ -144,21 +135,6 @@ module DataSets
         item_id: item_ids.fetch([FRONT, row[:front]]),
         source_card_id: row[:source_card_id],
       }
-    end
-
-    # Items on the deck's anchor side that participate in a pairing - a card is
-    # generated only for paired items (a distractor-only item gets none).
-    def anchor_items(deck)
-      deck.data_set.items
-        .where(side: deck.anchor_side, id: pairing_anchor_ids(deck))
-    end
-
-    def pairing_anchor_ids(deck)
-      Pairing.select(deck.anchor_pairing_column)
-    end
-
-    def create_anchor_card(deck, item)
-      deck.card_type.constantize.create!(deck:, item:)
     end
 
     def front_attributes(content)

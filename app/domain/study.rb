@@ -137,7 +137,6 @@ class Study
   def reading_stage?
     !reading_confirmed &&
       deck.level == READING_LEVEL &&
-      deck.anchor_side == "Front" &&
       next_card&.reading.present?
   end
 

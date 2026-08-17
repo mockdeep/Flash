@@ -11,18 +11,18 @@ RSpec.describe Item do
   it { is_expected.to validate_presence_of(:side) }
   it { is_expected.to validate_presence_of(:text) }
 
-  describe "#reverse_glosses" do
-    def pair(front_text, back)
-      front = create(:item, data_set: back.data_set, text: front_text)
+  describe "#glosses" do
+    def pair_back(front, text)
+      back = create(:item, :back, data_set: front.data_set, text:)
       create(:pairing, item: front, paired_item: back)
     end
 
-    it "returns paired item texts in authored order" do
-      back = create(:item, :back, text: "understand")
-      pair("明白", back)
-      pair("清楚", back)
+    it "returns paired back texts in authored order" do
+      front = create(:item, text: "明白")
+      pair_back(front, "understand")
+      pair_back(front, "clear")
 
-      expect(back.reverse_glosses).to eq(["明白", "清楚"])
+      expect(front.glosses).to eq(["understand", "clear"])
     end
   end
 end

@@ -20,18 +20,6 @@ FactoryBot.define do
     distractor_pool { "category" }
   end
 
-  factory(:writing_deck, class: "WritingDeck") do
-    transient do
-      sequence(:name, 100) { |n| "Writing Deck #{n}" }
-      language { "zh" }
-    end
-
-    user { default_user }
-    data_set { association(:language_data_set, user:, name:, language:) }
-    study_goal { 50 }
-    distractor_pool { "category" }
-  end
-
   factory(:music_deck, class: "MusicDeck") do
     sequence(:name, 100) { |n| "Music Deck #{n}" }
     user { default_user }

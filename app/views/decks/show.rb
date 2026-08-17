@@ -25,22 +25,12 @@ module Views
         render_topic_section
         render(Components::CatalogToggleButton.new(deck:)) if admin_owner?
         render_replace_link if deck.replaceable?
-        render_reverse_button if deck.reversible? && !deck.reverse_present?
 
         render_cards_table if deck.cards.any?
         render_delete_button
       end
 
       private
-
-      def render_reverse_button
-        button_to(
-          "Create reverse deck",
-          deck_reversal_path(deck),
-          method: :post,
-          class: button_class(:secondary, :compact),
-        )
-      end
 
       def admin_owner?
         current_user.admin? && deck.user_id == current_user.id
