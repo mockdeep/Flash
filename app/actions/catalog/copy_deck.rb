@@ -10,13 +10,24 @@ module Catalog
       ActiveRecord::Base.transaction do
         return Result.new(success: false, record: new_deck) unless new_deck.save
 
-        new_deck.card_writer.build(new_deck, copy_rows(deck, card_limit))
+        fill_cards(new_deck, deck, card_limit)
       end
 
       Result.new(success: true, record: new_deck)
     end
 
     private
+
+    # Flat decks own their content, so a copy duplicates the rows. A language
+    # deck references the source data_set instead - the words are canonical,
+    # and only the progress anchors belong to the copier.
+    def fill_cards(new_deck, source, card_limit)
+      if new_deck.flat_cards?
+        Decks::FlatCards.build(new_deck, copy_rows(source, card_limit))
+      else
+        DataSets::Projection.build_cards(new_deck, limit: card_limit)
+      end
+    end
 
     def build_new_deck(user:, source:)
       attrs = {
@@ -26,13 +37,7 @@ module Catalog
       }
       return source.class.new(name: source.name, **attrs) if source.flat_cards?
 
-      source.class.new(**attrs, data_set: copied_data_set(user, source))
-    end
-
-    def copied_data_set(user, source)
-      source.data_set.class.new(
-        user:, name: source.name, language: source.language,
-      )
+      source.class.new(**attrs, data_set: source.data_set)
     end
 
     def copy_rows(source, card_limit)

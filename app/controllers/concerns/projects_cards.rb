@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
-# Edits and deletes go through the deck family's card writer. Only the
-# flat-card families reach here now (CardsController turns language decks
-# away), so the writer is always Decks::FlatCards. Edit content comes from
-# the form params; distractors aren't editable, so they're carried over from
-# the existing card.
+# Edits and deletes for the flat-card families - CardsController turns
+# language decks away, since their content lives on shared data_set items.
+# Edit content comes from the form params; distractors aren't editable, so
+# they're carried over from the existing card.
 module ProjectsCards
   extend ActiveSupport::Concern
 
@@ -15,14 +14,14 @@ module ProjectsCards
     ActiveRecord::Base.transaction do
       next false unless valid_edit?(card, content)
 
-      card.deck.card_writer.project(card, content)
+      Decks::FlatCards.project(card, content)
       true
     end
   end
 
   def destroy_card(card)
     ActiveRecord::Base.transaction do
-      card.deck.card_writer.remove_card(card)
+      Decks::FlatCards.remove_card(card)
     end
   end
 
@@ -53,6 +52,6 @@ module ProjectsCards
   end
 
   def front_collision?(card, front)
-    front.present? && card.deck.card_writer.front_taken?(card, front)
+    front.present? && Decks::FlatCards.front_taken?(card, front)
   end
 end

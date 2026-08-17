@@ -218,7 +218,7 @@ end
 
 ### Data Model
 
-**Two content models, one card table.** Basic and Music decks are **flat**: the card owns its content (`front`, `back`, `category`, `reading`, `example_front`, `example_back`) and its progress counters directly, with `card_distractors` rows for decoys. Language decks still keep content in a shared, neutral **data set** of items and pairings — `LanguageCard` overrides the column readers to go through its `item`. `Deck#flat_cards?` is the switch between them, and `Deck#card_writer` selects the matching write path (`Decks::FlatCards` vs `DataSets::Projection`). The language side is slated to leave the item layer too, at which point the data_set machinery goes away entirely.
+**Two content models, one card table.** Basic and Music decks are **flat**: the card owns its content (`front`, `back`, `category`, `reading`, `example_front`, `example_back`) and its progress counters directly, with `card_distractors` rows for decoys. Language decks still keep content in a shared, neutral **data set** of items and pairings — `LanguageCard` overrides the column readers to go through its `item`. `Deck#flat_cards?` is the switch between them. The language side is slated to leave the item layer too, at which point the data_set machinery goes away entirely.
 
 **Core Models:**
 - `User` - Authentication. Has `username` (unique, `/\A[a-zA-Z0-9_.]+\z/` — letters, digits, `_`, `.`), `role` (`"user"` / `"admin"` / `"guest"`), `study_goal`, `time_zone`. `has_many :data_sets`, `has_many :decks` (**direct** — every deck carries `user_id`), `has_many :topics`, `has_one :subscription`.
@@ -235,7 +235,7 @@ end
 **DataSet STI:** `LanguageDataSet` is the only subclass. It requires a `language` code; `LANGUAGES` (on this class) maps every individual ISO 639-2 language to its display name, keyed by shortest available code per BCP 47 ("zh", not "zho"; "tlh" works). Nothing in the app creates one any more — the deck form has no Language option — so the validation guards what the seed account and catalog copies carry.
 
 **Deck/Card STI subclasses** (deck class names match their UI representation — the future topic-page tabs). Both hierarchies have an abstract language intermediate:
-- `LanguageDeck < Deck` / `LanguageCard < Card` — never instantiated. `LanguageDeck` delegates `name` and `language` to the data_set, points `card_writer` at `DataSets::Projection`, holds `mandarin?` and `hanzi_chars` (font features), and overrides `cards_in_category` / `reading_pairs` to join through items. `LanguageCard` overrides the content readers to read its `item`, requires one, and records a miss as an item-side decoy rather than a `card_distractors` row. The base `Deck#mandarin?` is `false`.
+- `LanguageDeck < Deck` / `LanguageCard < Card` — never instantiated. `LanguageDeck` delegates `name` and `language` to the data_set and holds `mandarin?` and `hanzi_chars` (font features), and overrides `cards_in_category` / `reading_pairs` to join through items. `LanguageCard` overrides the content readers to read its `item`, requires one, and records a miss as an item-side decoy rather than a `card_distractors` row. The base `Deck#mandarin?` is `false`.
 - `ReadingDeck < LanguageDeck` / `ReadingCard < LanguageCard` — forward study: multiple-choice (or fuzzy-find) recognition.
 - `BasicDeck < Deck` / `BasicCard < Card` — plain forward flashcards on flat cards.
 - `MusicDeck < Deck` / `MusicCard < Card` — microphone-driven music study on flat cards. Each `MusicCard.back` is a **single** note matching `MusicCard::NOTE_REGEXP` (e.g. `C4`, `F#3`), enforced by `Decks::CreateMusic` at import rather than by a model validation; sequences are formed at study time by windowing (see Music Decks). `MusicDeck` defaults `distractor_pool` to `"none"`.
@@ -348,7 +348,7 @@ app/
 │   ├── catalog_listings_controller.rb # Publish / unpublish a deck to the catalog
 │   ├── concerns/
 │   │   ├── demo_session.rb            # Demo guest-session helpers
-│   │   └── projects_cards.rb          # save_card/destroy_card → deck.card_writer (flat decks only)
+│   │   └── projects_cards.rb          # save_card/destroy_card → Decks::FlatCards (flat decks only)
 │   ├── decks_controller.rb            # `#create` dispatches CreateMusic vs CreateBasic on :deck_type
 │   ├── demo_controller.rb             # Starts a guest demo study session
 │   ├── milestones_controller.rb       # Updates a deck's study goal
@@ -372,7 +372,7 @@ app/
 │   ├── pairing.rb          # Front item ↔ Back paired_item join
 │   ├── item_distractor.rb  # Front item ↔ Back distractor_item join (language decoys)
 │   ├── card_distractor.rb  # Card-owned decoy text (flat-card decoys)
-│   ├── deck.rb             # STI base — user/topic/data_set; flat_cards?/card_writer
+│   ├── deck.rb             # STI base — user/topic/data_set; flat_cards?/replaceable?
 │   ├── language_deck.rb    # Abstract parent of the item-backed decks — mandarin?/hanzi_chars
 │   ├── reading_deck.rb     # STI subclass — forward language study
 │   ├── basic_deck.rb       # STI subclass — plain flashcards on flat cards; replaceable
@@ -507,15 +507,15 @@ Controllers call actions and branch on `result.success?`.
 
 ### Card writers
 
-Two writers exist, and a deck picks between them with `Deck#card_writer`. Both consume the same "row": a hash of the shape a CSV row or the edit form produces, `{ front:, back:, category:, distractors:, reading:, example_front:, example_back:, source_card_id? }`. Callers (`Decks::Replace`, the `ProjectsCards` controller concern, `Catalog::CopyDeck`) go through `deck.card_writer` and never name a writer directly.
+**`Decks::FlatCards`** (`app/actions/decks/flat_cards.rb`) is the only card writer. It serves Basic and Music, whose cards own their content: rows become card columns plus `card_distractors` rows, with no indirection to reconcile. A "row" is a hash of the shape a CSV row or the edit form produces, `{ front:, back:, category:, distractors:, reading:, example_front:, example_back:, source_card_id? }`. Its entry points are `build` / `replace` / `project` / `remove_card` / `front_taken?`, and callers (`Decks::CreateBasic`, `Decks::CreateMusic`, `Decks::Replace`, the `ProjectsCards` concern, `Catalog::CopyDeck`) name it directly.
 
-`build` is the only entry point both share. `replace` / `project` / `remove_card` / `front_taken?` are **flat-only**: language decks support neither per-card editing nor CSV re-import, so `CardsController` and `ReplacementsController` turn them away, the study view hides the edit button, and `ReadingDeck` is no longer `replaceable?`. Once a language deck exists, the only thing that still touches its content is a miss-recorded decoy.
+`replace` matches rows to existing cards by `front`, preserves the progress of any card whose `back` survives unchanged (a changed back zeroes the counters), and carries over `PRESERVED` fields (`reading`, `example_front`, `example_back`) when the CSV omits those columns.
 
-**`Decks::FlatCards`** (`app/actions/decks/flat_cards.rb`) — the writer for Basic and Music. Rows become card columns plus `card_distractors` rows; there is no indirection to reconcile. `replace` matches rows to existing cards by `front`, preserves the progress of any card whose `back` survives unchanged (a changed back zeroes the counters), and carries over `PRESERVED` fields (`reading`, `example_front`, `example_back`) when the CSV omits those columns.
+There used to be a second writer behind a `Deck#card_writer` seam, because language decks wrote through `DataSets::Projection` instead. Language content is frozen now — no upload, edit, delete, or re-import — so the seam had one implementation and was removed.
 
-**`DataSets::Projection`** (`app/actions/data_sets/projection.rb`) — the writer for language decks. It translates rows into the item/pairing/distractor graph plus the thin cards that anchor to it; items are the source of truth and the card is just `item_id` + progress. Two entry points remain:
-- `build(deck, rows)` — reached only from `Catalog::CopyDeck`, the last thing that creates language content.
-- `add_distractor(card, text)` — a wrong guess accretes the guessed text as an unpaired decoy item + `ItemDistractor` (never spawns a card). The flat families write `card_distractors` from `Card#record_distractor` instead.
+**`DataSets::Projection`** (`app/actions/data_sets/projection.rb`) is what remains of the language write path. It creates nothing in the item graph; both entry points work over content that already exists:
+- `build_cards(deck, limit:)` — one card per paired Front item in the deck's data_set. Runs when a deck is created over existing content, i.e. a catalog copy. Unpaired items (accreted decoys) get no card.
+- `add_distractor(card, text)` — a wrong guess accretes the guessed text as an unpaired Back item + `ItemDistractor` (never spawns a card). The flat families write `card_distractors` from `Card#record_distractor` instead.
 
 Sibling-deck reconciliation used to live here: forward and reverse decks shared a data set, so every content change had to propagate between them. Writing decks are gone and nothing reshapes an existing data_set's items, so that machinery went with them.
 
@@ -654,7 +654,7 @@ end
 Users can browse and copy public decks at `/catalog`:
 - **Browse**: `/catalog` — grid of all public decks (no auth required)
 - **Preview**: `/catalog/:id` — card preview (first 5 cards), deck info (no auth required)
-- **Copy**: `POST /catalog/:id/copy` — duplicates deck + cards into current user's account (auth required)
+- **Copy**: `POST /catalog/:id/copy` — adds the deck to the current user's account (auth required). A **Basic or Music** deck is duplicated, cards and all. A **language** deck is added *by reference*: the new deck points at the source's `data_set`, and only its cards (the progress anchors) are new — the words themselves are canonical and shared. A `Deck` validation blocks a second deck over the same data_set for one user, so adding twice errors instead of silently duplicating.
 - Deck visibility is controlled by `deck.visibility` (`"public"` / `"private"`)
 - **Admins** publish/unpublish a deck to the catalog from the deck-show page (`Components::CatalogToggleButton` → `CatalogListingsController#create`/`#destroy`, which flips `visibility`). Non-admins have no visibility UI.
 
