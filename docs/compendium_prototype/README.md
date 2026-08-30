@@ -15,6 +15,19 @@ ruby 04-report.rb <slug>     # -> report-<slug>.md (committed here)
 bin/rails runner docs/compendium_prototype/resolve.rb   # migration entry-resolution dry run (read-only)
 ```
 
+Migration dry runs (read-only, independent of the pipeline above):
+
+```
+heroku pg:psql --app flash -f docs/compendium_prototype/fork_compare.sql
+heroku pg:psql --app flash -f docs/compendium_prototype/spanish_a1_diff.sql
+```
+
+`fork_compare.sql` compares each non-seed word_list against the seed list of
+the same name, and decides which forks phase 4's pre-rung can relink without a
+visible change. `spanish_a1_diff.sql` explains the one group that fails its
+front gate without losing any words, and what an article-aware relink must
+handle.
+
 - Reference data comes from the flash-csvs repo (`../../../flash-csvs/mandarin`):
   cedict.json, the jieba user dict, and the HSK 02-gloss CSVs.
 - 03/03b shell out to the `claude` CLI — run them with the sandbox off. Both are

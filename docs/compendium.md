@@ -462,13 +462,17 @@ lexicon:
     mismatches, no reading-less items, no parenthesized fronts. Entry
     resolution needs neither a CEDICT reading fallback nor a headword-only
     path.
-  - **Everything else: 5,823 fronts in 15 forks across 11 users**, with zero
-    parenthesized fronts anywhere in production. Nine of those forks are exact
-    copies of current seed content — no word absent. The other five (word_lists
-    56, 61, 68, 81, 84; users 232/277/297) are copies of an older, larger HSK
-    generation that stored no readings: they hold every reading-less front that
-    remains (3,424) and 65 words (Level 1) or 59 (Level 3) that seed content no
-    longer carries, against 262 card views of study history between them.
+  - **Everything else: 5,723 fronts in 13 zh forks across 10 users**
+    (re-measured 2026-08-30, once a guest-account cleanup removed the demo
+    copies), with zero parenthesized fronts anywhere in production. Eight hold
+    exactly the current seed words. Four (56, 61, 68 at Level 1; 81 at Level 3;
+    users 232/277/297) copy an older, larger HSK generation that stored no
+    readings: they hold every reading-less front that remains (3,424) and 65
+    words (Level 1) or 59 (Level 3) that seed content no longer carries at any
+    level, against 262 card views of study history between them. The last, 84
+    ("Mandarin HSK 3.0 (Custom)", user 277), matches no seed list by name and
+    is residue rather than a fork. Across all six languages there are 30 forks;
+    the breakdown is in phase 4's pre-rung.
   - **The only artifacts in seed content are 21 marked fronts** — see
     Homographs and the level marks.
 
@@ -519,10 +523,14 @@ Executes inside the Build sequencing ladder (phase 4), not as a one-shot event.
    leaves the entries backfill a uniform corpus (see phase 4's pre-rung).
    Identification is by name, since the copy flow copies the source's name
    verbatim and `cards.source_card_id` (added 2026-05) is absent from the
-   older forks. But a name match is *not* proof of equal content: the five
-   legacy forks carry names identical to current seed decks over an older,
-   larger generation, so collapsing them shrinks those decks. That shrink is
-   accepted — a decision about five known word_lists, not a rule. Users edit selections, not senses;
+   older forks. But a name match is *not* proof of equal content — four legacy
+   forks (56, 61, 68, 81) carry names identical to current seed decks over an
+   older, larger generation, so collapsing them shrinks those decks — and the
+   absence of a name match is not proof of residue either, since two lists
+   (es 7, zh 84) match nothing by name while a third group (es 22, 23, 30)
+   matches by name over the same words written differently. Hence the
+   pre-rung's gate is set equality on fronts, not the name. That shrink is accepted — a
+   decision about four known word_lists, not a rule. Users edit selections, not senses;
    personal gloss edits have no home in the new model (per-user overrides are
    parked — see Open questions). The copy-and-suggest-back catalog flow lost
    its premise here and was deleted at step 3.1; its successor, if any, is
@@ -533,10 +541,10 @@ Executes inside the Build sequencing ladder (phase 4), not as a one-shot event.
    verbatim as senses (source: curated), same standing as the HSK seed. Items'
    example / paired_example import as sense_examples rows, fanned out to the
    same senses the item's gloss mapped to.
-4. **The residue is handled by hand, not policy.** Measured 2026-08-16, there
-   is none: all 15 non-seed language word_lists are forks of seed decks (see
-   Prototype findings), so this is a safety net rather than a planned step.
-   The step-4.2 dry-run report lists any that appear; each is settled
+4. **The residue is handled by hand, not policy.** Re-measured 2026-08-30
+   across all languages, there are two: es 7 ("Spanish", 2,845 fronts) and
+   zh 84 ("Mandarin HSK 3.0 (Custom)", 953), neither matching a seed list by
+   name. The step-4.2 dry-run report lists any that appear; each is settled
    manually — words already in the compendium resolve to their entries (the
    user's gloss is a matching hint only, and user wording never enters the
    lexicon), and anything left, word-shaped or not, converts to a Basic deck.
@@ -651,19 +659,60 @@ before the next, dry-run/verification checks around every backfill.
    today's structure, and between them they leave the entries backfill nothing
    to decide.
 
-   *Collapse the legacy forks.* Nine of the fifteen fork word_lists are exact
-   copies of current seed content and repoint losslessly; the other five (56,
-   61, 68, 81, 84) copy an older, larger HSK generation, so repointing shrinks
-   those decks to the current list — accepted, since most of the dropped words
-   are still published at other levels and only 262 card views of history sit
-   across all five. Doing this first is what lets the entries rung resolve a
-   uniform corpus: the 3,424 reading-less fronts leave with these word_lists,
-   so no headword-only resolution path is ever needed. Mechanically it is the
-   3.6 copy-by-reference shape — repoint `deck.word_list_id`, delete the old
-   cards, `WordLists::Projection.build_cards` over the shared list — with one
-   collision to settle by hand: user 277 holds both Level 3 (81) and Level 3
-   (Custom) (84), which would collapse onto the same word_list and trip
-   `one_deck_per_word_list`. Keep 81, the one with study history.
+   *Collapse the legacy forks.* Re-measured 2026-08-30 across every language
+   (the earlier count of fifteen was zh-only): **30 fork word_lists, each with
+   exactly one deck** — no orphans, and the guest-account cleanup took the demo
+   copies with it. They fall in five groups, ordered by how much judgment each
+   needs; the first three are PRs, the rest are settled by hand:
+
+   - **13 collapse invisibly** (de 42, 44, 46; es 20, 31, 33, 35, 100; ja 8,
+     28; zh 168, 175, 176): fronts, readings, *and* glosses all match the seed
+     list of the same name, in both directions. Nothing a user sees changes,
+     which is what makes this the first PR.
+   - **8 differ only in gloss wording** (zh 102, 107, 138, 143, 147 — five
+     copies of one pre-July-2026 generation, 106 glosses each; es 32 with 14,
+     es 34 with 1, pt 94 with 2). Same mechanics one PR later, after a sample
+     confirms the seed wording is the newer one. Not a deferral: one canonical
+     sense per word is the point of the model, so no end state leaves these
+     users on their old glosses.
+   - **3 hold the same words in an older presentation** (es 22, 23, 30,
+     "Spanish A1 Vocab", byte-identical to each other). Seed has since put the
+     definite article on every noun ("pelo" → "el pelo", common-gender written
+     "el/la cantante") and moved `category` from topical groupings to parts of
+     speech; the forks also carry a stray "centro" beside "el centro", which is
+     the 483rd front against seed's 482. No vocabulary is lost, but a relink
+     cannot match cards on `(side, text)` — 233 of 483 would find no seed
+     item — so this is a third PR with an article-aware match and the duplicate
+     dropped. Two changes are accepted with it: those users' fronts gain
+     articles (what every other Spanish A1 deck already shows, gender being
+     worth teaching), and their MC decoys move from topical to part-of-speech,
+     since all five decks over these lists set `distractor_pool: category` — a
+     difference 4.4 ends anyway by making sibling generation universal.
+   - **4 copy an older, larger HSK generation** (56, 61, 68 at Level 1 with 506
+     fronts; 81 at Level 3 with 953). Repointing shrinks those decks to the
+     current list — accepted, since most dropped words are still published at
+     other levels and only 262 card views of history sit across all four — and
+     because their fronts carry no readings, every word they share with seed
+     content also reads as a reading and gloss mismatch. Settled by hand.
+   - **2 are residue**, matching no seed list by name: es 7 ("Spanish", 2,845
+     fronts) and zh 84 ("Mandarin HSK 3.0 (Custom)", 953). They fall to Deck
+     migration's residue rule rather than to this pre-rung.
+
+   Doing this first is what lets the entries rung resolve a uniform corpus: the
+   3,424 reading-less fronts leave with word_lists 56, 61, 68 and 81, so no
+   headword-only resolution path is ever needed.
+
+   Mechanically it is a **relink, not a rebuild**. In one transaction, repoint
+   `deck.word_list_id` at the seed list and each `card.item_id` at the seed
+   item with the same `(side, text)`, then delete the fork word_list. Cards
+   keep their ids and their `correct_count`/`correct_streak`/`view_count`, so
+   study history survives with nothing to copy or reconcile, and there is no
+   delete-then-`build_cards` window for a mid-flight session to write into.
+   The fork's `item_distractors` die with its items — the decoy history goes,
+   the feature continues, exactly as at 4.4. The collision an earlier draft
+   planned for does not arise: no user holds both a fork and a deck over the
+   same seed list, and 84's name matches no seed list, so user 277's two
+   Level-3-sized lists never meet.
 
    *Let homographs be homographs.* Replace `items`' unique
    `(word_list_id, side, text)` with `(word_list_id, side, text, reading)`,
