@@ -4,10 +4,12 @@ Design for a single shared vocabulary store ("the compendium") that all language
 decks select from, replacing per-deck language content sets. Status: **phases
 1–3 of Build sequencing are shipped** (2026-08: study-engine interface
 extraction, the Basic/Music flat-card pass, then the language content freeze),
-and phase 4 has begun with its 4.3 rename, taken out of order. Language content
-is now read-only and `word_lists`/`items`/`pairings` are language-only and
-static. The content pipeline was prototyped against real texts in 2026-08 (see
-Prototype findings).
+and phase 4 has begun: its 4.3 rename was taken out of order, and its
+fork-collapse pre-rung finished on 2026-08-30, leaving every word_list in
+production owned by the seed account and no zh front without a reading.
+Language content is now read-only and `word_lists`/`items`/`pairings` are
+language-only and static. The content pipeline was prototyped against real
+texts in 2026-08 (see Prototype findings).
 
 ## Goals
 
@@ -341,6 +343,16 @@ scores. Rules:
 `skill_scores` is per user × sense × skill. Reading and writing advance
 independently; both persist across every deck containing the sense.
 
+The 2026-08-30 fork collapse is the case for this, made twice over. Progress
+lives on `cards` today, which means it is destroyed by anything that destroys
+a card: a cascade that deleted 12 decks took their history with it, and
+adopting the legacy HSK decks cost deck 298 126 of its 160 views purely
+because the words had moved to another level's list. Keyed to senses, neither
+would have lost anything — the deck row is a selection, and a word moving
+between lists is not a reason to forget that the user knows it. Until 4.5 it
+is, which is what makes every rung before it destructive in a way the end
+model is not.
+
 Known wrinkle, deliberately deferred: writing ability is arguably per *entry* (or
 per character — writing 银行 is writing 银 + 行) rather than per sense. Keying both
 skills to sense is the consistent v1; revisit if writing decks feel wrong.
@@ -450,7 +462,10 @@ lexicon:
   coincide (转 zhuǎn/zhuàn, 炸 fry/explode). No confirm tier needed for
   selection; adjacent-sense homographs are the only escalation candidates.
 - **Entry resolution** (`resolve.rb`, read-only dry run of the migration's
-  entry-resolution step): 100% of dev-DB zh fronts resolve cleanly by headword +
+  entry-resolution step). **Superseded 2026-08-30**: the fork lists this
+  measured no longer exist, so the non-seed numbers below describe what the
+  pre-rung has since removed, and the seed-content row is now the whole
+  corpus. 100% of dev-DB zh fronts resolve cleanly by headword +
   reading, with a toneless fallback absorbing sandhi differences. The first
   production run (2026-08, 31,312 zh fronts via CSV export) covered every
   account, including demo accounts since deleted, and its headline buckets —
@@ -467,11 +482,13 @@ lexicon:
     copies), with zero parenthesized fronts anywhere in production. Eight hold
     exactly the current seed words. Four (56, 61, 68 at Level 1; 81 at Level 3;
     users 232/277/297) copy an older, larger HSK generation that stored no
-    readings: they hold every reading-less front that remains (3,424) and 65
-    words (Level 1) or 59 (Level 3) that seed content no longer carries at any
-    level, against 262 card views of study history between them. The last, 84
-    ("Mandarin HSK 3.0 (Custom)", user 277), matches no seed list by name and
-    is residue rather than a fork. Across all six languages there are 30 forks;
+    readings: they hold 2,471 of the 3,424 reading-less fronts that remain,
+    and 65 words (Level 1) or 59 (Level 3) that seed content no longer carries
+    at any level, against 262 card views of study history between them. The
+    last, 84 ("Mandarin HSK 3.0 (Custom)", user 277), matches no seed list by
+    name and so reads as residue rather than a fork — but it is a second clone
+    of the same old Level 3 generation and holds the other 953 reading-less
+    fronts. Across all six languages there are 30 forks;
     the breakdown is in phase 4's pre-rung.
   - **The only artifacts in seed content are 21 marked fronts** — see
     Homographs and the level marks.
@@ -507,44 +524,39 @@ Executes inside the Build sequencing ladder (phase 4), not as a one-shot event.
 1. **Seeding is the backfill.** Entries and senses backfill directly from the
    curated HSK word_lists (steps 4.1 and 4.2, see Seeding), so matching
    targets exist by construction before any fork row resolves.
-2. **Forks of catalog word_lists resolve, then collapse.** Nearly every
-   non-seed word_list is a copy of a seed-account catalog deck. **The set is
-   already closed**: phase 3 shipped, so copying is by reference and editing
-   is gone — no new fork appears and no existing one changes. During the
-   backfills their rows resolve to the same entries and senses as the
-   originals: stale copies (parenthesized-traditional fronts, missing
-   readings, since-removed words like 车上) resolve all the same, and
-   copy-era modifications are discarded wholesale, no log required. Study
-   counts carry as best they can: scores migrate per
-   resolved front (see Progress scoring migration) and key to senses, not
-   lists, so progress on a word a list dropped persists as skill_scores and
-   resurfaces in any deck containing that sense. Collapsing the fork
-   word_lists onto system lists **runs first**, not as late cleanup: it is what
-   leaves the entries backfill a uniform corpus (see phase 4's pre-rung).
-   Identification is by name, since the copy flow copies the source's name
-   verbatim and `cards.source_card_id` (added 2026-05) is absent from the
-   older forks. But a name match is *not* proof of equal content — four legacy
-   forks (56, 61, 68, 81) carry names identical to current seed decks over an
-   older, larger generation, so collapsing them shrinks those decks — and the
-   absence of a name match is not proof of residue either, since two lists
-   (es 7, zh 84) match nothing by name while a third group (es 22, 23, 30)
-   matches by name over the same words written differently. Hence the
-   pre-rung's gate is set equality on fronts, not the name. That shrink is accepted — a
-   decision about four known word_lists, not a rule. Users edit selections, not senses;
-   personal gloss edits have no home in the new model (per-user overrides are
-   parked — see Open questions). The copy-and-suggest-back catalog flow lost
-   its premise here and was deleted at step 3.1; its successor, if any, is
-   sense-level edit proposals.
+2. **Forks are already gone.** ✅ Every non-seed word_list was collapsed,
+   adopted or deleted on 2026-08-30 (see phase 4's pre-rung), so the entries
+   and senses backfills resolve seed content only — no fork row, no
+   reading-less front, no copy-era wording to reconcile. Phase 3 is what made
+   that possible: copying became by-reference and editing was deleted, so the
+   fork set was closed before anything touched it.
+
+   Two identification lessons are worth keeping, because they are what the
+   pre-rung's gate became. A name match is *not* proof of equal content — the
+   legacy HSK forks carried names identical to current seed decks over an
+   older, larger generation — and the absence of one is not proof of residue,
+   since zh 84 matched nothing by name while holding a straight clone of an
+   old catalog list. So the gate compared **the set of fronts**, never the
+   name, and the deletions were decided on content rather than naming.
+
+   Users edit selections, not senses; personal gloss edits have no home in the
+   new model (per-user overrides are parked — see Open questions). The
+   copy-and-suggest-back catalog flow lost its premise here and was deleted at
+   step 3.1; its successor, if any, is sense-level edit proposals.
 3. **Seed-account word_lists that aren't HSK levels** become curated
    word_lists. Items resolve to entries by headword + stored reading (CEDICT
    fallback when reading is missing); glosses are trusted curation and import
    verbatim as senses (source: curated), same standing as the HSK seed. Items'
    example / paired_example import as sense_examples rows, fanned out to the
    same senses the item's gloss mapped to.
-4. **The residue is handled by hand, not policy.** Re-measured 2026-08-30
-   across all languages, there are two: es 7 ("Spanish", 2,845 fronts) and
-   zh 84 ("Mandarin HSK 3.0 (Custom)", 953), neither matching a seed list by
-   name. The step-4.2 dry-run report lists any that appear; each is settled
+4. **The residue is handled by hand, not policy.** ✅ The two that existed
+   were settled on 2026-08-30 by deletion: zh 84 was a duplicate clone of an
+   old catalog list, and es 7 was a user's own 2,845-word frequency list,
+   abandoned after three cards in six months. Converting es 7 to a Basic deck
+   was the model-consistent option and was weighed and declined — worth
+   recording, because the rule below still stands for anything the step-4.2
+   dry run turns up, and this is a precedent against it rather than an
+   application of it. The report lists any that appear; each is settled
    manually — words already in the compendium resolve to their entries (the
    user's gloss is a matching hint only, and user wording never enters the
    lexicon), and anything left, word-shaped or not, converts to a Basic deck.
@@ -608,7 +620,9 @@ before the next, dry-run/verification checks around every backfill.
    Four results phase 4 depends on:
    - **`WordLists::Projection` is 40 lines**, down from ~410: `build_cards`
      (one card per paired Front item, for a deck created over existing
-     content) and `add_distractor`. Nothing creates or reshapes items and
+     content — since the pre-rung, passing over items the deck already
+     anchors, so filling a part-built deck cannot double up) and
+     `add_distractor`. Nothing creates or reshapes items and
      pairings any more. The `Deck#card_writer` seam went too — with the
      language writer gone it had one implementation, so `Decks::Replace` and
      `ProjectsCards` name `Decks::FlatCards` directly.
@@ -663,9 +677,11 @@ before the next, dry-run/verification checks around every backfill.
    (the earlier count of fifteen was zh-only): **30 fork word_lists, each with
    exactly one deck** — no orphans, and the guest-account cleanup took the demo
    copies with it. They fall in five groups, ordered by how much judgment each
-   needs; the first three are PRs, the rest are settled by hand. **24 of the
-   30 have collapsed as of 2026-08-30**; the six that remain are the last two
-   groups.
+   needs; the first three are PRs, the rest were settled by hand. ✅ **Complete
+   as of 2026-08-30**: 24 collapsed onto catalog lists, 4 adopted onto current
+   canonical decks, 2 deleted. Every word_list in production now belongs to the
+   seed account, and **no zh front is without a reading** — which was the
+   rung's whole point, and is what the entries backfill can now assume.
 
    - **13 collapse invisibly** (de 42, 44, 46; es 20, 31, 33, 35, 100; ja 8,
      28; zh 168, 175, 176): fronts, readings, *and* glosses all match the seed
@@ -709,18 +725,40 @@ before the next, dry-run/verification checks around every backfill.
      the duplicate pair's creation order deciding which spelling was kept,
      both cards being unstudied.
    - **4 copy an older, larger HSK generation** (56, 61, 68 at Level 1 with 506
-     fronts; 81 at Level 3 with 953). Repointing shrinks those decks to the
-     current list — accepted, since most dropped words are still published at
-     other levels and only 262 card views of history sit across all four — and
-     because their fronts carry no readings, every word they share with seed
-     content also reads as a reading and gloss mismatch. Settled by hand.
-   - **2 are residue**, matching no seed list by name: es 7 ("Spanish", 2,845
-     fronts) and zh 84 ("Mandarin HSK 3.0 (Custom)", 953). They fall to Deck
-     migration's residue rule rather than to this pre-rung.
+     fronts; 81 at Level 3 with 953). Their fronts carry no readings, so the
+     `(text, reading)` match finds nothing, and the level boundaries have been
+     redrawn beneath them: of 81's 953 words only 79 are on today's Level 3,
+     while 420 sit at Level 5 and 311 at Level 4. ✅ *Run 2026-08-30* — and
+     the shrink this document planned was **replaced by an adoption**, which
+     is the better rule. Shrinking would have cut deck 298 from 953 cards to
+     79; instead `AdoptCatalogList` matched cards by text alone, relinked
+     every word the catalog still publishes at that level (keeping counters),
+     dropped the rest, and *added* the words the fork never had — so each deck
+     came out as the current canonical deck (300, 300, 300 and 500 cards), not
+     a remnant of one. `Projection#build_cards` gained the invariant that
+     makes the fill safe: it passes over items the deck already anchors.
+     History cost: decks 267 and 272 lost nothing, 281 lost 1 view of 28, and
+     298 kept 34 of 160 — the rest sat on words that moved up two levels. All
+     four decks had been untouched since the day they were created in May.
+   - **2 were residue**, matching no seed list by name. ✅ *Deleted
+     2026-08-30*, both by `WordList#destroy!` — the one case in this rung
+     where the `dependent: :destroy` cascade is what you want, since the deck
+     should go with the list. zh 84 ("Mandarin HSK 3.0 (Custom)", 953 fronts)
+     was user 277's second clone of the same old Level 3 generation, made a
+     day after the first; it held the last 953 reading-less fronts, so the
+     rung's whole purpose depended on it going. es 7 ("Spanish", 2,845 fronts,
+     3 views in six months) was the only genuinely original content in the
+     set — a user's own frequency list, part-of-speech tagged, 1,992 of its
+     words absent from the catalog. Converting it to a Basic deck was the
+     model-consistent option (user-authored glosses have no home in the
+     compendium) and was weighed and declined; it was deleted instead.
 
    Doing this first is what lets the entries rung resolve a uniform corpus: the
-   3,424 reading-less fronts leave with word_lists 56, 61, 68 and 81, so no
-   headword-only resolution path is ever needed.
+   3,424 reading-less fronts leave with word_lists 56, 61, 68, 81 **and 84**,
+   so no headword-only resolution path is ever needed. That 84 carries 953 of
+   them is easy to miss, since it is residue by name rather than a fork —
+   1,518 + 953 + 953 is the whole of the 3,424, and the rung is not finished
+   without it.
 
    Mechanically it is a **relink, not a rebuild**. In one transaction, repoint
    `deck.word_list_id` at the seed list and each `card.item_id` at the seed
@@ -873,14 +911,23 @@ its own `--dry-run` runs clean against production.
   soft-hidden from the owner, while references exist). More broadly, what a user may
   modify at all: current stance is selections yes, senses/glosses no — whether
   sense-level edit proposals ever earn a place is open.
-  **Now concrete, not hypothetical**: since 3.6, other users' decks reference
-  the seed account's word_lists, and `DataSet has_many :decks, dependent:
+  **Now unavoidable, and demonstrated**: since the pre-rung there are no
+  non-seed word_lists left, so *every* language deck in production references
+  one of the seed account's lists. `WordList has_many :decks, dependent:
   :destroy` (plus `User has_many :word_lists, dependent: :destroy`) means
-  destroying one would take those decks with it. Deleting a *deck* is safe —
-  it leaves the word_list alone, which is exactly the "revoking a share stops
-  discovery only" behaviour — and no UI deletes a word_list or a seed account,
-  so this is console-only today. Decide the rule (block while referenced, or
-  nullify and let the decks die gracefully) before either gets a UI.
+  destroying one list would destroy every user's deck over it, and their
+  cards with them. That is no longer a thought experiment: the first collapse
+  run fired exactly this cascade by accident — through a *stale* association
+  rather than a live one — and deleted 12 decks (see the pre-rung's two
+  rules). The same cascade was then used deliberately, twice, to retire the
+  residue lists, which is the point: it is correct when the decks should go
+  and catastrophic when they should not, and nothing in the model
+  distinguishes the two cases. Deleting a *deck* stays safe — it leaves the
+  word_list alone, which is exactly the "revoking a share stops discovery
+  only" behaviour — and no UI deletes a word_list or a seed account, so this
+  is console-only today. Decide the rule (block while referenced, or nullify
+  and let the decks die gracefully) before either gets a UI, and prefer
+  blocking: a seed list now has every user behind it.
 - **Per-user gloss overrides**: parked. Gloss wording is the one fork-era freedom
   this model drops, and the Basic-deck escape hatch prices it at the entire
   language machinery (readings, fuzzy find, per-sense progress). Candidate
