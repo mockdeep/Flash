@@ -15,7 +15,7 @@ module WordLists
     # is created over existing content - a catalog copy shares the source's
     # word_list by reference, so only these anchors are the copier's own.
     def build_cards(deck, limit: nil)
-      paired_fronts(deck.word_list, limit).each do |item|
+      paired_fronts(deck, limit).each do |item|
         deck.card_type.constantize.create!(deck:, item:)
       end
       # Cards were created outside the loaded association above.
@@ -34,9 +34,14 @@ module WordLists
 
     private
 
-    # Only paired Front items get a card; a distractor-only item gets none.
-    def paired_fronts(word_list, limit)
-      scope = word_list.items.where(side: FRONT, id: Pairing.select(:item_id))
+    # Only paired Front items get a card; a distractor-only item gets none,
+    # and an item the deck already anchors is passed over, so filling a
+    # part-built deck cannot double up. Anchored ids exclude nulls: a NULL
+    # inside the subquery would make `where.not` match nothing at all.
+    def paired_fronts(deck, limit)
+      scope = deck.word_list.items
+        .where(side: FRONT, id: Pairing.select(:item_id))
+        .where.not(id: deck.cards.where.not(item_id: nil).select(:item_id))
       limit ? scope.order(:id).limit(limit) : scope
     end
   end
