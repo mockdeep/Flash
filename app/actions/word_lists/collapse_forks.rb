@@ -55,8 +55,20 @@ module WordLists
       targets = front_items(catalog).index_by { |item| key(item) }
       count = relink_cards(fork, targets)
       repoint_decks(fork, catalog)
-      fork.destroy!
+      discard(fork)
       count
+    end
+
+    # Destroying the list through the object the run has been holding deletes
+    # live decks. `WordList has_many :decks, dependent: :destroy`, and once any
+    # fork in the batch has been destroyed the remaining fork objects carry a
+    # *loaded* decks association whose target still holds each deck as it was
+    # before the repoint - so the cascade destroys a deck (and its cards) that
+    # now belongs to the catalog list, while the database says nothing points
+    # at the fork. Re-reading the row asks the database instead, and its
+    # cascade finds nothing left to take.
+    def discard(fork)
+      WordList.find(fork.id).destroy!
     end
 
     # Every front the gate compared has a counterpart, so a card can only miss
