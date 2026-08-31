@@ -16,12 +16,19 @@ module WordLists
   # the catalog's own decks are unpublished, and their lists would then read
   # as forks of nothing.
   #
+  # `accept_gloss_drift` widens the gate to fronts and readings alone, for the
+  # forks that hold the same words under an older generation's wording. Those
+  # users end up on the canonical gloss, which is the point of the model - one
+  # wording per word - and the flag cannot reach further than intended, since
+  # every other remaining fork differs in its *fronts*.
+  #
   # The dry run reports over the same code path that writes, so the report
   # cannot drift from the thing it verifies:
   #
   #   owner = User.find(1)
   #   WordLists::CollapseForks.call(owner:)             # writes nothing
   #   WordLists::CollapseForks.call(owner:, dry_run: false)
+  #   WordLists::CollapseForks.call(owner:, accept_gloss_drift: true)
   module CollapseForks
     extend self
 
@@ -29,8 +36,11 @@ module WordLists
     Collapsed = Data.define(:id, :name, :language, :catalog_id, :cards)
     Skipped = Data.define(:id, :name, :language, :reason)
 
-    def call(owner:, dry_run: true)
-      results = forks(owner).map { |fork| process(owner, fork, dry_run:) }
+    def call(owner:, dry_run: true, accept_gloss_drift: false)
+      results =
+        forks(owner).map do |fork|
+          process(owner, fork, dry_run:, accept_gloss_drift:)
+        end
       collapsed, skipped =
         results.partition { |result| result.is_a?(Collapsed) }
       Report.new(collapsed:, skipped:)
@@ -38,9 +48,9 @@ module WordLists
 
     private
 
-    def process(owner, fork, dry_run:)
+    def process(owner, fork, dry_run:, accept_gloss_drift:)
       catalog = counterpart(owner, fork)
-      reason = skip_reason(fork, catalog)
+      reason = skip_reason(fork, catalog, accept_gloss_drift:)
       return skipped(fork, reason) if reason
 
       cards = nil
@@ -93,9 +103,12 @@ module WordLists
       end
     end
 
-    def skip_reason(fork, catalog)
+    def skip_reason(fork, catalog, accept_gloss_drift:)
       return :no_catalog_match unless catalog
-      return :content_differs unless signature(fork) == signature(catalog)
+
+      fork_signature = signature(fork, accept_gloss_drift:)
+      catalog_signature = signature(catalog, accept_gloss_drift:)
+      return :content_differs unless fork_signature == catalog_signature
 
       nil
     end
@@ -108,9 +121,12 @@ module WordLists
     # catalog's largest lists run to thousands of fronts and instantiating
     # each one with its pairings and back items is more than a console dyno
     # holds.
-    def signature(word_list)
+    # Accepting gloss drift leaves every value empty, so the comparison falls
+    # back to the fronts and readings the hash is keyed on.
+    def signature(word_list, accept_gloss_drift:)
       fronts = front_items(word_list).pluck(:id, :text, :reading)
-      glosses = glosses_by_front(fronts.map(&:first))
+      glosses =
+        accept_gloss_drift ? {} : glosses_by_front(fronts.map(&:first))
       fronts.to_h { |id, text, reading| [[text, reading], glosses[id].to_a] }
     end
 
