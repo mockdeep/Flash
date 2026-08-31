@@ -7,113 +7,120 @@ RSpec.describe WordLists::CollapseForks do
     { front: "明白", back: "understand" }
   end
 
-  def deck_with(name, cards, visibility)
-    deck = create(:reading_deck, name:, user: create(:user), visibility:)
+  def deck_with(name, cards, user)
+    deck = create(:reading_deck, name:, user:)
     cards.each { |attrs| create(:reading_card, deck:, **attrs) }
     deck
   end
 
-  def catalog_deck(cards, name: "HSK 1")
-    deck_with(name, cards, "public")
+  # A catalog list and one other account's copy of it, under the same name.
+  # Returns the catalog's owner and the copier's deck.
+  def pair(catalog_cards, fork_cards, name: "HSK 1")
+    owner = create(:user)
+    deck_with("HSK 1", catalog_cards, owner)
+    [owner, deck_with(name, fork_cards, create(:user))]
   end
 
-  def fork_deck(cards, name: "HSK 1")
-    deck_with(name, cards, "private")
+  # The byte-identical case, which is the whole of what this PR collapses.
+  def matched_pair
+    pair([word], [word])
   end
 
-  # A catalog deck and a private copy of it, byte-identical: the case the
-  # first PR collapses. Returns the copier's deck.
-  def matched_fork
-    catalog_deck([word])
-    fork_deck([word])
+  def catalog_list(owner)
+    WordList.where(user: owner).sole
   end
 
-  def catalog_list
-    Deck.publicly_visible.sole.word_list
+  def collapse(owner)
+    described_class.call(owner:, dry_run: false)
   end
 
-  def catalog_front
-    catalog_list.items.find_by(text: word[:front])
+  def studied(deck)
+    deck.cards.sole.tap do |card|
+      card.update!(correct_count: 4, correct_streak: 2, view_count: 9)
+    end
   end
 
-  # Builds a catalog deck and a fork beside it, then reports on the fork.
+  # Builds a catalog list and a fork beside it, then reports on the fork.
   # Every gate example differs only in the content of the two.
   def skipped_row(catalog_cards, fork_cards, name: "HSK 1")
-    catalog_deck(catalog_cards)
-    fork_deck(fork_cards, name:)
-    described_class.call.skipped.sole
+    owner, = pair(catalog_cards, fork_cards, name:)
+    described_class.call(owner:).skipped.sole
   end
 
   describe ".call" do
     it "relinks the fork's cards onto the catalog items" do
-      card = matched_fork.cards.sole
+      owner, fork = matched_pair
+      card = fork.cards.sole
 
-      described_class.call(dry_run: false)
+      collapse(owner)
 
-      expect(card.reload.item).to eq(catalog_front)
+      expect(card.reload.item.word_list).to eq(catalog_list(owner))
     end
 
     it "keeps the relinked card's progress counters" do
-      card = matched_fork.cards.sole
-      card.update!(correct_count: 4, correct_streak: 2, view_count: 9)
+      owner, fork = matched_pair
+      card = studied(fork)
 
-      described_class.call(dry_run: false)
+      collapse(owner)
 
       expect(card.reload)
         .to have_attributes(correct_count: 4, correct_streak: 2, view_count: 9)
     end
 
     it "repoints the fork's deck at the catalog list" do
-      deck = matched_fork
+      owner, fork = matched_pair
 
-      described_class.call(dry_run: false)
+      collapse(owner)
 
-      expect(deck.reload.word_list).to eq(catalog_list)
+      expect(fork.reload.word_list).to eq(catalog_list(owner))
     end
 
     it "destroys the emptied fork word_list" do
-      list = matched_fork.word_list
+      owner, fork = matched_pair
+      list = fork.word_list
 
-      described_class.call(dry_run: false)
+      collapse(owner)
 
       expect(WordList.exists?(list.id)).to be(false)
     end
 
     it "reports the collapsed list" do
-      list = matched_fork.word_list
+      owner, fork = matched_pair
+      list = fork.word_list
 
-      report = described_class.call(dry_run: false)
+      report = collapse(owner)
 
-      expect(report.collapsed.sole)
-        .to have_attributes(id: list.id, catalog_id: catalog_list.id, cards: 1)
+      expect(report.collapsed.sole).to have_attributes(id: list.id, cards: 1)
     end
 
     it "collapses every fork of one catalog list" do
-      catalog_deck([word])
-      lists = [fork_deck([word]).word_list, fork_deck([word]).word_list]
+      owner, fork = matched_pair
+      other = deck_with("HSK 1", [word], create(:user))
+      ids = [fork.word_list.id, other.word_list.id]
 
-      report = described_class.call(dry_run: false)
+      report = collapse(owner)
 
-      expect(report.collapsed.map(&:id)).to match_array(lists.map(&:id))
+      expect(report.collapsed.map(&:id)).to match_array(ids)
     end
 
     it "writes nothing on a dry run" do
-      list = matched_fork.word_list
+      owner, fork = matched_pair
+      list = fork.word_list
 
-      described_class.call
+      described_class.call(owner:)
 
       expect(WordList.exists?(list.id)).to be(true)
     end
 
     it "reports what a dry run would collapse" do
-      list = matched_fork.word_list
+      owner, fork = matched_pair
 
-      report = described_class.call
+      report = described_class.call(owner:)
 
-      expect(report.collapsed.map(&:id)).to eq([list.id])
+      expect(report.collapsed.map(&:id)).to eq([fork.word_list.id])
     end
 
-    it "skips a list no catalog deck shares a name with" do
+    it "skips a list the owner holds no list of that name for" do
       row = skipped_row([word], [word], name: "Not In Catalog")
 
       expect(row)
@@ -144,10 +151,11 @@ RSpec.describe WordLists::CollapseForks do
       expect(row.reason).to eq(:content_differs)
     end
 
-    it "leaves catalog lists alone" do
-      catalog_deck([word])
+    it "leaves the owner's own lists alone" do
+      owner = create(:user)
+      deck_with("HSK 1", [word], owner)
 
-      report = described_class.call
+      report = described_class.call(owner:)
 
       expect(report.collapsed + report.skipped).to be_empty
     end
