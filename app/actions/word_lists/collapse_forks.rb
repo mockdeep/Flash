@@ -10,11 +10,18 @@ module WordLists
   # counters, and a fork's items are destroyed only once no card points at
   # them.
   #
+  # `owner` is the account whose lists are canonical - every other account's
+  # list is a fork, and collapses onto the owner's list of the same name and
+  # language. Deck visibility does not identify the canonical set: several of
+  # the catalog's own decks are unpublished, and their lists would then read
+  # as forks of nothing.
+  #
   # The dry run reports over the same code path that writes, so the report
   # cannot drift from the thing it verifies:
   #
-  #   WordLists::CollapseForks.call             # dry run, writes nothing
-  #   WordLists::CollapseForks.call(dry_run: false)
+  #   owner = User.find(1)
+  #   WordLists::CollapseForks.call(owner:)             # writes nothing
+  #   WordLists::CollapseForks.call(owner:, dry_run: false)
   module CollapseForks
     extend self
 
@@ -22,8 +29,8 @@ module WordLists
     Collapsed = Data.define(:id, :name, :language, :catalog_id, :cards)
     Skipped = Data.define(:id, :name, :language, :reason)
 
-    def call(dry_run: true)
-      results = forks.map { |fork| process(fork, dry_run:) }
+    def call(owner:, dry_run: true)
+      results = forks(owner).map { |fork| process(owner, fork, dry_run:) }
       collapsed, skipped =
         results.partition { |result| result.is_a?(Collapsed) }
       Report.new(collapsed:, skipped:)
@@ -31,8 +38,8 @@ module WordLists
 
     private
 
-    def process(fork, dry_run:)
-      catalog = counterpart(fork)
+    def process(owner, fork, dry_run:)
+      catalog = counterpart(owner, fork)
       reason = skip_reason(fork, catalog)
       return skipped(fork, reason) if reason
 
@@ -112,21 +119,14 @@ module WordLists
 
     def key(item) = [item.text, item.reading]
 
-    def forks
-      WordList.where.not(id: catalog_list_ids).order(:id)
+    def forks(owner)
+      WordList.where.not(user_id: owner.id).order(:id)
     end
 
-    def counterpart(fork)
-      WordList
-        .where(id: catalog_list_ids)
-        .find_by(name: fork.name, language: fork.language)
-    end
-
-    # Public decks are the catalog, and their word_lists are what forks
-    # collapse onto. Flat-card decks carry no word_list, and a NULL inside the
-    # subquery would leave `where.not(id: ...)` matching nothing at all.
-    def catalog_list_ids
-      Deck.publicly_visible.where.not(word_list_id: nil).select(:word_list_id)
+    def counterpart(owner, fork)
+      WordList.find_by(
+        user_id: owner.id, name: fork.name, language: fork.language,
+      )
     end
 
     def collapsed(fork, catalog, cards)
