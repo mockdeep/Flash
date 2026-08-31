@@ -103,6 +103,19 @@ RSpec.describe WordLists::CollapseForks do
       expect(report.collapsed.map(&:id)).to match_array(ids)
     end
 
+    # Destroying a fork through an object loaded before the batch began takes
+    # the *next* fork's repointed deck with it, so more than one fork has to
+    # collapse for this to bite.
+    it "keeps the deck of every fork in a multi-fork run" do
+      owner, fork = matched_pair
+      others = Array.new(2) { deck_with("HSK 1", [word], create(:user)) }
+      ids = [fork.id, *others.map(&:id)]
+
+      collapse(owner)
+
+      expect(Deck.where(id: ids).count).to eq(3)
+    end
+
     it "writes nothing on a dry run" do
       owner, fork = matched_pair
       list = fork.word_list
