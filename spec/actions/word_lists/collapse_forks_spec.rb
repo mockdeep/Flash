@@ -164,6 +164,30 @@ RSpec.describe WordLists::CollapseForks do
       expect(row.reason).to eq(:content_differs)
     end
 
+    it "collapses a gloss-drifted fork when drift is accepted" do
+      owner, fork = pair([word], [word.merge(back: "to understand")])
+
+      report = described_class.call(owner:, accept_gloss_drift: true)
+
+      expect(report.collapsed.map(&:id)).to eq([fork.word_list.id])
+    end
+
+    it "still skips differing words when drift is accepted" do
+      owner, = pair([word], [word, { front: "你好", back: "hi" }])
+
+      report = described_class.call(owner:, accept_gloss_drift: true)
+
+      expect(report.skipped.sole.reason).to eq(:content_differs)
+    end
+
+    it "still skips differing readings when drift is accepted" do
+      owner, = pair([word.merge(reading: "míngbai")], [word])
+
+      report = described_class.call(owner:, accept_gloss_drift: true)
+
+      expect(report.skipped.sole.reason).to eq(:content_differs)
+    end
+
     it "leaves the owner's own lists alone" do
       owner = create(:user)
       deck_with("HSK 1", [word], owner)
