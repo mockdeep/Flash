@@ -668,7 +668,9 @@ before the next, dry-run/verification checks around every backfill.
    - **13 collapse invisibly** (de 42, 44, 46; es 20, 31, 33, 35, 100; ja 8,
      28; zh 168, 175, 176): fronts, readings, *and* glosses all match the seed
      list of the same name, in both directions. Nothing a user sees changes,
-     which is what makes this the first PR.
+     which is what makes this the first PR. ✅ *Run 2026-08-30* — all 13 lists
+     collapsed and their cards relinked, but only one deck survived it; see
+     the two rules below.
    - **8 differ only in gloss wording** (zh 102, 107, 138, 143, 147 — five
      copies of one pre-July-2026 generation, 106 glosses each; es 32 with 14,
      es 34 with 1, pt 94 with 2). Same mechanics one PR later, after a sample
@@ -713,6 +715,29 @@ before the next, dry-run/verification checks around every backfill.
    planned for does not arise: no user holds both a fork and a deck over the
    same seed list, and 84's name matches no seed list, so user 277's two
    Level-3-sized lists never meet.
+
+   Two rules the first run bought the hard way, both costly enough to state
+   here rather than leave in the code:
+
+   - **Never destroy a list through the object the batch is holding.**
+     `WordList has_many :decks, dependent: :destroy`, and once any fork in a
+     batch has been destroyed the *remaining* fork objects carry a loaded
+     `decks` association whose target still holds each deck as it stood
+     before its repoint. Destroying through them cascades to a deck that now
+     belongs to the seed list, taking its cards with it, while the database
+     says nothing points at the fork. Re-read the row (`WordList.find(id)`)
+     and destroy that. Collapsing repointed 13 lists on 2026-08-30 and
+     deleted 12 decks this way — every fork after the first — with 855 card
+     views of history and no backup on an `essential-0` plan. Progress that
+     keyed to senses rather than to per-deck cards would have survived it,
+     which is an argument for 4.5, not a consolation.
+   - **Verify the end state, not the report.** The dry run rolls back, so it
+     re-creates whatever the write path destroys and its report cannot see
+     the damage; the report counts cards relinked, which stayed correct
+     throughout. After every collapse run, query the affected decks directly:
+     they must still exist, over the seed list, with their card counts and
+     view totals unchanged. That check takes a minute and is the only thing
+     that catches a cascade.
 
    *Let homographs be homographs.* Replace `items`' unique
    `(word_list_id, side, text)` with `(word_list_id, side, text, reading)`,
