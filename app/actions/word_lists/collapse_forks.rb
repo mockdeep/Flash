@@ -57,9 +57,12 @@ module WordLists
     # fails on the card's item presence rule and takes the whole fork's
     # transaction with it, rather than destroying items a card still needs.
     def relink_cards(fork, targets)
-      cards = Card.where(item_id: fork.items.select(:id)).includes(:item).load
-      cards.each { |card| card.update!(item: targets[key(card.item)]) }
-      cards.size
+      cards = Card.where(item_id: fork.items.select(:id))
+      count = cards.count
+      cards.includes(:item).find_each do |card|
+        card.update!(item: targets[key(card.item)])
+      end
+      count
     end
 
     # Moved by query rather than through `fork.decks`, so the word_list's
@@ -81,14 +84,30 @@ module WordLists
     # Fronts, their readings, and the glosses each one displays - the whole of
     # what a card shows. Comparing two of these settles both directions at
     # once: a word or gloss on either side alone makes the hashes differ.
+    #
+    # Built from plucked columns rather than loaded records, because the
+    # catalog's largest lists run to thousands of fronts and instantiating
+    # each one with its pairings and back items is more than a console dyno
+    # holds.
     def signature(word_list)
-      front_items(word_list).to_h { |item| [key(item), item.glosses] }
+      fronts = front_items(word_list).pluck(:id, :text, :reading)
+      glosses = glosses_by_front(fronts.map(&:first))
+      fronts.to_h { |id, text, reading| [[text, reading], glosses[id].to_a] }
+    end
+
+    # Back-item texts per front, in authored order (pairing id) - the order
+    # Item#glosses reads them in, and the order a card displays.
+    def glosses_by_front(front_ids)
+      pairings = Pairing.where(item_id: front_ids)
+        .order(:id)
+        .pluck(:item_id, :paired_item_id)
+      texts = Item.where(id: pairings.map(&:last)).pluck(:id, :text).to_h
+      pairings.group_by(&:first)
+        .transform_values { |rows| rows.map { |row| texts[row.last] } }
     end
 
     def front_items(word_list)
-      word_list.items
-        .where(side: Projection::FRONT)
-        .includes(pairings: :paired_item)
+      Item.where(word_list_id: word_list.id, side: Projection::FRONT)
     end
 
     def key(item) = [item.text, item.reading]

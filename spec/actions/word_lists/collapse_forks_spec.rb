@@ -88,6 +88,15 @@ RSpec.describe WordLists::CollapseForks do
         .to have_attributes(id: list.id, catalog_id: catalog_list.id, cards: 1)
     end
 
+    it "collapses every fork of one catalog list" do
+      catalog_deck([word])
+      lists = [fork_deck([word]).word_list, fork_deck([word]).word_list]
+
+      report = described_class.call(dry_run: false)
+
+      expect(report.collapsed.map(&:id)).to match_array(lists.map(&:id))
+    end
+
     it "writes nothing on a dry run" do
       list = matched_fork.word_list
 
