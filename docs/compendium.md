@@ -663,7 +663,9 @@ before the next, dry-run/verification checks around every backfill.
    (the earlier count of fifteen was zh-only): **30 fork word_lists, each with
    exactly one deck** — no orphans, and the guest-account cleanup took the demo
    copies with it. They fall in five groups, ordered by how much judgment each
-   needs; the first three are PRs, the rest are settled by hand:
+   needs; the first three are PRs, the rest are settled by hand. **21 of the
+   30 have collapsed as of 2026-08-30**; the nine that remain are the last
+   three groups.
 
    - **13 collapse invisibly** (de 42, 44, 46; es 20, 31, 33, 35, 100; ja 8,
      28; zh 168, 175, 176): fronts, readings, *and* glosses all match the seed
@@ -676,7 +678,15 @@ before the next, dry-run/verification checks around every backfill.
      es 34 with 1, pt 94 with 2). Same mechanics one PR later, after a sample
      confirms the seed wording is the newer one. Not a deferral: one canonical
      sense per word is the point of the model, so no end state leaves these
-     users on their old glosses.
+     users on their old glosses. ✅ *Run 2026-08-30* — all 8 collapsed, every
+     deck and every counter verified intact afterwards. The sample showed the
+     seed wording is newer and sharper (休息 "rest" → "to rest", 分 → "minute;
+     point (in a score)") but narrower in places (便宜 loses "inexpensive",
+     `camino` loses "way / trail"), and two Portuguese glosses are outright
+     regressions to fix upstream in flash-csvs: `a cor de laranja` "the color
+     orange" → "the orange", and `a gente` losing "us". Scores were preserved
+     across the reworded cards rather than reset, per this document's own
+     rule that a gloss edit cannot cost a user their streaks.
    - **3 hold the same words in an older presentation** (es 22, 23, 30,
      "Spanish A1 Vocab", byte-identical to each other). Seed has since put the
      definite article on every noun ("pelo" → "el pelo", common-gender written
