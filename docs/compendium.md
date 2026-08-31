@@ -663,9 +663,9 @@ before the next, dry-run/verification checks around every backfill.
    (the earlier count of fifteen was zh-only): **30 fork word_lists, each with
    exactly one deck** — no orphans, and the guest-account cleanup took the demo
    copies with it. They fall in five groups, ordered by how much judgment each
-   needs; the first three are PRs, the rest are settled by hand. **21 of the
-   30 have collapsed as of 2026-08-30**; the nine that remain are the last
-   three groups.
+   needs; the first three are PRs, the rest are settled by hand. **24 of the
+   30 have collapsed as of 2026-08-30**; the six that remain are the last two
+   groups.
 
    - **13 collapse invisibly** (de 42, 44, 46; es 20, 31, 33, 35, 100; ja 8,
      28; zh 168, 175, 176): fronts, readings, *and* glosses all match the seed
@@ -700,6 +700,14 @@ before the next, dry-run/verification checks around every backfill.
      worth teaching), and their MC decoys move from topical to part-of-speech,
      since all five decks over these lists set `distractor_pool: category` — a
      difference 4.4 ends anyway by making sibling generation universal.
+     ✅ *Run 2026-08-30* in two steps, and the split is the point: a separate
+     `AlignArticleFronts` pass rewrote the fork fronts to the catalog spelling
+     (233, 233, 234 renames) and dropped the duplicate, then the ordinary
+     collapse ran unchanged. No language-specific rule entered the general
+     action, and each half was verifiable before the other ran. The three
+     lists turned out to hold identical content after all — the odd 234 was
+     the duplicate pair's creation order deciding which spelling was kept,
+     both cards being unstudied.
    - **4 copy an older, larger HSK generation** (56, 61, 68 at Level 1 with 506
      fronts; 81 at Level 3 with 953). Repointing shrinks those decks to the
      current list — accepted, since most dropped words are still published at
