@@ -4,6 +4,7 @@ require "rails_helper"
 
 RSpec.describe Entry do
   it { is_expected.to have_many(:items).dependent(:restrict_with_exception) }
+  it { is_expected.to have_many(:senses).dependent(:restrict_with_exception) }
 
   it { is_expected.to validate_presence_of(:headword) }
 
