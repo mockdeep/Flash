@@ -3,8 +3,8 @@
 require "rails_helper"
 
 # Exercised through ReadingCard - LanguageCard is never instantiated
-# directly. Language cards keep nil content columns; everything reads
-# through the word_list item.
+# directly. Language cards keep nil content columns; the front side reads
+# through the item's entry, the back side through the item.
 RSpec.describe LanguageCard do
   it "requires an item" do
     card = ReadingCard.new(deck: build(:reading_deck))
@@ -14,11 +14,18 @@ RSpec.describe LanguageCard do
     expect(card.errors[:item]).to be_present
   end
 
-  it "reads the front from the item despite nil columns" do
+  it "reads the front from the entry despite nil columns" do
     card = create(:reading_card, front: "明白")
 
     expect(card).to have_attributes(front: "明白")
       .and(satisfy("column is nil") { |c| c[:front].nil? })
+  end
+
+  it "shares one entry with a card for the same word in another list" do
+    card = create(:reading_card, front: "明白", reading: "míngbai")
+    other = create(:reading_card, front: "明白", reading: "míngbai")
+
+    expect(card.entry).to eq(other.entry)
   end
 
   it "rejoins a semicolon back from the item's glosses" do
@@ -33,7 +40,7 @@ RSpec.describe LanguageCard do
     expect(card.distractors).to contain_exactly("happy", "run")
   end
 
-  it "reads reading and category from the item" do
+  it "reads the reading from the entry and the category from the item" do
     card = create(:reading_card, reading: "míngbai")
 
     expect(card).to have_attributes(reading: "míngbai", category: "General")
@@ -46,7 +53,7 @@ RSpec.describe LanguageCard do
   end
 
   describe "#homograph?" do
-    it "is true when another card's item shares the front" do
+    it "is true when another card's entry shares the headword" do
       deck = create(:reading_deck)
       card = create(:reading_card, deck:, front: "过", reading: "guò")
       create(:reading_card, deck:, front: "过", reading: "guo")
@@ -54,7 +61,7 @@ RSpec.describe LanguageCard do
       expect(card.homograph?).to be(true)
     end
 
-    it "is false when no other card's item shares the front" do
+    it "is false when no other card's entry shares the headword" do
       deck = create(:reading_deck)
       card = create(:reading_card, deck:, front: "过")
       create(:reading_card, deck:, front: "还")

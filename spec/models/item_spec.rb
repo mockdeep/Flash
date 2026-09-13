@@ -4,12 +4,21 @@ require "rails_helper"
 
 RSpec.describe Item do
   it { is_expected.to belong_to(:word_list) }
+  it { is_expected.to belong_to(:entry).optional }
   it { is_expected.to have_many(:cards).dependent(:destroy) }
   it { is_expected.to have_many(:paired_items).through(:pairings) }
   it { is_expected.to have_many(:distractors).through(:item_distractors) }
 
   it { is_expected.to validate_presence_of(:side) }
   it { is_expected.to validate_presence_of(:text) }
+
+  it "requires an entry on a Front item" do
+    expect(build(:item, entry: nil)).not_to be_valid
+  end
+
+  it "allows a Back item no entry" do
+    expect(build(:item, :back)).to be_valid
+  end
 
   describe "uniqueness" do
     it "allows homographs that differ by reading" do

@@ -68,7 +68,7 @@ RSpec.describe WordLists::AlignArticleFronts do
 
       align(owner)
 
-      expect(fork.cards.sole.reload.front).to eq("el pelo")
+      expect(fork.cards.sole.item.reload.text).to eq("el pelo")
     end
 
     it "keeps the card's progress through the rename" do
@@ -86,7 +86,7 @@ RSpec.describe WordLists::AlignArticleFronts do
 
       align(owner)
 
-      expect(fork.cards.sole.reload.front).to eq("el/la cantante")
+      expect(fork.cards.sole.item.reload.text).to eq("el/la cantante")
     end
 
     it "leaves a front that already matches" do

@@ -2,9 +2,7 @@
 
 class Item < ApplicationRecord
   belongs_to :word_list
-  # Front items link to their entry once `WordLists::CanonicalizeEntries`
-  # has run; Back items never do.
-  belongs_to :entry, optional: true
+  belongs_to :entry
   has_many :cards, dependent: :destroy
 
   has_many :pairings, dependent: :destroy
@@ -15,6 +13,9 @@ class Item < ApplicationRecord
 
   validates :side, presence: true
   validates :text, presence: true
+  validates :entry, presence: true, if: :front?
+
+  def front? = side == WordLists::Projection::FRONT
 
   # Paired Back-item texts in authored order (pairing id), forming the glosses
   # of this Front item. Uses loaded associations so callers can preload.

@@ -7,8 +7,11 @@ RSpec.describe WordLists::CanonicalizeEntries do
     create(:word_list, language:)
   end
 
+  # A Front item as it stood before the backfill: no entry yet, which the
+  # model no longer allows, so validation is bypassed.
   def front(word_list, text, reading = nil)
-    create(:item, word_list:, text:, reading:)
+    build(:item, word_list:, text:, reading:, entry: nil)
+      .tap { |item| item.save!(validate: false) }
   end
 
   def canonicalize
