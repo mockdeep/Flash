@@ -8,10 +8,14 @@ and phase 4 has begun: its 4.3 rename was taken out of order, its
 fork-collapse pre-rung finished on 2026-08-30, leaving every word_list in
 production owned by the seed account and no zh front without a reading, and
 its homograph pre-rung finished in 2026-09, leaving no marked front. Next is
-4.1, entries.
+4.1, entries. One small item is still owed before 4.2: the console action
+that corrects two Portuguese back items in place (see the fork-collapse
+pre-rung).
 Language content is now read-only and `word_lists`/`items`/`pairings` are
 language-only and static. The content pipeline was prototyped against real
-texts in 2026-08 (see Prototype findings).
+texts in 2026-08 (see Prototype findings). flash-csvs, the generator behind
+the seed catalog, is out of scope: nothing loads its output into the app any
+more, and phase 5's pipeline is a different shape, so no rung here touches it.
 
 ## Goals
 
@@ -30,8 +34,6 @@ texts in 2026-08 (see Prototype findings).
 
 ```mermaid
 erDiagram
-    lexicons ||--o{ entries : ""
-    lexicons ||--o{ word_lists : ""
     entries ||--o{ senses : ""
     senses ||--o{ sense_memberships : ""
     word_lists ||--o{ sense_memberships : ""
@@ -45,25 +47,20 @@ erDiagram
     senses ||--o{ sense_distractors : ""
     users ||--o{ sense_distractors : ""
 
-    lexicons {
-        string language "unique; zh, ja, es..."
-    }
     entries {
-        bigint lexicon_id FK
+        string language "zh, ja, es..."
         string headword "e.g. 爱好"
         string reading "pinyin w/ tones; furigana; null where n/a"
         string script_variant "zh: traditional form"
         integer frequency_rank
-        string kind "word | proper_noun"
     }
     senses {
         bigint entry_id FK
         string gloss "one meaning; may hold synonym facets"
         string pos
-        string register "modern | literary"
         integer rank "1 = primary"
-        string source "cedict | llm | curated"
-        string status "auto | reviewed"
+        string source "phase 5: cedict | llm | curated"
+        string status "phase 5: auto | reviewed"
     }
     texts {
         bigint word_list_id FK "owner comes through the list"
@@ -72,7 +69,7 @@ erDiagram
         text body "retained source; re-runs, audit, future reader"
     }
     word_lists {
-        bigint lexicon_id FK "one language per list; drives fonts"
+        string language "one language per list; drives fonts"
         bigint user_id FK "seed account owns the catalog"
         string name "lists sort by name"
     }
@@ -115,7 +112,7 @@ Key uniques:
 
 | Table | Unique on |
 |---|---|
-| entries | (lexicon_id, headword, reading), nulls not distinct |
+| entries | (language, headword, reading), nulls not distinct |
 | senses | — (rank orders within entry) |
 | sense_memberships | (sense_id, word_list_id) |
 | skill_scores | (user_id, sense_id, skill) |
@@ -125,8 +122,11 @@ Key uniques:
 
 ### Entry vs. sense
 
-- **Entry** identity is headword + reading within a lexicon. 还 hái and 还 huán are
-  two entries; 花 huā is one entry regardless of meaning.
+- **Entry** identity is headword + reading within a language. 还 hái and 还 huán are
+  two entries; 花 huā is one entry regardless of meaning. There is no
+  `lexicons` table: a lexicon would hold nothing but its language code, so
+  `language` sits directly on entries (as it already does on word_lists) until
+  a per-language attribute with a reader exists.
 - **Sense** is the studyable unit — one meaning of an entry. The split criterion:
   *could a learner know one meaning without knowing the other?* 花 flower vs.
   花 to-spend split; "to like" vs. "to be fond of" do not (synonym facets stay
@@ -139,14 +139,15 @@ Key uniques:
   is `script_variant` (per-sense mapping is unambiguous even for one-to-many
   characters like 发, because senses pin the word). Regional *vocabulary*
   differences (软件 vs. 軟體) are separate entries, not script variants.
-- Proper nouns (`kind`) stay out of general vocabulary lists like HSK but
+- Proper nouns stay out of general vocabulary lists like HSK but
   belong in lists fed by texts — a choice made when a list is built, not a
   list type: studying to read a text means no token
   should be a blank. Name glosses are text-contextual ("Guo Jing — the
   protagonist"), which the pipeline's contextual glossing step produces anyway,
   and progress on a name carries across chapters and sequels like any sense.
-  `kind` is presentation metadata (a name badge, maybe a lighter study
-  treatment), not a compendium filter. Function words enter text lists on the
+  Entries carry no `kind` column: the gloss already says a word is a name,
+  and a badge or lighter study treatment can add the column when it has a
+  reader. Function words enter text lists on the
   same no-blanks basis, glossed as function ("的 — possessive marker") — weak
   cards that teach recognition rather than mastery, but a weak card beats a
   blank, and past the earliest levels they're already mastered and drop out of
@@ -154,8 +155,13 @@ Key uniques:
   collocations (不再, 几天) in lists: common-phrase reinforcement beats filtering,
   streaks retire them fast, and the only requirement is that their glosses are
   verified correct — no triviality filter.
-- `register` keeps literary/archaic senses (e.g. from Journey to the West) from
-  polluting modern decks, and vice versa.
+- Senses carry no `register` column. Literary senses (e.g. from Journey to the
+  West) cannot leak into modern decks on their own, because a sense enters a
+  list only through an explicit membership; the one consumer would be the
+  pipeline's match step preferring modern senses for modern text, and
+  classical texts are deferred. Provenance (`source`, `status`) exists for the
+  pipeline's review queue and audit trail, so those columns arrive with the
+  pipeline in phase 5, not in the phase 4 backfills.
 
 ### Homographs and the level marks
 
@@ -179,8 +185,8 @@ three readings across Levels 6–7, two of which collide inside Level 7.
 
 The compendium needs no mark — 过 guò and 过 guo are two entries differing only
 in `reading`, and `sense_memberships` lets both into one word_list. What remains
-is a display problem, two cards in a deck sharing a front, and the interim
-answer is to annotate rather than merge. The front text stays the bare
+is a display problem, two cards in a deck sharing a front, and the answer is
+to annotate rather than merge. The front text stays the bare
 headword everywhere; the annotation reuses the **reading line** the study page
 already shows under a confirmed front (`CardFront`'s `reading:`) rather than
 building a "重 · chóng" string:
@@ -209,19 +215,19 @@ Outside study, the deck page gains a **Reading column**, shown whenever any
 card in the deck has a reading (Basic cards can carry one too), so twin rows
 are told apart there without a twin-specific branch.
 
-Both study stages stay unambiguous while the cards stay separate. Merging them
-is the end state (see Study semantics) but belongs with headword grouping in
-phase 5; annotation is the small correct thing to carry until then.
+Both study stages stay unambiguous while the cards stay separate. Merging
+twins into one card (a labeled back, a combined reading answer, shape-matched
+two-reading distractors) was weighed and dropped: the annotation already makes
+both stages answerable, and the merge would buy little for 21 words at the
+cost of a second grouping level and progress fan-out across entries. Separate
+cards are the design, not an interim. The one visible oddity is 露, whose two
+cards share a gloss and differ only in the reading line.
 
 The marks were retired **before** the entries rung, on the item structure
 (✅ *shipped 2026-09*, see phase 4's pre-rungs), so that entries land with no
-display change at all. Still to do upstream, as tidying rather than a guard:
-`disambiguate_fronts!` and its tables (`MARKED_READING`, `SUPERSCRIPT`, the
-tone helpers) come out of flash-csvs' `09-emit.rb`, along with the card-rule-3
-text in `mandarin/AGENTS.md`. Nothing loads a regenerated catalog into the app
-any more, so the marks could not come back that way. The pipeline's own `homograph` column (the
-syllabus's 本1 numbering, used as a card-identity key) is a different thing
-and stays.
+display change at all. flash-csvs still emits the marks, but nothing loads a
+regenerated catalog into the app any more, so they cannot come back that way
+and the generator is left alone.
 
 ### Deck = word_list × form
 
@@ -329,20 +335,14 @@ scores. Rules:
 
 ### Study semantics
 
-- **One card per headword per deck.** If a deck's list contains several senses of
+- **One card per entry per deck.** If a deck's list contains several senses of
   one entry, study mode presents a single card whose back is the union of those
   senses' glosses, rejoined with "; " — the same display as today. The deck itself
   is the disambiguating context for the prompt (seeing 花 in an HSK 1 deck asks
-  for what HSK 1 taught). Grouping is by written form, not entry: homograph
-  entries (还 hái / 还 huán) would otherwise yield two visually identical fronts —
-  an unanswerable prompt, with each card's true answer sitting in the other's
-  distractor pool. Merged, the back shows each reading labeled with its glosses,
-  and the reading test's correct option is the union of member readings
-  ("hái; huán"), with distractors shape-matched by composing pairs from sibling
-  cards' readings so a two-reading option isn't a giveaway. Writing decks are
-  unaffected — their prompts are glosses, which don't collide. Merging is
-  phase-5 work: through phase 4 homographs stay separate cards, disambiguated
-  by annotation (see Homographs and the level marks).
+  for what HSK 1 taught). Grouping is by entry, not written form: homograph
+  entries (还 hái / 还 huán) stay separate cards, told apart by the reading line
+  and the decoy exclusion described in Homographs and the level marks. Writing
+  decks are unaffected — their prompts are glosses, which don't collide.
 - **Credit fans out.** Answering that card correctly advances the streak of every
   member sense. Grouping is a study-time construct; nothing about it is stored.
 - **A card studies at the level of its weakest member sense.** A card mixing a
@@ -359,7 +359,7 @@ scores. Rules:
   usage.
 - **Distractors are generated; misses are remembered.** No curated distractor
   lists for language decks: option lists build on the fly from sibling cards in
-  the deck (length-matched, register permitting). When a user picks a wrong
+  the deck (length-matched). When a user picks a wrong
   option, every member sense the card displayed is linked to every member sense
   the chosen option displayed — cross-product fan-out, mirroring credit fan-out,
   because the displayed grouping is deck-contextual and not stored. Rows are
@@ -426,9 +426,8 @@ evidence is a separate, deferred concept (see Open questions).
    real question (memberships attach at the sense level, and picking the sense
    resolves homograph readings as a side effect); measured at 100% for
    same-reading splits, ~96% when a tone-pair reading is at stake (see Prototype
-   findings). If no sense fits, create one (source: llm, status: auto), with
-   `register` set from the text's context so literary senses stay out of modern
-   decks. The sense inventory grows lazily from real usage.
+   findings). If no sense fits, create one (source: llm, status: auto). The
+   sense inventory grows lazily from real usage.
 5. **Misses route, they don't fail**: not-in-CEDICT means proper noun (→ into
    the text's list, glossed contextually), segmentation artifact (→ re-segment
    check), or a real rare word
@@ -549,8 +548,8 @@ Executes inside the Build sequencing ladder (phase 4), not as a one-shot event.
 3. **Seed-account word_lists that aren't HSK levels** need no special
    handling: lists have no type, so they run through 4.1 and 4.2 like the
    HSK lists. Items resolve to entries by headword + stored reading; glosses
-   are trusted curation and import verbatim as senses (source: curated), same
-   standing as the HSK seed. Items' example / paired_example import as
+   are trusted curation and import verbatim as senses, same standing as the
+   HSK seed. Items' example / paired_example import as
    sense_examples rows, fanned out to the same senses the item's gloss mapped
    to.
 4. **No residue policy is needed.** The two non-seed lists with no catalog
@@ -677,13 +676,12 @@ backfill.
    repointed at seed rows in one transaction, keeping card ids and counters.
    Every word_list in production now belongs to the seed account and **no zh
    front is without a reading**, which is what the entries backfill assumes.
-   Two flash-csvs gloss regressions surfaced along the way: Portuguese
+   Two gloss regressions surfaced along the way: Portuguese
    `a cor de laranja` ("the color orange" became "the orange") and `a gente`
-   (lost "us"). Nothing loads the catalog into the app any more, so an
-   upstream fix alone never reaches users. Both get fixed twice: in flash-csvs
-   so the source stays right, and in the app by a one-off console action that
-   edits the two back items in place (dry run by default, like the others),
-   ahead of 4.2 so the senses import already corrected.
+   (lost "us"). ⏳ *Pending, must land before 4.2*: a one-off console action
+   that edits the two back items in place (dry run by default, like the
+   others), so the senses import already corrected. The fix is in-app only;
+   flash-csvs is out of scope (see the status note at the top).
 
    Two rules the run bought the hard way, which apply to every backfill after
    it:
@@ -743,8 +741,9 @@ backfill.
    `entries.headword`. Nothing creates language items any more, so no writer
    has to learn the new shape — `Decks::CardsCsv`'s duplicate-front check
    belongs to the Basic import path alone.
-   1. **Canonicalize entries, switch front-side reads.** Add `lexicons` +
-      `entries`; backfill by deduping front items across word_lists. After the
+   1. **Canonicalize entries, switch front-side reads.** Add `entries`
+      (`language` copied from the owning word_list); backfill by deduping
+      front items across word_lists. After the
       pre-rungs every front is seed content, carries no mark, and resolves on
       headword + reading, so the measured step has nothing left to fail on.
       The entries unique index takes `nulls_not_distinct: true`, as the items
@@ -753,7 +752,8 @@ backfill.
       quietly duplicate them. Items point at their entry, and the front-side reads move in the same
       rung rather than sitting dormant: `LanguageCard#front`, `#reading` and
       `#homograph?`, `LanguageDeck#hanzi_chars`, `#reading_pairs` and
-      `#readings?`, and `#language`/`#mandarin?` (through the lexicon).
+      and `#readings?`. `#language`/`#mandarin?` keep reading
+      `word_lists.language`, which stays as it is.
       **Display comes out byte-identical, with no exceptions** — that is what
       the second pre-rung bought, and it makes production traffic the
       verification for the one backfill that was ever measured. Enrichment
@@ -779,8 +779,9 @@ backfill.
       collect a different example from each, which would leave a card no way
       to show the one its own item held, so the dry run also reports every
       sense with more than one distinct example. Every row is
-      seed-account content and imports as canonical (source: curated; see
-      Deck migration). Cards keep `item_id` past this step; `add_distractor`
+      seed-account content and imports as canonical (see Deck migration);
+      no provenance column is written, because none exists until phase 5.
+      Cards keep `item_id` past this step; `add_distractor`
       still needs it until 4.4.
    3. **Rename `data_sets` → `word_lists`.** ✅ *Shipped 2026-08-17*, ahead of the
       rest of the ladder: it touches only names, so running it first meant
@@ -806,7 +807,7 @@ backfill.
    5. **Globalize progress** — the lumpiest step, so it runs as its own
       sub-ladder: (a) add `skill_scores` and backfill from cards, study
       dual-writes while card counters stay authoritative; (b) switch study
-      reads to sense enumeration — headword grouping, credit fan-out, and
+      reads to sense enumeration — entry grouping, credit fan-out, and
       weakest-member selection land here, verifiable against the still-live
       card counters and revertible to card reads without data loss for as
       long as the dual-write stands; (c) drop language rows from `cards`,
@@ -839,7 +840,10 @@ backfill.
    is stable, in three rungs: productionize the content pipeline (API
    structured output, not the prototype's claude-CLI) and run it
    *out-of-band* first, landing its output as ordinary word_lists — real
-   text decks ship before any new schema; then add `texts` (pointing at their
+   text decks ship before any new schema. This rung adds `senses.source` and
+   `senses.status`, the first columns with a reader (the review queue);
+   every row already present defaults to curated and reviewed, since all of
+   it is seed curation. Then add `texts` (pointing at their
    word_list) and entry-order positions so runs become first-class; then
    the text-study UX (uploading texts into a list, leveling, surfacing to
    the reader which words earlier texts already covered).
