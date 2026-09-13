@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_13_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_14_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -110,6 +110,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_000000) do
     t.index ["paired_item_id"], name: "index_pairings_on_paired_item_id"
   end
 
+  create_table "sense_examples", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "sense_id", null: false
+    t.string "sentence", null: false
+    t.string "translation"
+    t.datetime "updated_at", null: false
+    t.index ["sense_id", "sentence"], name: "index_sense_examples_on_sense_id_and_sentence", unique: true
+  end
+
+  create_table "sense_memberships", force: :cascade do |t|
+    t.string "category"
+    t.datetime "created_at", null: false
+    t.integer "position", null: false
+    t.bigint "sense_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "word_list_id", null: false
+    t.index ["sense_id", "word_list_id"], name: "index_sense_memberships_on_sense_id_and_word_list_id", unique: true
+    t.index ["word_list_id"], name: "index_sense_memberships_on_word_list_id"
+  end
+
+  create_table "senses", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "entry_id", null: false
+    t.string "gloss", null: false
+    t.datetime "updated_at", null: false
+    t.index ["entry_id", "gloss"], name: "index_senses_on_entry_id_and_gloss", unique: true
+  end
+
   create_table "subscriptions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "creem_subscription_id"
@@ -168,6 +196,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_000000) do
   add_foreign_key "items", "word_lists", on_delete: :cascade
   add_foreign_key "pairings", "items", column: "paired_item_id", on_delete: :cascade
   add_foreign_key "pairings", "items", on_delete: :cascade
+  add_foreign_key "sense_examples", "senses", on_delete: :cascade
+  add_foreign_key "sense_memberships", "senses", on_delete: :cascade
+  add_foreign_key "sense_memberships", "word_lists", on_delete: :cascade
+  add_foreign_key "senses", "entries"
   add_foreign_key "subscriptions", "users"
   add_foreign_key "topics", "users", on_delete: :cascade
   add_foreign_key "word_lists", "users", on_delete: :cascade
