@@ -8,9 +8,7 @@ and phase 4 has begun: its 4.3 rename was taken out of order, its
 fork-collapse pre-rung finished on 2026-08-30, leaving every word_list in
 production owned by the seed account and no zh front without a reading, and
 its homograph pre-rung finished in 2026-09, leaving no marked front. Next is
-4.1, entries. One small item is still owed before 4.2: the console action
-that corrects two Portuguese back items in place (see the fork-collapse
-pre-rung).
+4.1, entries.
 Language content is now read-only and `word_lists`/`items`/`pairings` are
 language-only and static. The content pipeline was prototyped against real
 texts in 2026-08 (see Prototype findings). flash-csvs, the generator behind
@@ -678,14 +676,14 @@ backfill.
    front is without a reading**, which is what the entries backfill assumes.
    Two gloss regressions surfaced along the way: Portuguese
    `a cor de laranja` ("the color orange" became "the orange") and `a gente`
-   (lost "us"). ⏳ *Built, production run pending; must land before 4.2*:
-   `WordLists::RepairGloss` (dry run by default, like the others) retargets
-   the front's pairing to new Back items ("the color orange"; "we", "us")
-   rather than editing the old ones in place, because Back items are shared
-   within a list — "the orange" also glosses the fruit. Dry-run against a
-   production copy (`bin/pull_prod`) reports both repairs and the one
-   sharer. The fix is in-app only; flash-csvs is out of scope (see the
-   status note at the top).
+   (lost "us"). ✅ *Fixed 2026-09-13*: `WordLists::RepairGloss` (dry run by
+   default, like the others) retargets the front's pairing to new Back items
+   ("the color orange"; "we", "us") rather than editing the old ones in
+   place, because Back items are shared within a list — "the orange" also
+   glosses the fruit. Dry-run against a production copy (`bin/pull_prod`),
+   then run for real; a fresh pull confirmed the three fronts' glosses and
+   their card count. The fix is in-app only; flash-csvs is out of scope (see
+   the status note at the top).
 
    Two rules the run bought the hard way, which apply to every backfill after
    it:
