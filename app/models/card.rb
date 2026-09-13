@@ -58,6 +58,8 @@ class Card < ApplicationRecord
   # overrides the readers to go through the word_list item instead.
   def distractors = card_distractors.map(&:text)
 
+  def homograph? = false
+
   def to_row
     {
       front:,

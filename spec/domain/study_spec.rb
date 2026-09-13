@@ -166,6 +166,43 @@ RSpec.describe Study do
     end
   end
 
+  describe "#prompt_reading" do
+    def deck_with_twins(level:)
+      deck = create(:reading_deck, level:)
+      create(:reading_card, deck:, front: "过", reading: "guò")
+      create(:reading_card, deck:, front: "过", reading: "guo")
+      deck
+    end
+
+    it "shows a homograph's reading on the translation question" do
+      study = described_class.new(deck: deck_with_twins(level: 1))
+
+      expect(study.prompt_reading).to eq(study.next_card.reading)
+    end
+
+    it "hides a homograph's reading during the reading stage" do
+      deck = deck_with_twins(level: described_class::READING_LEVEL)
+
+      expect(described_class.new(deck:).prompt_reading).to be_nil
+    end
+
+    it "shows a confirmed reading" do
+      deck = create(:deck, level: described_class::READING_LEVEL)
+      card = create(:basic_card, deck:, reading: "liǎng")
+
+      study = described_class.new(deck:, card_id: card.id)
+
+      expect(study.prompt_reading).to eq("liǎng")
+    end
+
+    it "hides the reading of a card that isn't a homograph" do
+      deck = create(:deck)
+      create(:basic_card, deck:, reading: "liǎng")
+
+      expect(described_class.new(deck:).prompt_reading).to be_nil
+    end
+  end
+
   describe "#possible_answers" do
     it "returns empty array when no next card" do
       deck = create(:deck)
@@ -299,6 +336,15 @@ RSpec.describe Study do
         create(:basic_card, :done, deck:, reading: "shì")
 
         expect(described_class.new(deck:).possible_answers).to eq(["shì"])
+      end
+
+      it "excludes the readings of homograph twins" do
+        deck = create(:reading_deck, level: Study::READING_LEVEL)
+        create(:reading_card, deck:, front: "过", reading: "guò")
+        create(:reading_card, deck:, front: "过", reading: "guo")
+        study = described_class.new(deck:)
+
+        expect(study.possible_answers).to eq([study.next_card.reading])
       end
 
       it "skips siblings without a reading" do

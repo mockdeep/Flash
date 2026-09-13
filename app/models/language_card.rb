@@ -19,6 +19,10 @@ class LanguageCard < Card
   def example_back = item.paired_example
   def distractors = item.distractors.map(&:text)
 
+  def homograph?
+    deck.cards.joins(:item).where(items: { text: front }).where.not(id:).exists?
+  end
+
   private
 
   # A language miss accretes an item-side decoy (shared with the reverse

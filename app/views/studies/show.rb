@@ -57,9 +57,7 @@ module Views
               render(
                 Components::CardFront.new(
                   text: card.front,
-                  # A confirmed reading stays visible while the translation
-                  # stage is answered.
-                  reading: (card.reading if study.reading_confirmed?),
+                  reading: study.prompt_reading,
                   font_menu: deck.mandarin?,
                   card_id: card.id,
                 ),

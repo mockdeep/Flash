@@ -45,6 +45,24 @@ RSpec.describe LanguageCard do
     expect(card).to have_attributes(example_front: "ef", example_back: "eb")
   end
 
+  describe "#homograph?" do
+    it "is true when another card's item shares the front" do
+      deck = create(:reading_deck)
+      card = create(:reading_card, deck:, front: "过", reading: "guò")
+      create(:reading_card, deck:, front: "过", reading: "guo")
+
+      expect(card.homograph?).to be(true)
+    end
+
+    it "is false when no other card's item shares the front" do
+      deck = create(:reading_deck)
+      card = create(:reading_card, deck:, front: "过")
+      create(:reading_card, deck:, front: "还")
+
+      expect(card.homograph?).to be(false)
+    end
+  end
+
   describe "#record_miss!" do
     it "records the chosen answer as an item-side decoy" do
       card = create(:reading_card)
