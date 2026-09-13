@@ -45,10 +45,12 @@ module Views
       end
 
       def render_cards_table
+        readings = deck.readings?
         table do
           thead do
             tr do
               th { "Front" }
+              th { "Reading" } if readings
               th { "Back" }
               th { "Category" }
             end
@@ -57,6 +59,7 @@ module Views
             table_cards.each do |card|
               tr do
                 td { card.front }
+                td { card.reading } if readings
                 td { card.back }
                 td { card.category }
               end

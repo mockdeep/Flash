@@ -55,6 +55,10 @@ class Deck < ApplicationRecord
     cards.where.not(id: except.id).pluck(:front, :reading)
   end
 
+  def readings?
+    cards.where.not(reading: [nil, ""]).exists?
+  end
+
   # Gates the study page's Mandarin font menu; only language decks can be.
   def mandarin? = false
 
