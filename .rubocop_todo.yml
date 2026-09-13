@@ -224,6 +224,7 @@ Rails/SkipsModelValidations:
     - 'app/actions/catalog/copy_deck.rb'
     - 'app/actions/data_sets/projection.rb'
     - 'app/actions/decks/flat_cards.rb'
+    - 'app/actions/word_lists/canonicalize_entries.rb'
     - 'app/actions/decks/create_music.rb'
     - 'app/actions/decks/replace.rb'
     - 'db/migrate/20251215211527_add_service_name_to_active_storage_blobs.active_storage.rb'
