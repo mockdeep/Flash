@@ -184,29 +184,47 @@ three readings across Levels 6–7, two of which collide inside Level 7.
 The compendium needs no mark — 过 guò and 过 guo are two entries differing only
 in `reading`, and `sense_memberships` lets both into one word_list. What remains
 is a display problem, two cards in a deck sharing a front, and the interim
-answer is to annotate rather than merge, **showing whichever field the question
-isn't asking for**:
+answer is to annotate rather than merge. The front text stays the bare
+headword everywhere; the annotation reuses the **reading line** the study page
+already shows under a confirmed front (`CardFront`'s `reading:`) rather than
+building a "重 · chóng" string:
 
-- translation question (levels 1, 3+): the prompt carries the reading
-  (重 · chóng), which is what the stored mark conveys today;
-- reading question (level 2): the reading is the answer, so the prompt carries
-  the gloss instead (重 · "heavy" → zhòng).
+- translation question (levels 1, 3+): a twin shows its reading under the
+  front, which is what the stored mark conveys today. A `LanguageCard` method
+  taking the stage decides this; the deck works out once which of its fronts
+  are shared.
+- level 2: no annotation at either stage. The reading stage shows the bare
+  front — a gloss hint would spoil the translation stage that follows — and
+  the translation stage already shows the confirmed reading.
 
-Both stages stay unambiguous while the cards stay separate. Merging them is the
-end state (see Study semantics) but belongs with headword grouping in phase 5;
-annotation is the small correct thing to carry until then.
+The reading stage stays answerable because its decoy pool **excludes
+same-headword siblings**. Without that, 过 would be offered both `guò` and
+`guo` — the twin card's true reading, and for a single character the most
+likely filler, since decoys rank by matching character count. With the twin
+excluded, the card's own reading is the only right option on screen; that
+holds for 露 too, whose twins share a gloss. The exclusion also restores an
+invariant the current code already documents: `Study#shared_character_decoys`
+notes that a single-character prompt can never anchor, "a same-count sibling
+sharing its character would be the prompt itself", which merging the fronts
+would otherwise falsify.
 
-The annotation also needs the reading stage's decoy pool to **exclude
-same-headword siblings**, or 过 would be offered with both `guò` and `guo` — the
-twin card's true reading. That exclusion restores an invariant the current code
-already documents: `Study#shared_character_decoys` notes that a single-character
-prompt can never anchor, "a same-count sibling sharing its character would be
-the prompt itself", which merging the fronts would otherwise falsify.
+Outside study, the deck page gains a **Reading column**, shown whenever any
+card in the deck has a reading (Basic cards can carry one too), so twin rows
+are told apart there without a twin-specific branch.
+
+Both study stages stay unambiguous while the cards stay separate. Merging them
+is the end state (see Study semantics) but belongs with headword grouping in
+phase 5; annotation is the small correct thing to carry until then.
 
 Retiring the marks happens **before** the entries rung, on today's structure
 (see phase 4's pre-rungs), so that entries land with no display change at all.
-It also means deleting `disambiguate_fronts!` upstream, or the next catalog
-regeneration reintroduces them.
+Upstream, `disambiguate_fronts!` and its tables (`MARKED_READING`,
+`SUPERSCRIPT`, the tone helpers) come out of flash-csvs' `09-emit.rb`, along
+with the card-rule-3 text in `mandarin/AGENTS.md`. That is tidying, not a
+guard: nothing loads a regenerated catalog into the app any more, so the marks
+could not come back that way. The pipeline's own `homograph` column (the
+syllabus's 本1 numbering, used as a card-identity key) is a different thing
+and stays.
 
 ### Deck = word_list × form
 
@@ -474,12 +492,14 @@ lexicon:
   Re-scoped to the seed account (2026-08-16) the picture is far simpler:
   - **Seed content: 10,989 zh fronts, 100% `exact_hsk`** — exactly HSK 1–7 from
     the current flash-csvs generation. No unresolved rows, no reading
-    mismatches, no reading-less items, no parenthesized fronts. Entry
+    mismatches, no reading-less items, no parenthesized traditional variants
+    ("枪 (槍)"; distinct from the 6 parenthesized homograph readings). Entry
     resolution needs neither a CEDICT reading fallback nor a headword-only
     path.
   - **Everything else: 5,723 fronts in 13 zh forks across 10 users**
     (re-measured 2026-08-30, once a guest-account cleanup removed the demo
-    copies), with zero parenthesized fronts anywhere in production. Eight hold
+    copies), with zero parenthesized traditional variants anywhere in
+    production. Eight hold
     exactly the current seed words. Four (56, 61, 68 at Level 1; 81 at Level 3;
     users 232/277/297) copy an older, larger HSK generation that stored no
     readings: they hold 2,471 of the 3,424 reading-less fronts that remain,
@@ -803,9 +823,27 @@ before the next, dry-run/verification checks around every backfill.
    scaffolding: it is `entries`' own uniqueness rule, headword + reading,
    asserted one table early, and the index it replaces was simply wrong about
    what identifies a word. With the constraint gone the 21 marks are stripped
-   from `items.text`, the deck renders the disambiguator instead (see
-   Homographs and the level marks), and the reading stage stops drawing decoys
-   from same-headword siblings. Doing this *before* entries is what makes the
+   from `items.text`, a twin's translation question shows its reading line
+   instead (see Homographs and the level marks), and the reading stage stops
+   drawing decoys from same-headword siblings. Four single-concern PRs, each
+   deployed before the next:
+
+   - **Reading column** on the deck page, shown when any card has a reading.
+     Useful on its own, and it tells twin rows apart once the marks go.
+   - **Index swap**, migration only. It lands ahead of the study code because
+     specs need real twins — two bare 过 items in one list — which the old
+     index forbids, and it lets marks be stripped locally to try the UI.
+     Content is frozen, so no writer can slip a duplicate in while the looser
+     index is live.
+   - **Study code**: the `LanguageCard` reading-line method and the
+     same-headword decoy exclusion. While the marks remain no fronts are
+     shared, so in production this changes nothing until the next step.
+   - **Strip the marks**: a rake task with `--dry-run` on the same code path
+     (listing the 21 rows and their twins), run in each environment when
+     wanted. Verify the end state directly afterwards — 21 fronts changed, no
+     marks left, card counts unchanged.
+
+   Doing this *before* entries is what makes the
    entries rung invisible: front reads switch from an already-clean
    `items.text` to an identical `entries.headword`. Nothing creates language
    items any more, so no writer has to learn the new shape —
