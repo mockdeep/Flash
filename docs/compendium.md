@@ -20,8 +20,8 @@ texts in 2026-08 (see Prototype findings).
 - Progress belongs to the user × word-sense × skill, independent of deck. Studying
   a word in any deck advances the same streak; reading and writing streaks are
   separate.
-- Support texts as a first-class source: a book's chapters become word lists, so a
-  reader can study a chapter's vocabulary before reading it.
+- Support texts as a first-class source: texts feed a word list, so a reader can
+  study a text's vocabulary before reading it.
 - Multi-language from the start (Mandarin first). Language-specific needs live in
   nullable columns, not Mandarin-shaped tables.
 - Sharing by reference: a shared deck is a visibility flag, not a copied word_list.
@@ -35,8 +35,8 @@ erDiagram
     entries ||--o{ senses : ""
     senses ||--o{ sense_memberships : ""
     word_lists ||--o{ sense_memberships : ""
-    texts ||--o{ chapters : ""
-    chapters ||--o{ word_lists : "chapter lists"
+    word_lists ||--o{ texts : "fed by"
+    users ||--o{ word_lists : owns
     word_lists ||--o{ decks : "selection"
     users ||--o{ decks : owns
     users ||--o{ skill_scores : ""
@@ -66,28 +66,20 @@ erDiagram
         string status "auto | reviewed"
     }
     texts {
+        bigint word_list_id FK "owner comes through the list"
         string title
         string author
-        bigint user_id FK "null = system/public-domain"
-    }
-    chapters {
-        bigint text_id FK
-        integer position
-        string title
         text body "retained source; re-runs, audit, future reader"
     }
     word_lists {
         bigint lexicon_id FK "one language per list; drives fonts"
-        string kind "hsk_level | chapter | curated"
-        integer hsk_level "when kind = hsk_level"
-        bigint chapter_id FK "when kind = chapter"
-        bigint user_id FK "null = system"
-        string name
+        bigint user_id FK "seed account owns the catalog"
+        string name "lists sort by name"
     }
     sense_memberships {
         bigint sense_id FK
         bigint word_list_id FK
-        integer position "first occurrence in chapter"
+        integer position "order the sense entered the list"
     }
     sense_examples {
         bigint sense_id FK
@@ -123,8 +115,7 @@ Key uniques:
 
 | Table | Unique on |
 |---|---|
-| entries | (lexicon_id, headword, reading) |
-| chapters | (text_id, position) |
+| entries | (lexicon_id, headword, reading), nulls not distinct |
 | senses | — (rank orders within entry) |
 | sense_memberships | (sense_id, word_list_id) |
 | skill_scores | (user_id, sense_id, skill) |
@@ -148,8 +139,9 @@ Key uniques:
   is `script_variant` (per-sense mapping is unambiguous even for one-to-many
   characters like 发, because senses pin the word). Regional *vocabulary*
   differences (软件 vs. 軟體) are separate entries, not script variants.
-- Proper nouns (`kind`) are excluded from general vocabulary lists (HSK,
-  curated) but belong in text lists: studying to read a chapter means no token
+- Proper nouns (`kind`) stay out of general vocabulary lists like HSK but
+  belong in lists fed by texts — a choice made when a list is built, not a
+  list type: studying to read a text means no token
   should be a blank. Name glosses are text-contextual ("Guo Jing — the
   protagonist"), which the pipeline's contextual glossing step produces anyway,
   and progress on a name carries across chapters and sequels like any sense.
@@ -180,7 +172,9 @@ Seed content held **21 such rows** — 15 superscripts (过, 空, 处, 卷, 散,
 to its readings (卷 juǎn "to roll up" vs. juàn "examination paper"), so folding a
 pair into one card under the common reading would teach something false. Two are
 worth knowing individually: 露 carries *identical* glosses on both rows (lù and
-lòu, "to reveal; to expose"), so it is one sense with two readings; and 圈 has
+lòu, "to reveal; to expose"), so it becomes two entries whose senses share a
+gloss — progress on one reading does not carry to the other, which suits lòu
+as the colloquial form a learner must recognize on its own; and 圈 has
 three readings across Levels 6–7, two of which collide inside Level 7.
 
 The compendium needs no mark — 过 guò and 过 guo are two entries differing only
@@ -231,8 +225,8 @@ and stays.
 
 ### Deck = word_list × form
 
-A deck owns no content: it points at a word_list (HSK level, book chapter, or a
-hand-curated list) and contributes the *form* — reading vs. writing (existing STI),
+A deck owns no content: it points at a word_list (an HSK level, a list fed by
+texts, or a hand-built list) and contributes the *form* — reading vs. writing (existing STI),
 plus study settings. Consequences:
 
 - Sharing a deck is a visibility flag. No copying, no forking of content on add:
@@ -250,8 +244,11 @@ plus study settings. Consequences:
 - Revoking a share stops discovery only: the link and preview die, no new adds.
   Decks that already reference the word_list keep working — same outcome the
   old fork-on-add design gave, without the copy.
-- HSK levels, chapters, and personal lists are one mechanism.
-- The `word_lists`/`items`/`pairings` tables are not needed for language decks
+- HSK levels, text-fed lists, and personal lists are one mechanism. Word lists
+  carry no type column: every list behaves the same, is owned by a user (the
+  seed account owns the catalog), and sorts by name. Grouping lists into a
+  series is deferred.
+- The `items`/`pairings` tables are not needed for language decks
   either, once decks select over the compendium. Basic and Music have already
   exited them onto flat deck-owned cards (phase 2, shipped), so the item
   machinery is language-only today.
@@ -264,9 +261,25 @@ plus study settings. Consequences:
   is not a staging area for the pipeline — it is the end-state rule, shipped
   early.
 
+### Texts feed word lists
+
+- A text belongs to exactly one word_list; a word_list can be fed by many
+  texts. Think independent snippets uploaded over time into one growing list —
+  possibly a book's chapters, though that use is not settled.
+- The pointer sits on the text (`texts.word_list_id`), so lists stay generic:
+  a list can exist without texts, never the reverse.
+- Only the list's owner adds texts, so texts carry no `user_id` of their own.
+- Adding a text runs the content pipeline and appends only senses the list
+  doesn't already hold; membership `position` records the order senses
+  entered the list, across all its texts.
+- Removing a text removes the text only. Memberships don't record which text
+  brought a sense in, so the list keeps its words; the owner can still remove
+  words by hand. Removing a text's words with it would need per-text
+  occurrence records (see Open questions).
+
 ### Coexistence with Basic and Music
 
-The compendium replaces `word_lists`/`items`/`pairings` for language decks;
+The compendium replaces `items`/`pairings` for language decks;
 Basic and Music exited that machinery first (phase 2, **shipped 2026-08**)
 onto one shared flat model: cards own their content and their progress
 directly (`deck_id`, front, back, category, reading, examples, the score
@@ -341,8 +354,8 @@ scores. Rules:
   choice and fuzzy find both target this union (fuzzy find matches the full
   joined gloss, not one sense). Synonym-facet safety comes from seeding, not
   grading: facets semicolon-split from one seed row enter lists together, so
-  they are usually co-members. A narrow chapter list that links only one facet
-  will mark a synonym facet wrong — accepted; the chapter taught a specific
+  they are usually co-members. A narrow text-fed list that links only one facet
+  will mark a synonym facet wrong — accepted; the text taught a specific
   usage.
 - **Distractors are generated; misses are remembered.** No curated distractor
   lists for language decks: option lists build on the fly from sibling cards in
@@ -417,7 +430,7 @@ evidence is a separate, deferred concept (see Open questions).
    `register` set from the text's context so literary senses stay out of modern
    decks. The sense inventory grows lazily from real usage.
 5. **Misses route, they don't fail**: not-in-CEDICT means proper noun (→ into
-   the chapter list, glossed contextually), segmentation artifact (→ re-segment
+   the text's list, glossed contextually), segmentation artifact (→ re-segment
    check), or a real rare word
    (→ ungrounded gloss with heavier checks: "real word / name / artifact?" asked
    explicitly, cross-occurrence agreement, back-translation, review queue).
@@ -426,9 +439,10 @@ evidence is a separate, deferred concept (see Open questions).
    judge, calibrated to actually reject — the flash-csvs pattern. Prototype rates:
    ~43% of new-sense proposals rejected on modern text, ~10% of glosses fixed.
    Nothing enters the compendium on a single model's say-so.
-7. **Chapter word_lists** get sense_memberships with first-occurrence positions;
-   dedup against earlier chapters happens by construction (the sense already
-   exists and the user may already have scores).
+7. **The text's word_list** gains sense_memberships for senses it doesn't
+   already hold, positioned after its existing ones; dedup against earlier
+   texts in the list happens by construction (the sense already exists and the
+   user may already have scores).
 
 Because step 1 verifies integrity but not boundaries, boundary errors are the one
 class that reaches later stages, and each kind meets a net: an over-merge either
@@ -532,8 +546,9 @@ Executes inside the Build sequencing ladder (phase 4), not as a one-shot event.
    in the new model (per-user overrides are parked — see Open questions). The
    copy-and-suggest-back catalog flow lost its premise and was deleted at
    step 3.1; its successor, if any, is sense-level edit proposals.
-3. **Seed-account word_lists that aren't HSK levels** become curated
-   word_lists. Items resolve to entries by headword + stored reading; glosses
+3. **Seed-account word_lists that aren't HSK levels** need no special
+   handling: lists have no type, so they run through 4.1 and 4.2 like the
+   HSK lists. Items resolve to entries by headword + stored reading; glosses
    are trusted curation and import verbatim as senses (source: curated), same
    standing as the HSK seed. Items' example / paired_example import as
    sense_examples rows, fanned out to the same senses the item's gloss mapped
@@ -662,9 +677,13 @@ backfill.
    repointed at seed rows in one transaction, keeping card ids and counters.
    Every word_list in production now belongs to the seed account and **no zh
    front is without a reading**, which is what the entries backfill assumes.
-   Two flash-csvs gloss regressions surfaced along the way and still need
-   fixing upstream: Portuguese `a cor de laranja` ("the color orange" became
-   "the orange") and `a gente` (lost "us").
+   Two flash-csvs gloss regressions surfaced along the way: Portuguese
+   `a cor de laranja` ("the color orange" became "the orange") and `a gente`
+   (lost "us"). Nothing loads the catalog into the app any more, so an
+   upstream fix alone never reaches users. Both get fixed twice: in flash-csvs
+   so the source stays right, and in the app by a one-off console action that
+   edits the two back items in place (dry run by default, like the others),
+   ahead of 4.2 so the senses import already corrected.
 
    Two rules the run bought the hard way, which apply to every backfill after
    it:
@@ -728,7 +747,10 @@ backfill.
       `entries`; backfill by deduping front items across word_lists. After the
       pre-rungs every front is seed content, carries no mark, and resolves on
       headword + reading, so the measured step has nothing left to fail on.
-      Items point at their entry, and the front-side reads move in the same
+      The entries unique index takes `nulls_not_distinct: true`, as the items
+      index did: most languages carry no reading, and without it every
+      reading-less headword would count as distinct and the dedup would
+      quietly duplicate them. Items point at their entry, and the front-side reads move in the same
       rung rather than sitting dormant: `LanguageCard#front`, `#reading` and
       `#homograph?`, `LanguageDeck#hanzi_chars`, `#reading_pairs` and
       `#readings?`, and `#language`/`#mandarin?` (through the lexicon).
@@ -745,7 +767,18 @@ backfill.
       content reads move onto senses in the same step: display should come
       out byte-identical, so production traffic verifies the mapping
       continuously, and the card → sense mapping that 4.5 depends on gets
-      exercised for weeks before it carries progress. Every row is
+      exercised for weeks before it carries progress. Byte-identical depends
+      on the split round-tripping, so the split ignores semicolons inside
+      parentheses, and the dry run rejoins each item's parts with "; " and
+      reports every gloss that doesn't come back unchanged; the write waits
+      until that report is empty or each entry on it is resolved. Examples
+      move in this step too, as the last content reads: each front item's
+      `example` / `paired_example` becomes one sense_examples row on every
+      sense its pairings map to, and `LanguageCard#example_front` /
+      `#example_back` read from there. A sense shared across lists can
+      collect a different example from each, which would leave a card no way
+      to show the one its own item held, so the dry run also reports every
+      sense with more than one distinct example. Every row is
       seed-account content and imports as canonical (source: curated; see
       Deck migration). Cards keep `item_id` past this step; `add_distractor`
       still needs it until 4.4.
@@ -755,8 +788,8 @@ backfill.
       their FK under the new name — no repoint. The STI went with it: with
       Basic and Music long gone from the table, `LanguageDataSet` was the only
       subclass, so `DataSet` + `LanguageDataSet` collapsed into one `WordList`
-      and `type` was dropped. `kind` and `hsk_level` were *not* added — nothing
-      reads them until chapter and curated lists exist in phase 5.
+      and `type` was dropped. No list type replaces it: every list behaves
+      the same, and a list fed by texts is known by its texts pointing at it.
    4. **Generated distractors.** Sibling generation becomes the *universal*
       option source for language decks, and `sense_distractors` replaces the
       accreted pool. These are one step, not two: a `preset` deck draws
@@ -768,10 +801,8 @@ backfill.
       fan-out works from the senses a card displays, so it widens on its own
       when grouping lands at 4.5; the mechanism doesn't change. Runs before
       4.5 because `add_distractor` takes a language card, and 4.5 deletes
-      those. Count `preset` language decks in production before scheduling
-      this: if the catalog decks were uploaded with distractor columns the
-      switch touches most study traffic, and if they are already `category`
-      it is close to a no-op.
+      those. `preset` stays a Basic-deck option; language decks always
+      generate their distractors, whatever pool they were uploaded with.
    5. **Globalize progress** — the lumpiest step, so it runs as its own
       sub-ladder: (a) add `skill_scores` and backfill from cards, study
       dual-writes while card counters stay authoritative; (b) switch study
@@ -807,11 +838,11 @@ backfill.
 5. **Text companion.** New capability, built only once the model beneath it
    is stable, in three rungs: productionize the content pipeline (API
    structured output, not the prototype's claude-CLI) and run it
-   *out-of-band* first, landing its output as ordinary curated word_lists —
-   real chapter decks ship before any new schema; then add
-   `texts`/`chapters` and first-occurrence positions so runs become
-   first-class; then the chapter-study UX (leveling, cross-chapter dedup
-   surfaced to the reader).
+   *out-of-band* first, landing its output as ordinary word_lists — real
+   text decks ship before any new schema; then add `texts` (pointing at their
+   word_list) and entry-order positions so runs become first-class; then
+   the text-study UX (uploading texts into a list, leveling, surfacing to
+   the reader which words earlier texts already covered).
 
 One discipline the in-place path demands, restated: every backfill is
 global — a bug touches all language decks at once — so no rung writes before
@@ -821,9 +852,10 @@ its end state has been checked.
 ## Open questions
 
 - **Writing skill grain**: sense vs. entry vs. character (see wrinkle above).
-- **Missed-words / tap-to-collect lists**: per-user dynamic word_lists (kind:
-  missed?) — mechanism sketched, not designed.
-- **Word_list governance**: who may edit a system list vs. a user list
+- **Missed-words / tap-to-collect lists**: per-user word_lists that fill
+  themselves — the one list that might behave differently from the rest, so
+  it may be what finally earns a list type. Mechanism sketched, not designed.
+- **Word_list governance**: who may edit a seed-account list vs. a user list
   referenced by others' decks, and what a user may modify at all (current
   stance: selections yes, senses/glosses no; whether sense-level edit
   proposals ever earn a place is open). **Deletion needs a rule before it
@@ -845,12 +877,13 @@ its end state has been checked.
   the schema blocks adding it later.
 - **Gloss language**: glosses are English today; multi-gloss-language support
   would hang off senses later.
-- **In-app reader**: chapters retain their source bodies, so a reader is
+- **In-app reader**: texts retain their source bodies, so a reader is
   storage-ready, but the feature itself — display, and what "hosted" means for
   copyright and visibility — is undesigned. (An earlier `texts.hosted` flag was
   dropped as machinery-free.)
 - **Occurrence evidence**: quoted-from-text sentences were cut from
   sense_examples — they belong to sense × text occurrence and inherit the text's
-  copyright status. Two future consumers would revive them: auditing an LLM
-  gloss against the sentence that produced it, and chapter pre-study context
-  ("the sentence where chapter 3 uses this word"). Design when one exists.
+  copyright status. Three future consumers would revive them: auditing an LLM
+  gloss against the sentence that produced it, pre-study context ("the
+  sentence where this text uses this word"), and removing a text's words
+  along with the text. Design when one exists.
