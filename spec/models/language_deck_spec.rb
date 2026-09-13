@@ -34,7 +34,7 @@ RSpec.describe LanguageDeck do
   end
 
   describe "#reading_pairs" do
-    it "reads sibling (front, reading) pairs through the item layer" do
+    it "reads sibling (headword, reading) pairs from the entries" do
       deck = create(:reading_deck)
       create(:reading_card, deck:, front: "两", reading: "liǎng")
       excluded = create(:reading_card, deck:, front: "三", reading: "sān")
@@ -45,14 +45,14 @@ RSpec.describe LanguageDeck do
   end
 
   describe "#readings?" do
-    it "is true when an item holds a reading" do
+    it "is true when an entry holds a reading" do
       deck = create(:reading_deck)
       create(:reading_card, deck:, reading: "liǎng")
 
       expect(deck.readings?).to be(true)
     end
 
-    it "is false when every item's reading is blank" do
+    it "is false when every entry's reading is blank" do
       deck = create(:reading_deck)
       create(:reading_card, deck:, reading: nil)
       create(:reading_card, deck:, reading: "")

@@ -1,26 +1,26 @@
 # frozen_string_literal: true
 
-# Shared behavior for cards over a word_list: their content still lives on
-# word_list items (the flat card columns stay nil until the compendium
-# lands), so the column-backed readers are overridden with item-backed ones.
-# Never instantiated directly.
 class LanguageCard < Card
   def self.model_name
     Card.model_name
   end
 
+  has_one :entry, through: :item
+
   validates :item, presence: true
 
-  delegate :reading, :category, to: :item
+  delegate :category, to: :item
+  delegate :reading, to: :entry
 
-  def front = item.text
+  def front = entry.headword
   def back = item.glosses.join(SEPARATOR)
   def example_front = item.example
   def example_back = item.paired_example
   def distractors = item.distractors.map(&:text)
 
   def homograph?
-    deck.cards.joins(:item).where(items: { text: front }).where.not(id:).exists?
+    deck.cards.joins(item: :entry)
+      .where(entries: { headword: front }).where.not(id:).exists?
   end
 
   private
