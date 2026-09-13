@@ -60,6 +60,13 @@ class Study
     end
   end
 
+  def prompt_reading
+    return if reading_stage?
+    return next_card.reading if reading_confirmed?
+
+    next_card.reading if next_card.homograph?
+  end
+
   def record_answer(params)
     permitted =
       params
@@ -171,11 +178,10 @@ class Study
     pairs.sort_by { |text, _| [(text.length - front.length).abs, rand] }
   end
 
-  # Sibling (front, reading) pairs with a reading; homophones of the correct
-  # reading are excluded so a decoy can't also be right.
   def sibling_pool(correct)
-    deck.reading_pairs(except: next_card)
-      .select { |_, reading| reading.present? && reading != correct }
+    deck.reading_pairs(except: next_card).select do |text, reading|
+      reading.present? && reading != correct && text != next_card.front
+    end
   end
 
   def multiple_choice_answers

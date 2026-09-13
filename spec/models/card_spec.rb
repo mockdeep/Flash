@@ -72,6 +72,14 @@ RSpec.describe Card do
     end
   end
 
+  describe "#homograph?" do
+    it "is false for a flat card, whose front is unique in its deck" do
+      card = create(:basic_card, front: "过")
+
+      expect(card.homograph?).to be(false)
+    end
+  end
+
   describe "content from the card's own columns" do
     it "reads the front" do
       card = create(:basic_card, front: "明白")

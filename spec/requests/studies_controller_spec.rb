@@ -40,6 +40,15 @@ RSpec.describe StudiesController do
       expect(rendered).to have_css(".level-fill--done", count: 2)
     end
 
+    it "shows a homograph's reading under the prompt" do
+      deck = create(:reading_deck)
+      create(:reading_card, deck:, front: "过", reading: "guò")
+      create(:reading_card, deck:, front: "过", reading: "guo")
+      get(deck_study_path(deck))
+
+      expect(rendered).to have_css("#card-reading")
+    end
+
     it "does not show the demo banner" do
       card = create(:basic_card)
       get(deck_study_path(card.deck))
