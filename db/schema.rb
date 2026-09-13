@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_17_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_12_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -87,7 +87,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_000000) do
     t.string "text", null: false
     t.datetime "updated_at", null: false
     t.bigint "word_list_id", null: false
-    t.index ["word_list_id", "side", "text"], name: "index_items_on_word_list_id_and_side_and_text", unique: true
+    t.index ["word_list_id", "side", "text", "reading"], name: "index_items_on_word_list_id_and_side_and_text_and_reading", unique: true, nulls_not_distinct: true
   end
 
   create_table "pairings", force: :cascade do |t|

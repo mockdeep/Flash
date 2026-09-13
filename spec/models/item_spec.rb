@@ -11,6 +11,24 @@ RSpec.describe Item do
   it { is_expected.to validate_presence_of(:side) }
   it { is_expected.to validate_presence_of(:text) }
 
+  describe "uniqueness" do
+    it "allows homographs that differ by reading" do
+      word_list = create(:word_list)
+      create(:item, word_list:, text: "过", reading: "guò")
+
+      expect { create(:item, word_list:, text: "过", reading: "guo") }
+        .to change(described_class, :count).by(1)
+    end
+
+    it "treats a missing reading as a match" do
+      word_list = create(:word_list)
+      create(:item, :back, word_list:, text: "to pass")
+
+      expect { create(:item, :back, word_list:, text: "to pass") }
+        .to raise_error(ActiveRecord::RecordNotUnique)
+    end
+  end
+
   describe "#glosses" do
     def pair_back(front, text)
       back = create(:item, :back, word_list: front.word_list, text:)
