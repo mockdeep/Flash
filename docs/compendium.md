@@ -678,10 +678,14 @@ backfill.
    front is without a reading**, which is what the entries backfill assumes.
    Two gloss regressions surfaced along the way: Portuguese
    `a cor de laranja` ("the color orange" became "the orange") and `a gente`
-   (lost "us"). ⏳ *Pending, must land before 4.2*: a one-off console action
-   that edits the two back items in place (dry run by default, like the
-   others), so the senses import already corrected. The fix is in-app only;
-   flash-csvs is out of scope (see the status note at the top).
+   (lost "us"). ⏳ *Built, production run pending; must land before 4.2*:
+   `WordLists::RepairGloss` (dry run by default, like the others) retargets
+   the front's pairing to new Back items ("the color orange"; "we", "us")
+   rather than editing the old ones in place, because Back items are shared
+   within a list — "the orange" also glosses the fruit. Dry-run against a
+   production copy (`bin/pull_prod`) reports both repairs and the one
+   sharer. The fix is in-app only; flash-csvs is out of scope (see the
+   status note at the top).
 
    Two rules the run bought the hard way, which apply to every backfill after
    it:

@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Replace the local development database with a copy of production, for
+# dry-running console actions against real data before they run for real.
+#
+#   bin/pull_prod
+#
+# Destroys flash_development. --force drops the running dev server's
+# connections; it reconnects on its next request. Local Postgres must match
+# production's major version for pg:pull to work.
+
+DATABASE = "flash_development"
+
+system("dropdb", "--force", "--if-exists", DATABASE, exception: true)
+
+# pg_restore reports a few errors for Heroku's own event triggers and _heroku
+# schema, which never exist locally; the data is intact, so the non-zero exit
+# is ignored.
+system("heroku", "pg:pull", "DATABASE_URL", DATABASE, "--app", "flash")
+
+# The copy is tagged as production, which makes Rails refuse db:drop and
+# friends until it says development.
+system(
+  "psql",
+  "-d",
+  DATABASE,
+  "-qc",
+  "UPDATE ar_internal_metadata SET value = 'development' " \
+  "WHERE key = 'environment'",
+  exception: true,
+)
