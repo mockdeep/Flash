@@ -30,3 +30,14 @@ system(
   "WHERE key = 'environment'",
   exception: true,
 )
+
+# Heroku's monitoring extension comes with the copy, and db:migrate would
+# otherwise dump it into schema.rb.
+system(
+  "psql",
+  "-d",
+  DATABASE,
+  "-qc",
+  "DROP EXTENSION IF EXISTS pg_stat_statements",
+  exception: true,
+)

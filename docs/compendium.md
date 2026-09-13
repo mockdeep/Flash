@@ -7,8 +7,10 @@ extraction, the Basic/Music flat-card pass, then the language content freeze),
 and phase 4 has begun: its 4.3 rename was taken out of order, its
 fork-collapse pre-rung finished on 2026-08-30, leaving every word_list in
 production owned by the seed account and no zh front without a reading, and
-its homograph pre-rung finished in 2026-09, leaving no marked front. Next is
-4.1, entries.
+its homograph pre-rung finished in 2026-09, leaving no marked front, and
+**4.1 shipped 2026-09-13**: every Front item points at a canonical entry and
+the front-side reads go through it. Next is 4.2, senses, then 4.4 ahead of
+4.5 (see 4.4 for why).
 Language content is now read-only and `word_lists`/`items`/`pairings` are
 language-only and static. The content pipeline was prototyped against real
 texts in 2026-08 (see Prototype findings). flash-csvs, the generator behind
@@ -55,8 +57,6 @@ erDiagram
     senses {
         bigint entry_id FK
         string gloss "one meaning; may hold synonym facets"
-        string pos
-        integer rank "1 = primary"
         string source "phase 5: cedict | llm | curated"
         string status "phase 5: auto | reviewed"
     }
@@ -75,6 +75,7 @@ erDiagram
         bigint sense_id FK
         bigint word_list_id FK
         integer position "order the sense entered the list"
+        string category "the list's own filing of the word"
     }
     sense_examples {
         bigint sense_id FK
@@ -111,8 +112,9 @@ Key uniques:
 | Table | Unique on |
 |---|---|
 | entries | (language, headword, reading), nulls not distinct |
-| senses | — (rank orders within entry) |
+| senses | (entry_id, gloss) |
 | sense_memberships | (sense_id, word_list_id) |
+| sense_examples | (sense_id, sentence) |
 | skill_scores | (user_id, sense_id, skill) |
 | sense_distractors | (user_id, sense_id, distractor_sense_id) |
 
@@ -133,6 +135,13 @@ Key uniques:
   imported as-is). Credit fan-out (below) makes facet-level rows score in lockstep,
   and merging senses later is a local fix: combine rows, keep the max score. The
   cost is cosmetic — inflated "sense counts" on entries.
+- Senses carry no `pos` or `rank`: neither has a reader in phase 4. A card's
+  gloss order is the list's, held by membership `position`, not the entry's.
+- Category is a property of a word *in a list*, not of the word: 227 of the
+  378 entries shared between lists are filed differently by each (virus is
+  "Nature" in one Spanish level and "Technology" in another). So it lives on
+  `sense_memberships`, blank for text-fed lists, and stays the first filter
+  for generated distractors (see Study semantics).
 - Script is a column, not an entry split: simplified is the headword, traditional
   is `script_variant` (per-sense mapping is unambiguous even for one-to-many
   characters like 发, because senses pin the word). Regional *vocabulary*
@@ -357,7 +366,8 @@ scores. Rules:
   usage.
 - **Distractors are generated; misses are remembered.** No curated distractor
   lists for language decks: option lists build on the fly from sibling cards in
-  the deck (length-matched). When a user picks a wrong
+  the deck — same-category siblings first, then any sibling, length-matched
+  within each tier. When a user picks a wrong
   option, every member sense the card displayed is linked to every member sense
   the chosen option displayed — cross-product fan-out, mirroring credit fan-out,
   because the displayed grouping is deck-contextual and not stored. Rows are
@@ -656,7 +666,12 @@ backfill.
    console action in `app/actions/word_lists/` that dry-runs by default: it
    performs the writes in a transaction and rolls back, so the report comes
    from the *same code path* as the write and cannot drift from it; there is
-   no separate report-tooling rung. The Deck migration section's concerns
+   no separate report-tooling rung. `bin/pull_prod` copies production into
+   the local database so the dry run sees real data before it ever runs
+   there. An action lives only until its production run is verified, then
+   its PR deletes it — nothing calls it afterwards, and the read switch that
+   follows can make it wrong (two pre-rung actions rewrote `items.text`,
+   which nothing displays since 4.1). The Deck migration section's concerns
    execute inside these backfills rather than as a one-shot event.
 
    Phase 4 opens with **two pre-rungs that need no new tables**. Both ran on
@@ -743,48 +758,59 @@ backfill.
    `entries.headword`. Nothing creates language items any more, so no writer
    has to learn the new shape — `Decks::CardsCsv`'s duplicate-front check
    belongs to the Basic import path alone.
-   1. **Canonicalize entries, switch front-side reads.** Add `entries`
-      (`language` copied from the owning word_list); backfill by deduping
-      front items across word_lists. After the
-      pre-rungs every front is seed content, carries no mark, and resolves on
-      headword + reading, so the measured step has nothing left to fail on.
-      The entries unique index takes `nulls_not_distinct: true`, as the items
-      index did: most languages carry no reading, and without it every
-      reading-less headword would count as distinct and the dedup would
-      quietly duplicate them. Items point at their entry, and the front-side reads move in the same
-      rung rather than sitting dormant: `LanguageCard#front`, `#reading` and
-      `#homograph?`, `LanguageDeck#hanzi_chars`, `#reading_pairs` and
-      and `#readings?`. `#language`/`#mandarin?` keep reading
-      `word_lists.language`, which stays as it is.
-      **Display comes out byte-identical, with no exceptions** — that is what
-      the second pre-rung bought, and it makes production traffic the
-      verification for the one backfill that was ever measured. Enrichment
+   1. **Canonicalize entries, switch front-side reads.** ✅ *Shipped
+      2026-09-13* as two PRs. (a) `entries` (`language` copied from the
+      owning word_list, unique on language + headword + reading with
+      `nulls_not_distinct: true`, as the items index: most languages carry no
+      reading, and without it every reading-less headword would count as
+      distinct), a nullable `items.entry_id`, and the `CanonicalizeEntries`
+      action: one entry per distinct word across Front items, then every
+      Front item linked. The production run made 25,299 entries from 25,694
+      fronts — 378 words shared between lists (Spanish 336, zh 31, German
+      11), all cross-list since the items index forbids duplicates within
+      one — with 0 fronts unlinked and 0 disagreeing with their entry. After
+      the pre-rungs every front was seed content, carried no mark, and
+      resolved on headword + reading, so the measured step had nothing left
+      to fail on. (b) The six front-side readers moved onto the entry —
+      `LanguageCard#front`, `#reading` and `#homograph?`,
+      `LanguageDeck#hanzi_chars`, `#reading_pairs` and `#readings?` — and
+      Front items validate an entry's presence. `#language`/`#mandarin?`
+      keep reading `word_lists.language`. Display came out byte-identical,
+      which is what the second pre-rung bought. Left on items until later
+      rungs: `category`, `example` and `paired_example` (4.2), `text` and
+      `reading` (Back items and the table itself, 4.6). Enrichment
       (`script_variant`, `frequency_rank`) has no reader anywhere in phase 4
       and waits until one exists.
-   2. **Extract senses, switch content reads.** Backfill `senses` from back
-      items with the semicolon split applied *at backfill time* — splitting
-      later, with credit fan-out live, would multiply rows across every user,
-      while splitting before anything reads senses is free and verifiable.
-      Pairings become sense_memberships (list × sense, position). Card
-      content reads move onto senses in the same step: display should come
-      out byte-identical, so production traffic verifies the mapping
-      continuously, and the card → sense mapping that 4.5 depends on gets
-      exercised for weeks before it carries progress. Byte-identical depends
-      on the split round-tripping, so the split ignores semicolons inside
-      parentheses, and the dry run rejoins each item's parts with "; " and
-      reports every gloss that doesn't come back unchanged; the write waits
-      until that report is empty or each entry on it is resolved. Examples
-      move in this step too, as the last content reads: each front item's
-      `example` / `paired_example` becomes one sense_examples row on every
-      sense its pairings map to, and `LanguageCard#example_front` /
-      `#example_back` read from there. A sense shared across lists can
-      collect a different example from each, which would leave a card no way
-      to show the one its own item held, so the dry run also reports every
-      sense with more than one distinct example. Every row is
-      seed-account content and imports as canonical (see Deck migration);
-      no provenance column is written, because none exists until phase 5.
-      Cards keep `item_id` past this step; `add_distractor`
-      still needs it until 4.4.
+   2. **Extract senses, switch content reads.** No semicolon split is
+      needed: upload already split every gloss into its own pairing, and
+      production holds zero paired Back items containing a semicolon. A
+      sense is therefore a pairing's back text under its front's entry,
+      unique on (entry, gloss), so a gloss two lists share is one sense.
+      Pairings become sense_memberships (list × sense), whose `position` is
+      the pairing's order within the list — what keeps a card's rejoined
+      back byte-identical — and whose `category` is the front's (see Entry
+      vs. sense for why it lives there). Examples move in this step too: each
+      front's `example` / `paired_example` becomes one sense_examples row on
+      every sense its pairings map to. The 2026-09-13 production copy
+      profiles as 31,006 pairings → 30,795 senses, 207 of them shared
+      between lists; 184 of the 378 shared entries carry *different* gloss
+      sets in different lists, which is the cross-level signal Seeding
+      predicted; and 5 zh senses collect two different sentences from two
+      levels (调, 过去, 面, 作为), each a fine example, so the card shows the
+      earliest. Every row is seed-account content and imports as canonical
+      (see Deck migration); no provenance column is written, because none
+      exists until phase 5. Ships as three PRs: (a) the three tables and the
+      `ExtractSenses` action, whose report counts senses, memberships and
+      examples written, pairings left without a membership (must be 0), and
+      fronts whose senses rejoin to a different back than their pairings
+      (must be 0 — the byte-identical check runs inside the dry run, not
+      after the deploy); (b) `LanguageCard#back`, `#example_front`,
+      `#example_back` and `#category`, plus `LanguageDeck#cards_in_category`,
+      read senses and memberships, and `Projection.build_cards` picks fronts
+      by entry rather than by pairing; (c) after a soak, drop `pairings`,
+      `Item#glosses`, and the paired-only Back items. Cards keep `item_id`
+      past this step, and decoy-only Back items with `item_distractors`
+      stay until 4.4.
    3. **Rename `data_sets` → `word_lists`.** ✅ *Shipped 2026-08-17*, ahead of the
       rest of the ladder: it touches only names, so running it first meant
       every later rung could be written against the final ones. Decks kept
@@ -793,8 +819,16 @@ backfill.
       subclass, so `DataSet` + `LanguageDataSet` collapsed into one `WordList`
       and `type` was dropped. No list type replaces it: every list behaves
       the same, and a list fed by texts is known by its texts pointing at it.
-   4. **Generated distractors.** Sibling generation becomes the *universal*
-      option source for language decks, and `sense_distractors` replaces the
+   4. **Generated distractors.** Runs right after 4.2, ahead of 4.5, because
+      it also closes a 3.6 side effect: `item_distractors` has no user
+      column and hangs off the shared items, so since copies stopped forking
+      their word_lists one user's miss has shaped every user's options on
+      that list (3,367 such rows on multi-user lists in the 2026-09 copy).
+      Mild — a decoy is always another gloss from the same list — and
+      accepted rather than patched, since this rung deletes the table.
+      Sibling generation becomes the *universal* option source for language
+      decks — same-category siblings first, then any sibling, length-matched
+      within each tier — and per-user `sense_distractors` replaces the
       accreted pool. These are one step, not two: a `preset` deck draws
       options only from stored decoys, so emptying the pool without
       generation in place would leave the correct answer alone on screen
@@ -822,10 +856,8 @@ backfill.
       `build_cards` at 4.5, `add_distractor` at 4.4, everything else in
       phase 3 — so this is dropping `items`/`pairings`, `cards.item_id`, and
       the projection file itself. A cleanup rung, not a migration. The
-      pre-rungs' one-off actions (`CollapseForks`, `AlignArticleFronts`,
-      `AdoptCatalogList`, `StripHomographMarks`) read items too, so they go
-      here at the latest; nothing calls them after their runs, so any time
-      before is fine.
+      one-off actions are already gone: every one was deleted once its
+      production run was verified (the last six together on 2026-09-13).
    7. **Remaining selection work.** Writing decks return — a *rebuild*, not
       a re-enable: phase 3 deleted `WritingDeck` and `WritingCard` outright
       once production held none, so this is a new `WritingDeck` over an
