@@ -139,6 +139,23 @@ RSpec.describe Deck do
     end
   end
 
+  describe "#readings?" do
+    it "is true when a card column holds a reading" do
+      deck = create(:deck)
+      create(:basic_card, deck:, reading: "liǎng")
+
+      expect(deck.readings?).to be(true)
+    end
+
+    it "is false when every card's reading is blank" do
+      deck = create(:deck)
+      create(:basic_card, deck:, reading: nil)
+      create(:basic_card, deck:, reading: "")
+
+      expect(deck.readings?).to be(false)
+    end
+  end
+
   describe "#mandarin?" do
     it "is true when the word_list language is Mandarin" do
       deck = create(:reading_deck, language: "zh")

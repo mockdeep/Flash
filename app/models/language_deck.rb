@@ -24,6 +24,10 @@ class LanguageDeck < Deck
       .joins(:item).pluck("items.text", "items.reading")
   end
 
+  def readings?
+    cards.joins(:item).where.not(items: { reading: [nil, ""] }).exists?
+  end
+
   # The distinct Han characters across the word_list's items; the study page
   # embeds them once so the browser can prewarm the font slices they need.
   def hanzi_chars

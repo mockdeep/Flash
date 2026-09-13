@@ -361,6 +361,25 @@ RSpec.describe DecksController do
       expect(rendered).to have_text("Test Front")
     end
 
+    it "shows a reading column when a card has a reading" do
+      deck = create(:reading_card, reading: "nǐ hǎo").deck
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_css("th", text: "Reading")
+    end
+
+    it "omits the reading column when no card has a reading" do
+      deck = create(:deck)
+      create(:basic_card, deck:, reading: nil)
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_no_css("th", text: "Reading")
+    end
+
     it "shows study link when deck has cards" do
       deck = create(:deck)
       create(:basic_card, deck:)
