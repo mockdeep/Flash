@@ -2,6 +2,9 @@
 
 class Item < ApplicationRecord
   belongs_to :word_list
+  # Front items link to their entry once `WordLists::CanonicalizeEntries`
+  # has run; Back items never do.
+  belongs_to :entry, optional: true
   has_many :cards, dependent: :destroy
 
   has_many :pairings, dependent: :destroy

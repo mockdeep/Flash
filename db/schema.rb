@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_12_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_13_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -68,6 +68,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_000000) do
     t.index ["word_list_id"], name: "index_decks_on_word_list_id"
   end
 
+  create_table "entries", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "headword", null: false
+    t.string "language", null: false
+    t.string "reading"
+    t.datetime "updated_at", null: false
+    t.index ["language", "headword", "reading"], name: "index_entries_on_language_and_headword_and_reading", unique: true, nulls_not_distinct: true
+  end
+
   create_table "item_distractors", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "distractor_item_id", null: false
@@ -80,6 +89,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_000000) do
   create_table "items", force: :cascade do |t|
     t.string "category"
     t.datetime "created_at", null: false
+    t.bigint "entry_id"
     t.string "example"
     t.string "paired_example"
     t.string "reading"
@@ -87,6 +97,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_000000) do
     t.string "text", null: false
     t.datetime "updated_at", null: false
     t.bigint "word_list_id", null: false
+    t.index ["entry_id"], name: "index_items_on_entry_id"
     t.index ["word_list_id", "side", "text", "reading"], name: "index_items_on_word_list_id_and_side_and_text_and_reading", unique: true, nulls_not_distinct: true
   end
 
@@ -153,6 +164,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_000000) do
   add_foreign_key "decks", "word_lists", on_delete: :cascade
   add_foreign_key "item_distractors", "items", column: "distractor_item_id", on_delete: :cascade
   add_foreign_key "item_distractors", "items", on_delete: :cascade
+  add_foreign_key "items", "entries"
   add_foreign_key "items", "word_lists", on_delete: :cascade
   add_foreign_key "pairings", "items", column: "paired_item_id", on_delete: :cascade
   add_foreign_key "pairings", "items", on_delete: :cascade
