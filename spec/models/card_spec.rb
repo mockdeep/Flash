@@ -126,11 +126,11 @@ RSpec.describe Card do
       expect(card.card_distractors.pluck(:text)).to contain_exactly("wrong")
     end
 
-    it "does not write the item layer" do
+    it "does not write sense_distractors" do
       card = create(:basic_card)
 
       expect { card.record_miss!("wrong") }
-        .not_to change(ItemDistractor, :count)
+        .not_to change(SenseDistractor, :count)
     end
 
     it "records no distractor without a chosen answer" do
