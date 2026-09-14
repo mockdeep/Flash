@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_15_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_15_020000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -101,6 +101,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_000000) do
     t.index ["word_list_id", "side", "text", "reading"], name: "index_items_on_word_list_id_and_side_and_text_and_reading", unique: true, nulls_not_distinct: true
   end
 
+  create_table "sense_distractors", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "distractor_sense_id", null: false
+    t.datetime "last_missed_at", null: false
+    t.integer "miss_count", null: false
+    t.bigint "sense_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["distractor_sense_id"], name: "index_sense_distractors_on_distractor_sense_id"
+    t.index ["user_id", "sense_id", "distractor_sense_id"], name: "index_sense_distractors_on_user_sense_and_distractor", unique: true
+  end
+
   create_table "sense_examples", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "sense_id", null: false
@@ -185,6 +197,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_000000) do
   add_foreign_key "item_distractors", "items", on_delete: :cascade
   add_foreign_key "items", "entries"
   add_foreign_key "items", "word_lists", on_delete: :cascade
+  add_foreign_key "sense_distractors", "senses", column: "distractor_sense_id", on_delete: :cascade
+  add_foreign_key "sense_distractors", "senses", on_delete: :cascade
+  add_foreign_key "sense_distractors", "users", on_delete: :cascade
   add_foreign_key "sense_examples", "senses", on_delete: :cascade
   add_foreign_key "sense_memberships", "senses", on_delete: :cascade
   add_foreign_key "sense_memberships", "word_lists", on_delete: :cascade

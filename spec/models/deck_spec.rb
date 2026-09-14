@@ -118,6 +118,20 @@ RSpec.describe Deck do
     end
   end
 
+  describe "#generates_distractors?" do
+    it "is true when the pool is category" do
+      deck = create(:deck, distractor_pool: "category")
+
+      expect(deck.generates_distractors?).to be(true)
+    end
+
+    it "is false when the pool is preset" do
+      deck = create(:deck, distractor_pool: "preset")
+
+      expect(deck.generates_distractors?).to be(false)
+    end
+  end
+
   describe "#cards_in_category" do
     it "finds cards by their category column" do
       deck = create(:deck)

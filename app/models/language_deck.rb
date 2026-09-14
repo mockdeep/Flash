@@ -12,6 +12,8 @@ class LanguageDeck < Deck
 
   def mandarin? = language == "zh"
 
+  def generates_distractors? = true
+
   # Category is a property of the word in this list, so it comes from the
   # list's memberships rather than the card.
   def cards_in_category(category)

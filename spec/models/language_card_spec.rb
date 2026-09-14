@@ -41,10 +41,60 @@ RSpec.describe LanguageCard do
     expect(card.back).to eq("flower")
   end
 
-  it "reads the distractors from the item" do
-    card = create(:reading_card, distractors: ["happy", "run"])
+  describe "#distractors" do
+    def sense_of(card, gloss)
+      Sense.find_by!(entry: card.entry, gloss:)
+    end
 
-    expect(card.distractors).to contain_exactly("happy", "run")
+    def another_users_miss(card, sibling)
+      create(
+        :sense_distractor,
+        user: create(:user),
+        sense: sense_of(card, "understand"),
+        distractor_sense: sense_of(sibling, "happy"),
+      )
+    end
+
+    it "reads the owner's remembered decoys" do
+      card = create(:reading_card, distractors: ["happy", "run"])
+
+      expect(card.distractors).to contain_exactly("happy", "run")
+    end
+
+    it "shows a decoy as the list's current glosses for its entry" do
+      card = create(:reading_card, distractors: ["he; him"])
+      decoy = Entry.find_by!(headword: "he; him")
+      sense = create(:sense, entry: decoy, gloss: "his")
+      card.deck.word_list.sense_memberships.create!(sense:, position: 99)
+
+      expect(card.distractors).to eq(["he; him; his"])
+    end
+
+    it "ignores another user's misses" do
+      card = create(:reading_card, back: "understand")
+      sibling = create(:reading_card, deck: card.deck, back: "happy")
+      another_users_miss(card, sibling)
+
+      expect(card.distractors).to be_empty
+    end
+
+    it "lists a back once when two decoy entries share it" do
+      card = create(:reading_card, front: "あ", back: "a")
+      create(:reading_card, deck: card.deck, front: "い", back: "i")
+      create(:reading_card, deck: card.deck, front: "イ", back: "i")
+
+      card.record_miss!("i")
+
+      expect(card.distractors).to eq(["i"])
+    end
+
+    it "drops a decoy whose entry the list no longer holds" do
+      card = create(:reading_card, distractors: ["happy"])
+      card.deck.word_list.sense_memberships.joins(:sense)
+        .where(senses: { gloss: "happy" }).delete_all
+
+      expect(card.distractors).to be_empty
+    end
   end
 
   it "reads the reading from the entry and the category from the list" do
@@ -84,11 +134,75 @@ RSpec.describe LanguageCard do
   end
 
   describe "#record_miss!" do
-    it "records the chosen answer as an item-side decoy" do
+    def gloss_pairs
+      SenseDistractor.all.map { |d| [d.sense.gloss, d.distractor_sense.gloss] }
+    end
+
+    def pronoun_pairs
+      [["he", "she"], ["he", "her"], ["him", "she"], ["him", "her"]]
+    end
+
+    it "links each shown sense to each chosen sense" do
+      card = create(:reading_card, back: "he; him")
+      create(:reading_card, deck: card.deck, back: "she; her")
+
+      card.record_miss!("she; her")
+
+      expect(gloss_pairs).to match_array(pronoun_pairs)
+    end
+
+    it "records the miss for the deck's owner" do
+      card = create(:reading_card, back: "he")
+      create(:reading_card, deck: card.deck, back: "she")
+
+      card.record_miss!("she")
+
+      expect(SenseDistractor.sole.user).to eq(card.deck.user)
+    end
+
+    it "makes the chosen back one of the card's distractors" do
+      card = create(:reading_card, back: "he")
+      create(:reading_card, deck: card.deck, back: "she")
+
+      card.record_miss!("she")
+
+      expect(card.distractors).to eq(["she"])
+    end
+
+    it "counts a repeated miss instead of adding a row" do
+      card = create(:reading_card, back: "he")
+      create(:reading_card, deck: card.deck, back: "she")
+
+      2.times { card.record_miss!("she") }
+
+      expect(SenseDistractor.sole.miss_count).to eq(2)
+    end
+
+    it "links every entry whose glosses rejoin to the chosen text" do
+      card = create(:reading_card, front: "喜欢", back: "to like")
+      create(:reading_card, deck: card.deck, front: "爱", back: "to love")
+      create(:reading_card, deck: card.deck, front: "爱好", back: "to love")
+
+      card.record_miss!("to love")
+
+      expect(SenseDistractor.count).to eq(2)
+    end
+
+    it "records nothing when the text is only part of a sibling's back" do
+      card = create(:reading_card, back: "he")
+      create(:reading_card, deck: card.deck, back: "she; her")
+
+      card.record_miss!("she")
+
+      expect(SenseDistractor.count).to eq(0)
+    end
+
+    it "records nothing when the text matches no sibling" do
       card = create(:reading_card)
+
       card.record_miss!("wrong")
 
-      expect(card.item.distractors.pluck(:text)).to include("wrong")
+      expect(SenseDistractor.count).to eq(0)
     end
 
     it "does not write card_distractors" do
