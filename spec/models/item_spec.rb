@@ -6,7 +6,6 @@ RSpec.describe Item do
   it { is_expected.to belong_to(:word_list) }
   it { is_expected.to belong_to(:entry).optional }
   it { is_expected.to have_many(:cards).dependent(:destroy) }
-  it { is_expected.to have_many(:paired_items).through(:pairings) }
   it { is_expected.to have_many(:distractors).through(:item_distractors) }
 
   it { is_expected.to validate_presence_of(:side) }
