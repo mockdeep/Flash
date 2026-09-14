@@ -24,7 +24,7 @@ RSpec.describe LanguageDeck do
   end
 
   describe "#cards_in_category" do
-    it "finds cards through the item layer" do
+    it "finds cards by the list's filing of their word" do
       deck = create(:reading_deck)
       card = create(:reading_card, deck:, category: "Nature")
       create(:reading_card, deck:, category: "Body")

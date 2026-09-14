@@ -1,21 +1,37 @@
 # frozen_string_literal: true
 
-# Language cards are thin item_id+progress anchors; their content lives on
-# word_list items. The language factory takes content as transient attributes,
-# builds the front item from them, and links the back side after create.
+# Language cards are thin item_id+progress anchors. The language factory
+# takes content as transient attributes, builds the front item (and so the
+# entry) from them, and selects the back side into the deck's word_list as
+# senses after create.
 module FactoryCardContent
   NOTES = ["C", "D", "E", "F", "G", "A", "B"].freeze
 
-  # Pairs the card's front item to one Back item per gloss and links any
-  # distractors as unpaired decoys.
+  # Selects one sense per gloss into the list, in gloss order, filed under
+  # the card's category and carrying its example; links any distractors as
+  # decoy Back items.
   def self.link_backs(card, attrs)
-    glosses(attrs.back).each do |text|
-      Pairing.create!(item: card.item, paired_item: back_item(card, text))
-    end
+    glosses(attrs.back).each { |text| select_sense(card, text, attrs) }
     Array(attrs.distractors).each do |text|
       ItemDistractor.create!(
         item: card.item, distractor_item: back_item(card, text),
       )
+    end
+  end
+
+  def self.select_sense(card, gloss, attrs)
+    list = card.deck.word_list
+    sense = Sense.find_or_create_by!(entry: card.entry, gloss:)
+    position = (list.sense_memberships.maximum(:position) || 0) + 1
+    list.sense_memberships.create!(sense:, position:, category: attrs.category)
+    add_example(sense, attrs)
+  end
+
+  def self.add_example(sense, attrs)
+    return if attrs.example_front.blank?
+
+    sense.sense_examples.find_or_create_by!(sentence: attrs.example_front) do
+      |example| example.translation = attrs.example_back
     end
   end
 
@@ -69,15 +85,7 @@ FactoryBot.define do
 
     deck { association(:reading_deck) }
     item do
-      association(
-        :item,
-        word_list: deck.word_list,
-        text: front,
-        category:,
-        reading:,
-        example: example_front,
-        paired_example: example_back,
-      )
+      association(:item, word_list: deck.word_list, text: front, reading:)
     end
 
     after(:create) { |card, attrs| FactoryCardContent.link_backs(card, attrs) }

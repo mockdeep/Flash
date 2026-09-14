@@ -12,8 +12,12 @@ class LanguageDeck < Deck
 
   def mandarin? = language == "zh"
 
+  # Category is a property of the word in this list, so it comes from the
+  # list's memberships rather than the card.
   def cards_in_category(category)
-    cards.joins(:item).where(items: { category: })
+    entries = word_list.sense_memberships.where(category:)
+      .joins(:sense).select("senses.entry_id")
+    cards.joins(:item).where(items: { entry_id: entries })
   end
 
   def reading_pairs(except:)

@@ -4,7 +4,7 @@ require "rails_helper"
 
 # Exercised through ReadingCard - LanguageCard is never instantiated
 # directly. Language cards keep nil content columns; the front side reads
-# through the item's entry, the back side through the item.
+# through the item's entry, the back side through the list's senses.
 RSpec.describe LanguageCard do
   it "requires an item" do
     card = ReadingCard.new(deck: build(:reading_deck))
@@ -28,10 +28,17 @@ RSpec.describe LanguageCard do
     expect(card.entry).to eq(other.entry)
   end
 
-  it "rejoins a semicolon back from the item's glosses" do
+  it "rejoins the back from the list's senses in membership order" do
     card = create(:reading_card, back: "understand;clear")
 
     expect(card.back).to eq("understand; clear")
+  end
+
+  it "shows only the senses its own list selected" do
+    card = create(:reading_card, front: "花", back: "flower")
+    create(:reading_card, front: "花", back: "to spend")
+
+    expect(card.back).to eq("flower")
   end
 
   it "reads the distractors from the item" do
@@ -40,16 +47,22 @@ RSpec.describe LanguageCard do
     expect(card.distractors).to contain_exactly("happy", "run")
   end
 
-  it "reads the reading from the entry and the category from the item" do
+  it "reads the reading from the entry and the category from the list" do
     card = create(:reading_card, reading: "míngbai")
 
     expect(card).to have_attributes(reading: "míngbai", category: "General")
   end
 
-  it "reads the example pair from the item" do
+  it "reads the example pair from the senses" do
     card = create(:reading_card, example_front: "ef", example_back: "eb")
 
     expect(card).to have_attributes(example_front: "ef", example_back: "eb")
+  end
+
+  it "has no example when its senses hold none" do
+    card = create(:reading_card)
+
+    expect(card).to have_attributes(example_front: nil, example_back: nil)
   end
 
   describe "#homograph?" do
