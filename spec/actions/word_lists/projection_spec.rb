@@ -20,7 +20,7 @@ RSpec.describe WordLists::Projection do
       )
     end
 
-    it "creates one card per paired front item" do
+    it "creates one card per front item" do
       copy = deck_over(two_word_deck.word_list)
 
       described_class.build_cards(copy)
@@ -28,7 +28,7 @@ RSpec.describe WordLists::Projection do
       expect(copy.cards.map(&:front)).to contain_exactly("明白", "你好")
     end
 
-    it "omits an unpaired decoy item" do
+    it "omits a decoy back item" do
       source = source_deck([{ front: "明白", back: "understand" }])
       described_class.add_distractor(source.cards.sole, "decoy")
       copy = deck_over(source.word_list)

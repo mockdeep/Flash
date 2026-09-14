@@ -37,19 +37,4 @@ RSpec.describe Item do
         .to raise_error(ActiveRecord::RecordNotUnique)
     end
   end
-
-  describe "#glosses" do
-    def pair_back(front, text)
-      back = create(:item, :back, word_list: front.word_list, text:)
-      create(:pairing, item: front, paired_item: back)
-    end
-
-    it "returns paired back texts in authored order" do
-      front = create(:item, text: "明白")
-      pair_back(front, "understand")
-      pair_back(front, "clear")
-
-      expect(front.glosses).to eq(["understand", "clear"])
-    end
-  end
 end
