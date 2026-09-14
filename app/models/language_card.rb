@@ -3,7 +3,7 @@
 # A card over a word_list: the flat content columns stay nil, and every
 # reader goes through the compendium. The item is the card's pointer at its
 # entry; the list's memberships for that entry give the back, category and
-# example. Only the miss-recorded decoys still live on the item.
+# example, and the owner's sense_distractors give the remembered decoys.
 class LanguageCard < Card
   def self.model_name
     Card.model_name
@@ -16,11 +16,14 @@ class LanguageCard < Card
   delegate :reading, to: :entry
 
   def front = entry.headword
-  def back = memberships.pluck("senses.gloss").join(SEPARATOR)
+  def back = list_back(item.entry_id)
   def category = memberships.pick(:category)
   def example_front = example&.sentence
   def example_back = example&.translation
-  def distractors = item.distractors.map(&:text)
+
+  def distractors
+    decoy_entry_ids.filter_map { |id| list_back(id).presence }.uniq
+  end
 
   def homograph?
     deck.cards.joins(item: :entry)
@@ -29,10 +32,24 @@ class LanguageCard < Card
 
   private
 
+  def list_memberships = deck.word_list.sense_memberships.joins(:sense)
+
   # The list's memberships for this card's entry, in the list's gloss order.
-  def memberships
-    deck.word_list.sense_memberships.joins(:sense)
-      .where(senses: { entry_id: item.entry_id }).order(:position)
+  def memberships = memberships_of(item.entry_id)
+
+  def memberships_of(entry_id)
+    list_memberships.where(senses: { entry_id: }).order(:position)
+  end
+
+  def list_back(entry_id)
+    memberships_of(entry_id).pluck("senses.gloss").join(SEPARATOR)
+  end
+
+  def sense_ids = memberships.unscope(:order).select(:sense_id)
+
+  def decoy_entry_ids
+    SenseDistractor.where(user: deck.user, sense_id: sense_ids)
+      .joins(:distractor_sense).distinct.pluck("senses.entry_id")
   end
 
   # The earliest sentence any of the card's senses holds; a sense shared
@@ -40,13 +57,25 @@ class LanguageCard < Card
   def example
     return @example if defined?(@example)
 
-    @example = SenseExample
-      .where(sense_id: memberships.unscope(:order).select(:sense_id))
-      .order(:id).first
+    @example = SenseExample.where(sense_id: sense_ids).order(:id).first
   end
 
-  # A language miss accretes an item-side decoy, not a card_distractors row.
   def record_distractor(text)
-    WordLists::Projection.add_distractor(self, text)
+    memberships.pluck(:sense_id).product(chosen_sense_ids(text)).each do
+      |sense_id, distractor_sense_id|
+      miss = SenseDistractor.find_or_initialize_by(
+        user_id: deck.user_id, sense_id:, distractor_sense_id:,
+      )
+      miss.miss_count += 1
+      miss.update!(last_missed_at: Time.current)
+    end
+  end
+
+  def chosen_sense_ids(text)
+    glosses = text.split(";").map(&:squish)
+    list_memberships.where(senses: { gloss: glosses })
+      .distinct.pluck("senses.entry_id")
+      .select { |entry_id| list_back(entry_id) == text }
+      .flat_map { |entry_id| memberships_of(entry_id).pluck(:sense_id) }
   end
 end

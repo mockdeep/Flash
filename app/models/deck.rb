@@ -42,6 +42,8 @@ class Deck < ApplicationRecord
   # decks support it.
   def replaceable? = false
 
+  def generates_distractors? = distractor_pool == "category"
+
   # Cards whose studied answer carries the given category, for category-pool
   # distractors. Flat-card families read the card column; language decks
   # override to look through the item layer.

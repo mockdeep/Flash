@@ -23,6 +23,14 @@ RSpec.describe LanguageDeck do
     end
   end
 
+  describe "#generates_distractors?" do
+    it "is true whatever the pool column says" do
+      deck = create(:reading_deck, distractor_pool: "preset")
+
+      expect(deck.generates_distractors?).to be(true)
+    end
+  end
+
   describe "#cards_in_category" do
     it "finds cards by the list's filing of their word" do
       deck = create(:reading_deck)

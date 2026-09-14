@@ -186,12 +186,10 @@ class Study
 
   def multiple_choice_answers
     distractors = next_card.distractors.sample(4)
-    distractors += category_distractors(distractors) if category_pool?
+    if deck.generates_distractors?
+      distractors += category_distractors(distractors)
+    end
     [*distractors, next_card.back].shuffle
-  end
-
-  def category_pool?
-    deck.distractor_pool == "category"
   end
 
   def category_distractors(chosen)

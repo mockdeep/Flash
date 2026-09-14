@@ -482,6 +482,16 @@ RSpec.describe Study do
 
         expect(answers).to eq(["Paris"])
       end
+
+      it "still fills from siblings on a language deck" do
+        deck = create(:reading_deck, distractor_pool: "preset")
+        create(:reading_card, deck:, back: "Paris")
+        create(:reading_card, :done, deck:, back: "Madrid")
+
+        answers = described_class.new(deck:).possible_answers
+
+        expect(answers).to contain_exactly("Paris", "Madrid")
+      end
     end
   end
 
@@ -781,12 +791,13 @@ RSpec.describe Study do
         expect(card.reload.distractors).to eq(["London"])
       end
 
-      it "records the new distractor in the word_list" do
-        card = create(:basic_card, back: "Paris")
+      it "remembers a language miss for the deck's owner" do
+        card = create(:reading_card, back: "Paris")
+        create(:reading_card, deck: card.deck, back: "London")
         described_class.new(deck: card.deck)
           .answer_card(card_id: card.id, answer: "London")
 
-        expect(card.reload.distractors).to include("London")
+        expect(card.reload.distractors).to eq(["London"])
       end
 
       it "adds the wrong answer to the existing distractors" do
