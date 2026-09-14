@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_15_020000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_15_030000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -75,15 +75,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_020000) do
     t.string "reading"
     t.datetime "updated_at", null: false
     t.index ["language", "headword", "reading"], name: "index_entries_on_language_and_headword_and_reading", unique: true, nulls_not_distinct: true
-  end
-
-  create_table "item_distractors", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "distractor_item_id", null: false
-    t.bigint "item_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["distractor_item_id"], name: "index_item_distractors_on_distractor_item_id"
-    t.index ["item_id", "distractor_item_id"], name: "index_item_distractors_on_item_id_and_distractor_item_id", unique: true
   end
 
   create_table "items", force: :cascade do |t|
@@ -193,8 +184,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_020000) do
   add_foreign_key "decks", "topics", on_delete: :nullify
   add_foreign_key "decks", "users", on_delete: :cascade
   add_foreign_key "decks", "word_lists", on_delete: :cascade
-  add_foreign_key "item_distractors", "items", column: "distractor_item_id", on_delete: :cascade
-  add_foreign_key "item_distractors", "items", on_delete: :cascade
   add_foreign_key "items", "entries"
   add_foreign_key "items", "word_lists", on_delete: :cascade
   add_foreign_key "sense_distractors", "senses", column: "distractor_sense_id", on_delete: :cascade
