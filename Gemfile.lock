@@ -362,6 +362,8 @@ GEM
       rubocop-rspec (~> 3.5)
     ruby-progressbar (1.13.0)
     rubyzip (3.6.0)
+    scout_apm (6.3.0)
+      parser
     securerandom (0.4.1)
     selenium-webdriver (4.48.0)
       base64 (~> 0.2)
@@ -444,6 +446,7 @@ DEPENDENCIES
   rubocop-rake
   rubocop-rspec
   rubocop-rspec_rails
+  scout_apm
   selenium-webdriver
   shoulda-matchers
   simplecov
