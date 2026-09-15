@@ -41,6 +41,32 @@ RSpec.describe LanguageCard do
     expect(card.back).to eq("flower")
   end
 
+  describe ".backs" do
+    it "rejoins each card's back from the list's senses in one query" do
+      deck = create(:reading_deck)
+      create(:reading_card, deck:, back: "two;a couple")
+      create(:reading_card, deck:, back: "three")
+
+      expect(deck.cards.backs).to contain_exactly("two; a couple", "three")
+    end
+
+    it "limits itself to the scope" do
+      deck = create(:reading_deck)
+      create(:reading_card, deck:, back: "two")
+      excluded = create(:reading_card, deck:, back: "three")
+
+      expect(deck.cards.where.not(id: excluded.id).backs).to eq(["two"])
+    end
+
+    it "shows only the senses its own list selected" do
+      deck = create(:reading_deck)
+      create(:reading_card, deck:, front: "花", back: "flower")
+      create(:reading_card, front: "花", back: "to spend")
+
+      expect(deck.cards.backs).to eq(["flower"])
+    end
+  end
+
   describe "#distractors" do
     def sense_of(card, gloss)
       Sense.find_by!(entry: card.entry, gloss:)

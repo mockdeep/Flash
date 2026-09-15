@@ -56,6 +56,16 @@ RSpec.describe Card do
     end
   end
 
+  describe ".backs" do
+    it "reads the back column of each card in the scope" do
+      deck = create(:deck)
+      create(:basic_card, deck:, back: "Paris")
+      excluded = create(:basic_card, deck:, back: "London")
+
+      expect(deck.cards.where.not(id: excluded.id).backs).to eq(["Paris"])
+    end
+  end
+
   describe "#done?" do
     it "returns true when correct_streak meets deck level" do
       deck = create(:deck, level: 2)

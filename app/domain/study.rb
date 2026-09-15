@@ -204,10 +204,10 @@ class Study
 
   def sibling_backs(category = nil)
     scope = category ? deck.cards_in_category(category) : deck.cards
-    scope.where.not(id: next_card.id).map(&:back)
+    scope.where.not(id: next_card.id).backs
   end
 
   def fuzzy_answers
-    deck.cards.map(&:back).uniq
+    deck.cards.backs.uniq
   end
 end

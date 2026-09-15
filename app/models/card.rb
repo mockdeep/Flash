@@ -28,6 +28,8 @@ class Card < ApplicationRecord
   scope :not_done, ->(level) { where(correct_streak: ...level) }
   scope :ordered, -> { order(:id) }
 
+  def self.backs = pluck(:back)
+
   def done? = correct_streak >= deck.level
 
   def record_correct!
