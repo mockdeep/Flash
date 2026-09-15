@@ -198,7 +198,7 @@ module Views
           class: classes,
           data: { filter_value: deck.type_label, filter_target: "item" },
         ) do
-          remaining = deck.cards.not_done(deck.level).count
+          remaining = deck.remaining_count
           render_study_link(deck, remaining)
           render_mru_label(deck) if mru
           div(class: "rail-type") { deck.type_label }
@@ -209,7 +209,7 @@ module Views
       end
 
       def render_study_link(deck, remaining)
-        return if deck.cards.none?
+        return if deck.cards_count.zero?
 
         label = remaining.zero? ? "Review →" : "Study →"
         link_to(label, deck_study_path(deck), class: "rail-card-study")
@@ -235,7 +235,7 @@ module Views
       end
 
       def render_remaining(deck, remaining)
-        if deck.cards.none?
+        if deck.cards_count.zero?
           span(class: "rail-remaining rail-remaining--empty") { "No cards yet" }
         elsif remaining.zero?
           span(class: "rail-remaining rail-remaining--done") { "Done ✓" }
