@@ -13,6 +13,15 @@ class LanguageCard < Card
 
   validates :item, presence: true
 
+  def self.backs
+    joins(item: { word_list: { sense_memberships: :sense } })
+      .where(Sense.arel_table[:entry_id].eq(Item.arel_table[:entry_id]))
+      .order("sense_memberships.position")
+      .pluck(:id, "senses.gloss")
+      .group_by(&:first)
+      .values.map { |rows| rows.map(&:last).join(SEPARATOR) }
+  end
+
   delegate :reading, to: :entry
 
   def front = entry.headword
