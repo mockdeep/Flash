@@ -2,7 +2,9 @@
 
 class DecksController < ApplicationController
   def index
-    render(Views::Decks::Index.new(decks: current_user.decks.ordered))
+    render(
+      Views::Decks::Index.new(decks: current_user.decks.ordered.with_progress),
+    )
   end
 
   def show

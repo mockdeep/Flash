@@ -46,10 +46,10 @@ module Components
     end
 
     def compute_current_percent
-      total = @deck.cards.count
+      total = @deck.cards_count
       return 0 if total.zero?
 
-      @deck.cards.done(@deck.level).count * 100 / total
+      @deck.done_count * 100 / total
     end
 
     def render_tag

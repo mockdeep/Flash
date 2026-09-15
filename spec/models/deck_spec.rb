@@ -118,6 +118,42 @@ RSpec.describe Deck do
     end
   end
 
+  def level_two_deck
+    deck = create(:deck, level: 2)
+    create(:basic_card, deck:, correct_streak: 2)
+    create(:basic_card, deck:, correct_streak: 1)
+    deck
+  end
+
+  describe ".with_progress" do
+    it "selects each deck's card and done counts alongside its columns" do
+      loaded = described_class.with_progress.find(level_two_deck.id)
+
+      expect(loaded.attributes)
+        .to include("cards_count" => 2, "done_count" => 1)
+    end
+  end
+
+  describe "#cards_count" do
+    it "counts the cards when none were selected" do
+      expect(level_two_deck.cards_count).to eq(2)
+    end
+  end
+
+  describe "#done_count" do
+    it "counts cards at or above the level when none were selected" do
+      expect(level_two_deck.done_count).to eq(1)
+    end
+  end
+
+  describe "#remaining_count" do
+    it "is the cards still below the level" do
+      loaded = described_class.with_progress.find(level_two_deck.id)
+
+      expect(loaded.remaining_count).to eq(1)
+    end
+  end
+
   describe "#generates_distractors?" do
     it "is true when the pool is category" do
       deck = create(:deck, distractor_pool: "category")

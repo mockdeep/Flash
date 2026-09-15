@@ -4,6 +4,13 @@ class Deck < ApplicationRecord
   VISIBILITIES = ["public", "private"].freeze
   DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
   NAME_SOURCE = Arel.sql("COALESCE(decks.name, word_lists.name)")
+  PROGRESS_COLUMNS = <<~SQL.squish
+    decks.*,
+    (SELECT COUNT(*) FROM cards WHERE cards.deck_id = decks.id) AS cards_count,
+    (SELECT COUNT(*) FROM cards
+      WHERE cards.deck_id = decks.id AND cards.correct_streak >= decks.level)
+      AS done_count
+  SQL
 
   belongs_to :word_list
   belongs_to :user
@@ -31,8 +38,13 @@ class Deck < ApplicationRecord
 
   scope :ordered, -> { left_joins(:word_list).order(NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
+  scope :with_progress, -> { select(PROGRESS_COLUMNS) }
 
   def music? = false
+
+  def cards_count = self[:cards_count] || cards.count
+  def done_count = self[:done_count] || cards.done(level).count
+  def remaining_count = cards_count - done_count
 
   # Whether this family's cards own their content directly (the flat-card
   # model); language decks read content through word_list items.
