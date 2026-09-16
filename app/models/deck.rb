@@ -56,11 +56,20 @@ class Deck < ApplicationRecord
 
   def generates_distractors? = distractor_pool == "category"
 
-  # Cards whose studied answer carries the given category, for category-pool
-  # distractors. Flat-card families read the card column; language decks
-  # override to look through the item layer.
-  def cards_in_category(category)
-    cards.where(category:)
+  def card(id) = cards.find(id)
+
+  def study_pool(limit:) = cards.not_done(level).ordered.limit(limit).to_a
+
+  def all_done? = cards.not_done(level).none?
+
+  def backs(except: nil, category: nil)
+    scope = category ? cards_in_category(category) : cards
+    scope = scope.where.not(id: except.id) if except
+    scope.backs
+  end
+
+  def cards_in_order(limit: nil)
+    limit ? cards.ordered.limit(limit) : cards.ordered
   end
 
   # Sibling (front, reading) pairs for the reading stage's decoy pool; the
@@ -89,6 +98,13 @@ class Deck < ApplicationRecord
   end
 
   private
+
+  # Cards whose studied answer carries the given category, for category-pool
+  # distractors. Flat-card families read the card column; language decks
+  # override to look through the item layer.
+  def cards_in_category(category)
+    cards.where(category:)
+  end
 
   # Language decks reference a shared word_list rather than copying it, so
   # adding the same catalog deck twice would otherwise leave a user with two

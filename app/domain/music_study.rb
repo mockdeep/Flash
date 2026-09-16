@@ -53,7 +53,7 @@ class MusicStudy < Study
 
   def record_correct(cards, answer)
     cards.each(&:record_correct!)
-    level_completed = deck.cards.not_done(deck.level).none?
+    level_completed = deck.all_done?
     deck.update!(level: deck.level + 1) if level_completed
     build_result(cards, answer, correct: true, level_completed:)
   end

@@ -39,7 +39,7 @@ module Views
       end
 
       def render_frame
-        if deck.cards.none?
+        if deck.cards_count.zero?
           render_empty
         else
           render(progress_component)

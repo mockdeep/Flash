@@ -66,7 +66,7 @@ module Views
             music_badge if deck.music?
           end
           div(class: "card-count") do
-            span(class: "count-number") { deck.cards.count }
+            span(class: "count-number") { deck.cards_count }
             span(class: "count-label") { "cards" }
           end
         end

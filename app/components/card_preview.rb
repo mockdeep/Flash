@@ -27,7 +27,7 @@ module Components
     private
 
     def preview_cards
-      @preview_cards ||= deck.cards.ordered.limit(PREVIEW_LIMIT)
+      @preview_cards ||= deck.cards_in_order(limit: PREVIEW_LIMIT)
     end
 
     def render_empty
@@ -56,11 +56,10 @@ module Components
     end
 
     def render_more_count
-      return if deck.cards.count <= PREVIEW_LIMIT
+      more = deck.cards_count - PREVIEW_LIMIT
+      return unless more.positive?
 
-      p(class: "catalog-preview-more") do
-        "and #{deck.cards.count - PREVIEW_LIMIT} more cards..."
-      end
+      p(class: "catalog-preview-more") { "and #{more} more cards..." }
     end
   end
 end

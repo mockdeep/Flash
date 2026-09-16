@@ -42,7 +42,7 @@ module Catalog
 
     def copy_rows(source, card_limit)
       copy_distractors = source.distractor_pool == "preset"
-      source_cards(source, card_limit).map do |card|
+      source.cards_in_order(limit: card_limit).map do |card|
         content_row(card, copy_distractors:)
       end
     end
@@ -52,11 +52,6 @@ module Catalog
         distractors: copy_distractors ? card.distractors : [],
         source_card_id: card.id,
       )
-    end
-
-    def source_cards(source, card_limit)
-      scope = source.cards
-      card_limit ? scope.order(:id).limit(card_limit) : scope
     end
 
     class Result

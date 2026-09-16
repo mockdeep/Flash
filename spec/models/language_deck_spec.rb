@@ -31,13 +31,13 @@ RSpec.describe LanguageDeck do
     end
   end
 
-  describe "#cards_in_category" do
-    it "finds cards by the list's filing of their word" do
+  describe "#backs" do
+    it "narrows to the words the list files under a category" do
       deck = create(:reading_deck)
-      card = create(:reading_card, deck:, category: "Nature")
-      create(:reading_card, deck:, category: "Body")
+      create(:reading_card, deck:, back: "tree", category: "Nature")
+      create(:reading_card, deck:, back: "hand", category: "Body")
 
-      expect(deck.cards_in_category("Nature")).to contain_exactly(card)
+      expect(deck.backs(category: "Nature")).to eq(["tree"])
     end
   end
 
