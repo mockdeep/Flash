@@ -4,7 +4,6 @@ require "rails_helper"
 
 RSpec.describe Card do
   it { is_expected.to belong_to(:deck) }
-  it { is_expected.to belong_to(:item).optional }
   it { is_expected.to validate_presence_of(:correct_count) }
   it { is_expected.to validate_presence_of(:correct_streak) }
   it { is_expected.to validate_presence_of(:deck_id) }
@@ -119,12 +118,6 @@ RSpec.describe Card do
       card = create(:basic_card, example_front: "ef", example_back: "eb")
 
       expect(card).to have_attributes(example_front: "ef", example_back: "eb")
-    end
-
-    it "has no item to read through" do
-      card = create(:basic_card, front: "Q")
-
-      expect(card).to have_attributes(item: nil, front: "Q")
     end
   end
 
