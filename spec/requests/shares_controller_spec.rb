@@ -202,8 +202,8 @@ RSpec.describe SharesController do
       expect(rendered).to have_css(".demo-banner")
     end
 
-    it "caps the copied cards at Demo::CreateGuestUser::CARD_LIMIT" do
-      stub_const("Demo::CreateGuestUser::CARD_LIMIT", 2)
+    it "caps the copied cards at the guest limit" do
+      stub_const("Deck::GUEST_CARD_LIMIT", 2)
       deck = shared_deck
       3.times { |i| create(:basic_card, deck:, front: "Q#{i}", back: "A#{i}") }
 

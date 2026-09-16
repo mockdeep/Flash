@@ -795,7 +795,7 @@ RSpec.describe Study do
         card = create(:reading_card, back: "Paris")
         create(:reading_card, deck: card.deck, back: "London")
         described_class.new(deck: card.deck)
-          .answer_card(card_id: card.id, answer: "London")
+          .answer_card(card_id: card.entry.id, answer: "London")
 
         expect(card.reload.distractors).to eq(["London"])
       end

@@ -4,13 +4,13 @@ module Catalog
   module CopyDeck
     extend self
 
-    def call(user:, deck:, card_limit: nil)
+    def call(user:, deck:)
       new_deck = build_new_deck(user:, source: deck)
 
       ActiveRecord::Base.transaction do
         return Result.new(success: false, record: new_deck) unless new_deck.save
 
-        fill_cards(new_deck, deck, card_limit)
+        fill_cards(new_deck, deck)
       end
 
       Result.new(success: true, record: new_deck)
@@ -21,11 +21,11 @@ module Catalog
     # Flat decks own their content, so a copy duplicates the rows. A language
     # deck references the source word_list instead - the words are canonical,
     # and only the progress anchors belong to the copier.
-    def fill_cards(new_deck, source, card_limit)
+    def fill_cards(new_deck, source)
       if new_deck.flat_cards?
-        Decks::FlatCards.build(new_deck, copy_rows(source, card_limit))
+        Decks::FlatCards.build(new_deck, copy_rows(source, new_deck.card_limit))
       else
-        WordLists::Projection.build_cards(new_deck, limit: card_limit)
+        WordLists::Projection.build_cards(new_deck, limit: new_deck.card_limit)
       end
     end
 

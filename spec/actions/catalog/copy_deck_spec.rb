@@ -211,20 +211,28 @@ RSpec.describe Catalog::CopyDeck do
       expect(first_content(result).distractors).to eq([])
     end
 
-    it "caps copied cards when card_limit is set" do
+    it "caps the cards copied for a guest" do
+      stub_const("Deck::GUEST_CARD_LIMIT", 2)
       source = build_public_deck
       create_list(:basic_card, 3, deck: source)
-      user = create(:user)
-      result = described_class.call(user:, deck: source, card_limit: 2)
+      result = described_class.call(user: create(:user, :guest), deck: source)
 
       expect(result.record.cards.count).to eq(2)
     end
 
-    it "copies all cards when card_limit exceeds card count" do
+    it "copies every card for a guest when the deck is under the limit" do
       source = build_public_deck
       create(:basic_card, deck: source, front: "Q", back: "A")
-      user = create(:user)
-      result = described_class.call(user:, deck: source, card_limit: 10)
+      result = described_class.call(user: create(:user, :guest), deck: source)
+
+      expect(result.record.cards.count).to eq(1)
+    end
+
+    it "caps a guest's language deck at the limit" do
+      stub_const("Deck::GUEST_CARD_LIMIT", 1)
+      source = create(:reading_deck, visibility: "public")
+      create_list(:reading_card, 2, deck: source)
+      result = described_class.call(user: create(:user, :guest), deck: source)
 
       expect(result.record.cards.count).to eq(1)
     end
