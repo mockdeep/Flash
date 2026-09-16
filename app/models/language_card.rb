@@ -39,7 +39,38 @@ class LanguageCard < Card
       .where(entries: { headword: front }).where.not(id:).exists?
   end
 
+  # Until 4.5(b) reads progress from skill_scores, the card's counters stay
+  # authoritative and every write also reaches each member sense's score.
+  def record_correct!
+    transaction do
+      super
+      skill_scores.each(&:record_correct!)
+    end
+  end
+
+  def record_miss!(chosen_answer = nil)
+    transaction do
+      super
+      skill_scores.each(&:record_miss!)
+    end
+  end
+
+  def record_view!
+    transaction do
+      super
+      skill_scores.each(&:record_view!)
+    end
+  end
+
   private
+
+  def skill_scores
+    memberships.pluck(:sense_id).map do |sense_id|
+      SkillScore.find_or_initialize_by(
+        user_id: deck.user_id, sense_id:, skill: deck.skill,
+      )
+    end
+  end
 
   def list_memberships = deck.word_list.sense_memberships.joins(:sense)
 

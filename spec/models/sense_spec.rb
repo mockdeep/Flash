@@ -8,6 +8,7 @@ RSpec.describe Sense do
   it { is_expected.to have_many(:word_lists).through(:sense_memberships) }
   it { is_expected.to have_many(:sense_examples).dependent(:destroy) }
   it { is_expected.to have_many(:sense_distractors).dependent(:delete_all) }
+  it { is_expected.to have_many(:skill_scores).dependent(:delete_all) }
 
   it { is_expected.to validate_presence_of(:gloss) }
 

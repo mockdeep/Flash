@@ -141,6 +141,64 @@ RSpec.describe LanguageCard do
     expect(card).to have_attributes(example_front: nil, example_back: nil)
   end
 
+  describe "skill scores" do
+    def counters
+      SkillScore.pluck(:correct_count, :correct_streak, :view_count)
+    end
+
+    it "advances a score on each member sense with a correct answer" do
+      card = create(:reading_card, back: "he; him")
+
+      card.record_correct!
+
+      expect(counters).to eq([[1, 1, 1]] * 2)
+    end
+
+    it "keys the score to the deck's owner and skill" do
+      card = create(:reading_card, back: "he")
+
+      card.record_correct!
+
+      expect(SkillScore.sole)
+        .to have_attributes(user: card.deck.user, skill: "reading")
+    end
+
+    it "resets the score's streak on a miss" do
+      card = create(:reading_card, back: "he")
+
+      card.record_correct!
+      card.record_miss!
+
+      expect(counters).to eq([[1, 0, 2]])
+    end
+
+    it "counts a view on the score" do
+      card = create(:reading_card, back: "he")
+
+      card.record_view!
+
+      expect(counters).to eq([[0, 0, 1]])
+    end
+
+    it "builds on a score the sense already carries" do
+      card = create(:reading_card, back: "he")
+      sense = card.deck.word_list.senses.sole
+      create(:skill_score, user: card.deck.user, sense:, correct_streak: 3)
+
+      card.record_correct!
+
+      expect(counters).to eq([[1, 4, 1]])
+    end
+
+    it "leaves the card's own counters authoritative" do
+      card = create(:reading_card, back: "he")
+
+      card.record_correct!
+
+      expect(card.reload).to have_attributes(correct_streak: 1, view_count: 1)
+    end
+  end
+
   describe "#homograph?" do
     it "is true when another card's entry shares the headword" do
       deck = create(:reading_deck)
