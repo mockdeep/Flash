@@ -32,7 +32,7 @@ module Views
 
       def render_meta
         div(class: "catalog-show-meta") do
-          span { "#{deck.cards.count} cards" }
+          span { "#{deck.cards_count} cards" }
           span(class: "catalog-meta-separator") { "|" }
           span do
             plain("shared by #{deck.user.username}")

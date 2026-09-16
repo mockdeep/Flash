@@ -33,7 +33,7 @@ module Views
             class: "study-frame",
             data: study_frame_data_with_hanzi,
           ) do
-            if deck.cards.none?
+            if deck.cards_count.zero?
               div(class: "accent-box") do
                 div(class: "accent-box__icon") { "📚" }
                 div(class: "accent-box__content") do

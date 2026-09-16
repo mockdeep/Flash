@@ -36,7 +36,7 @@ class Study
     self.deck = deck
     self.reading_confirmed = !card_id.nil?
     self.next_card =
-      card_id ? deck.cards.find(card_id) : pick_next_card(exclude_card_id:)
+      card_id ? deck.card(card_id) : pick_next_card(exclude_card_id:)
   end
 
   def reading_confirmed? = reading_confirmed
@@ -46,8 +46,9 @@ class Study
   end
 
   def pick_next_card(exclude_card_id:)
-    pool = deck.cards.not_done(deck.level).ordered.limit(active_card_threshold)
-    pool.where.not(id: exclude_card_id).sample || pool.sample
+    pool = deck.study_pool(limit: active_card_threshold)
+    fresh = pool.reject { |card| card.id.to_s == exclude_card_id.to_s }
+    fresh.sample || pool.sample
   end
 
   def presentation_mode
@@ -90,7 +91,7 @@ class Study
   # pass writes nothing (answer_card does the bookkeeping), a miss resets the
   # streak without recording a translation distractor.
   def answer_reading(card_id:, answer:, possible_answers: [])
-    card = deck.cards.find(card_id)
+    card = deck.card(card_id)
     correct = card.reading == answer
     card.record_miss! unless correct
     Result.new(
@@ -107,12 +108,12 @@ class Study
   end
 
   def answer_card(card_id:, answer:, possible_answers: [])
-    card = deck.cards.find(card_id)
+    card = deck.card(card_id)
     result_answers = [*possible_answers, card.back].uniq
     if card.back == answer
       card.record_correct!
       card_completed = card.done?
-      level_completed = card_completed && deck.cards.not_done(deck.level).none?
+      level_completed = card_completed && deck.all_done?
       deck.update!(level: deck.level + 1) if level_completed
       Result.new(
         card:,
@@ -203,11 +204,10 @@ class Study
   end
 
   def sibling_backs(category = nil)
-    scope = category ? deck.cards_in_category(category) : deck.cards
-    scope.where.not(id: next_card.id).backs
+    deck.backs(except: next_card, category:)
   end
 
   def fuzzy_answers
-    deck.cards.backs.uniq
+    deck.backs.uniq
   end
 end

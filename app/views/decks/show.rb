@@ -15,7 +15,7 @@ module Views
 
         h1 { deck.name }
 
-        if deck.cards.empty?
+        if empty?
           p { "This deck has no cards yet." }
         else
           link_to("Study Deck", deck_study_path(deck))
@@ -26,11 +26,17 @@ module Views
         render(Components::CatalogToggleButton.new(deck:)) if admin_owner?
         render_replace_link if deck.replaceable?
 
-        render_cards_table if deck.cards.any?
+        render_cards_table unless empty?
         render_delete_button
       end
 
       private
+
+      def empty?
+        return @empty if defined?(@empty)
+
+        @empty = deck.cards_count.zero?
+      end
 
       def admin_owner?
         current_user.admin? && deck.user_id == current_user.id
@@ -69,7 +75,7 @@ module Views
       end
 
       def table_cards
-        deck.cards.ordered
+        deck.cards_in_order
       end
 
       def render_share_section

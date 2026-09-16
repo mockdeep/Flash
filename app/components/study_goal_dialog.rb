@@ -60,7 +60,7 @@ module Components
         :study_goal,
         value: @study_goal,
         min: 1,
-        max: @deck.cards.count,
+        max: @deck.cards_count,
         required: true,
         class: "form-input",
       )

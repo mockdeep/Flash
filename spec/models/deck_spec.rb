@@ -168,13 +168,88 @@ RSpec.describe Deck do
     end
   end
 
-  describe "#cards_in_category" do
-    it "finds cards by their category column" do
-      deck = create(:deck)
-      card = create(:basic_card, deck:, category: "Math")
-      create(:basic_card, deck:, category: "Art")
+  describe "#card" do
+    it "finds the deck's card by id" do
+      card = create(:basic_card)
 
-      expect(deck.cards_in_category("Math")).to contain_exactly(card)
+      expect(card.deck.card(card.id)).to eq(card)
+    end
+
+    it "raises for a card in another deck" do
+      card = create(:basic_card)
+
+      expect { create(:deck).card(card.id) }
+        .to raise_error(ActiveRecord::RecordNotFound)
+    end
+  end
+
+  describe "#study_pool" do
+    it "takes the first cards below the level, in deck order" do
+      deck = create(:deck, level: 1)
+      create(:basic_card, :done, deck:)
+      cards = create_list(:basic_card, 3, deck:)
+
+      expect(deck.study_pool(limit: 2)).to eq(cards.first(2))
+    end
+  end
+
+  describe "#all_done?" do
+    it "is true when every card has reached the level" do
+      deck = create(:deck, level: 2)
+      create(:basic_card, deck:, correct_streak: 2)
+
+      expect(deck.all_done?).to be(true)
+    end
+
+    it "is false while a card sits below the level" do
+      deck = create(:deck, level: 2)
+      create(:basic_card, deck:, correct_streak: 1)
+
+      expect(deck.all_done?).to be(false)
+    end
+  end
+
+  describe "#backs" do
+    it "lists every card's back" do
+      deck = create(:deck)
+      create(:basic_card, deck:, back: "Paris")
+      create(:basic_card, deck:, back: "Rome")
+
+      expect(deck.backs).to contain_exactly("Paris", "Rome")
+    end
+
+    it "leaves out the given card" do
+      deck = create(:deck)
+      create(:basic_card, deck:, back: "Paris")
+      excluded = create(:basic_card, deck:, back: "Rome")
+
+      expect(deck.backs(except: excluded)).to eq(["Paris"])
+    end
+
+    it "narrows to the cards filed under a category" do
+      deck = create(:deck)
+      create(:basic_card, deck:, back: "2", category: "Math")
+      create(:basic_card, deck:, back: "Blue", category: "Art")
+
+      expect(deck.backs(category: "Math")).to eq(["2"])
+    end
+  end
+
+  describe "#cards_in_order" do
+    it "lists the cards in deck order" do
+      deck = create(:deck)
+      first = create(:basic_card, deck:)
+      second = create(:basic_card, deck:)
+
+      expect(deck.cards_in_order).to eq([first, second])
+    end
+
+    it "stops at the limit" do
+      deck = create(:deck)
+      first = create(:basic_card, deck:)
+      create(:basic_card, deck:)
+
+      expect(deck.cards_in_order(limit: 1)).to eq([first])
     end
   end
 

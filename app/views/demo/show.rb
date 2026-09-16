@@ -58,7 +58,7 @@ module Views
         div(class: "catalog-card-header") do
           h3(class: "catalog-card-title") { deck.name }
           div(class: "card-count") do
-            span(class: "count-number") { deck.cards.count }
+            span(class: "count-number") { deck.cards_count }
             span(class: "count-label") { "cards" }
           end
         end
