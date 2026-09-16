@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Card < ApplicationRecord
+  include StudyCounters
+
   self.ignored_columns += ["status"]
 
   SEPARATOR = "; "
@@ -20,9 +22,6 @@ class Card < ApplicationRecord
   normalizes :back, with: NORMALIZE_BACK
 
   validates :deck_id, presence: true
-  validates :correct_count, presence: true
-  validates :correct_streak, presence: true
-  validates :view_count, presence: true
 
   scope :done, ->(level) { where(correct_streak: level..) }
   scope :not_done, ->(level) { where(correct_streak: ...level) }
@@ -32,28 +31,14 @@ class Card < ApplicationRecord
 
   def done? = correct_streak >= deck.level
 
-  def record_correct!
-    self.view_count += 1
-    self.correct_count += 1
-    self.correct_streak += 1
-    save!
-  end
-
   # A miss resets the streak; when the chosen answer is given it's also
   # remembered as a distractor for future option lists (the reading stage
   # passes none - a reading miss never records a translation distractor).
   def record_miss!(chosen_answer = nil)
-    self.view_count += 1
-    self.correct_streak = 0
-    ActiveRecord::Base.transaction do
-      save!
+    transaction do
+      super()
       record_distractor(chosen_answer) if chosen_answer
     end
-  end
-
-  def record_view!
-    self.view_count += 1
-    save!
   end
 
   # Content reads the card's own columns (the flat-card model); LanguageCard

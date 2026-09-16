@@ -27,6 +27,7 @@ class User < ApplicationRecord
   has_many :decks, dependent: :destroy
   has_many :topics, dependent: :destroy
   has_many :sense_distractors, dependent: :delete_all
+  has_many :skill_scores, dependent: :delete_all
   has_one :subscription, dependent: :destroy
 
   def self.find_by(args)

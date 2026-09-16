@@ -8,6 +8,7 @@ class Sense < ApplicationRecord
   has_many :word_lists, through: :sense_memberships
   has_many :sense_examples, dependent: :destroy
   has_many :sense_distractors, dependent: :delete_all
+  has_many :skill_scores, dependent: :delete_all
 
   validates :gloss, presence: true, uniqueness: { scope: :entry_id }
 end

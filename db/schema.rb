@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_15_030000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_16_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -132,6 +132,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_030000) do
     t.index ["entry_id", "gloss"], name: "index_senses_on_entry_id_and_gloss", unique: true
   end
 
+  create_table "skill_scores", force: :cascade do |t|
+    t.integer "correct_count", default: 0, null: false
+    t.integer "correct_streak", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "sense_id", null: false
+    t.string "skill", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.integer "view_count", default: 0, null: false
+    t.index ["sense_id"], name: "index_skill_scores_on_sense_id"
+    t.index ["user_id", "sense_id", "skill"], name: "index_skill_scores_on_user_id_and_sense_id_and_skill", unique: true
+  end
+
   create_table "subscriptions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "creem_subscription_id"
@@ -193,6 +206,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_030000) do
   add_foreign_key "sense_memberships", "senses", on_delete: :cascade
   add_foreign_key "sense_memberships", "word_lists", on_delete: :cascade
   add_foreign_key "senses", "entries"
+  add_foreign_key "skill_scores", "senses", on_delete: :cascade
+  add_foreign_key "skill_scores", "users", on_delete: :cascade
   add_foreign_key "subscriptions", "users"
   add_foreign_key "topics", "users", on_delete: :cascade
   add_foreign_key "word_lists", "users", on_delete: :cascade

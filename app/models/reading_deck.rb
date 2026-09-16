@@ -8,4 +8,6 @@ class ReadingDeck < LanguageDeck
   def card_type = "ReadingCard"
 
   def type_label = "Reading"
+
+  def skill = "reading"
 end
