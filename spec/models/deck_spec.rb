@@ -138,10 +138,10 @@ RSpec.describe Deck do
     end
 
     # One entry below the level, then one at it, in list order.
-    def language_deck(user: default_user)
-      deck = create(:reading_deck, level: 1, user:)
-      create(:reading_card, deck:)
-      create(:reading_card, :done, deck:, back: "he; him")
+    def language_deck
+      deck = create(:reading_deck, level: 1)
+      create(:word, deck:)
+      create(:word, :done, deck:, back: "he; him")
       deck
     end
 
@@ -150,9 +150,14 @@ RSpec.describe Deck do
         .to include("cards_count" => 2, "done_count" => 1)
     end
 
+    def guest_deck_over(source)
+      guest = create(:user, :guest)
+      create(:reading_deck, word_list: source.word_list, user: guest)
+    end
+
     it "stops a guest's language deck at the limit" do
       stub_const("Deck::GUEST_CARD_LIMIT", 1)
-      deck = language_deck(user: create(:user, :guest))
+      deck = guest_deck_over(language_deck)
 
       expect(progress_of(deck))
         .to include("cards_count" => 1, "done_count" => 0)
@@ -341,15 +346,15 @@ RSpec.describe Deck do
   describe "#hanzi_chars" do
     it "collects the distinct Han characters across items" do
       deck = create(:reading_deck)
-      create(:reading_card, deck:, front: "你好", back: "hello")
-      create(:reading_card, deck:, front: "好吗", back: "well?")
+      create(:word, deck:, front: "你好", back: "hello")
+      create(:word, deck:, front: "好吗", back: "well?")
 
       expect(deck.hanzi_chars.chars).to contain_exactly("你", "好", "吗")
     end
 
     it "is empty when no item contains Han characters" do
       deck = create(:reading_deck, language: "es")
-      create(:reading_card, deck:, front: "hola", back: "hello")
+      create(:word, deck:, front: "hola", back: "hello")
 
       expect(deck.hanzi_chars).to eq("")
     end

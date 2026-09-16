@@ -134,15 +134,15 @@ RSpec.describe CardsController do
 
     context "with a language deck" do
       it "leaves the card's content untouched" do
-        card = create(:reading_card, front: "明白", back: "understand")
+        card = create(:word, front: "明白", back: "understand")
         login_as(default_user)
         patch_card(card.deck, card, front: "懂")
 
-        expect(card.reload.front).to eq("明白")
+        expect(card.deck.card(card.id).front).to eq("明白")
       end
 
       it "redirects back to the study page" do
-        card = create(:reading_card)
+        card = create(:word)
         login_as(default_user)
         patch_card(card.deck, card, front: "懂")
 
@@ -150,7 +150,7 @@ RSpec.describe CardsController do
       end
 
       it "explains why in a flash" do
-        card = create(:reading_card)
+        card = create(:word)
         login_as(default_user)
         patch_card(card.deck, card, front: "懂")
 
@@ -170,12 +170,12 @@ RSpec.describe CardsController do
         .to change(Card, :count).by(-1)
     end
 
-    it "leaves a language deck's card in place" do
-      card = create(:reading_card, back: "x")
+    it "leaves a language deck's word in place" do
+      card = create(:word, back: "x")
       login_as(default_user)
 
       expect { delete(deck_card_path(card.deck, card)) }
-        .not_to change(Card, :count)
+        .not_to change(SenseMembership, :count)
     end
 
     it "redirects to the deck study path" do

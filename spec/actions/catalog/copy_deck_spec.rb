@@ -34,12 +34,12 @@ RSpec.describe Catalog::CopyDeck do
       expect(result.record.name).to eq("My Deck")
     end
 
-    # A language deck's words are canonical, so a copy references the source
-    # word_list rather than duplicating its items and pairings.
+    # A language deck's words are canonical, so a copy is a single row
+    # referencing the source word_list.
     context "with a language deck" do
       def public_language_deck
         source = create(:reading_deck, visibility: "public")
-        create(:reading_card, deck: source, front: "明白", back: "understand")
+        create(:word, deck: source, front: "明白", back: "understand")
         source
       end
 
@@ -57,26 +57,27 @@ RSpec.describe Catalog::CopyDeck do
           .not_to change(WordList, :count)
       end
 
-      it "duplicates no items" do
+      it "creates no cards" do
         source = public_language_deck
 
         expect { described_class.call(user: create(:user), deck: source) }
-          .not_to change(Item, :count)
+          .not_to change(Card, :count)
       end
 
-      it "gives the copy its own progress anchors" do
+      it "shows the source's words" do
         source = public_language_deck
         result = described_class.call(user: create(:user), deck: source)
 
-        expect(result.record.cards.map(&:front)).to contain_exactly("明白")
+        expect(result.record.cards_in_order.map(&:front))
+          .to contain_exactly("明白")
       end
 
       it "leaves the copy's progress independent of the source" do
         source = public_language_deck
         result = described_class.call(user: create(:user), deck: source)
-        result.record.cards.sole.record_correct!
+        result.record.cards_in_order.sole.record_correct!
 
-        expect(source.cards.sole.correct_count).to eq(0)
+        expect(source.cards_in_order.sole.correct_streak).to eq(0)
       end
     end
 
@@ -231,10 +232,10 @@ RSpec.describe Catalog::CopyDeck do
     it "caps a guest's language deck at the limit" do
       stub_const("Deck::GUEST_CARD_LIMIT", 1)
       source = create(:reading_deck, visibility: "public")
-      create_list(:reading_card, 2, deck: source)
+      create_list(:word, 2, deck: source)
       result = described_class.call(user: create(:user, :guest), deck: source)
 
-      expect(result.record.cards.count).to eq(1)
+      expect(result.record.cards_count).to eq(1)
     end
 
     it "links each copied card back to its source card" do

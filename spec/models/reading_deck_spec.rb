@@ -3,10 +3,6 @@
 require "rails_helper"
 
 RSpec.describe ReadingDeck do
-  it "builds ReadingCards" do
-    expect(described_class.new.card_type).to eq("ReadingCard")
-  end
-
   it "is labeled Reading on the decks index" do
     expect(described_class.new.type_label).to eq("Reading")
   end

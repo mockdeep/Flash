@@ -10,7 +10,7 @@ module Catalog
       ActiveRecord::Base.transaction do
         return Result.new(success: false, record: new_deck) unless new_deck.save
 
-        fill_cards(new_deck, deck)
+        fill_cards(new_deck, deck) if new_deck.flat_cards?
       end
 
       Result.new(success: true, record: new_deck)
@@ -19,14 +19,10 @@ module Catalog
     private
 
     # Flat decks own their content, so a copy duplicates the rows. A language
-    # deck references the source word_list instead - the words are canonical,
-    # and only the progress anchors belong to the copier.
+    # deck is a single row referencing the source word_list - the words are
+    # canonical, and progress keys to the copier and the senses.
     def fill_cards(new_deck, source)
-      if new_deck.flat_cards?
-        Decks::FlatCards.build(new_deck, copy_rows(source, new_deck.card_limit))
-      else
-        WordLists::Projection.build_cards(new_deck, limit: new_deck.card_limit)
-      end
+      Decks::FlatCards.build(new_deck, copy_rows(source, new_deck.card_limit))
     end
 
     def build_new_deck(user:, source:)
