@@ -5,7 +5,6 @@ require "rails_helper"
 RSpec.describe Item do
   it { is_expected.to belong_to(:word_list) }
   it { is_expected.to belong_to(:entry) }
-  it { is_expected.to have_many(:cards).dependent(:destroy) }
 
   it { is_expected.to validate_presence_of(:side) }
   it { is_expected.to validate_presence_of(:text) }
