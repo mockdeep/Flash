@@ -84,6 +84,12 @@ class LanguageDeck < Deck
     rows(entries.where(entries: { id: entry_ids })).pluck(:back)
   end
 
+  # The member senses of every entry whose back reads exactly as the text;
+  # a chosen option arrives as text, so this is how a miss finds its senses.
+  def sense_ids_shown_as(text)
+    rows(entries).where(back: text).pluck(:sense_ids).flatten
+  end
+
   private
 
   # A guest's deck covers only the first entries in list order.

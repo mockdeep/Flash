@@ -158,12 +158,12 @@ RSpec.describe ReplacementsController do
     end
 
     it "leaves a language deck's cards untouched" do
-      card = create(:reading_card, front: "明白", back: "understand")
+      card = create(:word, front: "明白", back: "understand")
       login_as(default_user)
 
       post_replace(card.deck, valid_csv)
 
-      expect(card.deck.cards.reload.map(&:front)).to contain_exactly("明白")
+      expect(card.deck.cards_in_order.map(&:front)).to contain_exactly("明白")
     end
   end
 end
