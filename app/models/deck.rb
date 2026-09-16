@@ -4,18 +4,49 @@ class Deck < ApplicationRecord
   VISIBILITIES = ["public", "private"].freeze
   DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
   NAME_SOURCE = Arel.sql("COALESCE(decks.name, word_lists.name)")
+  GUEST_CARD_LIMIT = 100
+
+  # A language deck's cards are the entries its list selects, each scored by
+  # the weakest of the owner's skill_scores on the entry's senses, and a
+  # guest's deck stops at the first GUEST_CARD_LIMIT of them in list order.
+  # Only reading decks exist, so the skill is fixed here until 4.7.
+  LANGUAGE_ENTRIES = <<~SQL.squish
+    SELECT MIN(COALESCE(skill_scores.correct_streak, 0)) AS correct_streak,
+      ROW_NUMBER() OVER (ORDER BY MIN(sense_memberships.position)) AS list_row
+    FROM sense_memberships
+    JOIN senses ON senses.id = sense_memberships.sense_id
+    LEFT JOIN skill_scores ON skill_scores.sense_id = senses.id
+      AND skill_scores.user_id = decks.user_id
+      AND skill_scores.skill = 'reading'
+    WHERE sense_memberships.word_list_id = decks.word_list_id
+    GROUP BY senses.entry_id
+  SQL
   PROGRESS_COLUMNS = <<~SQL.squish
     decks.*,
-    (SELECT COUNT(*) FROM cards WHERE cards.deck_id = decks.id) AS cards_count,
-    (SELECT COUNT(*) FROM cards
-      WHERE cards.deck_id = decks.id AND cards.correct_streak >= decks.level)
-      AS done_count
+    CASE WHEN decks.word_list_id IS NULL THEN
+      (SELECT COUNT(*) FROM cards WHERE cards.deck_id = decks.id)
+    ELSE
+      (SELECT COUNT(*) FROM (#{LANGUAGE_ENTRIES}) entries
+        WHERE users.role <> 'guest' OR entries.list_row <= :card_limit)
+    END AS cards_count,
+    CASE WHEN decks.word_list_id IS NULL THEN
+      (SELECT COUNT(*) FROM cards
+        WHERE cards.deck_id = decks.id AND cards.correct_streak >= decks.level)
+    ELSE
+      (SELECT COUNT(*) FROM (#{LANGUAGE_ENTRIES}) entries
+        WHERE (users.role <> 'guest' OR entries.list_row <= :card_limit)
+          AND entries.correct_streak >= decks.level)
+    END AS done_count
   SQL
 
   belongs_to :word_list
   belongs_to :user
   belongs_to :topic
   has_many :cards, dependent: :delete_all
+
+  def self.progress_columns
+    sanitize_sql_array([PROGRESS_COLUMNS, { card_limit: GUEST_CARD_LIMIT }])
+  end
 
   # Flat-card decks own their name (the column); language decks override the
   # reader to go through the word_list.
@@ -38,13 +69,15 @@ class Deck < ApplicationRecord
 
   scope :ordered, -> { left_joins(:word_list).order(NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
-  scope :with_progress, -> { select(PROGRESS_COLUMNS) }
+  scope :with_progress, -> { joins(:user).select(progress_columns) }
 
   def music? = false
 
   def cards_count = self[:cards_count] || cards.count
   def done_count = self[:done_count] || cards.done(level).count
   def remaining_count = cards_count - done_count
+
+  def card_limit = (GUEST_CARD_LIMIT if user.guest?)
 
   # Whether this family's cards own their content directly (the flat-card
   # model); language decks read content through word_list items.

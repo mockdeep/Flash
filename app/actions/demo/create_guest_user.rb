@@ -2,8 +2,6 @@
 
 module Demo
   module CreateGuestUser
-    CARD_LIMIT = 100
-
     class << self
       def call(deck:, time_zone:)
         guest = build_guest(time_zone)
@@ -26,9 +24,7 @@ module Demo
       def copy_deck_for(guest, deck)
         ActiveRecord::Base.transaction do
           guest.save!
-          copy = Catalog::CopyDeck.call(
-            user: guest, deck:, card_limit: CARD_LIMIT,
-          )
+          copy = Catalog::CopyDeck.call(user: guest, deck:)
           return Result.new(user: guest, deck: copy.record)
         end
       end

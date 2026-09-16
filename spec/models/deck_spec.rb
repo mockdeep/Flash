@@ -132,6 +132,43 @@ RSpec.describe Deck do
       expect(loaded.attributes)
         .to include("cards_count" => 2, "done_count" => 1)
     end
+
+    def progress_of(deck)
+      described_class.with_progress.find(deck.id).attributes
+    end
+
+    # One entry below the level, then one at it, in list order.
+    def language_deck(user: default_user)
+      deck = create(:reading_deck, level: 1, user:)
+      create(:reading_card, deck:)
+      create(:reading_card, :done, deck:, back: "he; him")
+      deck
+    end
+
+    it "counts a language deck's entries and those at the level" do
+      expect(progress_of(language_deck))
+        .to include("cards_count" => 2, "done_count" => 1)
+    end
+
+    it "stops a guest's language deck at the limit" do
+      stub_const("Deck::GUEST_CARD_LIMIT", 1)
+      deck = language_deck(user: create(:user, :guest))
+
+      expect(progress_of(deck))
+        .to include("cards_count" => 1, "done_count" => 0)
+    end
+  end
+
+  describe "#card_limit" do
+    it "caps a guest's deck" do
+      deck = build(:deck, user: build(:user, :guest))
+
+      expect(deck.card_limit).to eq(described_class::GUEST_CARD_LIMIT)
+    end
+
+    it "leaves a user's deck uncapped" do
+      expect(build(:deck).card_limit).to be_nil
+    end
   end
 
   describe "#cards_count" do

@@ -288,7 +288,7 @@ RSpec.describe StudiesController do
 
     it "omits the edit button on a language deck" do
       card = create(:reading_card, back: "Paris")
-      submit_answer(card:, answer: "London")
+      submit_answer(card: card.deck.card(card.entry.id), answer: "London")
 
       expect(rendered).to have_no_button("Edit card")
     end

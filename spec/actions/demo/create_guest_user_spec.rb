@@ -51,8 +51,8 @@ RSpec.describe Demo::CreateGuestUser do
       expect(result.deck.cards.count).to eq(2)
     end
 
-    it "caps the copied cards at CARD_LIMIT" do
-      stub_const("Demo::CreateGuestUser::CARD_LIMIT", 2)
+    it "caps the copied cards at the guest limit" do
+      stub_const("Deck::GUEST_CARD_LIMIT", 2)
       deck = demo_deck_with_cards
       create(:basic_card, deck:, front: "Q3", back: "A3")
 

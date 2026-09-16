@@ -12,9 +12,11 @@ module FactoryCardContent
   # as a sibling entry (headword = the text, no card) the deck's owner has
   # confused with this one.
   def self.link_backs(card, attrs)
-    glosses(attrs.back).each do |gloss|
-      select_sense(card.deck.word_list, card.entry, gloss, attrs)
-    end
+    senses =
+      glosses(attrs.back).map do |gloss|
+        select_sense(card.deck.word_list, card.entry, gloss, attrs)
+      end
+    score(card, senses)
     Array(attrs.distractors).each { |text| remember_decoy(card, text) }
   end
 
@@ -24,6 +26,19 @@ module FactoryCardContent
       sense:, position: next_position(list), category: attrs.category,
     )
     add_example(sense, attrs)
+    sense
+  end
+
+  # A card created with progress scores its senses too, as the backfill did.
+  def self.score(card, senses)
+    counters = card.slice(:correct_count, :correct_streak, :view_count)
+    return if counters.values.all?(&:zero?)
+
+    senses.each do |sense|
+      SkillScore.create!(
+        user: card.deck.user, sense:, skill: card.deck.skill, **counters,
+      )
+    end
   end
 
   def self.next_position(list)
