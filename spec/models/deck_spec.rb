@@ -344,7 +344,7 @@ RSpec.describe Deck do
   end
 
   describe "#hanzi_chars" do
-    it "collects the distinct Han characters across items" do
+    it "collects the distinct Han characters across entries" do
       deck = create(:reading_deck)
       create(:word, deck:, front: "你好", back: "hello")
       create(:word, deck:, front: "好吗", back: "well?")

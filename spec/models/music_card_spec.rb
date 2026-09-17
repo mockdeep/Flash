@@ -3,8 +3,8 @@
 require "rails_helper"
 
 RSpec.describe MusicCard do
-  # Note-format validation now lives at ingest (Decks::CreateMusic), since the
-  # card is a thin item_id+progress anchor -- see create_music_spec.
+  # Note-format validation lives at ingest (Decks::CreateMusic), where the
+  # note string is parsed -- see create_music_spec.
 
   describe ".model_name" do
     it "returns the Card model name for routing" do

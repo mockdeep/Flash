@@ -26,8 +26,6 @@ class WordList < ApplicationRecord
   LANGUAGES = language_pairs.sort_by(&:last).to_h.freeze
 
   belongs_to :user
-  has_many :items, dependent: :destroy
-  has_many :entries, through: :items
   has_many :sense_memberships, dependent: :destroy
   has_many :senses, through: :sense_memberships
   has_many :decks, dependent: :destroy

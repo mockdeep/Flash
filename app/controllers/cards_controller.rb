@@ -29,7 +29,7 @@ class CardsController < ApplicationController
   end
 
   # Only the flat-card families own editable card content; a language card's
-  # front and back live on shared word_list items.
+  # front and back are compendium entries and senses shared across decks.
   def ensure_editable_deck
     return if deck.flat_cards?
 
