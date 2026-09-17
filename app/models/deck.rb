@@ -80,7 +80,7 @@ class Deck < ApplicationRecord
   def card_limit = (GUEST_CARD_LIMIT if user.guest?)
 
   # Whether this family's cards own their content directly (the flat-card
-  # model); language decks read content through word_list items.
+  # model); language decks read the compendium through their word_list.
   def flat_cards? = false
 
   # Whether the deck's content can be replaced from a fresh CSV; only Basic

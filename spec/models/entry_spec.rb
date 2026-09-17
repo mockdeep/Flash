@@ -3,7 +3,6 @@
 require "rails_helper"
 
 RSpec.describe Entry do
-  it { is_expected.to have_many(:items).dependent(:restrict_with_exception) }
   it { is_expected.to have_many(:senses).dependent(:restrict_with_exception) }
 
   it { is_expected.to validate_presence_of(:headword) }
@@ -26,12 +25,5 @@ RSpec.describe Entry do
     create(:entry, headword: "过", reading: "guò")
 
     expect(build(:entry, headword: "过", reading: "guo")).to be_valid
-  end
-
-  it "cannot be destroyed while an item points at it" do
-    item = create(:item)
-
-    expect { item.entry.destroy! }
-      .to raise_error(ActiveRecord::DeleteRestrictionError)
   end
 end

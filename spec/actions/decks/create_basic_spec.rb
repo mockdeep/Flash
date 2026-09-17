@@ -115,14 +115,6 @@ RSpec.describe Decks::CreateBasic do
         expect(deck.word_list).to be_nil
       end
 
-      it "creates no items" do
-        user = create(:user)
-        csv = csv_file("front,back\nQ,A\n")
-
-        expect { described_class.call(user:, name: "T", cards_csv: csv) }
-          .not_to change(Item, :count)
-      end
-
       it "builds a BasicDeck owned by the user" do
         user = create(:user)
         csv = csv_file("front,back\nQ,A\n")

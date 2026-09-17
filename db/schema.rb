@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_17_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_18_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -32,14 +32,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_000000) do
     t.string "example_back"
     t.string "example_front"
     t.string "front"
-    t.bigint "item_id"
     t.string "reading"
     t.bigint "source_card_id"
     t.string "type", null: false
     t.datetime "updated_at", null: false
     t.integer "view_count", default: 0, null: false
     t.index ["deck_id", "front"], name: "index_cards_on_deck_id_and_front", unique: true, where: "(front IS NOT NULL)"
-    t.index ["item_id"], name: "index_cards_on_item_id"
     t.index ["source_card_id"], name: "index_cards_on_source_card_id"
     t.index ["type"], name: "index_cards_on_type"
   end
@@ -75,21 +73,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_000000) do
     t.string "reading"
     t.datetime "updated_at", null: false
     t.index ["language", "headword", "reading"], name: "index_entries_on_language_and_headword_and_reading", unique: true, nulls_not_distinct: true
-  end
-
-  create_table "items", force: :cascade do |t|
-    t.string "category"
-    t.datetime "created_at", null: false
-    t.bigint "entry_id"
-    t.string "example"
-    t.string "paired_example"
-    t.string "reading"
-    t.string "side", null: false
-    t.string "text", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "word_list_id", null: false
-    t.index ["entry_id"], name: "index_items_on_entry_id"
-    t.index ["word_list_id", "side", "text", "reading"], name: "index_items_on_word_list_id_and_side_and_text_and_reading", unique: true, nulls_not_distinct: true
   end
 
   create_table "sense_distractors", force: :cascade do |t|
@@ -193,12 +176,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_000000) do
   add_foreign_key "card_distractors", "cards", on_delete: :cascade
   add_foreign_key "cards", "cards", column: "source_card_id", on_delete: :nullify
   add_foreign_key "cards", "decks"
-  add_foreign_key "cards", "items", on_delete: :cascade
   add_foreign_key "decks", "topics", on_delete: :nullify
   add_foreign_key "decks", "users", on_delete: :cascade
   add_foreign_key "decks", "word_lists", on_delete: :cascade
-  add_foreign_key "items", "entries"
-  add_foreign_key "items", "word_lists", on_delete: :cascade
   add_foreign_key "sense_distractors", "senses", column: "distractor_sense_id", on_delete: :cascade
   add_foreign_key "sense_distractors", "senses", on_delete: :cascade
   add_foreign_key "sense_distractors", "users", on_delete: :cascade
