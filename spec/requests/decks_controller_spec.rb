@@ -362,7 +362,7 @@ RSpec.describe DecksController do
     end
 
     it "shows a reading column when a card has a reading" do
-      deck = create(:word, reading: "nǐ hǎo").deck
+      deck = create(:language_card, reading: "nǐ hǎo").deck
       login_as(default_user)
 
       get(deck_path(deck))
@@ -391,7 +391,7 @@ RSpec.describe DecksController do
     end
 
     def deck_with_card
-      create(:word, deck: create(:reading_deck)).deck
+      create(:language_card, deck: create(:reading_deck)).deck
     end
 
     it "shows the topic form when the deck has no topic" do

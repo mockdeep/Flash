@@ -39,7 +39,7 @@ RSpec.describe Catalog::CopyDeck do
     context "with a language deck" do
       def public_language_deck
         source = create(:reading_deck, visibility: "public")
-        create(:word, deck: source, front: "明白", back: "understand")
+        create(:language_card, deck: source, front: "明白", back: "understand")
         source
       end
 
@@ -232,7 +232,7 @@ RSpec.describe Catalog::CopyDeck do
     it "caps a guest's language deck at the limit" do
       stub_const("Deck::GUEST_CARD_LIMIT", 1)
       source = create(:reading_deck, visibility: "public")
-      create_list(:word, 2, deck: source)
+      create_list(:language_card, 2, deck: source)
       result = described_class.call(user: create(:user, :guest), deck: source)
 
       expect(result.record.cards_count).to eq(1)

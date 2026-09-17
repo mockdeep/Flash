@@ -140,8 +140,8 @@ RSpec.describe Deck do
     # One entry below the level, then one at it, in list order.
     def language_deck
       deck = create(:reading_deck, level: 1)
-      create(:word, deck:)
-      create(:word, :done, deck:, back: "he; him")
+      create(:language_card, deck:)
+      create(:language_card, :done, deck:, back: "he; him")
       deck
     end
 
@@ -346,15 +346,15 @@ RSpec.describe Deck do
   describe "#hanzi_chars" do
     it "collects the distinct Han characters across entries" do
       deck = create(:reading_deck)
-      create(:word, deck:, front: "你好", back: "hello")
-      create(:word, deck:, front: "好吗", back: "well?")
+      create(:language_card, deck:, front: "你好", back: "hello")
+      create(:language_card, deck:, front: "好吗", back: "well?")
 
       expect(deck.hanzi_chars.chars).to contain_exactly("你", "好", "吗")
     end
 
     it "is empty when no item contains Han characters" do
       deck = create(:reading_deck, language: "es")
-      create(:word, deck:, front: "hola", back: "hello")
+      create(:language_card, deck:, front: "hola", back: "hello")
 
       expect(deck.hanzi_chars).to eq("")
     end

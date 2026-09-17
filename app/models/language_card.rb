@@ -4,7 +4,7 @@
 # rejoined as the back, and the owner's skill scores on those senses as the
 # streak. Not a row - built from the deck's enumeration - which is what lets
 # a deck be a single row over a shared word_list.
-class WordCard
+class LanguageCard
   attr_reader :deck, :correct_streak
 
   def initialize(deck, entry)

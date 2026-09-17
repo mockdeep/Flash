@@ -169,8 +169,8 @@ RSpec.describe Study do
   describe "#prompt_reading" do
     def deck_with_twins(level:)
       deck = create(:reading_deck, level:)
-      create(:word, deck:, front: "过", reading: "guò")
-      create(:word, deck:, front: "过", reading: "guo")
+      create(:language_card, deck:, front: "过", reading: "guò")
+      create(:language_card, deck:, front: "过", reading: "guo")
       deck
     end
 
@@ -340,8 +340,8 @@ RSpec.describe Study do
 
       it "excludes the readings of homograph twins" do
         deck = create(:reading_deck, level: Study::READING_LEVEL)
-        create(:word, deck:, front: "过", reading: "guò")
-        create(:word, deck:, front: "过", reading: "guo")
+        create(:language_card, deck:, front: "过", reading: "guò")
+        create(:language_card, deck:, front: "过", reading: "guo")
         study = described_class.new(deck:)
 
         expect(study.possible_answers).to eq([study.next_card.reading])
@@ -485,8 +485,8 @@ RSpec.describe Study do
 
       it "still fills from siblings on a language deck" do
         deck = create(:reading_deck, distractor_pool: "preset")
-        create(:word, deck:, back: "Paris")
-        create(:word, :done, deck:, back: "Madrid")
+        create(:language_card, deck:, back: "Paris")
+        create(:language_card, :done, deck:, back: "Madrid")
 
         answers = described_class.new(deck:).possible_answers
 
@@ -792,8 +792,8 @@ RSpec.describe Study do
       end
 
       it "remembers a language miss for the deck's owner" do
-        card = create(:word, back: "Paris")
-        create(:word, deck: card.deck, back: "London")
+        card = create(:language_card, back: "Paris")
+        create(:language_card, deck: card.deck, back: "London")
         described_class.new(deck: card.deck)
           .answer_card(card_id: card.id, answer: "London")
 

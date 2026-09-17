@@ -134,7 +134,7 @@ RSpec.describe CardsController do
 
     context "with a language deck" do
       it "leaves the card's content untouched" do
-        card = create(:word, front: "明白", back: "understand")
+        card = create(:language_card, front: "明白", back: "understand")
         login_as(default_user)
         patch_card(card.deck, card, front: "懂")
 
@@ -142,7 +142,7 @@ RSpec.describe CardsController do
       end
 
       it "redirects back to the study page" do
-        card = create(:word)
+        card = create(:language_card)
         login_as(default_user)
         patch_card(card.deck, card, front: "懂")
 
@@ -150,7 +150,7 @@ RSpec.describe CardsController do
       end
 
       it "explains why in a flash" do
-        card = create(:word)
+        card = create(:language_card)
         login_as(default_user)
         patch_card(card.deck, card, front: "懂")
 
@@ -171,7 +171,7 @@ RSpec.describe CardsController do
     end
 
     it "leaves a language deck's word in place" do
-      card = create(:word, back: "x")
+      card = create(:language_card, back: "x")
       login_as(default_user)
 
       expect { delete(deck_card_path(card.deck, card)) }
