@@ -28,7 +28,7 @@ class WordList < ApplicationRecord
   belongs_to :user
   has_many :sense_memberships, dependent: :destroy
   has_many :senses, through: :sense_memberships
-  has_many :decks, dependent: :destroy
+  has_many :decks, dependent: :restrict_with_exception
 
   validates :name, presence: true, uniqueness: { scope: :user_id }
   validates :language, presence: true, inclusion: { in: LANGUAGES.keys }

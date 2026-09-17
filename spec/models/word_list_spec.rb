@@ -6,9 +6,16 @@ RSpec.describe WordList do
   it { is_expected.to belong_to(:user) }
   it { is_expected.to have_many(:sense_memberships).dependent(:destroy) }
   it { is_expected.to have_many(:senses).through(:sense_memberships) }
-  it { is_expected.to have_many(:decks).dependent(:destroy) }
+  it { is_expected.to have_many(:decks).dependent(:restrict_with_exception) }
 
   it { is_expected.to validate_presence_of(:name) }
+
+  it "cannot be destroyed while a deck references it" do
+    deck = create(:reading_deck)
+
+    expect { deck.word_list.destroy! }
+      .to raise_error(ActiveRecord::DeleteRestrictionError)
+  end
 
   it "validates uniqueness of name scoped to user" do
     create(:word_list)
