@@ -15,8 +15,25 @@ RSpec.describe User do
   it { is_expected.to validate_presence_of(:email) }
   it { is_expected.to validate_presence_of(:username) }
   it { is_expected.to have_secure_password }
+  it { is_expected.to have_many(:decks).dependent(:destroy) }
+  it { is_expected.to have_many(:word_lists).dependent(:destroy) }
   it { is_expected.to have_many(:sense_distractors).dependent(:delete_all) }
   it { is_expected.to have_many(:skill_scores).dependent(:delete_all) }
+
+  it "destroys its own decks before its word_lists" do
+    deck = create(:reading_deck)
+
+    expect { deck.user.destroy! }.to change(WordList, :count).by(-1)
+  end
+
+  it "cannot be destroyed while another user's deck references its list" do
+    deck = create(:reading_deck)
+    create(:reading_deck, user: create(:user), word_list: deck.word_list)
+
+    expect { deck.user.destroy! }
+      .to raise_error(ActiveRecord::DeleteRestrictionError)
+  end
+
   it { is_expected.to normalize(:email).from(" FO@bOOn.GL ").to("fo@boon.gl") }
   it { is_expected.to normalize(:username).from(" spacey ").to("spacey") }
 
