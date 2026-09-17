@@ -14,7 +14,7 @@ RSpec.describe "study font" do
   def visit_hanzi_study_page
     deck = create(:reading_deck, user: default_user)
     hanzi_cards.each do |front, back|
-      create(:word, deck:, front:, back:)
+      create(:language_card, deck:, front:, back:)
     end
     sign_in(default_user)
     visit(deck_study_path(deck))

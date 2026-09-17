@@ -32,7 +32,7 @@ class LanguageDeck < Deck
 
   def generates_distractors? = true
 
-  def card(id) = WordCard.new(self, entries.find(id))
+  def card(id) = LanguageCard.new(self, entries.find(id))
 
   def study_pool(limit:)
     pool = entries.having("#{STREAK} < ?", level).order(LIST_ORDER)
@@ -111,7 +111,7 @@ class LanguageDeck < Deck
 
   def rows(scope) = Entry.from(scope, :entries)
 
-  def cards_from(scope) = scope.map { |entry| WordCard.new(self, entry) }
+  def cards_from(scope) = scope.map { |entry| LanguageCard.new(self, entry) }
 
   def entry_ids_filed(category)
     word_list.sense_memberships.where(category:)

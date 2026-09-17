@@ -42,8 +42,8 @@ RSpec.describe StudiesController do
 
     it "shows a homograph's reading under the prompt" do
       deck = create(:reading_deck)
-      create(:word, deck:, front: "过", reading: "guò")
-      create(:word, deck:, front: "过", reading: "guo")
+      create(:language_card, deck:, front: "过", reading: "guò")
+      create(:language_card, deck:, front: "过", reading: "guo")
       get(deck_study_path(deck))
 
       expect(rendered).to have_css("#card-reading")
@@ -58,7 +58,7 @@ RSpec.describe StudiesController do
 
     it "wires the font controller on a Mandarin deck", :aggregate_failures do
       deck = create(:reading_deck)
-      create(:word, deck:, front: "他", back: "he; him")
+      create(:language_card, deck:, front: "他", back: "he; him")
       get(deck_study_path(deck))
 
       expect(rendered).to have_css(".study-frame[data-controller~='font']")
@@ -81,7 +81,7 @@ RSpec.describe StudiesController do
 
     it "embeds the deck's hanzi for font prewarming on full page loads" do
       deck = create(:reading_deck)
-      create(:word, deck:, front: "他", back: "he; him")
+      create(:language_card, deck:, front: "他", back: "he; him")
       get(deck_study_path(deck))
 
       expect(rendered).to have_css("[data-font-hanzi-value='他']")
@@ -89,7 +89,7 @@ RSpec.describe StudiesController do
 
     it "omits the hanzi payload on turbo frame navigations" do
       deck = create(:reading_deck)
-      create(:word, deck:, front: "他", back: "he; him")
+      create(:language_card, deck:, front: "他", back: "he; him")
       get(deck_study_path(deck), headers: { "Turbo-Frame" => "study" })
 
       expect(rendered).to have_no_css("[data-font-hanzi-value]")
@@ -287,7 +287,7 @@ RSpec.describe StudiesController do
     end
 
     it "omits the edit button on a language deck" do
-      card = create(:word, back: "Paris")
+      card = create(:language_card, back: "Paris")
       submit_answer(card:, answer: "London")
 
       expect(rendered).to have_no_button("Edit card")

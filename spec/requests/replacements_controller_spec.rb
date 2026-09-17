@@ -158,7 +158,7 @@ RSpec.describe ReplacementsController do
     end
 
     it "leaves a language deck's cards untouched" do
-      card = create(:word, front: "明白", back: "understand")
+      card = create(:language_card, front: "明白", back: "understand")
       login_as(default_user)
 
       post_replace(card.deck, valid_csv)

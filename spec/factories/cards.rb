@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Flat-card families: content lives on the card's own columns. Language
-# decks have no card rows; see the :word factory.
+# decks have no card rows; see the :language_card factory.
 FactoryBot.define do
   factory(:basic_card, class: "BasicCard") do
     deck { default_deck }

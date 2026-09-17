@@ -4,8 +4,8 @@
 # senses and their memberships into the deck's word_list - the example on
 # each sense, each distractor remembered as a sibling entry the owner has
 # confused it with, and any counters scored on every sense - and returns
-# the deck's WordCard for it.
-module FactoryWords
+# the deck's LanguageCard for it.
+module FactoryLanguageCards
   Word = Struct.new(
     :deck,
     :front,
@@ -97,9 +97,9 @@ module FactoryWords
 end
 
 FactoryBot.define do
-  factory(:word, class: "WordCard") do
+  factory(:language_card, class: "LanguageCard") do
     skip_create
-    initialize_with { FactoryWords.create(FactoryWords::Word.new(**attributes)) }
+    initialize_with { FactoryLanguageCards.create(FactoryLanguageCards::Word.new(**attributes)) }
 
     deck { association(:reading_deck) }
     sequence(:front, 100) { |n| "Word #{n}" }
