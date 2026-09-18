@@ -14,6 +14,7 @@ gem "bootsnap", require: false
 gem "cssbundling-rails"
 gem "csv"
 gem "goldiloader"
+gem "good_job"
 gem "honeybadger"
 gem "iso-639"
 gem "jsbundling-rails"
