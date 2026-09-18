@@ -28,6 +28,7 @@ module Flash
 
     config.session_store(:cookie_store, expire_after: 1.year)
     config.active_record.belongs_to_required_by_default = false
+    config.active_job.queue_adapter = :good_job
 
     url_options = { host: ENV.fetch("HOST") }
 

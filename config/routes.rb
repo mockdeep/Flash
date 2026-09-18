@@ -32,4 +32,8 @@ Rails.application.routes.draw do
   get "terms", to: "pages#terms"
 
   post "webhooks/creem", to: "webhooks/creem#create"
+
+  constraints AdminConstraint.new do
+    mount GoodJob::Engine, at: "good_job"
+  end
 end
