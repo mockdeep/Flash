@@ -92,6 +92,7 @@ Layout/LineLength:
     - 'app/views/studies/show.rb'
     - 'app/views/subscriptions/show.rb'
     - 'app/views/welcome/index.rb'
+    - 'db/migrate/20260920002006_create_solid_queue_tables.rb'
 
 # Offense count: 2
 # This cop supports unsafe autocorrection (--autocorrect-all).
@@ -120,6 +121,7 @@ Metrics/AbcSize:
     - 'app/views/studies/update.rb'
     - 'app/views/subscriptions/show.rb'
     - 'app/views/welcome/index.rb'
+    - 'db/migrate/20260920002006_create_solid_queue_tables.rb'
 
 # Offense count: 47
 # Configuration parameters: CountComments, Max, CountAsOne, AllowedMethods, AllowedPatterns, inherit_mode.
@@ -152,6 +154,7 @@ Metrics/ClassLength:
     - 'app/views/pages/privacy.rb'
     - 'app/views/pages/terms.rb'
     - 'app/views/studies/update.rb'
+    - 'db/migrate/20260920002006_create_solid_queue_tables.rb'
 
 # Offense count: 28
 # Configuration parameters: CountComments, Max, CountAsOne, AllowedMethods, AllowedPatterns.

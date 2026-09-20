@@ -14,6 +14,7 @@ Flash is a flashcard study application built with Ruby on Rails that uses spaced
 - Phlex for HTML views
 - Creem for payment processing
 - Hotwire (Turbo + Stimulus)
+- Solid Queue for background jobs (Mission Control dashboard)
 - pnpm for JavaScript package management
 
 ## Design Philosophy
@@ -283,6 +284,15 @@ Uses **Creem** (creem.io) for subscription payments:
 - Webhook integration for subscription events
 - Transparent messaging to users about what they're supporting
 
+### Background Jobs
+
+Jobs run on **Solid Queue**, with its tables in the main database:
+- **Worker**: `bin/jobs` runs as its own `worker` process (`Procfile` and `Procfile.dev`). Without it, jobs queue up and never run.
+- **Config**: `config/queue.yml` (dispatcher + workers; `JOB_CONCURRENCY` sets the worker process count) and `config/recurring.yml` (production-only schedule).
+- **Recurring tasks**: hourly clearing of finished jobs (kept 14 days), and hourly `Demo::CleanupGuestUsers` via `CallableJob`. Schedule a new action the same way — `class: CallableJob` with the action name as the arg — rather than writing a job class per action.
+- **Dashboard**: Mission Control is mounted at `/jobs` behind `AdminConstraint`, so it returns 404 for anyone but admins. Its HTTP basic auth is turned off for that reason.
+- **Tests** use the `:test` adapter, so specs never touch the queue tables.
+
 ## Important Conventions
 
 ### File Organization
@@ -479,6 +489,10 @@ db/
 ├── seeds.rb             # Entry point (loads db/seeds/*)
 └── seeds/
     └── music_decks.rb   # Seeds starter music decks
+
+lib/
+└── route_constraints/
+    └── admin_constraint.rb  # Routes inside `constraints AdminConstraint.new` 404 for non-admins
 ```
 
 ### Actions
