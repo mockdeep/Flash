@@ -395,6 +395,11 @@ GEM
     shoulda-matchers (8.0.1)
       activesupport (>= 7.2)
     simplecov (1.2.0)
+    solid_cable (4.0.2)
+      actioncable (>= 7.2)
+      activejob (>= 7.2)
+      activerecord (>= 7.2)
+      railties (>= 7.2)
     solid_queue (1.7.0)
       activejob (>= 7.1)
       activerecord (>= 7.1)
@@ -478,6 +483,7 @@ DEPENDENCIES
   selenium-webdriver
   shoulda-matchers
   simplecov
+  solid_cable
   solid_queue
   stimulus-rails
   strong_migrations

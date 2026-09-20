@@ -15,6 +15,7 @@ Flash is a flashcard study application built with Ruby on Rails that uses spaced
 - Creem for payment processing
 - Hotwire (Turbo + Stimulus)
 - Solid Queue for background jobs (Mission Control dashboard)
+- Solid Cable for Action Cable (database-backed, no Redis)
 - pnpm for JavaScript package management
 
 ## Design Philosophy
@@ -292,6 +293,14 @@ Jobs run on **Solid Queue**, with its tables in the main database:
 - **Recurring tasks**: hourly clearing of finished jobs (kept 14 days), and hourly `Demo::CleanupGuestUsers` via `CallableJob`. Schedule a new action the same way — `class: CallableJob` with the action name as the arg — rather than writing a job class per action.
 - **Dashboard**: Mission Control is mounted at `/jobs` behind `AdminConstraint`, so it returns 404 for anyone but admins. Its HTTP basic auth is turned off for that reason.
 - **Tests** use the `:test` adapter, so specs never touch the queue tables.
+
+### Action Cable
+
+Action Cable runs on **Solid Cable**, with its `solid_cable_messages` table in the main database:
+- **Config**: `config/cable.yml` — development and production share the `solid_cable` adapter (polls every 0.1s, keeps messages 1 day). Development uses it too, rather than `async`, so a broadcast from the `worker` process reaches the browser.
+- **Trimming**: old messages are cleared by a job, so it relies on the `worker` process running.
+- **Tests** use the `test` adapter.
+- Nothing subscribes yet, and `ApplicationCable::Connection` does no authentication — add it before streaming anything user-specific.
 
 ## Important Conventions
 
