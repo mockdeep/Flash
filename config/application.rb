@@ -34,6 +34,13 @@ module Flash
     Rails.application.routes.default_url_options = url_options
     config.action_mailer.default_url_options = url_options
 
+    config.active_job.queue_adapter = :solid_queue
+    config.solid_queue.clear_finished_jobs_after = 14.days
+
+    # The dashboard is mounted behind AdminConstraint in config/routes.rb, so
+    # it doesn't need HTTP basic auth.
+    config.mission_control.jobs.http_basic_auth_enabled = false
+
     extra_paths = [Rails.root.join("lib/route_constraints")]
     config.autoload_paths += extra_paths
     config.eager_load_paths += extra_paths
