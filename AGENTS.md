@@ -209,6 +209,7 @@ end
 - `price-display.css` - `.price-display` component
 - `pricing.css` - Pricing page
 - `subscription.css` - Subscription page
+- `table.css` - Generic `.table` pattern (catalog preview, deck cards)
 - `welcome.css` - Landing page styles
 
 **Key Principles:**
@@ -347,6 +348,7 @@ app/
 │   ├── session_progress.rb       # Study session progress bar
 │   ├── study_example.rb          # Optional example sentence on the answer view
 │   ├── study_goal_dialog.rb      # Edit daily study-goal dialog
+│   ├── table.rb                  # `.table` pattern; block fills each row via `table.cell`
 │   └── text_csv_instructions.rb  # CSV format help block for text decks
 ├── domain/
 │   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
@@ -492,6 +494,7 @@ app/
         ├── price-display.css
         ├── pricing.css
         ├── subscription.css
+        ├── table.css
         └── welcome.css
 
 db/
