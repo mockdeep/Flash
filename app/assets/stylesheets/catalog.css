@@ -172,34 +172,6 @@
   margin: 0;
 }
 
-.catalog-preview-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--font-body);
-}
-
-.catalog-preview-table th {
-  text-align: left;
-  padding: 0.875rem 1rem;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 3px solid var(--color-border);
-}
-
-.catalog-preview-table td {
-  padding: 0.875rem 1rem;
-  font-size: 15px;
-  color: var(--color-text);
-  border-bottom: 1px solid var(--color-background-subtle);
-}
-
-.catalog-preview-table tr:last-child td {
-  border-bottom: none;
-}
-
 .catalog-preview-more {
   font-family: var(--font-body);
   font-size: 14px;
@@ -244,11 +216,6 @@
 
   .catalog-preview {
     padding: 1.5rem;
-  }
-
-  .catalog-preview-table th,
-  .catalog-preview-table td {
-    padding: 0.75rem;
   }
 
   .catalog-show-actions {

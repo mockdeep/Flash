@@ -3,6 +3,7 @@
 module Components
   class CardPreview < Components::Base
     PREVIEW_LIMIT = 5
+    HEADINGS = ["Front", "Back"].freeze
 
     attr_reader :deck
 
@@ -35,23 +36,11 @@ module Components
     end
 
     def render_table
-      table(class: "catalog-preview-table") do
-        thead { render_header_row }
-        tbody { preview_cards.each { |card| render_body_row(card) } }
-      end
-    end
+      preview = Table.new(headings: HEADINGS, rows: preview_cards)
 
-    def render_header_row
-      tr do
-        th { "Front" }
-        th { "Back" }
-      end
-    end
-
-    def render_body_row(card)
-      tr do
-        td { card.front }
-        td { card.back }
+      render(preview) do |table, card|
+        table.cell { card.front }
+        table.cell { card.back }
       end
     end
 

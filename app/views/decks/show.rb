@@ -52,25 +52,15 @@ module Views
 
       def render_cards_table
         readings = deck.readings?
-        table do
-          thead do
-            tr do
-              th { "Front" }
-              th { "Reading" } if readings
-              th { "Back" }
-              th { "Category" }
-            end
-          end
-          tbody do
-            table_cards.each do |card|
-              tr do
-                td { card.front }
-                td { card.reading } if readings
-                td { card.back }
-                td { card.category }
-              end
-            end
-          end
+        headings = ["Front", "Back", "Category"]
+        headings.insert(1, "Reading") if readings
+        cards_table = Components::Table.new(headings:, rows: table_cards)
+
+        render(cards_table) do |table, card|
+          table.cell { card.front }
+          table.cell { card.reading } if readings
+          table.cell { card.back }
+          table.cell { card.category }
         end
       end
 
