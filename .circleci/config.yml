@@ -4,9 +4,9 @@ orbs:
   browser-tools: circleci/browser-tools@2.2.0
   node: circleci/node@7.1.0
 
-jobs:
-  build:
-    parallelism: 1
+executors:
+  default:
+    resource_class: large
     docker:
       - image: cimg/ruby:4.0.7-browsers
         environment:
@@ -20,6 +20,9 @@ jobs:
           POSTGRES_DB: app_test
           POSTGRES_PASSWORD:
 
+commands:
+  setup:
+    description: Check out code and install Node, Ruby, and database dependencies
     steps:
       - checkout
 
@@ -30,8 +33,6 @@ jobs:
 
       - node/install-packages:
           pkg-manager: pnpm
-
-      - browser-tools/install_firefox
 
       - run:
           name: Which versions?
@@ -65,6 +66,12 @@ jobs:
       - run:
           name: Database setup
           command: bin/rails db:setup --trace
+
+jobs:
+  checks:
+    executor: default
+    steps:
+      - setup
 
       - run:
           name: Typescript
@@ -116,8 +123,23 @@ jobs:
             COVERAGE=true bundle exec rspec \
               --format progress \
               --format RspecJunitFormatter \
-              --out /tmp/test-results/rspec.xml \
+              --out /tmp/test-results/unit/rspec.xml \
               $TEST_FILES
+
+      - store_test_results:
+          path: /tmp/test-results
+
+      - store_artifacts:
+          path: log
+          destination: log
+
+  system_tests:
+    executor: default
+    parallelism: 4
+    steps:
+      - setup
+
+      - browser-tools/install_firefox
 
       - run:
           name: ✨ 🌈 ✨ Run System Tests ✨ 🌈 ✨
@@ -132,8 +154,18 @@ jobs:
             xvfb-run -a bundle exec rspec \
               --format progress \
               --format RspecJunitFormatter \
-              --out /tmp/test-results/rspec.xml \
+              --out /tmp/test-results/system/rspec.xml \
               $TEST_FILES
 
       - store_test_results:
-          path: test_results
+          path: /tmp/test-results
+
+      - store_artifacts:
+          path: log
+          destination: log
+
+workflows:
+  test:
+    jobs:
+      - checks
+      - system_tests
