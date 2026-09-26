@@ -200,7 +200,6 @@ RSpec/NoBeforeHook:
 # Offense count: 2
 Rails/Env:
   Exclude:
-    - 'Rakefile'
     - 'spec/rails_helper.rb'
 
 # Offense count: 5
@@ -261,12 +260,11 @@ Style/HashLookupMethod:
     - 'spec/actions/creem/create_checkout_spec.rb'
     - 'spec/requests/webhooks/creem_controller_spec.rb'
 
-# Offense count: 2
+# Offense count: 1
 # Configuration parameters: AllowedClasses.
 Style/OneClassPerFile:
   Exclude:
     - 'config/initializers/phlex.rb'
-    - 'spec/support/factory_bot.rb'
 
 # Offense count: 7
 Style/TopLevelMethodDefinition:
