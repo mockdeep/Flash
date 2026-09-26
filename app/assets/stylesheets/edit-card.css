@@ -32,6 +32,24 @@
   margin-bottom: 1.25rem;
 }
 
+.edit-card__goal-modes {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.edit-card__goal-modes:has(#goal-mode-session:checked) .edit-card__goal-form--target,
+.edit-card__goal-modes:has(#goal-mode-target:checked) .edit-card__goal-form--session {
+  display: none;
+}
+
+.edit-card__goal-today {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .edit-card__actions {
   display: flex;
   gap: 0.75rem;

@@ -2,6 +2,8 @@
 
 module Components
   class StudyGoalDialog < Components::Base
+    MODES = { "session" => "Daily goal", "target" => "Target date" }.freeze
+
     def initialize(deck:, study_goal:)
       super()
       @deck = deck
@@ -34,47 +36,39 @@ module Components
       end
     end
 
+    # The radios pick which form shows, in CSS (edit-card.css).
     def render_body
       div(class: "dialog__body") do
-        form_with(
-          url: deck_milestone_path(@deck),
-          method: :patch,
-        ) do |form|
-          render_field(form)
-          render_actions(form)
+        div(class: "edit-card__goal-modes") do
+          mode_radios
+          MODES.each_key { |mode| goal_form(mode) }
         end
       end
     end
 
-    def render_field(form)
-      div(class: "edit-card__fields") do
-        div(class: "form-field") do
-          form.label(:study_goal, "Cards per session", class: "form-label")
-          study_goal_input(form)
-        end
+    def mode_radios
+      fieldset(class: "deck-type-toggle") do
+        MODES.each { |mode, text| mode_radio(mode, text) }
       end
     end
 
-    def study_goal_input(form)
-      form.number_field(
-        :study_goal,
-        value: @study_goal,
-        min: 1,
-        max: @deck.cards_count,
-        required: true,
-        class: "form-input",
+    def mode_radio(mode, text)
+      label(class: "deck-type-option") do
+        input(
+          type: "radio",
+          name: "goal_mode_choice",
+          id: "goal-mode-#{mode}",
+          value: mode,
+          checked: @deck.goal_mode == mode,
+        )
+        plain(" #{text}")
+      end
+    end
+
+    def goal_form(mode)
+      render(
+        Components::GoalForm.new(deck: @deck, mode:, study_goal: @study_goal),
       )
-    end
-
-    def render_actions(form)
-      div(class: "edit-card__actions") do
-        button(
-          type: "button",
-          class: button_class(:ghost, :compact),
-          data: { action: "click->dialog#close" },
-        ) { "Cancel" }
-        form.submit("Save", class: button_class(:primary, :compact))
-      end
     end
   end
 end

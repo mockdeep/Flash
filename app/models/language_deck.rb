@@ -41,6 +41,10 @@ class LanguageDeck < Deck
 
   def all_done? = rows(entries.having("#{STREAK} < ?", level)).none?
 
+  def not_done_count(at_level)
+    rows(entries.having("#{STREAK} < ?", at_level)).count
+  end
+
   def backs(except: nil, category: nil)
     scope = entries
     scope = scope.where.not(entries: { id: except.id }) if except

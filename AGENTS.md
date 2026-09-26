@@ -202,7 +202,7 @@ end
 - `decks.css` - Deck listing, deck form, and deck-show page (incl. `.deck-share-*` block)
 - `demo-banner.css` - Demo-mode banner
 - `dialog.css` - Modal dialog component styles (`.dialog`, `.dialog__header`, etc.)
-- `edit-card.css` - Edit card trigger button and form layout within the dialog
+- `edit-card.css` - Edit card trigger button and form layout within the dialog (also the study-goal dialog's goal-mode forms, toggled with `:has()`)
 - `flash.css` - Study/flashcard core (card front + kebab menu, answers grid, `.card-reading`)
 - `layout.css` - Header, footer, navigation
 - `music-study.css` - Mic-driven music study UI
@@ -231,9 +231,9 @@ end
 - `Pairing` - Join between a Front `item` and a Back `paired_item` (one row per gloss).
 - `ItemDistractor` - Join marking a Back item as a preset distractor for a Front `item`. The language-side counterpart of `CardDistractor`.
 - `CardDistractor` - A wrong-answer option owned directly by a flat card (uploaded presets and remembered study misses). Unique on `[card_id, text]`.
-- `Deck` (STI base) - A study form. `belongs_to :user`, `belongs_to :topic` (optional), and `belongs_to :word_list` — required *unless* `flat_cards?`, forbidden *if* it is (the presence/absence pair is what keeps the two content models apart). Flat families own a `name` column (unique per user); language decks delegate `name` to the word_list, and the `ordered` scope COALESCEs the two. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"` / `"preset"` / `"none"`, NOT NULL — set by the importer), `ordered`, `study_goal`, `last_studied_at`, and nullable `share_token`.
+- `Deck` (STI base) - A study form. `belongs_to :user`, `belongs_to :topic` (optional), and `belongs_to :word_list` — required *unless* `flat_cards?`, forbidden *if* it is (the presence/absence pair is what keeps the two content models apart). Flat families own a `name` column (unique per user); language decks delegate `name` to the word_list, and the `ordered` scope COALESCEs the two. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"` / `"preset"` / `"none"`, NOT NULL — set by the importer), `ordered`, `study_goal`, `last_studied_at`, nullable `share_token`, and `goal_mode` (`"session"` / `"target"`) with its level target (`target_level` + `target_date` — "finish level N by date"; see Level Targets).
 - `Card` (STI base) - `belongs_to :deck`, `belongs_to :item` (nullable — flat cards have none), `belongs_to :source_card` (catalog-copy provenance). `has_many :card_distractors`. Owns the content columns and the progress counters (`correct_count`, `correct_streak`, `view_count`), and holds the score handle (`record_correct!`, `record_miss!`, `record_view!`). `normalizes :back` is the single back-joining rule. Unique on `[deck_id, front]` where `front` is present.
-- `StudyDay` - Cards a deck completed on one day (`studied_on`, in the owner's time zone), unique on `[deck_id, studied_on]`. `completed_count` counts the current batch and drives the progress bar; the milestone's "Keep Going" starts a new batch by resetting it to 0. `deck.study_days.today` finds or creates the row.
+- `StudyDay` - Cards a deck completed on one day (`studied_on`, in the owner's time zone), unique on `[deck_id, studied_on]`. `completed_count` counts the current batch and drives the progress bar; the milestone's "Keep Going" starts a new batch by resetting it to 0. `goal` holds the day's goal worked out from a level target (nil without one; `#study_goal` falls back to the deck's). `deck.study_days.today` finds or creates the row.
 - `Subscription` - Payment/subscription info, belongs to user.
 
 **`WordList` languages:** `LANGUAGES` (on `WordList`) maps every individual ISO 639-2 language to its display name, keyed by shortest available code per BCP 47 ("zh", not "zho"; "tlh" works). Nothing in the app creates a word list any more — the deck form has no Language option — so the validation guards what the seed account and catalog copies carry.
@@ -341,6 +341,7 @@ app/
 │   ├── demo_banner.rb            # Demo-mode banner
 │   ├── error_explanation.rb      # Styled validation-error box
 │   ├── fuzzy_find_answers.rb     # Typed-answer input for fuzzy-find mode (level 3+)
+│   ├── goal_form.rb              # One study-goal form per goal mode (daily goal / target date)
 │   ├── level_progress.rb         # Deck level indicator (LEVELS = 3)
 │   ├── music_card_body.rb        # Mic-driven music study widget
 │   ├── music_csv_instructions.rb # CSV format help block for music decks
@@ -350,6 +351,7 @@ app/
 │   ├── study_example.rb          # Optional example sentence on the answer view
 │   ├── study_goal_dialog.rb      # Edit daily study-goal dialog
 │   ├── table.rb                  # `.table` pattern; block fills each row via `table.cell`
+│   ├── target_goal_fields.rb     # Level-target fields + today's goal and Recalculate
 │   └── text_csv_instructions.rb  # CSV format help block for text decks
 ├── domain/
 │   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
@@ -722,7 +724,7 @@ Microphone-driven music study (target: guitar / ukulele). Public music decks app
 
 **Domain dispatch:** `Study.for(deck:)` returns `MusicStudy` for music decks. `MusicStudy` overrides card selection to build a **window** of `deck.level` cards (consecutive from an anchor if `deck.ordered?`, else the anchor plus random others) and studies them as one note sequence. It answers the whole window (`answer_window`, permitting `card_ids: []`): the JS POSTs the played sequence and the expected value is the cards' `back`s joined with `,`. Progress is bumped per card in the window; the deck levels up when no cards remain not-done — so higher levels study longer sequences.
 
-**Study UI:** `StudiesController#show`/`#update` dispatches to `Views::Studies::MusicShow`/`MusicUpdate` (vs `Show`/`Update`) when `deck.music?`. The MusicShow view renders `Components::MusicCardBody`, which is the mic-driven widget — Start Microphone gate, Play Reference button, hidden card front, progress counter, and a hidden form the JS POSTs through on completion.
+**Study UI:** `StudiesController#show`/`#update` dispatches to `Views::Studies::MusicShow`/`MusicUpdate` (vs `Show`/`Update`) when `deck.music?`. The MusicShow view renders `Components::MusicCardBody`, which is the mic-driven widget — Start Microphone gate, Play Reference button, hidden card front, progress counter, and a hidden form the JS POSTs through on completion. Music decks have **no study goal**: the music views show only the level indicator (no session progress bar, goal dialog, or milestone), so practice runs on without a stopping point. `decks.study_goal` still holds a value (NOT NULL) but is unused.
 
 **JS modules** (under `app/javascript/music/`) — pure, framework-free, 100% Vitest coverage:
 - `note_utils.ts` — `noteToFrequency("A4") → 440`, `frequencyToNote(440) → {note: "A4", cents: 0}`, `parseSequence("C4,E4,G4") → ["C4", "E4", "G4"]`. Equal-temperament from MIDI; sharps only, no flats.
@@ -759,6 +761,16 @@ The study engine (`app/domain/study.rb`) manages card selection and answer proce
 - A **pass** writes nothing; the controller re-renders the question view pinned to the same card (`Study.for(deck:, card_id:)` forces the translation stage, and the confirmed reading stays visible under the character). The translation answer then flows through `answer_card` as usual
 - **Decoys are computed, not stored**: sibling (front, reading) pairs from `deck.reading_pairs(except:)`, ranked by how close each sibling front's **character count** is to the prompt's — the learner predicts phoneme count by counting the prompt's characters, so a wrong-count option is a free elimination. Two slots prefer siblings that share the prompt's first or last character *and* match its character count exactly (knowing one character's reading then can't eliminate them). Sibling readings equal to the card's own (homophones) are excluded
 - Cards without a `reading` behave exactly as before, even at level 2
+
+### Level Targets
+
+A deck can aim to finish a level by a date, and the daily goal is worked out from it instead of set by hand:
+- **Set** in the study-goal dialog (`Components::StudyGoalDialog` → `MilestonesController#update`). It holds two whole forms (`Components::GoalForm`, one per `deck.goal_mode`, each with a hidden `goal_mode` field and a `namespace:` for unique ids) and a "Daily goal" / "Target date" radio pair outside both forms. A `:has()` rule in `edit-card.css` shows the form matching the checked radio, so no JS is involved and the hidden form never submits. The target form's fields are `Components::TargetGoalFields` ("Finish level", "By date", and today's goal with a Recalculate button once a target is saved).
+- **Validation**: `target_level` and `target_date` are required in `"target"` mode, and a `before_validation` clears them in `"session"` mode. Their bounds (level ≥ the deck's, date not past) are checked only when they change, so a deck can still level up past its target or outlive its date.
+- **Maths** (`Deck#target_goal`): work left = for each level from the current one to the target, the cards below it (`not_done_count`, overridden by `LanguageDeck` to read skill_scores), divided by the days left including today, rounded up. A passed date puts all the work left on today.
+- **Saved** on `StudyDay#goal` when today's row is created, and again (with the count reset to 0) by `StudyDay#recalculate!` when the goal mode or target changes, or the dialog's "Recalculate" button is pressed.
+- A reached target (`level > target_level`) stops being active; tomorrow's row falls back to the hand-set goal.
+- **Not on music decks**: they have no study goal at all (see Music Decks). `MusicDeck` still rejects `goal_mode: "target"` as a guard.
 
 ### Subscription Transparency
 

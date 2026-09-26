@@ -17,6 +17,8 @@ RSpec.describe MusicDeck do
     expect(described_class.new.flat_cards?).to be(true)
   end
 
+  it { is_expected.to validate_exclusion_of(:goal_mode).in_array(["target"]) }
+
   describe "#distractor_pool" do
     it "defaults to 'none'" do
       expect(described_class.new.distractor_pool).to eq("none")

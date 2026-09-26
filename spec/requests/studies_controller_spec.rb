@@ -160,6 +160,72 @@ RSpec.describe StudiesController do
       expect(rendered).to have_text("0 / 50 completed")
     end
 
+    context "when the deck has a level target" do
+      def target_deck
+        deck = create(:deck, :with_target)
+        create_list(:basic_card, 2, deck:)
+        deck
+      end
+
+      it "uses the target's goal on the progress bar" do
+        get(deck_study_path(target_deck))
+
+        expect(rendered).to have_text("0 / 2 completed")
+      end
+
+      it "picks the target date mode" do
+        get(deck_study_path(target_deck))
+
+        expect(rendered).to have_checked_field("Target date", visible: :all)
+      end
+
+      it "shows today's goal as worked out from the target" do
+        get(deck_study_path(target_deck))
+
+        expect(rendered).to have_text("Today: 2 cards")
+      end
+
+      it "offers to recalculate" do
+        get(deck_study_path(target_deck))
+
+        expect(rendered).to have_button("Recalculate", visible: :all)
+      end
+
+      it "submits the target date form in target mode" do
+        get(deck_study_path(target_deck))
+        selector = "#target_deck_goal_mode[value=target]"
+
+        expect(rendered).to have_css(selector, visible: :all)
+      end
+    end
+
+    context "when the deck has no level target" do
+      it "picks the daily goal mode" do
+        get(deck_study_path(create(:basic_card).deck))
+
+        expect(rendered).to have_checked_field("Daily goal", visible: :all)
+      end
+
+      it "submits the daily goal form in session mode" do
+        get(deck_study_path(create(:basic_card).deck))
+        selector = "#session_deck_goal_mode[value=session]"
+
+        expect(rendered).to have_css(selector, visible: :all)
+      end
+
+      it "shows the cards per session field" do
+        get(deck_study_path(create(:basic_card).deck))
+
+        expect(rendered).to have_field("Cards per session", visible: :all)
+      end
+
+      it "does not offer to recalculate" do
+        get(deck_study_path(create(:basic_card).deck))
+
+        expect(rendered).to have_no_button("Recalculate", visible: :all)
+      end
+    end
+
     context "when returning after reaching milestone" do
       it "shows milestone heading" do
         get(deck_study_path(complete_milestone_goal))
@@ -515,6 +581,24 @@ RSpec.describe StudiesController do
       expect(rendered).to have_css("[data-controller='music-study']")
     end
 
+    it "has no study goal" do
+      deck = music_deck
+      create(:music_card, deck:, back: "C4")
+
+      get(deck_study_path(deck))
+
+      expect(rendered).to have_no_css(".session-progress-bar")
+    end
+
+    it "shows the deck's level" do
+      deck = music_deck
+      create(:music_card, deck:, back: "C4")
+
+      get(deck_study_path(deck))
+
+      expect(rendered).to have_css(".level-segments")
+    end
+
     it "wires the wake-lock controller on the study frame" do
       deck = music_deck
       create(:music_card, deck:, back: "C4")
@@ -565,13 +649,13 @@ RSpec.describe StudiesController do
       expect(rendered).to have_css("h2", text: "No cards to study")
     end
 
-    it "shows the milestone prompt when completed reaches the goal" do
+    it "keeps studying past the deck's old study goal" do
       deck = music_deck(study_goal: 1)
       seed_notes(deck, ["C4", "E4"])
       submit_music_window(deck, answer: "C4")
       get(deck_study_path(deck))
 
-      expect(rendered).to have_text("You've completed 1 cards")
+      expect(rendered).to have_css("[data-controller='music-study']")
     end
 
     it "shows the level-complete UI when the last card is answered" do

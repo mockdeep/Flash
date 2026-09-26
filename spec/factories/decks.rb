@@ -6,6 +6,12 @@ FactoryBot.define do
     user { default_user }
     study_goal { 50 }
     distractor_pool { "category" }
+
+    trait(:with_target) do
+      goal_mode { "target" }
+      target_level { 1 }
+      target_date { Date.current }
+    end
   end
 
   factory(:reading_deck, class: "ReadingDeck") do

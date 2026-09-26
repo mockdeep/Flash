@@ -37,6 +37,35 @@ RSpec.describe StudyDay do
 
       expect(study_day.studied_on).to eq(Date.new(2026, 5, 29))
     end
+
+    it "saves the target's goal on a new row" do
+      deck = create(:deck, :with_target)
+      create_list(:basic_card, 2, deck:)
+
+      expect(deck.study_days.today.goal).to eq(2)
+    end
+
+    it "keeps the goal already saved on today's row" do
+      deck = create(:deck, :with_target)
+      create_list(:basic_card, 2, deck:)
+      deck.study_days.create!(studied_on: Date.current, goal: 5)
+
+      expect(deck.study_days.today.goal).to eq(5)
+    end
+  end
+
+  describe "#study_goal" do
+    it "is the saved goal when there is one" do
+      study_day = described_class.new(deck: create(:deck), goal: 5)
+
+      expect(study_day.study_goal).to eq(5)
+    end
+
+    it "falls back to the deck's cards per session" do
+      study_day = described_class.new(deck: create(:deck, study_goal: 30))
+
+      expect(study_day.study_goal).to eq(30)
+    end
   end
 
   describe "#record_completion!" do
@@ -56,6 +85,34 @@ RSpec.describe StudyDay do
 
       expect { study_day.start_batch! }
         .to change_record(study_day, :completed_count).from(5).to(0)
+    end
+  end
+
+  describe "#recalculate!" do
+    def recalculated_day
+      deck = create(:deck, :with_target)
+      create_list(:basic_card, 2, deck:)
+      study_day = deck.study_days.create!(
+        studied_on: Date.current, goal: 5, completed_count: 3,
+      )
+      study_day.recalculate!
+      study_day
+    end
+
+    it "works the goal out again from the target" do
+      expect(recalculated_day.goal).to eq(2)
+    end
+
+    it "starts a new batch" do
+      expect(recalculated_day.completed_count).to eq(0)
+    end
+
+    it "clears the goal when the deck has no target" do
+      study_day =
+        create(:deck).study_days.create!(studied_on: Date.current, goal: 5)
+
+      expect { study_day.recalculate! }
+        .to change_record(study_day, :goal).from(5).to(nil)
     end
   end
 end
