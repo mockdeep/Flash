@@ -7,14 +7,12 @@ module Views
 
       LEVEL_BODY = "You've mastered all the cards at this level."
 
-      attr_accessor :deck, :result, :completed, :study_goal, :demo
+      attr_accessor :deck, :result, :demo
 
-      def initialize(deck:, result:, completed:, study_goal:, demo: false)
+      def initialize(deck:, result:, demo: false)
         super()
         self.deck = deck
         self.result = result
-        self.completed = completed
-        self.study_goal = study_goal
         self.demo = demo
       end
 
@@ -30,17 +28,19 @@ module Views
 
       private
 
+      def render_level_progress
+        div(class: "session-progress") do
+          render(Components::LevelProgress.new(deck:))
+        end
+      end
+
       def render_frame
         if result.level_completed?
           render_level_complete
         else
-          render(progress_component)
+          render_level_progress
           render_card_result
         end
-      end
-
-      def progress_component
-        Components::SessionProgress.new(deck:, completed:, study_goal:)
       end
 
       def render_level_complete

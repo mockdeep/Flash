@@ -87,6 +87,16 @@ RSpec.describe LanguageDeck do
     end
   end
 
+  describe "#not_done_count" do
+    it "counts the entries whose weakest sense is below the given level" do
+      deck = create(:reading_deck, level: 1)
+      create(:language_card, deck:, correct_streak: 1)
+      create(:language_card, deck:, correct_streak: 2)
+
+      expect(deck.not_done_count(2)).to eq(1)
+    end
+  end
+
   describe "#backs" do
     it "rejoins every entry's glosses in membership order" do
       deck = create(:reading_deck)

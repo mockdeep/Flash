@@ -5,14 +5,12 @@ module Views
     class MusicShow < Views::Base
       include StudyFrameData
 
-      attr_accessor :deck, :study, :completed, :study_goal, :demo
+      attr_accessor :deck, :study, :demo
 
-      def initialize(deck:, study:, completed:, study_goal:, demo: false)
+      def initialize(deck:, study:, demo: false)
         super()
         self.deck = deck
         self.study = study
-        self.completed = completed
-        self.study_goal = study_goal
         self.demo = demo
       end
 
@@ -28,6 +26,12 @@ module Views
 
       private
 
+      def render_level_progress
+        div(class: "session-progress") do
+          render(Components::LevelProgress.new(deck:))
+        end
+      end
+
       def render_header
         if demo
           render(Components::DemoBanner.new)
@@ -42,25 +46,13 @@ module Views
         if deck.cards_count.zero?
           render_empty
         else
-          render(progress_component)
-          render_card_or_milestone
+          render_level_progress
+          render(Components::MusicCardBody.new(deck:, cards: study.next_window))
         end
-      end
-
-      def progress_component
-        Components::SessionProgress.new(deck:, completed:, study_goal:)
       end
 
       def empty_body
         "This deck doesn't have any cards yet."
-      end
-
-      def render_card_or_milestone
-        if completed >= study_goal
-          render(Components::SessionMilestone.new(deck:, study_goal:, demo:))
-        else
-          render(Components::MusicCardBody.new(deck:, cards: study.next_window))
-        end
       end
 
       def render_empty

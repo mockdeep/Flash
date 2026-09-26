@@ -3,6 +3,10 @@
 class MusicDeck < Deck
   after_initialize(:default_distractor_pool)
 
+  # A correct answer finishes a whole window of cards but counts as one
+  # completion, so a target's daily goal would overshoot.
+  validates :goal_mode, exclusion: { in: ["target"] }
+
   def self.model_name
     Deck.model_name
   end

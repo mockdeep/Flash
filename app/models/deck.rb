@@ -3,6 +3,7 @@
 class Deck < ApplicationRecord
   VISIBILITIES = ["public", "private"].freeze
   DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
+  GOAL_MODES = ["session", "target"].freeze
   NAME_SOURCE = Arel.sql("COALESCE(decks.name, word_lists.name)")
   GUEST_CARD_LIMIT = 100
 
@@ -56,10 +57,27 @@ class Deck < ApplicationRecord
   attribute(:level, :integer, default: 1)
   attribute(:visibility, :string, default: "private")
 
+  before_validation(:clear_target, unless: :target_mode?)
+
   validates :visibility, inclusion: { in: VISIBILITIES }
   validates :distractor_pool, inclusion: { in: DISTRACTOR_POOLS }
   validates :study_goal,
             numericality: { greater_than_or_equal_to: 1, only_integer: true }
+  validates :goal_mode, inclusion: { in: GOAL_MODES }
+  validates :target_level, :target_date, presence: true, if: :target_mode?
+  # Checked only when set, so a deck that levels up past its target or
+  # outlives its date can still be saved.
+  validates :target_level,
+            numericality: {
+              greater_than_or_equal_to: :level,
+              only_integer: true,
+            },
+            allow_nil: true,
+            if: :will_save_change_to_target_level?
+  validates :target_date,
+            comparison: { greater_than_or_equal_to: -> { Date.current } },
+            allow_nil: true,
+            if: :will_save_change_to_target_date?
   validates :name,
             presence: true,
             uniqueness: { scope: :user_id },
@@ -95,6 +113,22 @@ class Deck < ApplicationRecord
   def study_pool(limit:) = cards.not_done(level).ordered.limit(limit).to_a
 
   def all_done? = cards.not_done(level).none?
+
+  def not_done_count(at_level) = cards.not_done(at_level).count
+
+  def target_mode? = goal_mode == "target"
+
+  def target_active? = target_mode? && level <= target_level
+
+  # Card completions left to finish the target level, spread over the days
+  # left including today. A passed date puts everything left on today.
+  def target_goal
+    return unless target_active?
+
+    work_left = (level..target_level).sum { |at| not_done_count(at) }
+    days_left = [(Date.current..target_date).count, 1].max
+    work_left.fdiv(days_left).ceil
+  end
 
   def backs(except: nil, category: nil)
     scope = category ? cards_in_category(category) : cards
@@ -132,6 +166,11 @@ class Deck < ApplicationRecord
   end
 
   private
+
+  def clear_target
+    self.target_level = nil
+    self.target_date = nil
+  end
 
   # Cards whose studied answer carries the given category, for category-pool
   # distractors. Flat-card families read the card column; language decks

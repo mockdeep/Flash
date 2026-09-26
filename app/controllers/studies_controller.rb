@@ -44,15 +44,14 @@ class StudiesController < ApplicationController
     deck.study_days.today.record_completion! if result.card_completed?
   end
 
+  # Music decks have no study goal, so their views take no session progress.
   def render_study(view, deck:, **args)
-    render(
-      view.new(
-        **args,
-        deck:,
-        completed: deck.study_days.today.completed_count,
-        study_goal: deck.study_goal,
-        demo: current_user.guest?,
-      ),
-    )
+    args.merge!(session_progress(deck)) unless deck.music?
+    render(view.new(**args, deck:, demo: current_user.guest?))
+  end
+
+  def session_progress(deck)
+    study_day = deck.study_days.today
+    { completed: study_day.completed_count, study_goal: study_day.study_goal }
   end
 end

@@ -89,6 +89,74 @@ RSpec.describe Deck do
     end
   end
 
+  def target_attributes
+    { goal_mode: "target", target_level: 1, target_date: Date.current }
+  end
+
+  describe "#goal_mode" do
+    it "defaults to session" do
+      expect(described_class.new.goal_mode).to eq("session")
+    end
+
+    it "validates inclusion" do
+      expect(described_class.new)
+        .to validate_inclusion_of(:goal_mode).in_array(Deck::GOAL_MODES)
+    end
+
+    it "clears the target outside target mode" do
+      deck = create(:deck, **target_attributes)
+
+      expect { deck.update!(goal_mode: "session") }
+        .to change_record(deck, :target_level).to(nil)
+    end
+  end
+
+  describe "#target_level" do
+    it "is required in target mode" do
+      expect(described_class.new(goal_mode: "target"))
+        .to validate_presence_of(:target_level)
+    end
+
+    it "must not be below the deck's level when set" do
+      deck = create(:deck, level: 2)
+
+      expect(deck.update(target_attributes)).to be(false)
+    end
+
+    it "must be a whole number" do
+      deck = create(:deck)
+
+      expect(deck.update(**target_attributes, target_level: 1.5)).to be(false)
+    end
+
+    it "lets the deck level up past it" do
+      deck = create(:deck, **target_attributes)
+
+      expect(deck.update(level: 2)).to be(true)
+    end
+  end
+
+  describe "#target_date" do
+    it "is required in target mode" do
+      expect(described_class.new(goal_mode: "target"))
+        .to validate_presence_of(:target_date)
+    end
+
+    it "must not be in the past when set" do
+      deck = create(:deck)
+
+      expect(deck.update(**target_attributes, target_date: Date.yesterday))
+        .to be(false)
+    end
+
+    it "lets the deck be saved after the date passes" do
+      deck = create(:deck, **target_attributes)
+      travel_to(2.days.from_now)
+
+      expect(deck.update(study_goal: 10)).to be(true)
+    end
+  end
+
   describe ".ordered" do
     it "returns decks sorted by name" do
       zebra = create(:deck, name: "Zebra")
@@ -249,6 +317,67 @@ RSpec.describe Deck do
       create(:basic_card, deck:, correct_streak: 1)
 
       expect(deck.all_done?).to be(false)
+    end
+  end
+
+  describe "#not_done_count" do
+    it "counts the cards whose streak is below the given level" do
+      deck = create(:deck)
+      create(:basic_card, deck:, correct_streak: 1)
+      create(:basic_card, deck:, correct_streak: 2)
+
+      expect(deck.not_done_count(2)).to eq(1)
+    end
+  end
+
+  describe "#target_active?" do
+    it "is false without a target" do
+      expect(described_class.new.target_active?).to be(false)
+    end
+
+    it "is true while the target level is unfinished" do
+      deck = described_class.new(goal_mode: "target", level: 2, target_level: 2)
+
+      expect(deck.target_active?).to be(true)
+    end
+
+    it "is false once the deck has passed the target level" do
+      deck = described_class.new(goal_mode: "target", level: 3, target_level: 2)
+
+      expect(deck.target_active?).to be(false)
+    end
+  end
+
+  describe "#target_goal" do
+    def target_deck(target_date:)
+      deck = create(:deck, :with_target, target_level: 2, target_date:)
+      create_list(:basic_card, 3, deck:, correct_streak: 0)
+      create(:basic_card, deck:, correct_streak: 1)
+      deck
+    end
+
+    it "is nil without an active target" do
+      expect(create(:deck).target_goal).to be_nil
+    end
+
+    it "spreads the work left over the days left, including today" do
+      # 3 cards left at level 1, plus 4 at level 2, over 2 days.
+      deck = target_deck(target_date: Date.tomorrow)
+
+      expect(deck.target_goal).to eq(4)
+    end
+
+    it "puts all the work left on the target date itself" do
+      deck = target_deck(target_date: Date.current)
+
+      expect(deck.target_goal).to eq(7)
+    end
+
+    it "puts all the work left on today once the date has passed" do
+      deck = target_deck(target_date: Date.current)
+      travel_to(3.days.from_now)
+
+      expect(deck.target_goal).to eq(7)
     end
   end
 
