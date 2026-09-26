@@ -151,6 +151,15 @@ RSpec.describe StudiesController do
       expect(rendered).to have_text("0 / 50 completed")
     end
 
+    it "counts completions separately for each deck" do
+      card = create(:basic_card, back: "Paris", correct_streak: 0)
+      create(:basic_card, deck: card.deck)
+      submit_answer(card:, answer: "Paris")
+      get(deck_study_path(create(:basic_card, deck: create(:deck)).deck))
+
+      expect(rendered).to have_text("0 / 50 completed")
+    end
+
     context "when returning after reaching milestone" do
       it "shows milestone heading" do
         get(deck_study_path(complete_milestone_goal))
