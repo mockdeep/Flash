@@ -44,6 +44,7 @@ Metrics/BlockLength:
     - db/schema.rb
     - config/environments/development.rb
 Rails/FilePath: { EnforcedStyle: slashes }
+Rails/SkipsModelValidations: { AllowedMethods: [decrement!, increment!] }
 Metrics/MethodLength: { Exclude: [db/migrate/**/*.rb] }
 RSpec/MultipleExpectations:
   Exclude:

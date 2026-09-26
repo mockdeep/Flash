@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_20_022633) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_26_145824) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -288,6 +288,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_022633) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "study_days", force: :cascade do |t|
+    t.integer "completed_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "deck_id", null: false
+    t.date "studied_on", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deck_id", "studied_on"], name: "index_study_days_on_deck_id_and_studied_on", unique: true
+  end
+
   create_table "subscriptions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "creem_subscription_id"
@@ -356,6 +365,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_022633) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "study_days", "decks", on_delete: :cascade
   add_foreign_key "subscriptions", "users"
   add_foreign_key "topics", "users", on_delete: :cascade
   add_foreign_key "word_lists", "users", on_delete: :cascade

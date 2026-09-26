@@ -43,6 +43,7 @@ class Deck < ApplicationRecord
   belongs_to :user
   belongs_to :topic
   has_many :cards, dependent: :delete_all
+  has_many :study_days, dependent: :delete_all
 
   def self.progress_columns
     sanitize_sql_array([PROGRESS_COLUMNS, { card_limit: GUEST_CARD_LIMIT }])

@@ -7,7 +7,7 @@ class StudiesController < ApplicationController
   def show
     deck = current_user.decks.find(params.expect(:deck_id))
     study = Study.for(deck:, exclude_card_id: params[:exclude])
-    reset_counters
+    deck.study_days.today.start_batch! if params[:reset_session]
     render_study(show_view_class(deck), deck:, study:)
   end
 
@@ -15,7 +15,7 @@ class StudiesController < ApplicationController
     deck = current_user.decks.find(params.expect(:deck_id))
     result = Study.for(deck:).record_answer(params)
     deck.update!(last_studied_at: Time.current)
-    increment_counters(result)
+    record_completion(deck, result)
     if result.reading_passed?
       render_translation_stage(deck, result.card)
     else
@@ -40,16 +40,8 @@ class StudiesController < ApplicationController
     deck.music? ? Views::Studies::MusicUpdate : Views::Studies::Update
   end
 
-  def reset_counters
-    reset_daily_counters
-    return unless params[:reset_session]
-
-    session[:study_completed] = 0
-  end
-
-  def increment_counters(result)
-    reset_daily_counters
-    session[:study_completed] += 1 if result.card_completed?
+  def record_completion(deck, result)
+    deck.study_days.today.record_completion! if result.card_completed?
   end
 
   def render_study(view, deck:, **args)
@@ -57,17 +49,10 @@ class StudiesController < ApplicationController
       view.new(
         **args,
         deck:,
-        completed: session[:study_completed],
+        completed: deck.study_days.today.completed_count,
         study_goal: deck.study_goal,
         demo: current_user.guest?,
       ),
     )
-  end
-
-  def reset_daily_counters
-    return if session[:study_date] == Date.current.to_s
-
-    session[:study_date] = Date.current.to_s
-    session[:study_completed] = 0
   end
 end

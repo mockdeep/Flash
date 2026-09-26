@@ -3,6 +3,7 @@
 RSpec.describe Deck do
   it { is_expected.to belong_to(:user) }
   it { is_expected.to have_many(:cards).dependent(:delete_all) }
+  it { is_expected.to have_many(:study_days).dependent(:delete_all) }
 
   def flat_deck_attributes
     {
