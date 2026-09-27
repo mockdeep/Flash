@@ -769,6 +769,7 @@ A deck can aim to finish a level by a date, and the daily goal is worked out fro
 - **Validation**: `target_level` and `target_date` are required in `"target"` mode, and a `before_validation` clears them in `"session"` mode. Their bounds (level ≥ the deck's, date not past) are checked only when they change, so a deck can still level up past its target or outlive its date.
 - **Maths** (`Deck#target_goal`): work left = for each level from the current one to the target, the cards below it (`not_done_count`, overridden by `LanguageDeck` to read skill_scores), divided by the days left including today, rounded up. A passed date puts all the work left on today.
 - **Saved** on `StudyDay#goal` when today's row is created, and again (with the count reset to 0) by `StudyDay#recalculate!` when the goal mode or target changes, or the dialog's "Recalculate" button is pressed.
+- **Missed** (`Deck#target_missed?`: still active, date before today): the study page's `Components::SessionProgress` shows a prompt under the progress bar with a "Pick a new date" button that opens the goal dialog. Saving a new date (or switching to a daily goal) clears it. Until then, today's goal covers all the work left.
 - A reached target (`level > target_level`) stops being active; tomorrow's row falls back to the hand-set goal.
 - **Not on music decks**: they have no study goal at all (see Music Decks). `MusicDeck` still rejects `goal_mode: "target"` as a guard.
 

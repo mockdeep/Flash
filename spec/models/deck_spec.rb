@@ -348,6 +348,36 @@ RSpec.describe Deck do
     end
   end
 
+  describe "#target_missed?" do
+    def target_deck(level:, target_date:)
+      described_class.new(
+        goal_mode: "target", level:, target_level: 2, target_date:,
+      )
+    end
+
+    it "is true once the date passes with the level unfinished" do
+      deck = target_deck(level: 2, target_date: Date.yesterday)
+
+      expect(deck.target_missed?).to be(true)
+    end
+
+    it "is false on the target date itself" do
+      deck = target_deck(level: 2, target_date: Date.current)
+
+      expect(deck.target_missed?).to be(false)
+    end
+
+    it "is false when the target level was finished" do
+      deck = target_deck(level: 3, target_date: Date.yesterday)
+
+      expect(deck.target_missed?).to be(false)
+    end
+
+    it "is false without a target" do
+      expect(described_class.new.target_missed?).to be(false)
+    end
+  end
+
   describe "#target_goal" do
     def target_deck(target_date:)
       deck = create(:deck, :with_target, target_level: 2, target_date:)
