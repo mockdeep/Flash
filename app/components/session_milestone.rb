@@ -21,10 +21,39 @@ module Components
     def render_actions
       if @demo
         sign_up_link
-        keep_going_link("session-milestone-secondary")
+        keep_going_link
       else
-        keep_going_link("session-milestone-primary")
+        next_deck_action
+        keep_going_link
         done_for_now_link
+      end
+    end
+
+    def next_deck_action
+      next_deck = @deck.user.next_unmet_deck
+      next_deck ? next_deck_link(next_deck) : reset_goals_button
+    end
+
+    def next_deck_link(next_deck)
+      link_to(
+        deck_study_path(next_deck),
+        class: "hotkey-button session-milestone-primary",
+        data: { turbo_frame: "_top", hotkeys_target: "click", hotkey: " " },
+      ) do
+        span { "Next Deck" }
+        span(class: "hotkey-hint") { "[space]" }
+      end
+    end
+
+    def reset_goals_button
+      button_to(
+        study_goal_reset_path,
+        class: "hotkey-button session-milestone-primary",
+        form: { data: { turbo_frame: "_top" } },
+        data: { hotkeys_target: "click", hotkey: " " },
+      ) do
+        span { "Reset All Goals" }
+        span(class: "hotkey-hint") { "[space]" }
       end
     end
 
@@ -37,14 +66,14 @@ module Components
       )
     end
 
-    def keep_going_link(css_class)
+    def keep_going_link
       link_to(
         deck_study_path(@deck, reset_session: true),
-        class: "hotkey-button #{css_class}",
-        data: { hotkeys_target: "click", hotkey: " " },
+        class: "hotkey-button session-milestone-secondary",
+        data: { hotkeys_target: "click", hotkey: "k" },
       ) do
         span { "Keep Going" }
-        span(class: "hotkey-hint") { "[space]" }
+        span(class: "hotkey-hint") { "[k]" }
       end
     end
 
