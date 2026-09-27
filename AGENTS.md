@@ -411,6 +411,7 @@ app/
 │   ├── study_day.rb        # Per-deck, per-day completion count (current batch)
 │   └── subscription.rb
 ├── nulls/
+│   ├── null_topic.rb         # Null-object Topic over a user's un-topiced decks ("Other Decks")
 │   └── null_user.rb          # Null-object User for logged-out / guest requests
 ├── views/                    # Phlex views (inherit from Views::Base)
 │   ├── base.rb               # Base view class (wraps the application layout)
@@ -430,7 +431,7 @@ app/
 │   │   ├── index.rb          # Public deck grid (mic badge for music decks)
 │   │   └── show.rb           # Deck preview + copy action (mic badge in header)
 │   ├── decks/
-│   │   ├── index.rb          # Decks grouped into topic sections + "Other Decks"
+│   │   ├── index.rb          # Decks grouped into topic sections + "Other Decks"; each features its first unmet-goal deck, else its most recently studied
 │   │   ├── new.rb            # Three-way deck-type radio + language select
 │   │   ├── show.rb           # Share-link, topic assignment, replace link, cards table
 │   │   └── replacements/

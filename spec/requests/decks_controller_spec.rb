@@ -149,44 +149,89 @@ RSpec.describe DecksController do
     end
 
     def studied_deck(name, at)
-      create(:deck, user: default_user, name:, last_studied_at: at)
+      create(
+        :deck, user: default_user, name:, last_studied_at: at, goal_mode: "none"
+      )
     end
 
-    it "spotlights the most recently studied deck" do
+    def featured_title(name)
+      have_css(".rail-card--featured .rail-title", text: name)
+    end
+
+    it "features the most recently studied deck when no goal is unmet" do
       login_as(default_user)
-      studied_deck("Old", 2.days.ago)
       studied_deck("New", 1.hour.ago)
+      studied_deck("Old", 2.days.ago)
 
       get(decks_path)
 
-      expect(rendered).to have_css(".rail-card--mru .rail-title", text: "New")
+      expect(rendered).to featured_title("New")
     end
 
-    it "notes when the spotlighted deck was last studied" do
+    it "notes when the featured deck was last studied" do
       login_as(default_user)
-      create(:deck, user: default_user, last_studied_at: 1.hour.ago)
+      studied_deck("Deck", 1.hour.ago)
 
       get(decks_path)
 
       expect(rendered).to have_text("Last studied about 1 hour ago")
     end
 
-    it "keeps the spotlighted deck in its natural position as well" do
+    def seed_unmet_and_recent
+      studied_deck("Recent", 1.hour.ago)
+      create(:deck, user: default_user, name: "Zebra")
+      create(:deck, user: default_user, name: "Apple")
+    end
+
+    it "features the first deck with an unmet goal over a recent one" do
       login_as(default_user)
-      create(:deck, user: default_user, last_studied_at: 1.hour.ago)
+      seed_unmet_and_recent
+
+      get(decks_path)
+
+      expect(rendered).to featured_title("Apple")
+    end
+
+    it "labels a featured deck with an unmet goal as up next" do
+      login_as(default_user)
+      create(:deck, user: default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".featured-label", text: "Up next")
+    end
+
+    def seed_met_and_unmet
+      met = create(:deck, user: default_user, name: "Apple", study_goal: 1)
+      met.study_days.create!(studied_on: Date.current, completed_count: 1)
+      create(:deck, user: default_user, name: "Zebra")
+    end
+
+    it "skips decks that have met today's goal" do
+      login_as(default_user)
+      seed_met_and_unmet
+
+      get(decks_path)
+
+      expect(rendered).to featured_title("Zebra")
+    end
+
+    it "keeps the featured deck in its natural position as well" do
+      login_as(default_user)
+      studied_deck("Deck", 1.hour.ago)
 
       get(decks_path)
 
       expect(rendered).to have_css(".rail-card", count: 2)
     end
 
-    it "renders no spotlight when nothing has been studied" do
+    it "features nothing when no goal is unmet and nothing was studied" do
       login_as(default_user)
-      create(:deck, user: default_user)
+      create(:deck, user: default_user, goal_mode: "none")
 
       get(decks_path)
 
-      expect(rendered).to have_no_css(".rail-card--mru")
+      expect(rendered).to have_no_css(".rail-card--featured")
     end
 
     def mixed_types
@@ -268,18 +313,18 @@ RSpec.describe DecksController do
         .to have_css(".rail-arrow[hidden]", count: 2, visible: :hidden)
     end
 
-    it "spotlights per topic, not across the whole page" do
+    it "features a deck in each topic" do
       login_as(default_user)
-      deck_in_topic("Mandarin").update!(last_studied_at: 1.hour.ago)
+      deck_in_topic("Mandarin")
       deck_in_topic("Music")
 
       get(decks_path)
 
-      expect(rendered).to have_css(".rail-card--mru", count: 1)
+      expect(rendered).to have_css(".rail-card--featured", count: 2)
     end
 
     it "shows filled segments for completed levels" do
-      deck = create(:deck, user: default_user, level: 3)
+      deck = create(:deck, user: default_user, level: 3, goal_mode: "none")
       create(:basic_card, deck:)
       login_as(default_user)
 

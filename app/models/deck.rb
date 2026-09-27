@@ -114,6 +114,8 @@ class Deck < ApplicationRecord
   scope :topic_ordered,
         -> { left_joins(:topic, :word_list).order(TOPIC_NAME, NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
+  scope :recently_studied,
+        -> { where.not(last_studied_at: nil).reorder(last_studied_at: :desc) }
   scope :with_progress, -> { joins(:user).select(progress_columns) }
 
   def music? = false
