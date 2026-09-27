@@ -4,6 +4,7 @@ require "capybara/rails"
 
 require_relative "capybara/rack_test"
 
+Capybara.automatic_label_click = true
 Capybara.enable_aria_label = true
 Capybara.save_path = ENV.fetch("CIRCLE_ARTIFACTS", Capybara.save_path)
 Capybara.server = :puma, { Silent: true }

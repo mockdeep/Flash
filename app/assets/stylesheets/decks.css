@@ -455,20 +455,58 @@
 
 /* Deck type toggle */
 .deck-type-toggle {
+  display: flex;
   border: 0;
   padding: 0;
   margin: 0;
 }
 
 .deck-type-option {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-right: 1.5rem;
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.7rem 0.5rem;
   font-family: var(--font-body);
   font-size: 15px;
-  color: var(--color-text);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-align: center;
   cursor: pointer;
+  background: var(--color-background-elevated);
+  border: 3px solid var(--color-border-dark);
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+
+/* Neighbours overlap by the border width, so each divider is one border. */
+.deck-type-option + .deck-type-option {
+  margin-left: -3px;
+}
+
+.deck-type-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.deck-type-option:hover {
+  color: var(--color-text);
+  background: var(--color-background-subtle);
+}
+
+.deck-type-option:has(:checked) {
+  color: #fff;
+  background: var(--color-primary);
+  box-shadow: inset 0 -4px 0 var(--color-primary-dark);
+}
+
+.deck-type-option:has(:focus-visible) {
+  z-index: 1;
+  outline: 3px solid var(--color-accent);
+  outline-offset: -6px;
 }
 
 /* File Upload */

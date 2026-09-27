@@ -1190,7 +1190,8 @@ body {
   background: var(--color-background);
   border: 3px solid var(--color-border);
   border-radius: 0;
-  transition: all var(--transition);
+  transition: var(--transition);
+  transition-property: border-color, box-shadow;
 }
 
 .form-input::-webkit-inner-spin-button,

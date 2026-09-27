@@ -33,15 +33,27 @@
 }
 
 .edit-card__goal-modes {
+  display: grid;
+  gap: 1.25rem;
+}
+
+/* Every form shares one cell, so the dialog keeps the tallest one's height. */
+.edit-card__goal-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  grid-area: 2 / 1;
 }
 
 .edit-card__goal-modes:not(:has(#goal-mode-none:checked)) .edit-card__goal-form--none,
 .edit-card__goal-modes:not(:has(#goal-mode-session:checked)) .edit-card__goal-form--session,
 .edit-card__goal-modes:not(:has(#goal-mode-target:checked)) .edit-card__goal-form--target {
-  display: none;
+  visibility: hidden;
+}
+
+.edit-card__goal-hint {
+  margin: 0 0 1.25rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
 }
 
 .edit-card__goal-today {
@@ -58,6 +70,10 @@
   justify-content: space-between;
   padding-top: 1.25rem;
   border-top: 2px solid var(--color-background-subtle);
+}
+
+.edit-card__goal-form .edit-card__actions {
+  margin-top: auto;
 }
 
 .edit-card__actions-group {
