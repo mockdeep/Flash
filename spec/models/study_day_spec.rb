@@ -55,10 +55,19 @@ RSpec.describe StudyDay do
   end
 
   describe "#study_goal" do
-    it "is the saved goal when there is one" do
-      study_day = described_class.new(deck: create(:deck), goal: 5)
+    it "is the saved goal while the target is active" do
+      deck = create(:deck, :with_target)
+      study_day = described_class.new(deck:, goal: 5)
 
       expect(study_day.study_goal).to eq(5)
+    end
+
+    it "ignores the saved goal once the target level is finished" do
+      deck = create(:deck, :with_target, study_goal: 30)
+      deck.update!(level: 2)
+      study_day = described_class.new(deck:, goal: 5)
+
+      expect(study_day.study_goal).to eq(30)
     end
 
     it "falls back to the deck's cards per session" do

@@ -17,7 +17,7 @@ class StudyDay < ApplicationRecord
     end
   end
 
-  def study_goal = goal || deck.study_goal
+  def study_goal = (goal if deck.target_active?) || deck.study_goal
 
   def record_completion! = increment!(:completed_count)
 

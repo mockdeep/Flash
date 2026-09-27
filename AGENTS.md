@@ -352,6 +352,7 @@ app/
 │   ├── study_goal_dialog.rb      # Edit daily study-goal dialog
 │   ├── table.rb                  # `.table` pattern; block fills each row via `table.cell`
 │   ├── target_goal_fields.rb     # Level-target fields + today's goal and Recalculate
+│   ├── target_prompt.rb          # Missed / reached level-target note under the progress bar
 │   └── text_csv_instructions.rb  # CSV format help block for text decks
 ├── domain/
 │   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
@@ -769,8 +770,9 @@ A deck can aim to finish a level by a date, and the daily goal is worked out fro
 - **Validation**: `target_level` and `target_date` are required in `"target"` mode, and a `before_validation` clears them in `"session"` mode. Their bounds (level ≥ the deck's, date not past) are checked only when they change, so a deck can still level up past its target or outlive its date.
 - **Maths** (`Deck#target_goal`): work left = for each level from the current one to the target, the cards below it (`not_done_count`, overridden by `LanguageDeck` to read skill_scores), divided by the days left including today, rounded up. A passed date puts all the work left on today.
 - **Saved** on `StudyDay#goal` when today's row is created, and again (with the count reset to 0) by `StudyDay#recalculate!` when the goal mode or target changes, or the dialog's "Recalculate" button is pressed.
-- **Missed** (`Deck#target_missed?`: still active, date before today): the study page's `Components::SessionProgress` shows a prompt under the progress bar with a "Pick a new date" button that opens the goal dialog. Saving a new date (or switching to a daily goal) clears it. Until then, today's goal covers all the work left.
-- A reached target (`level > target_level`) stops being active; tomorrow's row falls back to the hand-set goal.
+- **Prompts** (`Components::TargetPrompt`, rendered inside `SessionProgress` on the study page so its buttons can open the goal dialog). Both states are worked out from the deck's columns; nothing is recorded.
+  - **Missed** (`Deck#target_missed?`: still active, date before today): "Pick a new date". Saving a new date (or switching to a daily goal) clears it. Until then, today's goal covers all the work left.
+  - **Reached** (`Deck#target_reached?`: level past the target level): "Set next target" opens the dialog; "Not now" switches the deck back to its daily goal. A reached target is no longer active, so `StudyDay#study_goal` falls back to the hand-set goal straight away.
 - **Not on music decks**: they have no study goal at all (see Music Decks). `MusicDeck` still rejects `goal_mode: "target"` as a guard.
 
 ### Subscription Transparency
