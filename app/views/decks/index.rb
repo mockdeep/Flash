@@ -201,28 +201,19 @@ module Views
           class: classes,
           data: { filter_value: deck.type_label, filter_target: "item" },
         ) do
-          remaining = deck.remaining_count
-          render_study_link(deck, remaining)
           div(class: "featured-label") { featured_label } if featured_label
           div(class: "rail-type") { deck.type_label }
           render_rail_title(deck)
           render(Components::LevelProgress.new(deck:))
-          render_rail_meta(deck, remaining)
+          render_rail_meta(deck, deck.remaining_count)
         end
-      end
-
-      def render_study_link(deck, remaining)
-        return if deck.cards_count.zero?
-
-        label = remaining.zero? ? "Review →" : "Study →"
-        link_to(label, deck_study_path(deck), class: "rail-card-study")
       end
 
       # Language decks title with the word_list's base name (a reverse deck
       # drops its "(reversed)" suffix on the shared rail card).
       def render_rail_title(deck)
         h3(class: "rail-title") do
-          link_to(deck.word_list&.name || deck.name, deck_path(deck))
+          link_to(deck.word_list&.name || deck.name, deck_study_path(deck))
           catalog_badge if deck.publicly_visible?
         end
       end
