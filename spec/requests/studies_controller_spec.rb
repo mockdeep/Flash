@@ -167,6 +167,30 @@ RSpec.describe StudiesController do
         deck
       end
 
+      it "does not prompt for a new date before the date passes" do
+        get(deck_study_path(target_deck))
+
+        expect(rendered).to have_no_button("Pick a new date")
+      end
+
+      def missed_deck
+        deck = target_deck
+        travel_to(2.days.from_now)
+        deck
+      end
+
+      it "says when the target date was missed" do
+        get(deck_study_path(missed_deck))
+
+        expect(rendered).to have_text("You didn't finish level 1 by")
+      end
+
+      it "prompts for a new date once the target date has passed" do
+        get(deck_study_path(missed_deck))
+
+        expect(rendered).to have_button("Pick a new date")
+      end
+
       it "uses the target's goal on the progress bar" do
         get(deck_study_path(target_deck))
 

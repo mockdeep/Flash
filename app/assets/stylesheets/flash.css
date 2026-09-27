@@ -226,6 +226,14 @@ body {
   background: var(--color-background-elevated);
 }
 
+.session-progress .accent-box__content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  align-items: center;
+  justify-content: space-between;
+}
+
 /* Session progress bars */
 .session-progress-bar progress {
   height: 16px;
@@ -1141,7 +1149,8 @@ body {
     display: contents;
   }
 
-  .session-progress .level-track {
+  .session-progress .level-track,
+  .session-progress .accent-box {
     grid-column: 1 / -1;
   }
 
