@@ -6,6 +6,21 @@ module Components
   # its own goal_mode, so the dialog can show one and hide the rest with CSS
   # alone.
   class GoalForm < Components::Base
+    HINTS = {
+      "none" => <<~TEXT,
+        Study as much as you like. The study page counts the cards you finish
+        today.
+      TEXT
+      "session" => <<~TEXT,
+        Study the same number of cards each day. The study page shows how
+        close you are.
+      TEXT
+      "target" => <<~TEXT,
+        Pick a level to finish and a date to finish it by. Each day's goal is
+        worked out for you.
+      TEXT
+    }.freeze
+
     def initialize(deck:, mode:, study_goal:)
       super()
       @deck = deck
@@ -16,6 +31,7 @@ module Components
     def view_template
       form_with(**form_options) do |form|
         form.hidden_field(:goal_mode, value: @mode)
+        p(class: "edit-card__goal-hint") { HINTS[@mode] }
         render_fields(form)
         render_actions(form)
       end

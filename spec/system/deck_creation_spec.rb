@@ -12,13 +12,18 @@ RSpec.describe "the deck-creation form" do
   it "offers no Language deck type" do
     visit_new_deck
 
-    expect(page).to have_no_field("Language")
+    expect(page).to have_no_field("Language", visible: :all)
   end
 
-  it "offers Basic and Music" do
+  it "offers Basic" do
     visit_new_deck
 
-    expect(page)
-      .to(have_field("Basic").and(have_field("Music (microphone required)")))
+    expect(page).to have_field("Basic", visible: :all)
+  end
+
+  it "offers Music" do
+    visit_new_deck
+
+    expect(page).to have_field("Music (microphone required)", visible: :all)
   end
 end
