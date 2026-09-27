@@ -282,6 +282,53 @@ RSpec.describe StudiesController do
       end
     end
 
+    context "when the deck has no goal" do
+      def no_goal_deck
+        deck = create(:deck, goal_mode: "none", study_goal: 1)
+        create_list(:basic_card, 2, deck:, back: "Paris")
+        deck
+      end
+
+      it "shows the count of cards completed" do
+        get(deck_study_path(no_goal_deck))
+
+        expect(rendered).to have_text("0 completed today")
+      end
+
+      it "offers to set a goal" do
+        get(deck_study_path(no_goal_deck))
+
+        expect(rendered).to have_button("set goal")
+      end
+
+      it "does not show a progress bar" do
+        get(deck_study_path(no_goal_deck))
+
+        expect(rendered).to have_no_css("progress")
+      end
+
+      it "picks the no goal mode" do
+        get(deck_study_path(no_goal_deck))
+
+        expect(rendered).to have_checked_field("No goal", visible: :all)
+      end
+
+      it "submits the no goal form in none mode" do
+        get(deck_study_path(no_goal_deck))
+        selector = "#none_deck_goal_mode[value=none]"
+
+        expect(rendered).to have_css(selector, visible: :all)
+      end
+
+      it "keeps studying past the deck's study goal" do
+        deck = no_goal_deck
+        submit_answer(card: deck.cards.first, answer: "Paris")
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_no_text("You've completed")
+      end
+    end
+
     context "when returning after reaching milestone" do
       it "shows milestone heading" do
         get(deck_study_path(complete_milestone_goal))

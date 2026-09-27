@@ -38,6 +38,29 @@ RSpec.describe "studying a deck" do
     expect(page).to have_no_text("You've completed 1 cards")
   end
 
+  def switch_to_no_goal
+    visit_deck_with_goal_of_one
+    click_on("1", class: "milestone-goal-trigger")
+    choose("No goal")
+    within(".edit-card__goal-form--none") { click_on("Save") }
+  end
+
+  def visit_deck_with_goal_of_one
+    deck = create(:deck, user: default_user, study_goal: 1)
+    create_list(:basic_card, 2, deck:, back: "Paris", correct_streak: 0)
+    sign_in(default_user)
+    visit(deck_study_path(deck))
+  end
+
+  it "keeps studying without a milestone after switching to no goal" do
+    switch_to_no_goal
+    click_on("Paris", match: :first)
+    click_on("Next Card")
+
+    expect(page).to have_text("1 completed")
+    expect(page).to have_no_text("You've completed")
+  end
+
   context "with example sentences on a card" do
     def visit_card_with_example
       default_deck.update!(level: 2)

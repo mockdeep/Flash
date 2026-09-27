@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 module Components
-  # One of the study-goal dialog's forms: a hand-set daily goal ("session")
-  # or a level target ("target"). Each is a whole form with its own
-  # goal_mode, so the dialog can show one and hide the other with CSS alone.
+  # One of the study-goal dialog's forms: no goal ("none"), a hand-set daily
+  # goal ("session"), or a level target ("target"). Each is a whole form with
+  # its own goal_mode, so the dialog can show one and hide the rest with CSS
+  # alone.
   class GoalForm < Components::Base
     def initialize(deck:, mode:, study_goal:)
       super()
@@ -15,14 +16,14 @@ module Components
     def view_template
       form_with(**form_options) do |form|
         form.hidden_field(:goal_mode, value: @mode)
-        div(class: "edit-card__fields") { render_fields(form) }
+        render_fields(form)
         render_actions(form)
       end
     end
 
     private
 
-    # The namespace keeps field ids unique across the dialog's two forms.
+    # The namespace keeps field ids unique across the dialog's forms.
     def form_options
       {
         model: @deck,
@@ -33,16 +34,20 @@ module Components
       }
     end
 
+    # The no-goal form has no fields, only its goal_mode.
     def render_fields(form)
-      if @mode == "target"
-        render(
-          Components::TargetGoalFields.new(
-            form:, deck: @deck, study_goal: @study_goal,
-          ),
-        )
-      else
-        study_goal_field(form)
+      case @mode
+      when "target" then fields { render(target_fields(form)) }
+      when "session" then fields { study_goal_field(form) }
       end
+    end
+
+    def fields(&) = div(class: "edit-card__fields", &)
+
+    def target_fields(form)
+      Components::TargetGoalFields.new(
+        form:, deck: @deck, study_goal: @study_goal,
+      )
     end
 
     def study_goal_field(form)

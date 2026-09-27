@@ -330,6 +330,16 @@ RSpec.describe Deck do
     end
   end
 
+  describe "#no_goal?" do
+    it "is true in no-goal mode" do
+      expect(described_class.new(goal_mode: "none").no_goal?).to be(true)
+    end
+
+    it "is false with a daily goal" do
+      expect(described_class.new.no_goal?).to be(false)
+    end
+  end
+
   describe "#target_active?" do
     it "is false without a target" do
       expect(described_class.new.target_active?).to be(false)

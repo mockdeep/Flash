@@ -3,7 +3,7 @@
 class Deck < ApplicationRecord
   VISIBILITIES = ["public", "private"].freeze
   DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
-  GOAL_MODES = ["session", "target"].freeze
+  GOAL_MODES = ["none", "session", "target"].freeze
   NAME_SOURCE = Arel.sql("COALESCE(decks.name, word_lists.name)")
   GUEST_CARD_LIMIT = 100
 
@@ -117,6 +117,8 @@ class Deck < ApplicationRecord
   def not_done_count(at_level) = cards.not_done(at_level).count
 
   def target_mode? = goal_mode == "target"
+
+  def no_goal? = goal_mode == "none"
 
   def target_active? = target_mode? && level <= target_level
 
