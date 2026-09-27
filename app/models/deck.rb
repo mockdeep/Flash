@@ -122,6 +122,8 @@ class Deck < ApplicationRecord
 
   def target_missed? = target_active? && target_date < Date.current
 
+  def target_reached? = target_mode? && level > target_level
+
   # Card completions left to finish the target level, spread over the days
   # left including today. A passed date puts everything left on today.
   def target_goal

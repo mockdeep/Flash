@@ -378,6 +378,24 @@ RSpec.describe Deck do
     end
   end
 
+  describe "#target_reached?" do
+    it "is true once the deck has passed the target level" do
+      deck = described_class.new(goal_mode: "target", level: 3, target_level: 2)
+
+      expect(deck.target_reached?).to be(true)
+    end
+
+    it "is false while the target level is unfinished" do
+      deck = described_class.new(goal_mode: "target", level: 2, target_level: 2)
+
+      expect(deck.target_reached?).to be(false)
+    end
+
+    it "is false without a target" do
+      expect(described_class.new.target_reached?).to be(false)
+    end
+  end
+
   describe "#target_goal" do
     def target_deck(target_date:)
       deck = create(:deck, :with_target, target_level: 2, target_date:)

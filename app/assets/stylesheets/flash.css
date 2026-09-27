@@ -234,6 +234,12 @@ body {
   justify-content: space-between;
 }
 
+.target-prompt__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
 /* Session progress bars */
 .session-progress-bar progress {
   height: 16px;

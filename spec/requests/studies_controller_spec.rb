@@ -191,6 +191,38 @@ RSpec.describe StudiesController do
         expect(rendered).to have_button("Pick a new date")
       end
 
+      def reached_deck
+        deck = target_deck
+        deck.update!(level: 2)
+        deck
+      end
+
+      it "congratulates the learner once the target level is finished" do
+        get(deck_study_path(reached_deck))
+
+        expect(rendered).to have_text("You finished level 1!")
+      end
+
+      it "offers to set the next target once the level is finished" do
+        get(deck_study_path(reached_deck))
+
+        expect(rendered).to have_button("Set next target")
+      end
+
+      it "lets the learner go back to a daily goal once it's finished" do
+        get(deck_study_path(reached_deck))
+
+        expect(rendered).to have_button("Not now")
+      end
+
+      it "switches back to a daily goal from Not now" do
+        get(deck_study_path(reached_deck))
+        selector = ".target-prompt__actions " \
+                   "input[name='deck[goal_mode]'][value=session]"
+
+        expect(rendered).to have_css(selector, visible: :all)
+      end
+
       it "uses the target's goal on the progress bar" do
         get(deck_study_path(target_deck))
 
