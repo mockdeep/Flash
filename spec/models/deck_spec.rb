@@ -277,6 +277,21 @@ RSpec.describe Deck do
     end
   end
 
+  describe ".recently_studied" do
+    it "orders studied decks most recent first" do
+      old = create(:deck, last_studied_at: 2.days.ago)
+      new = create(:deck, last_studied_at: 1.hour.ago)
+
+      expect(described_class.recently_studied).to eq([new, old])
+    end
+
+    it "excludes decks never studied" do
+      deck = create(:deck, last_studied_at: nil)
+
+      expect(described_class.recently_studied).not_to include(deck)
+    end
+  end
+
   def level_two_deck
     deck = create(:deck, level: 2)
     create(:basic_card, deck:, correct_streak: 2)

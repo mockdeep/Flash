@@ -174,13 +174,13 @@
   scroll-snap-align: start;
 }
 
-.rail-card--mru {
+.rail-card--featured {
   flex-basis: 220px;
   border-color: var(--color-primary);
   box-shadow: 4px 4px 0 -1px var(--color-background), 4px 4px 0 0 var(--color-primary-dark);
 }
 
-.rail-card--mru::before {
+.rail-card--featured::before {
   content: '';
   position: absolute;
   top: 0;
@@ -201,7 +201,7 @@
   background: var(--color-border);
 }
 
-.mru-label {
+.featured-label {
   margin: 0.2rem 0 0.35rem;
   padding-right: 3.2rem;
   font-family: var(--font-mono);

@@ -5,13 +5,6 @@ module Views
     class Index < Views::Base
       include Phlex::Rails::Helpers::TimeAgoInWords
 
-      attr_accessor :decks
-
-      def initialize(decks:)
-        super()
-        self.decks = decks
-      end
-
       def view_template
         div(class: "decks-container") do
           div(class: "decks-header") do
@@ -22,7 +15,7 @@ module Views
             end
           end
 
-          if decks.empty?
+          if current_user.decks.none?
             render_empty_state
           else
             render_deck_sections
@@ -47,22 +40,22 @@ module Views
       # an "Other Decks" heading only when there are topics to distinguish
       # them from.
       def render_deck_sections
-        grouped = decks.group_by(&:topic)
-        topics = grouped.keys.compact.sort_by(&:name)
-        loose = grouped[nil] || []
-
-        topics.each do |topic|
-          render_topic_section(topic.name, grouped[topic], "topic-#{topic.id}")
+        topics = current_user.topics.where.associated(:decks).distinct
+        topics.order(:name).each do |topic|
+          render_topic_section(topic, "topic-#{topic.id}")
         end
-        return if loose.empty?
 
-        render_topic_section(topics.any? ? "Other Decks" : nil, loose, "other")
+        other = NullTopic.new(user: current_user)
+        return if other.decks.none?
+
+        render_topic_section(other, "other", heading: topics.any?)
       end
 
       # The filter key names the remembered tab in localStorage, so it has to
       # stay stable across visits, not across users -- localStorage is already
       # per-browser.
-      def render_topic_section(title, section_decks, section_id)
+      def render_topic_section(topic, section_id, heading: true)
+        section_decks = topic.decks.ordered.with_progress
         section(
           class: "topic-section",
           data: {
@@ -73,7 +66,7 @@ module Views
                     "filter:applied->rail#syncArrows",
           },
         ) do
-          render_section_heading(title, section_decks) if title
+          render_section_heading(topic.name, section_decks) if heading
           render_rail_tabs(section_decks)
           render_rail_wrap(section_decks)
         end
@@ -144,15 +137,15 @@ module Views
         end
       end
 
-      # The most recently studied deck repeats at the head of the rail as a
-      # spotlight; the copy in its natural slot stays put so the list order
-      # never shifts underneath the reader.
+      # The featured deck repeats at the head of the rail; the copy in its
+      # natural slot stays put so the list order never shifts underneath the
+      # reader.
       def render_rail(section_decks)
         div(
           class: "rail",
           data: { rail_target: "rail", action: "scroll->rail#syncArrows" },
         ) do
-          render_mru_spotlight(section_decks)
+          render_featured(section_decks)
 
           deck_sets(section_decks).each_with_index do |set_decks, set_index|
             set_decks.each_with_index do |deck, deck_index|
@@ -174,23 +167,33 @@ module Views
           end
       end
 
-      # The divider carries the spotlight deck's type so the two hide together
-      # when a tab filters that type out.
-      def render_mru_spotlight(section_decks)
-        mru = section_decks.select(&:last_studied_at).max_by(&:last_studied_at)
-        return if mru.nil?
+      # Name order matches User#next_unmet_deck within a topic, so the
+      # milestone's Next Deck and the featured deck agree.
+      def render_featured(section_decks)
+        unmet = section_decks.goal_unmet_today.first
+        return render_featured_card(unmet, "→ Up next") if unmet
 
-        render_rail_card(mru, mru: true)
+        recent = section_decks.recently_studied.first
+        return if recent.nil?
+
+        ago = time_ago_in_words(recent.last_studied_at)
+        render_featured_card(recent, "↻ Last studied #{ago} ago")
+      end
+
+      # The divider carries the featured deck's type so the two hide together
+      # when a tab filters that type out.
+      def render_featured_card(deck, label)
+        render_rail_card(deck, featured_label: label)
         div(
           class: "rail-divider",
-          data: { filter_value: mru.type_label, filter_target: "item" },
+          data: { filter_value: deck.type_label, filter_target: "item" },
         )
       end
 
-      def render_rail_card(deck, mru: false, set_start: false)
+      def render_rail_card(deck, featured_label: nil, set_start: false)
         classes = [
           "rail-card",
-          ("rail-card--mru" if mru),
+          ("rail-card--featured" if featured_label),
           ("rail-card--set-start" if set_start),
         ].compact.join(" ")
 
@@ -200,7 +203,7 @@ module Views
         ) do
           remaining = deck.remaining_count
           render_study_link(deck, remaining)
-          render_mru_label(deck) if mru
+          div(class: "featured-label") { featured_label } if featured_label
           div(class: "rail-type") { deck.type_label }
           render_rail_title(deck)
           render(Components::LevelProgress.new(deck:))
@@ -213,12 +216,6 @@ module Views
 
         label = remaining.zero? ? "Review →" : "Study →"
         link_to(label, deck_study_path(deck), class: "rail-card-study")
-      end
-
-      def render_mru_label(deck)
-        div(class: "mru-label") do
-          "↻ Last studied #{time_ago_in_words(deck.last_studied_at)} ago"
-        end
       end
 
       # Language decks title with the word_list's base name (a reverse deck
