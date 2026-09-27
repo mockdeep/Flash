@@ -100,32 +100,13 @@ RSpec.describe DecksController do
       expect(rendered).to have_css(".rail-type", text: "Basic")
     end
 
-    it "links the deck name to the deck page" do
+    it "links the deck name to its study page" do
       deck = create(:deck, user: default_user)
       login_as(default_user)
 
       get(decks_path)
 
-      expect(rendered).to have_link(deck.name, href: deck_path(deck))
-    end
-
-    it "links each deck with pending cards to its study page" do
-      deck = create(:deck, user: default_user)
-      create(:basic_card, deck:)
-      login_as(default_user)
-
-      get(decks_path)
-
-      expect(rendered).to have_link("Study →", href: deck_study_path(deck))
-    end
-
-    it "omits the study link for a deck with no cards" do
-      create(:deck, user: default_user)
-      login_as(default_user)
-
-      get(decks_path)
-
-      expect(rendered).to have_no_link("Study →")
+      expect(rendered).to have_link(deck.name, href: deck_study_path(deck))
     end
 
     it "shows Done for a deck whose cards are all done" do
@@ -136,16 +117,6 @@ RSpec.describe DecksController do
       get(decks_path)
 
       expect(rendered).to have_text("Done ✓")
-    end
-
-    it "offers Review instead of Study when a deck is done" do
-      deck = create(:deck, user: default_user)
-      create(:basic_card, deck:, correct_streak: 1)
-      login_as(default_user)
-
-      get(decks_path)
-
-      expect(rendered).to have_link("Review →", href: deck_study_path(deck))
     end
 
     def studied_deck(name, at)
