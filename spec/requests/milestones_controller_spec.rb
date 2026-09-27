@@ -71,6 +71,14 @@ RSpec.describe MilestonesController do
       expect(deck.study_days.sole.goal).to be_nil
     end
 
+    it "switches the deck to no goal" do
+      login_as(default_user)
+      deck = create(:deck)
+
+      expect { update_milestone(deck, deck: { goal_mode: "none" }) }
+        .to change_record(deck, :goal_mode).to("none")
+    end
+
     it "recalculates on request" do
       login_as(default_user)
       deck = target_deck(:with_target)

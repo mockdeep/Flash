@@ -2,7 +2,11 @@
 
 module Components
   class StudyGoalDialog < Components::Base
-    MODES = { "session" => "Daily goal", "target" => "Target date" }.freeze
+    MODES = {
+      "none" => "No goal",
+      "session" => "Daily goal",
+      "target" => "Target date",
+    }.freeze
 
     def initialize(deck:, study_goal:)
       super()

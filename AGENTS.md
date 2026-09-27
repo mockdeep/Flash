@@ -202,7 +202,7 @@ end
 - `decks.css` - Deck listing, deck form, and deck-show page (incl. `.deck-share-*` block)
 - `demo-banner.css` - Demo-mode banner
 - `dialog.css` - Modal dialog component styles (`.dialog`, `.dialog__header`, etc.)
-- `edit-card.css` - Edit card trigger button and form layout within the dialog (also the study-goal dialog's goal-mode forms, toggled with `:has()`)
+- `edit-card.css` - Edit card trigger button and form layout within the dialog (also the study-goal dialog's three goal-mode forms, toggled with `:has()`)
 - `flash.css` - Study/flashcard core (card front + kebab menu, answers grid, `.card-reading`)
 - `layout.css` - Header, footer, navigation
 - `music-study.css` - Mic-driven music study UI
@@ -231,7 +231,7 @@ end
 - `Pairing` - Join between a Front `item` and a Back `paired_item` (one row per gloss).
 - `ItemDistractor` - Join marking a Back item as a preset distractor for a Front `item`. The language-side counterpart of `CardDistractor`.
 - `CardDistractor` - A wrong-answer option owned directly by a flat card (uploaded presets and remembered study misses). Unique on `[card_id, text]`.
-- `Deck` (STI base) - A study form. `belongs_to :user`, `belongs_to :topic` (optional), and `belongs_to :word_list` — required *unless* `flat_cards?`, forbidden *if* it is (the presence/absence pair is what keeps the two content models apart). Flat families own a `name` column (unique per user); language decks delegate `name` to the word_list, and the `ordered` scope COALESCEs the two. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"` / `"preset"` / `"none"`, NOT NULL — set by the importer), `ordered`, `study_goal`, `last_studied_at`, nullable `share_token`, and `goal_mode` (`"session"` / `"target"`) with its level target (`target_level` + `target_date` — "finish level N by date"; see Level Targets).
+- `Deck` (STI base) - A study form. `belongs_to :user`, `belongs_to :topic` (optional), and `belongs_to :word_list` — required *unless* `flat_cards?`, forbidden *if* it is (the presence/absence pair is what keeps the two content models apart). Flat families own a `name` column (unique per user); language decks delegate `name` to the word_list, and the `ordered` scope COALESCEs the two. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"` / `"preset"` / `"none"`, NOT NULL — set by the importer), `ordered`, `study_goal`, `last_studied_at`, nullable `share_token`, and `goal_mode` (`"none"` / `"session"` / `"target"`) with its level target (`target_level` + `target_date` — "finish level N by date"; see Level Targets). In `"none"` mode the study page shows a plain "N completed today" count with a "set goal" button instead of the progress bar, and never shows the milestone.
 - `Card` (STI base) - `belongs_to :deck`, `belongs_to :item` (nullable — flat cards have none), `belongs_to :source_card` (catalog-copy provenance). `has_many :card_distractors`. Owns the content columns and the progress counters (`correct_count`, `correct_streak`, `view_count`), and holds the score handle (`record_correct!`, `record_miss!`, `record_view!`). `normalizes :back` is the single back-joining rule. Unique on `[deck_id, front]` where `front` is present.
 - `StudyDay` - Cards a deck completed on one day (`studied_on`, in the owner's time zone), unique on `[deck_id, studied_on]`. `completed_count` counts the current batch and drives the progress bar; the milestone's "Keep Going" starts a new batch by resetting it to 0. `goal` holds the day's goal worked out from a level target (nil without one; `#study_goal` falls back to the deck's). `deck.study_days.today` finds or creates the row.
 - `Subscription` - Payment/subscription info, belongs to user.
@@ -341,7 +341,7 @@ app/
 │   ├── demo_banner.rb            # Demo-mode banner
 │   ├── error_explanation.rb      # Styled validation-error box
 │   ├── fuzzy_find_answers.rb     # Typed-answer input for fuzzy-find mode (level 3+)
-│   ├── goal_form.rb              # One study-goal form per goal mode (daily goal / target date)
+│   ├── goal_form.rb              # One study-goal form per goal mode (no goal / daily goal / target date)
 │   ├── level_progress.rb         # Deck level indicator (LEVELS = 3)
 │   ├── music_card_body.rb        # Mic-driven music study widget
 │   ├── music_csv_instructions.rb # CSV format help block for music decks
@@ -766,8 +766,8 @@ The study engine (`app/domain/study.rb`) manages card selection and answer proce
 ### Level Targets
 
 A deck can aim to finish a level by a date, and the daily goal is worked out from it instead of set by hand:
-- **Set** in the study-goal dialog (`Components::StudyGoalDialog` → `MilestonesController#update`). It holds two whole forms (`Components::GoalForm`, one per `deck.goal_mode`, each with a hidden `goal_mode` field and a `namespace:` for unique ids) and a "Daily goal" / "Target date" radio pair outside both forms. A `:has()` rule in `edit-card.css` shows the form matching the checked radio, so no JS is involved and the hidden form never submits. The target form's fields are `Components::TargetGoalFields` ("Finish level", "By date", and today's goal with a Recalculate button once a target is saved).
-- **Validation**: `target_level` and `target_date` are required in `"target"` mode, and a `before_validation` clears them in `"session"` mode. Their bounds (level ≥ the deck's, date not past) are checked only when they change, so a deck can still level up past its target or outlive its date.
+- **Set** in the study-goal dialog (`Components::StudyGoalDialog` → `MilestonesController#update`). It holds three whole forms (`Components::GoalForm`, one per `deck.goal_mode`, each with a hidden `goal_mode` field and a `namespace:` for unique ids; the "none" form has no fields) and a "No goal" / "Daily goal" / "Target date" radio set outside the forms. A `:has()` rule in `edit-card.css` shows the form matching the checked radio, so no JS is involved and the hidden form never submits. The target form's fields are `Components::TargetGoalFields` ("Finish level", "By date", and today's goal with a Recalculate button once a target is saved).
+- **Validation**: `target_level` and `target_date` are required in `"target"` mode, and a `before_validation` clears them in the other modes. Their bounds (level ≥ the deck's, date not past) are checked only when they change, so a deck can still level up past its target or outlive its date.
 - **Maths** (`Deck#target_goal`): work left = for each level from the current one to the target, the cards below it (`not_done_count`, overridden by `LanguageDeck` to read skill_scores), divided by the days left including today, rounded up. A passed date puts all the work left on today.
 - **Saved** on `StudyDay#goal` when today's row is created, and again (with the count reset to 0) by `StudyDay#recalculate!` when the goal mode or target changes, or the dialog's "Recalculate" button is pressed.
 - **Prompts** (`Components::TargetPrompt`, rendered inside `SessionProgress` on the study page so its buttons can open the goal dialog). Both states are worked out from the deck's columns; nothing is recorded.

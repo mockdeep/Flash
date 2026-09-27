@@ -49,7 +49,7 @@ module Views
               Components::SessionProgress.new(deck:, completed:, study_goal:),
             )
 
-            if completed >= study_goal
+            if goal_reached?
               render(Components::SessionMilestone.new(deck:, study_goal:, demo:))
             else
               card = study.next_card
@@ -73,6 +73,8 @@ module Views
       end
 
       private
+
+      def goal_reached? = !deck.no_goal? && completed >= study_goal
 
       def render_active_card(card)
         answers = study.possible_answers

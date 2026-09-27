@@ -38,8 +38,9 @@
   gap: 1.25rem;
 }
 
-.edit-card__goal-modes:has(#goal-mode-session:checked) .edit-card__goal-form--target,
-.edit-card__goal-modes:has(#goal-mode-target:checked) .edit-card__goal-form--session {
+.edit-card__goal-modes:not(:has(#goal-mode-none:checked)) .edit-card__goal-form--none,
+.edit-card__goal-modes:not(:has(#goal-mode-session:checked)) .edit-card__goal-form--session,
+.edit-card__goal-modes:not(:has(#goal-mode-target:checked)) .edit-card__goal-form--target {
   display: none;
 }
 

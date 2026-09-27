@@ -12,7 +12,7 @@ module Components
     def view_template
       div(class: "session-progress", data: { controller: "dialog" }) do
         render(Components::LevelProgress.new(deck: @deck))
-        render_session_bar
+        @deck.no_goal? ? render_count : render_session_bar
         render(Components::TargetPrompt.new(deck: @deck))
       end
     end
@@ -23,10 +23,22 @@ module Components
       div(class: progress_bar_classes) do
         render_progress_bar
         render_progress_label
-        render(
-          Components::StudyGoalDialog.new(deck: @deck, study_goal: @study_goal),
-        )
+        render(goal_dialog)
       end
+    end
+
+    def render_count
+      div(class: "progress-label") do
+        plain("#{@completed} completed")
+        span(class: "progress-label__suffix") { " today" }
+        plain(" · ")
+        goal_trigger("set goal")
+      end
+      render(goal_dialog)
+    end
+
+    def goal_dialog
+      Components::StudyGoalDialog.new(deck: @deck, study_goal: @study_goal)
     end
 
     def render_progress_bar
@@ -46,13 +58,17 @@ module Components
     def render_progress_label
       div(class: "progress-label") do
         plain("#{@completed} / ")
-        button(
-          type: "button",
-          class: "milestone-goal-trigger",
-          data: { action: "click->dialog#open" },
-        ) { @study_goal.to_s }
+        goal_trigger(@study_goal.to_s)
         span(class: "progress-label__suffix") { " completed" }
       end
+    end
+
+    def goal_trigger(text)
+      button(
+        type: "button",
+        class: "milestone-goal-trigger",
+        data: { action: "click->dialog#open" },
+      ) { text }
     end
   end
 end
