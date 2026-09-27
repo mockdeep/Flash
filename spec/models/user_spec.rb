@@ -159,6 +159,41 @@ RSpec.describe User do
     end
   end
 
+  describe "#next_unmet_deck" do
+    def met_goal_deck(**)
+      deck = create(:deck, study_goal: 1, **)
+      deck.study_days.create!(studied_on: Date.current, completed_count: 1)
+      deck
+    end
+
+    it "returns the first deck in topic order that is under its goal" do
+      create(:deck, name: "Alpha")
+      deck = create(:deck, name: "Zebra", topic: create(:topic))
+
+      expect(default_user.next_unmet_deck).to eq(deck)
+    end
+
+    it "skips decks that met their goal today" do
+      met_goal_deck(name: "Alpha")
+      deck = create(:deck, name: "Zebra")
+
+      expect(default_user.next_unmet_deck).to eq(deck)
+    end
+
+    it "skips music decks" do
+      create(:music_deck, name: "Alpha")
+      deck = create(:deck, name: "Zebra")
+
+      expect(default_user.next_unmet_deck).to eq(deck)
+    end
+
+    it "returns nil when every deck met its goal" do
+      met_goal_deck
+
+      expect(default_user.next_unmet_deck).to be_nil
+    end
+  end
+
   describe "#supporter?" do
     it "returns false when the user has no subscription" do
       user = create(:user)

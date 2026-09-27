@@ -173,6 +173,96 @@ RSpec.describe Deck do
     end
   end
 
+  describe ".topic_ordered" do
+    it "sorts decks by topic name before deck name" do
+      alpha = create(:deck, name: "Alpha", topic: create(:topic, name: "Zulu"))
+      zebra = create(:deck, name: "Zebra", topic: create(:topic, name: "Kilo"))
+
+      expect(described_class.topic_ordered).to eq([zebra, alpha])
+    end
+
+    it "puts decks without a topic last" do
+      alpha = create(:deck, name: "Alpha")
+      zebra = create(:deck, name: "Zebra", topic: create(:topic))
+
+      expect(described_class.topic_ordered).to eq([zebra, alpha])
+    end
+
+    it "sorts flat and language decks together by name" do
+      zebra = create(:deck, name: "Zebra")
+      alpha = create(:reading_deck, name: "Alpha")
+
+      expect(described_class.topic_ordered).to eq([alpha, zebra])
+    end
+  end
+
+  describe ".goal_unmet_today" do
+    def unmet_decks = described_class.goal_unmet_today
+
+    def studied_deck(completed_count, **)
+      deck = create(:deck, study_goal: 2, **)
+      deck.study_days.create!(studied_on: Date.current, completed_count:)
+      deck
+    end
+
+    it "includes decks not studied today" do
+      deck = create(:deck)
+
+      expect(unmet_decks).to include(deck)
+    end
+
+    it "includes decks under their goal" do
+      deck = studied_deck(1)
+
+      expect(unmet_decks).to include(deck)
+    end
+
+    it "excludes decks that met their goal" do
+      deck = studied_deck(2)
+
+      expect(unmet_decks).not_to include(deck)
+    end
+
+    it "ignores rows from other days" do
+      deck = create(:deck, study_goal: 1)
+      deck.study_days.create!(studied_on: Date.yesterday, completed_count: 1)
+
+      expect(unmet_decks).to include(deck)
+    end
+
+    it "excludes decks in no-goal mode" do
+      deck = create(:deck, goal_mode: "none")
+
+      expect(unmet_decks).not_to include(deck)
+    end
+
+    it "excludes music decks" do
+      deck = create(:music_deck)
+
+      expect(unmet_decks).not_to include(deck)
+    end
+
+    def target_deck_at_its_goal
+      deck = create(:deck, :with_target, study_goal: 50)
+      study_days = deck.study_days
+      study_days.create!(studied_on: Date.current, completed_count: 2, goal: 2)
+      deck
+    end
+
+    it "compares against the day's goal while a target is active" do
+      deck = target_deck_at_its_goal
+
+      expect(unmet_decks).not_to include(deck)
+    end
+
+    it "compares against the daily goal once a target is reached" do
+      deck = target_deck_at_its_goal
+      deck.update!(level: 2)
+
+      expect(unmet_decks).to include(deck)
+    end
+  end
+
   describe ".publicly_visible" do
     it "includes public decks" do
       deck = create(:deck, visibility: "public")

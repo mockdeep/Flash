@@ -50,6 +50,8 @@ class User < ApplicationRecord
     role == "guest"
   end
 
+  def next_unmet_deck = decks.goal_unmet_today.topic_ordered.first
+
   def supporter?
     subscription&.active? || false
   end

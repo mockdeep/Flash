@@ -270,7 +270,8 @@ link_to("My Link", some_path, data:)
 
 **Current shortcuts:**
 - `1`-`5` - Select answer during study
-- `Space` - Next card after answering
+- `Space` - Next card after answering; Next Deck / Reset All Goals on the milestone
+- `k` - Keep Going on the milestone (starts a new batch on the same deck; demo too)
 - `[` / `]` - Decrease / increase study text size (card-front kebab menu)
 - `e` - Open the edit-card dialog during study
 - `Ctrl+Enter` - Save the edit-card dialog
@@ -346,7 +347,7 @@ app/
 │   ├── music_card_body.rb        # Mic-driven music study widget
 │   ├── music_csv_instructions.rb # CSV format help block for music decks
 │   ├── replace_cards_dialog.rb   # Confirm dialog for re-importing a deck's cards
-│   ├── session_milestone.rb      # Study milestone prompt (daily goal reached)
+│   ├── session_milestone.rb      # Study milestone prompt (daily goal reached; Next Deck / Reset All Goals)
 │   ├── session_progress.rb       # Study session progress bar
 │   ├── study_example.rb          # Optional example sentence on the answer view
 │   ├── study_goal_dialog.rb      # Edit daily study-goal dialog
@@ -382,6 +383,7 @@ app/
 │   ├── sessions_controller.rb         # Login / logout
 │   ├── shares_controller.rb           # Owner toggle (via :deck_id) + public preview/copy/try (via :token)
 │   ├── studies_controller.rb          # Study show/update; dispatches text vs music views
+│   ├── study_goal_resets_controller.rb # Reset today's count on all decks, go to the first deck
 │   ├── subscriptions_controller.rb    # Creem subscription show / create / destroy
 │   ├── topic_assignments_controller.rb # Assign/release a deck to a topic
 │   ├── webhooks/
@@ -762,6 +764,13 @@ The study engine (`app/domain/study.rb`) manages card selection and answer proce
 - A **pass** writes nothing; the controller re-renders the question view pinned to the same card (`Study.for(deck:, card_id:)` forces the translation stage, and the confirmed reading stays visible under the character). The translation answer then flows through `answer_card` as usual
 - **Decoys are computed, not stored**: sibling (front, reading) pairs from `deck.reading_pairs(except:)`, ranked by how close each sibling front's **character count** is to the prompt's — the learner predicts phoneme count by counting the prompt's characters, so a wrong-count option is a free elimination. Two slots prefer siblings that share the prompt's first or last character *and* match its character count exactly (knowing one character's reading then can't eliminate them). Sibling readings equal to the card's own (homophones) are excluded
 - Cards without a `reading` behave exactly as before, even at level 2
+
+### Milestone: Next Deck
+
+When a deck reaches its goal for the day, the milestone's main button moves on to another deck:
+- **Next Deck** links to `User#next_unmet_deck` — the first deck in decks-page order (`Deck.topic_ordered`: topics A–Z, then no topic, each by name) that `Deck.goal_unmet_today` returns. That query left-joins `Deck#todays_study_day` (a `has_one` scoped to `Date.current`): a deck with no row today counts as unmet, and otherwise its count is compared against the goal by a SQL copy of `StudyDay#study_goal` (keep the two in sync). Decks in no-goal mode and music decks never count as unmet.
+- **Reset All Goals** shows instead when every deck has met its goal. It POSTs to `StudyGoalResetsController#create`, which zeroes today's `completed_count` on all the user's decks and redirects to the first deck in that order.
+- Hidden in demo mode.
 
 ### Level Targets
 

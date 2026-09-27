@@ -5,6 +5,15 @@ class Deck < ApplicationRecord
   DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
   GOAL_MODES = ["none", "session", "target"].freeze
   NAME_SOURCE = Arel.sql("COALESCE(decks.name, word_lists.name)")
+  TOPIC_NAME = Arel.sql("topics.name NULLS LAST")
+  # Mirrors StudyDay#study_goal.
+  GOAL_UNMET = <<~SQL.squish
+    study_days.completed_count <
+      CASE WHEN decks.goal_mode = 'target' AND decks.level <= decks.target_level
+        THEN study_days.goal
+        ELSE decks.study_goal
+      END
+  SQL
   GUEST_CARD_LIMIT = 100
 
   # A language deck's cards are the entries its list selects, each scored by
@@ -45,6 +54,20 @@ class Deck < ApplicationRecord
   belongs_to :topic
   has_many :cards, dependent: :delete_all
   has_many :study_days, dependent: :delete_all
+  has_one :todays_study_day,
+          -> { where(studied_on: Date.current) },
+          class_name: "StudyDay",
+          inverse_of: :deck,
+          dependent: nil
+
+  # A deck with no row today hasn't been studied yet, so it can't have met
+  # its goal. Music decks have no study goal.
+  def self.goal_unmet_today
+    with_goal = left_joins(:todays_study_day)
+      .where.not(goal_mode: "none")
+      .where.not(type: MusicDeck.name)
+    with_goal.where(study_days: { id: nil }).or(with_goal.where(GOAL_UNMET))
+  end
 
   def self.progress_columns
     sanitize_sql_array([PROGRESS_COLUMNS, { card_limit: GUEST_CARD_LIMIT }])
@@ -87,6 +110,9 @@ class Deck < ApplicationRecord
   validate(:one_deck_per_word_list, unless: :flat_cards?)
 
   scope :ordered, -> { left_joins(:word_list).order(NAME_SOURCE) }
+  # The decks page's order: topic sections A-Z, then decks with no topic.
+  scope :topic_ordered,
+        -> { left_joins(:topic, :word_list).order(TOPIC_NAME, NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
   scope :with_progress, -> { joins(:user).select(progress_columns) }
 

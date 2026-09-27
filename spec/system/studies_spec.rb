@@ -27,15 +27,26 @@ RSpec.describe "studying a deck" do
     visit(deck_study_path(deck))
     click_on("Paris", match: :first)
     click_on("Next Card")
+    find(".session-milestone")
   end
 
-  it "advances past the milestone when the space hotkey is pressed" do
+  it "keeps going past the milestone when the k hotkey is pressed" do
     reach_milestone
     expect(page).to have_text("You've completed 1 cards")
 
-    find("body").send_keys(:space)
+    find("body").send_keys("k")
 
     expect(page).to have_no_text("You've completed 1 cards")
+  end
+
+  it "moves to the next deck when the space hotkey is pressed" do
+    next_deck = create(:deck, user: default_user, name: "Next Up")
+    create(:basic_card, deck: next_deck)
+    reach_milestone
+
+    find("body").send_keys(:space)
+
+    expect(page).to have_css("h1", text: "Next Up")
   end
 
   def switch_to_no_goal

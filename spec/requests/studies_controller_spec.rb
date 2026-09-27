@@ -342,6 +342,26 @@ RSpec.describe StudiesController do
         expect(rendered).to have_link("Keep Going")
       end
 
+      it "binds keep going to the k hotkey" do
+        get(deck_study_path(complete_milestone_goal))
+
+        expect(rendered).to have_css("a[data-hotkey='k']", text: "Keep Going")
+      end
+
+      it "links to the next deck under its goal" do
+        next_deck = create(:deck)
+        get(deck_study_path(complete_milestone_goal))
+
+        expect(rendered)
+          .to have_link("Next Deck", href: deck_study_path(next_deck))
+      end
+
+      it "shows a reset button when every deck met its goal" do
+        get(deck_study_path(complete_milestone_goal))
+
+        expect(rendered).to have_button("Reset All Goals")
+      end
+
       it "shows done for now link" do
         get(deck_study_path(complete_milestone_goal))
 

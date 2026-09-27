@@ -25,6 +25,7 @@ Rails.application.routes.draw do
   post "shared/:token/copy", to: "shares#copy", as: :copy_shared_deck
   post "shared/:token/try", to: "shares#try", as: :try_shared_deck
   resource :session, only: [:new, :create, :destroy]
+  resource :study_goal_reset, only: [:create]
   resource :subscription, only: [:show, :create, :destroy]
 
   get "pricing", to: "pages#pricing"
