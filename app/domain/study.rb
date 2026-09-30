@@ -206,10 +206,17 @@ class Study
     [*distractors, next_card.back].shuffle
   end
 
+  # Each sibling lookup reads the whole list, so it runs only while slots
+  # remain open.
   def category_distractors(chosen)
+    slots = 4 - chosen.length
+    return [] unless slots.positive?
+
     excluded = chosen + [next_card.back]
-    same = pick(sibling_backs(next_card.category), excluded, 4 - chosen.length)
-    same + pick(sibling_backs, excluded + same, 4 - chosen.length - same.length)
+    same = pick(sibling_backs(next_card.category), excluded, slots)
+    return same if same.length == slots
+
+    same + pick(sibling_backs, excluded + same, slots - same.length)
   end
 
   def pick(backs, excluded, count)
