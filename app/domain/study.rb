@@ -23,7 +23,7 @@ class Study
       def reading_passed? = reading_passed
     end
 
-  attr_accessor :deck, :next_card, :reading_confirmed
+  attr_accessor :deck, :reading_confirmed
 
   def self.for(deck:, exclude_card_id: nil, card_id: nil)
     klass = deck.music? ? MusicStudy : self
@@ -35,8 +35,21 @@ class Study
   def initialize(deck:, exclude_card_id: nil, card_id: nil)
     self.deck = deck
     self.reading_confirmed = !card_id.nil?
-    self.next_card =
-      card_id ? deck.card(card_id) : pick_next_card(exclude_card_id:)
+    @exclude_card_id = exclude_card_id
+    @card_id = card_id
+  end
+
+  # Picked on first use: recording an answer never asks, so it skips the
+  # pool query.
+  def next_card
+    return @next_card if defined?(@next_card)
+
+    @next_card =
+      if @card_id
+        deck.card(@card_id)
+      else
+        pick_next_card(exclude_card_id: @exclude_card_id)
+      end
   end
 
   def reading_confirmed? = reading_confirmed
