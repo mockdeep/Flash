@@ -105,6 +105,22 @@ RSpec.describe Study do
 
       expect(study.next_card).to eq(card)
     end
+
+    it "does not pick a card when the study is built" do
+      deck = create(:deck)
+      create(:basic_card, deck:)
+
+      expect { described_class.new(deck:) }.not_to make_database_queries
+    end
+
+    it "keeps the card it picked" do
+      deck = create(:deck)
+      card = create(:basic_card, deck:)
+      study = described_class.new(deck:).tap(&:next_card)
+      card.update!(correct_streak: deck.level)
+
+      expect(study.next_card).to eq(card)
+    end
   end
 
   describe "#presentation_mode" do
