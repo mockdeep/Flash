@@ -39,8 +39,6 @@ class LanguageDeck < Deck
     cards_from(pool.limit(limit))
   end
 
-  def all_done? = rows(entries.having("#{STREAK} < ?", level)).none?
-
   def not_done_count(at_level)
     rows(entries.having("#{STREAK} < ?", at_level)).count
   end
@@ -54,12 +52,6 @@ class LanguageDeck < Deck
 
   def cards_in_order(limit: nil)
     cards_from(entries.order(LIST_ORDER).limit(limit))
-  end
-
-  def cards_count = self[:cards_count] || rows(entries).count
-
-  def done_count
-    self[:done_count] || rows(entries.having("#{STREAK} >= ?", level)).count
   end
 
   def reading_pairs(except:)
@@ -115,6 +107,8 @@ class LanguageDeck < Deck
   end
 
   def rows(scope) = Entry.from(scope, :entries)
+
+  def count_progress = rows(entries).pick(*progress_counts)
 
   def cards_from(scope) = scope.map { |entry| LanguageCard.new(self, entry) }
 

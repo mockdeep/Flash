@@ -15,6 +15,7 @@ class Deck < ApplicationRecord
       END
   SQL
   GUEST_CARD_LIMIT = 100
+  Progress = Data.define(:total, :done)
 
   # A language deck's cards are the entries its list selects, each scored by
   # the weakest of the owner's skill_scores on the entry's senses, and a
@@ -120,9 +121,14 @@ class Deck < ApplicationRecord
 
   def music? = false
 
-  def cards_count = self[:cards_count] || cards.count
-  def done_count = self[:done_count] || cards.done(level).count
+  def cards_count = self[:cards_count] || progress.total
+  def done_count = self[:done_count] || progress.done
   def remaining_count = cards_count - done_count
+
+  def reload(*)
+    @progress = nil
+    super
+  end
 
   def card_limit = (GUEST_CARD_LIMIT if user.guest?)
 
@@ -140,7 +146,7 @@ class Deck < ApplicationRecord
 
   def study_pool(limit:) = cards.not_done(level).ordered.limit(limit).to_a
 
-  def all_done? = cards.not_done(level).none?
+  def all_done? = progress.done == progress.total
 
   def not_done_count(at_level) = cards.not_done(at_level).count
 
@@ -200,6 +206,20 @@ class Deck < ApplicationRecord
   end
 
   private
+
+  # Total and done cards come from one query, kept per level: a study page
+  # asks for them several times, and a level-up mid-request counts afresh.
+  def progress
+    @progress ||= {}
+    @progress[level] ||= Progress.new(*count_progress)
+  end
+
+  def count_progress = cards.pick(*progress_counts)
+
+  def progress_counts
+    done = ["COUNT(*) FILTER (WHERE correct_streak >= ?)", level]
+    [Arel.sql("COUNT(*)"), Arel.sql(self.class.sanitize_sql_array(done))]
+  end
 
   def clear_target
     self.target_level = nil
