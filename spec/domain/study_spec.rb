@@ -295,6 +295,23 @@ RSpec.describe Study do
       expect(study.possible_answers).to include("Four")
     end
 
+    it "leaves out other categories when its own fills the options" do
+      deck = create(:deck)
+      create(:basic_card, deck:, back: "Four", category: "Math")
+      create_list(:basic_card, 5, deck:, category: "Geography")
+      study = described_class.new(deck:, card_id: deck.cards.last.id)
+
+      expect(study.possible_answers).not_to include("Four")
+    end
+
+    it "looks up no siblings when the card's distractors fill the options" do
+      deck = create(:deck)
+      create(:basic_card, deck:, distractors: ["A", "B", "C", "D"])
+      study = described_class.new(deck:).tap { it.next_card.distractors }
+
+      expect { study.possible_answers }.not_to make_database_queries
+    end
+
     context "when in fuzzy find mode" do
       def fuzzy_find_deck
         create(:deck, level: Study::FUZZY_FIND_LEVEL)
