@@ -360,6 +360,28 @@ RSpec.describe Deck do
     it "counts cards at or above the level when none were selected" do
       expect(level_two_deck.done_count).to eq(1)
     end
+
+    it "shares one query with cards_count and all_done?" do
+      deck = level_two_deck.tap(&:cards_count)
+
+      expect { deck.done_count && deck.all_done? }.not_to make_database_queries
+    end
+
+    it "counts again once the level changes" do
+      deck = level_two_deck.tap(&:done_count)
+      deck.level = 3
+
+      expect(deck.done_count).to eq(0)
+    end
+  end
+
+  describe "#reload" do
+    it "forgets the counts" do
+      deck = create(:deck, level: 1).tap(&:done_count)
+      create(:basic_card, :done, deck:)
+
+      expect(deck.reload.done_count).to eq(1)
+    end
   end
 
   describe "#remaining_count" do
