@@ -37,9 +37,10 @@ class LanguageCard
   # remembered as a distractor for future option lists (the reading stage
   # passes none - a reading miss never records a translation distractor).
   def record_miss!(chosen_answer = nil)
+    shown_as = chosen_answer ? deck.sense_ids_shown_as(chosen_answer) : []
     SkillScore.transaction do
       scores.each(&:record_miss!)
-      remember(chosen_answer) if chosen_answer
+      remember(shown_as)
     end
     @correct_streak = 0
   end
@@ -57,8 +58,8 @@ class LanguageCard
   end
 
   # Every member sense links to every sense the chosen option displayed.
-  def remember(text)
-    sense_ids.product(deck.sense_ids_shown_as(text)).each do
+  def remember(distractor_sense_ids)
+    sense_ids.product(distractor_sense_ids).each do
       |sense_id, distractor_sense_id|
       miss = SenseDistractor.find_or_initialize_by(
         user_id: deck.user_id, sense_id:, distractor_sense_id:,

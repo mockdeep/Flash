@@ -91,7 +91,8 @@ class LanguageDeck < Deck
   # The member senses of every entry whose back reads exactly as the text;
   # a chosen option arrives as text, so this is how a miss finds its senses.
   def sense_ids_shown_as(text)
-    rows(entries).where(back: text).pluck(:sense_ids).flatten
+    candidates = entries.where(entries: { id: entry_ids_glossed_within(text) })
+    rows(candidates).where(back: text).pluck(:sense_ids).flatten
   end
 
   private
@@ -120,5 +121,12 @@ class LanguageDeck < Deck
   def entry_ids_filed(category)
     word_list.sense_memberships.where(category:)
       .joins(:sense).select("senses.entry_id")
+  end
+
+  # Only an entry with a gloss inside the text can show as it, so this
+  # spares grouping the whole list to match one back.
+  def entry_ids_glossed_within(text)
+    word_list.sense_memberships.joins(:sense)
+      .where("position(senses.gloss IN ?) > 0", text).select("senses.entry_id")
   end
 end

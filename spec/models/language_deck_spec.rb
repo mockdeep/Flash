@@ -226,6 +226,13 @@ RSpec.describe LanguageDeck do
 
       expect(card.deck.sense_ids_shown_as("he")).to eq([])
     end
+
+    it "leaves out an entry whose back is only part of the text" do
+      card = create(:language_card, back: "he; him")
+      create(:language_card, deck: card.deck, back: "he")
+
+      expect(card.deck.sense_ids_shown_as("he; him")).to eq(card.sense_ids)
+    end
   end
 
   describe "#readings?" do
