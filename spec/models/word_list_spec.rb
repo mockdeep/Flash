@@ -7,6 +7,7 @@ RSpec.describe WordList do
   it { is_expected.to have_many(:sense_memberships).dependent(:destroy) }
   it { is_expected.to have_many(:senses).through(:sense_memberships) }
   it { is_expected.to have_many(:decks).dependent(:restrict_with_exception) }
+  it { is_expected.to have_many(:snippets).dependent(:destroy) }
 
   it { is_expected.to validate_presence_of(:name) }
 

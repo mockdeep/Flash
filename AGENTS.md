@@ -225,7 +225,7 @@ end
 
 **Core Models:**
 - `User` - Authentication. Has `username` (unique, `/\A[a-zA-Z0-9_.]+\z/` — letters, digits, `_`, `.`), `role` (`"user"` / `"admin"` / `"guest"`), `study_goal`, `time_zone`. `has_many :word_lists`, `has_many :decks` (**direct** — every deck carries `user_id`), `has_many :topics`, `has_one :subscription`.
-- `WordList` - A selection of language study content, reusable across decks. `belongs_to :user`, `has_many :items`, `has_many :decks`. `name` unique per user. Requires a `language` code. Not STI: Basic and Music left this layer for flat cards, so every word list is language content, and the compendium distinguishes kinds (HSK level, chapter, curated) by column rather than by class.
+- `WordList` - A selection of language study content, reusable across decks. `belongs_to :user`, `has_many :items`, `has_many :decks`, `has_many :snippets`. `name` unique per user. Requires a `language` code. Not STI: Basic and Music left this layer for flat cards, so every word list is language content, and the compendium distinguishes kinds (HSK level, chapter, curated) by column rather than by class.
 - `Topic` - User-created container grouping **decks** (e.g. "Mandarin", "Music") so related decks collect together on the decks index. `name` unique per user; destroying a topic nullifies its decks. Assigned per deck from the deck show page (type-or-pick datalist input → `TopicAssignmentsController`, `find_or_create_by` name).
 - `Item` - One neutral term. Has `side` (`"Front"` / `"Back"`), `text`, and (Front-side) `category`, `reading`, `example`, `paired_example`. Belongs to a word list; unique on `[word_list_id, side, text]`. Front↔back meaning is expressed through `Pairing`; distractor candidates through `ItemDistractor`. `#glosses` returns the paired Back texts in authored order.
 - `Pairing` - Join between a Front `item` and a Back `paired_item` (one row per gloss).
@@ -235,7 +235,8 @@ end
 - `Card` (STI base) - `belongs_to :deck`, `belongs_to :item` (nullable — flat cards have none), `belongs_to :source_card` (catalog-copy provenance). `has_many :card_distractors`. Owns the content columns and the progress counters (`correct_count`, `correct_streak`, `view_count`), and holds the score handle (`record_correct!`, `record_miss!`, `record_view!`). `normalizes :back` is the single back-joining rule. Unique on `[deck_id, front]` where `front` is present.
 - `StudyDay` - Cards a deck completed on one day (`studied_on`, in the owner's time zone), unique on `[deck_id, studied_on]`. `completed_count` counts the current batch and drives the progress bar; the milestone's "Keep Going" starts a new batch by resetting it to 0. `goal` holds the day's goal worked out from a level target (nil without one; `#study_goal` falls back to the deck's). `deck.study_days.today` finds or creates the row.
 - `Subscription` - Payment/subscription info, belongs to user.
-
+- `Snippet` - A source text feeding one word_list (`belongs_to :word_list`; destroyed with it). Has `title`, `author` and `body`, kept as written. `has_many :sentences`, ordered by `position`.
+- `SnippetSentence` - One sentence of a snippet, unique on `[snippet_id, position]`. `tokens` (jsonb) holds the pieces it was cut into, in order: each token's `text` as written (traditional stays traditional) and, for a word, the `sense_id` it is studied as; punctuation and other non-words carry no `sense_id`.
 **`WordList` languages:** `LANGUAGES` (on `WordList`) maps every individual ISO 639-2 language to its display name, keyed by shortest available code per BCP 47 ("zh", not "zho"; "tlh" works). Nothing in the app creates a word list any more — the deck form has no Language option — so the validation guards what the seed account and catalog copies carry.
 
 **Deck/Card STI subclasses** (deck class names match their UI representation — the future topic-page tabs). Both hierarchies have an abstract language intermediate:
@@ -409,7 +410,9 @@ app/
 │   ├── reading_card.rb     # STI subclass — no behavior of its own
 │   ├── music_card.rb       # STI subclass — NOTE_REGEXP (single note)
 │   ├── study_day.rb        # Per-deck, per-day completion count (current batch)
-│   └── subscription.rb
+│   ├── subscription.rb
+│   ├── snippet.rb          # Source text feeding a word_list
+│   └── snippet_sentence.rb # Sentence + its tokens, each pointing at a sense
 ├── nulls/
 │   ├── null_topic.rb         # Null-object Topic over a user's un-topiced decks ("Other Decks")
 │   └── null_user.rb          # Null-object User for logged-out / guest requests
