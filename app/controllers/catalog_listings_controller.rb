@@ -17,10 +17,6 @@ class CatalogListingsController < ApplicationController
 
   private
 
-  def require_admin
-    head(:not_found) unless current_user.admin?
-  end
-
   def owned_deck
     @owned_deck ||= current_user.decks.find(params.expect(:deck_id))
   end

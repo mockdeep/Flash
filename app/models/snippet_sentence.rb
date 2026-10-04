@@ -11,11 +11,17 @@ class SnippetSentence < ApplicationRecord
 
   validates :snippet, :body, :position, presence: true
 
-  # Segmented, every Chinese word given a sense, and nothing else on the
-  # tokens: what a sentence must be before it can leave the machine it was
-  # made on.
-  def finished?
-    tokens.any? && tokens.all? { |token| finished_token?(token) }
+  # New until segmented. Finished once every Chinese word has a sense and
+  # nothing else is left on the tokens: what a sentence must be before it
+  # can leave the machine it was processed on.
+  def status
+    if tokens.empty?
+      :new
+    elsif tokens.all? { |token| finished_token?(token) }
+      :finished
+    else
+      :in_progress
+    end
   end
 
   private

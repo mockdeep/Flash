@@ -17,6 +17,7 @@ RSpec.describe User do
   it { is_expected.to have_secure_password }
   it { is_expected.to have_many(:decks).dependent(:destroy) }
   it { is_expected.to have_many(:word_lists).dependent(:destroy) }
+  it { is_expected.to have_many(:snippets).through(:word_lists) }
   it { is_expected.to have_many(:sense_distractors).dependent(:delete_all) }
   it { is_expected.to have_many(:skill_scores).dependent(:delete_all) }
 

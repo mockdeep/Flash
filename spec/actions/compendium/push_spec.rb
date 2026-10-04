@@ -31,10 +31,16 @@ RSpec.describe Compendium::Push do
     expect(push.changes["entries"]).to eq(added: 0, updated: 0, deleted: 0)
   end
 
-  it "refuses while a snippet is unfinished" do
+  it "refuses while a snippet is in progress" do
     create(:snippet_sentence, tokens: [{ "text" => "我" }])
 
-    expect { push }.to raise_error(Compendium::Refused, /Unfinished snippets/)
+    expect { push }.to raise_error(Compendium::Refused, /Snippets in progress/)
+  end
+
+  it "carries a snippet nobody has started" do
+    create(:snippet_sentence, tokens: [])
+
+    expect(push.changes["snippets"]).to eq(added: 0, updated: 0, deleted: 0)
   end
 
   it "refuses when the migrations differ" do

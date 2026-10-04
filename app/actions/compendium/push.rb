@@ -6,7 +6,7 @@ module Compendium
   # runs no transaction of its own: the caller commits or rolls back.
   module Push
     def self.call(local:, remote:, dir:, checksum:, username:)
-      unfinished!
+      none_in_progress!
       same_migrations!(local, remote)
       owner_id = owner_id!(remote, username)
       unchanged!(remote, Snapshot.new(dir.join("production")), checksum)
@@ -15,12 +15,14 @@ module Compendium
       Apply.call(remote, snapshot, owner_id:)
     end
 
-    def self.unfinished!
-      titles = SnippetSentence.includes(:snippet).reject(&:finished?)
-        .map { |sentence| sentence.snippet.title }.uniq
+    # A snippet nobody has started travels as it is; one partway through
+    # processing or review would carry unreviewed senses with it.
+    def self.none_in_progress!
+      titles = Snippet.all
+        .select { |snippet| snippet.status == :in_progress }.map(&:title)
       return if titles.empty?
 
-      raise(Refused, "Unfinished snippets: #{titles.join(", ")}")
+      raise(Refused, "Snippets in progress: #{titles.join(", ")}")
     end
 
     def self.same_migrations!(local, remote)
