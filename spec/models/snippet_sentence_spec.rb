@@ -17,27 +17,27 @@ RSpec.describe SnippetSentence do
       .to raise_error(ActiveRecord::RecordNotUnique)
   end
 
-  describe "#finished?" do
-    def sentence(*tokens) = build(:snippet_sentence, tokens:)
+  describe "#status" do
+    def status(*tokens) = build(:snippet_sentence, tokens:).status
 
-    it "is true when every word has a sense" do
+    it "is new before segmenting" do
+      expect(status).to eq(:new)
+    end
+
+    it "is finished when every word has a sense" do
       tokens = [{ "text" => "我", "sense_id" => 1 }, { "text" => "。" }]
 
-      expect(sentence(*tokens)).to be_finished
+      expect(status(*tokens)).to eq(:finished)
     end
 
-    it "is false before segmenting" do
-      expect(sentence).not_to be_finished
+    it "is in progress while a word has no sense" do
+      expect(status({ "text" => "我" })).to eq(:in_progress)
     end
 
-    it "is false when a word has no sense" do
-      expect(sentence({ "text" => "我" })).not_to be_finished
-    end
-
-    it "is false while a token carries working keys" do
+    it "is in progress while a token carries working keys" do
       token = { "text" => "我", "sense_id" => 1, "outcome" => "matched" }
 
-      expect(sentence(token)).not_to be_finished
+      expect(status(token)).to eq(:in_progress)
     end
   end
 end

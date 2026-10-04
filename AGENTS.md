@@ -224,7 +224,7 @@ end
 **Two content models, one card table.** Basic and Music decks are **flat**: the card owns its content (`front`, `back`, `category`, `reading`, `example_front`, `example_back`) and its progress counters directly, with `card_distractors` rows for decoys. Language decks still keep content in a shared, neutral **word list** of items and pairings — `LanguageCard` overrides the column readers to go through its `item`. `Deck#flat_cards?` is the switch between them. The language side is slated to leave the item layer too, at which point the item machinery goes away entirely.
 
 **Core Models:**
-- `User` - Authentication. Has `username` (unique, `/\A[a-zA-Z0-9_.]+\z/` — letters, digits, `_`, `.`), `role` (`"user"` / `"admin"` / `"guest"`), `study_goal`, `time_zone`. `has_many :word_lists`, `has_many :decks` (**direct** — every deck carries `user_id`), `has_many :topics`, `has_one :subscription`.
+- `User` - Authentication. Has `username` (unique, `/\A[a-zA-Z0-9_.]+\z/` — letters, digits, `_`, `.`), `role` (`"user"` / `"admin"` / `"guest"`), `study_goal`, `time_zone`. `has_many :word_lists`, `has_many :snippets` (through word_lists), `has_many :decks` (**direct** — every deck carries `user_id`), `has_many :topics`, `has_one :subscription`.
 - `WordList` - A selection of language study content, reusable across decks. `belongs_to :user`, `has_many :items`, `has_many :decks`, `has_many :snippets`. `name` unique per user. Requires a `language` code. Not STI: Basic and Music left this layer for flat cards, so every word list is language content, and the compendium distinguishes kinds (HSK level, chapter, curated) by column rather than by class.
 - `Topic` - User-created container grouping **decks** (e.g. "Mandarin", "Music") so related decks collect together on the decks index. `name` unique per user; destroying a topic nullifies its decks. Assigned per deck from the deck show page (type-or-pick datalist input → `TopicAssignmentsController`, `find_or_create_by` name).
 - `Item` - One neutral term. Has `side` (`"Front"` / `"Back"`), `text`, and (Front-side) `category`, `reading`, `example`, `paired_example`. Belongs to a word list; unique on `[word_list_id, side, text]`. Front↔back meaning is expressed through `Pairing`; distractor candidates through `ItemDistractor`. `#glosses` returns the paired Back texts in authored order.
@@ -235,8 +235,8 @@ end
 - `Card` (STI base) - `belongs_to :deck`, `belongs_to :item` (nullable — flat cards have none), `belongs_to :source_card` (catalog-copy provenance). `has_many :card_distractors`. Owns the content columns and the progress counters (`correct_count`, `correct_streak`, `view_count`), and holds the score handle (`record_correct!`, `record_miss!`, `record_view!`). `normalizes :back` is the single back-joining rule. Unique on `[deck_id, front]` where `front` is present.
 - `StudyDay` - Cards a deck completed on one day (`studied_on`, in the owner's time zone), unique on `[deck_id, studied_on]`. `completed_count` counts the current batch and drives the progress bar; the milestone's "Keep Going" starts a new batch by resetting it to 0. `goal` holds the day's goal worked out from a level target (nil without one; `#study_goal` falls back to the deck's). `deck.study_days.today` finds or creates the row.
 - `Subscription` - Payment/subscription info, belongs to user.
-- `Snippet` - A source text feeding one word_list (`belongs_to :word_list`; destroyed with it). Has `title`, `author` and `body`, kept as written. `has_many :sentences`, ordered by `position`.
-- `SnippetSentence` - One sentence of a snippet, unique on `[snippet_id, position]`. `tokens` (jsonb) holds the pieces it was cut into, in order: each token's `text` as written (traditional stays traditional) and, for a word, the `sense_id` it is studied as; punctuation and other non-words carry no `sense_id`. `#finished?` is true once it is segmented, every Han token has a `sense_id`, and no token carries other keys.
+- `Snippet` - A source text feeding one word_list (`belongs_to :word_list`; destroyed with it). Has `title`, `author` and `body`, kept as written; the body is capped at `Snippet::MAX_BODY` characters (processing costs LLM calls per sentence) and the list must be Mandarin (`Snippet::LANGUAGE`). `has_many :sentences`, ordered by `position`. `#status` is `:new` or `:finished` when every sentence is, and `:in_progress` otherwise. Admins add snippets at `/snippets` (`SnippetsController`, `Snippets::Create`), in production or locally; processing happens locally.
+- `SnippetSentence` - One sentence of a snippet, unique on `[snippet_id, position]`. `tokens` (jsonb) holds the pieces it was cut into, in order: each token's `text` as written (traditional stays traditional) and, for a word, the `sense_id` it is studied as; punctuation and other non-words carry no `sense_id`. `#status` is `:new` with no tokens, `:finished` once every Han token has a `sense_id` and no token carries other keys, and `:in_progress` between.
 **`WordList` languages:** `LANGUAGES` (on `WordList`) maps every individual ISO 639-2 language to its display name, keyed by shortest available code per BCP 47 ("zh", not "zho"; "tlh" works). Nothing in the app creates a word list any more — the deck form has no Language option — so the validation guards what the seed account and catalog copies carry.
 
 **Deck/Card STI subclasses** (deck class names match their UI representation — the future topic-page tabs). Both hierarchies have an abstract language intermediate:
@@ -328,6 +328,9 @@ app/
 │   │   ├── cancel_subscription.rb
 │   │   ├── client.rb             # Creem HTTP client
 │   │   └── create_checkout.rb    # Creates a Creem checkout session
+│   ├── snippets/
+│   │   ├── create.rb             # Saves a snippet + its sentences under a (found or new Mandarin) word_list
+│   │   └── split_sentences.rb    # Body → sentences on Chinese terminal punctuation
 │   ├── word_lists/
 │   │   └── projection.rb         # Builds/replaces/edits items+pairings+cards from content rows
 │   ├── decks/
@@ -392,6 +395,7 @@ app/
 │   ├── replacements_controller.rb     # Re-import a deck's cards (Decks::Replace)
 │   ├── sessions_controller.rb         # Login / logout
 │   ├── shares_controller.rb           # Owner toggle (via :deck_id) + public preview/copy/try (via :token)
+│   ├── snippets_controller.rb         # Snippet index / new / create (admin)
 │   ├── studies_controller.rb          # Study show/update; dispatches text vs music views
 │   ├── study_goal_resets_controller.rb # Reset today's count on all decks, go to the first deck
 │   ├── subscriptions_controller.rb    # Creem subscription show / create / destroy
@@ -464,6 +468,9 @@ app/
 │   │   ├── music_show.rb     # Mic-driven music study prompt
 │   │   ├── music_update.rb   # Music answer result
 │   │   └── study_frame_data.rb # Shared study-frame data helper (wires the text-size controller)
+│   ├── snippets/
+│   │   ├── index.rb          # Admin's snippets with their state (new / in progress / finished)
+│   │   └── new.rb            # Title / author / list (type-or-pick) / body
 │   ├── subscriptions/
 │   │   └── show.rb
 │   └── welcome/
@@ -805,7 +812,7 @@ A deck can aim to finish a level by a date, and the daily goal is worked out fro
 
 The compendium tables (`Compendium::TABLES`: entries, senses, sense_examples, word_lists, sense_memberships, snippets, snippet_sentences) move between a local database and production as a **snapshot**: one CSV per table under `tmp/compendium/`, streamed with `COPY`. Users, decks, cards and learner data never leave production. Production carries no sync code; both tasks run locally and fetch production's `DATABASE_URL` from `heroku` each run.
 - **`rails compendium:pull`**: refuses if the local compendium differs from what the last pull or push left (`FORCE=true` discards it), then exports production, runs `db:reset`, and loads the snapshot with every word list given to the seed admin. A plain `db:reset` never touches production.
-- **`rails compendium:push`**: refuses unless every snippet is `finished?`, both databases have the same `schema_migrations`, `COMPENDIUM_USERNAME` names a production admin, and production still matches the last pull's checksum. Then it applies the local snapshot to production in one transaction and prints the adds / updates / deletes per table plus the learner data the deletes take. It rolls back unless `DRY_RUN=false`.
+- **`rails compendium:push`**: refuses while any snippet is `:in_progress` (a `:new` one travels untouched), both databases have the same `schema_migrations`, `COMPENDIUM_USERNAME` names a production admin, and production still matches the last pull's checksum. Then it applies the local snapshot to production in one transaction and prints the adds / updates / deletes per table plus the learner data the deletes take. It rolls back unless `DRY_RUN=false`.
 - **Owners**: `word_lists.user_id` is never in a snapshot. Apply never changes an existing list's owner, and gives new lists to `COMPENDIUM_USERNAME`.
 - **Checksum**: kept under `compendium_checksum` in `ar_internal_metadata`, updated by every pull and committed push.
 - **Specs** run Export / Load / Apply / Push against the one test database; only the rake glue in `lib/tasks/compendium.rake` is unspecced.

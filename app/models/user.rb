@@ -25,6 +25,7 @@ class User < ApplicationRecord
 
   has_many :decks, dependent: :destroy
   has_many :word_lists, dependent: :destroy
+  has_many :snippets, through: :word_lists
   has_many :topics, dependent: :destroy
   has_many :sense_distractors, dependent: :delete_all
   has_many :skill_scores, dependent: :delete_all

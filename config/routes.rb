@@ -27,6 +27,7 @@ Rails.application.routes.draw do
   resource :session, only: [:new, :create, :destroy]
   resource :study_goal_reset, only: [:create]
   resource :subscription, only: [:show, :create, :destroy]
+  resources :snippets, only: [:index, :new, :create]
 
   get "pricing", to: "pages#pricing"
   get "privacy", to: "pages#privacy"

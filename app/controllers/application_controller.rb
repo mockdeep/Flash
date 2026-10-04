@@ -36,6 +36,10 @@ class ApplicationController < ActionController::Base
     redirect_to(new_session_path)
   end
 
+  def require_admin
+    head(:not_found) unless current_user.admin?
+  end
+
   def authenticate_guest
     redirect_to(new_session_path) unless current_user.logged_in?
   end
