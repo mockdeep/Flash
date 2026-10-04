@@ -17,6 +17,45 @@ RSpec.describe SnippetSentence do
       .to raise_error(ActiveRecord::RecordNotUnique)
   end
 
+  describe ".unsegmented" do
+    it "finds sentences without tokens" do
+      sentence = create(:snippet_sentence, tokens: [])
+      create(:snippet_sentence, tokens: [{ "text" => "我" }])
+
+      expect(described_class.unsegmented).to eq([sentence])
+    end
+  end
+
+  describe "#han" do
+    it "returns the sentence's Han characters without punctuation" do
+      sentence = build(:snippet_sentence, body: "“你好，”他说。")
+
+      expect(sentence.han).to eq("你好他说")
+    end
+  end
+
+  describe "#partitioned_by?" do
+    def partitioned_by?(words)
+      build(:snippet_sentence, body: "我爱你。").partitioned_by?(words)
+    end
+
+    it "is true when the words rejoin to the sentence" do
+      expect(partitioned_by?(["我", "爱", "你", "。"])).to be(true)
+    end
+
+    it "ignores punctuation the words leave out" do
+      expect(partitioned_by?(["我", "爱你"])).to be(true)
+    end
+
+    it "is false when a character is dropped" do
+      expect(partitioned_by?(["我", "你"])).to be(false)
+    end
+
+    it "is false when a character is substituted" do
+      expect(partitioned_by?(["我", "愛", "你"])).to be(false)
+    end
+  end
+
   describe "#status" do
     def status(*tokens) = build(:snippet_sentence, tokens:).status
 

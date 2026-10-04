@@ -11,6 +11,15 @@ class SnippetSentence < ApplicationRecord
 
   validates :snippet, :body, :position, presence: true
 
+  scope :unsegmented, -> { where("tokens = '[]'::jsonb") }
+
+  def han = body.scan(HAN).join
+
+  # Whether the words rejoin to exactly this sentence's Han characters:
+  # nothing dropped, invented or substituted. Says nothing about where the
+  # boundaries fall.
+  def partitioned_by?(words) = words.join.scan(HAN).join == han
+
   # New until segmented. Finished once every Chinese word has a sense and
   # nothing else is left on the tokens: what a sentence must be before it
   # can leave the machine it was processed on.
