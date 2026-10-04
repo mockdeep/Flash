@@ -330,6 +330,9 @@ app/
 │   │   └── create_checkout.rb    # Creates a Creem checkout session
 │   ├── snippets/
 │   │   ├── create.rb             # Saves a snippet + its sentences under a (found or new Mandarin) word_list
+│   │   ├── policy.rb             # Card rules shared by the pipeline's prompts (SEGMENTATION)
+│   │   ├── process.rb            # `rails snippets:process`: works through unprocessed sentences in batches
+│   │   ├── segment.rb            # Sonnet segmentation, checked by the Han-rejoin test, with fallbacks
 │   │   └── split_sentences.rb    # Body → sentences on Chinese terminal punctuation
 │   ├── word_lists/
 │   │   └── projection.rb         # Builds/replaces/edits items+pairings+cards from content rows
@@ -347,6 +350,7 @@ app/
 │   │   └── create_guest_user.rb   # Creates a temporary guest user for the demo
 │   ├── llm.rb                    # Model ids, Llm::Error, `Llm.client` (set per environment)
 │   └── llm/
+│       ├── ask_each.rb           # Ask about a list; answer rows keyed by item index
 │       ├── claude_cli.rb         # Development client: `claude -p` on the developer's subscription
 │       └── fake.rb               # Spec client: queued answers / responder block, records calls
 ├── components/                   # Phlex view components
@@ -538,7 +542,8 @@ lib/
 ├── route_constraints/
 │   └── admin_constraint.rb  # Routes inside `constraints AdminConstraint.new` 404 for non-admins
 └── tasks/
-    └── compendium.rake      # compendium:pull / compendium:push (see Compendium Sync)
+    ├── compendium.rake      # compendium:pull / compendium:push (see Compendium Sync)
+    └── snippets.rake        # snippets:process (see Snippet Processing)
 ```
 
 ### Actions
@@ -817,6 +822,12 @@ A deck can aim to finish a level by a date, and the daily goal is worked out fro
 
 The content pipeline asks Claude structured questions through `Llm.client.call(model:, system:, prompt:, schema:)`, which returns a hash fitting the JSON schema or raises `Llm::Error`. The client is set per environment: `Llm::ClaudeCli` in development (`config.to_prepare` in `config/environments/development.rb`), `Llm::Fake` in specs (`spec/support/llm.rb`), and none in production, where `Llm.client` raises — production never calls an LLM.
 - **`Llm::ClaudeCli`** runs `claude -p` with `--json-schema`, from the temp directory with setting sources off (so no project CLAUDE.md or memory reaches the prompt) and with `ANTHROPIC_API_KEY` removed from its environment (so it bills the subscription, not the API). Its spec drives a stand-in executable, `spec/fixtures/files/fake_claude`; `.env.test` sets a dummy `ANTHROPIC_API_KEY` so the spec can see it removed.
+
+### Snippet Processing
+
+Snippets are added in the app (see `Snippet`) and processed locally with `rails snippets:process`, which asks Claude through `Llm.client` and so only runs in development. It finds every sentence still unsegmented (`SnippetSentence.unsegmented`), segments them in batches of `Snippets::Process::SEGMENT_BATCH` and saves each batch, so a run that dies picks up where it stopped.
+- **Segment** (`Snippets::Segment`): Sonnet splits each sentence into words under `Snippets::Policy::SEGMENTATION`. The answer is checked mechanically (`SnippetSentence#partitioned_by?`: the words must rejoin to the sentence's Han characters); a sentence that fails, or comes back with no words, is asked again on its own, then falls back to one token per character.
+- A segmented sentence holds `{ "text" }` tokens only, so it and its snippet read `:in_progress` and block `compendium:push` until later steps fill in senses.
 
 ### Compendium Sync
 
