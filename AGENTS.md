@@ -236,7 +236,7 @@ end
 - `StudyDay` - Cards a deck completed on one day (`studied_on`, in the owner's time zone), unique on `[deck_id, studied_on]`. `completed_count` counts the current batch and drives the progress bar; the milestone's "Keep Going" starts a new batch by resetting it to 0. `goal` holds the day's goal worked out from a level target (nil without one; `#study_goal` falls back to the deck's). `deck.study_days.today` finds or creates the row.
 - `Subscription` - Payment/subscription info, belongs to user.
 - `Snippet` - A source text feeding one word_list (`belongs_to :word_list`; destroyed with it). Has `title`, `author` and `body`, kept as written. `has_many :sentences`, ordered by `position`.
-- `SnippetSentence` - One sentence of a snippet, unique on `[snippet_id, position]`. `tokens` (jsonb) holds the pieces it was cut into, in order: each token's `text` as written (traditional stays traditional) and, for a word, the `sense_id` it is studied as; punctuation and other non-words carry no `sense_id`.
+- `SnippetSentence` - One sentence of a snippet, unique on `[snippet_id, position]`. `tokens` (jsonb) holds the pieces it was cut into, in order: each token's `text` as written (traditional stays traditional) and, for a word, the `sense_id` it is studied as; punctuation and other non-words carry no `sense_id`. `#finished?` is true once it is segmented, every Han token has a `sense_id`, and no token carries other keys.
 **`WordList` languages:** `LANGUAGES` (on `WordList`) maps every individual ISO 639-2 language to its display name, keyed by shortest available code per BCP 47 ("zh", not "zho"; "tlh" works). Nothing in the app creates a word list any more — the deck form has no Language option — so the validation guards what the seed account and catalog copies carry.
 
 **Deck/Card STI subclasses** (deck class names match their UI representation — the future topic-page tabs). Both hierarchies have an abstract language intermediate:
@@ -315,6 +315,15 @@ app/
 ├── actions/                      # Service objects (`.call` → Result); see Actions below
 │   ├── catalog/
 │   │   └── copy_deck.rb          # Duplicates a public deck into a user's account
+│   ├── compendium.rb             # Sync namespace: TABLES (parents first), column helpers, Refused
+│   ├── compendium/
+│   │   ├── apply.rb              # Snapshot → database: add / update / delete by id, with a Report
+│   │   ├── export.rb             # Database → snapshot (COPY TO STDOUT)
+│   │   ├── load.rb               # Snapshot → empty database (Apply, then advance id sequences)
+│   │   ├── pull.rb               # `unpushed?` check before a pull resets the database
+│   │   ├── push.rb               # Push guards, then Apply to production
+│   │   ├── snapshot.rb           # One CSV per table; checksum / empty?
+│   │   └── staging.rb            # Loads a table's CSV into a temp table for Apply
 │   ├── creem/
 │   │   ├── cancel_subscription.rb
 │   │   ├── client.rb             # Creem HTTP client
@@ -511,11 +520,14 @@ app/
 db/
 ├── seeds.rb             # Entry point (loads db/seeds/*)
 └── seeds/
-    └── music_decks.rb   # Seeds starter music decks
+    ├── admin.rb         # Local admin (admin / password); development and test only
+    └── music_decks.rb   # Seeds starter music decks, owned by the admin
 
 lib/
-└── route_constraints/
-    └── admin_constraint.rb  # Routes inside `constraints AdminConstraint.new` 404 for non-admins
+├── route_constraints/
+│   └── admin_constraint.rb  # Routes inside `constraints AdminConstraint.new` 404 for non-admins
+└── tasks/
+    └── compendium.rake      # compendium:pull / compendium:push (see Compendium Sync)
 ```
 
 ### Actions
@@ -573,6 +585,7 @@ Environment variables are managed through `.env` files:
 Common variables:
 - `CREEM_API_KEY` - Creem payment API key
 - `CREEM_WEBHOOK_SECRET` - Secret for validating Creem webhooks
+- `COMPENDIUM_USERNAME` - Your production admin username; `compendium:push` gives new word lists to this user (`.env.local` only)
 
 **Important:** Never commit `.env.local` or any file containing real API keys.
 
@@ -787,6 +800,15 @@ A deck can aim to finish a level by a date, and the daily goal is worked out fro
   - **Missed** (`Deck#target_missed?`: still active, date before today): "Pick a new date". Saving a new date (or switching to a daily goal) clears it. Until then, today's goal covers all the work left.
   - **Reached** (`Deck#target_reached?`: level past the target level): "Set next target" opens the dialog; "Not now" switches the deck back to its daily goal. A reached target is no longer active, so `StudyDay#study_goal` falls back to the hand-set goal straight away.
 - **Not on music decks**: they have no study goal at all (see Music Decks). `MusicDeck` still rejects `goal_mode: "target"` as a guard.
+
+### Compendium Sync
+
+The compendium tables (`Compendium::TABLES`: entries, senses, sense_examples, word_lists, sense_memberships, snippets, snippet_sentences) move between a local database and production as a **snapshot**: one CSV per table under `tmp/compendium/`, streamed with `COPY`. Users, decks, cards and learner data never leave production. Production carries no sync code; both tasks run locally and fetch production's `DATABASE_URL` from `heroku` each run.
+- **`rails compendium:pull`**: refuses if the local compendium differs from what the last pull or push left (`FORCE=true` discards it), then exports production, runs `db:reset`, and loads the snapshot with every word list given to the seed admin. A plain `db:reset` never touches production.
+- **`rails compendium:push`**: refuses unless every snippet is `finished?`, both databases have the same `schema_migrations`, `COMPENDIUM_USERNAME` names a production admin, and production still matches the last pull's checksum. Then it applies the local snapshot to production in one transaction and prints the adds / updates / deletes per table plus the learner data the deletes take. It rolls back unless `DRY_RUN=false`.
+- **Owners**: `word_lists.user_id` is never in a snapshot. Apply never changes an existing list's owner, and gives new lists to `COMPENDIUM_USERNAME`.
+- **Checksum**: kept under `compendium_checksum` in `ar_internal_metadata`, updated by every pull and committed push.
+- **Specs** run Export / Load / Apply / Push against the one test database; only the rake glue in `lib/tasks/compendium.rake` is unspecced.
 
 ### Subscription Transparency
 

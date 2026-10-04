@@ -25,13 +25,7 @@ module Seeds
       },
     ].freeze
 
-    def self.call
-      owner = User.where(role: "admin").first || User.first
-      unless owner
-        warn("[seeds] no users found; skipping music deck seeds")
-        return
-      end
-
+    def self.call(owner:)
       DECKS.each { |attrs| seed_deck(owner, attrs) }
     end
 

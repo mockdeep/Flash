@@ -65,7 +65,7 @@ commands:
 
       - run:
           name: Database setup
-          command: bin/rails db:setup --trace
+          command: bin/rails db:create db:schema:load --trace
 
 jobs:
   checks:
@@ -164,8 +164,18 @@ jobs:
           path: log
           destination: log
 
+  seeds:
+    executor: default
+    steps:
+      - setup
+
+      - run:
+          name: Seeds
+          command: bin/rails db:seed
+
 workflows:
   test:
     jobs:
       - checks
       - system_tests
+      - seeds
