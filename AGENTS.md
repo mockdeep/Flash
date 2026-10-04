@@ -342,9 +342,13 @@ app/
 │   │   ├── flat_cards.rb         # Card writer for Basic/Music: content lives on card columns
 │   │   ├── replace.rb            # Re-import: diff CSV vs deck (add/remove/reset/keep)
 │   │   └── result.rb             # Shared Result object for the deck actions
-│   └── demo/
-│       ├── cleanup_guest_users.rb # Removes expired demo guest users
-│       └── create_guest_user.rb   # Creates a temporary guest user for the demo
+│   ├── demo/
+│   │   ├── cleanup_guest_users.rb # Removes expired demo guest users
+│   │   └── create_guest_user.rb   # Creates a temporary guest user for the demo
+│   ├── llm.rb                    # Model ids, Llm::Error, `Llm.client` (set per environment)
+│   └── llm/
+│       ├── claude_cli.rb         # Development client: `claude -p` on the developer's subscription
+│       └── fake.rb               # Spec client: queued answers / responder block, records calls
 ├── components/                   # Phlex view components
 │   ├── base.rb                   # Base component (supporter_badge / music_badge / catalog_badge)
 │   ├── card_front.rb             # Study card-front box + kebab menu; renders the reading gloss inside it
@@ -609,6 +613,7 @@ The project uses **RSpec** for automated testing with a comprehensive local test
 - One assertion per test (avoid linter warnings)
 - Use `change_record` matcher for database changes
 - WebMock for HTTP requests (don't stub client classes)
+- `Llm::Fake` for LLM calls: every example gets a fresh one as `Llm.client` (`llm` in specs); queue answers with `llm.answer(...)` / `llm.fail(...)`, or answer from the prompt with `llm.respond { |call| ... }`, and check `llm.calls`
 - Environment variables in `.env.test` (don't stub in specs)
 - Create focused, behavior-driven tests
 
@@ -807,6 +812,11 @@ A deck can aim to finish a level by a date, and the daily goal is worked out fro
   - **Missed** (`Deck#target_missed?`: still active, date before today): "Pick a new date". Saving a new date (or switching to a daily goal) clears it. Until then, today's goal covers all the work left.
   - **Reached** (`Deck#target_reached?`: level past the target level): "Set next target" opens the dialog; "Not now" switches the deck back to its daily goal. A reached target is no longer active, so `StudyDay#study_goal` falls back to the hand-set goal straight away.
 - **Not on music decks**: they have no study goal at all (see Music Decks). `MusicDeck` still rejects `goal_mode: "target"` as a guard.
+
+### LLM Client
+
+The content pipeline asks Claude structured questions through `Llm.client.call(model:, system:, prompt:, schema:)`, which returns a hash fitting the JSON schema or raises `Llm::Error`. The client is set per environment: `Llm::ClaudeCli` in development (`config.to_prepare` in `config/environments/development.rb`), `Llm::Fake` in specs (`spec/support/llm.rb`), and none in production, where `Llm.client` raises — production never calls an LLM.
+- **`Llm::ClaudeCli`** runs `claude -p` with `--json-schema`, from the temp directory with setting sources off (so no project CLAUDE.md or memory reaches the prompt) and with `ANTHROPIC_API_KEY` removed from its environment (so it bills the subscription, not the API). Its spec drives a stand-in executable, `spec/fixtures/files/fake_claude`; `.env.test` sets a dummy `ANTHROPIC_API_KEY` so the spec can see it removed.
 
 ### Compendium Sync
 

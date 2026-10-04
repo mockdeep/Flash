@@ -1,0 +1,37 @@
+#!/usr/bin/env -S RUBYOPT= ruby --disable-gems
+# frozen_string_literal: true
+
+# Stands in for the `claude` CLI in Llm::ClaudeCli's spec. The prompt on
+# stdin picks how it misbehaves; any other prompt is answered with what the
+# CLI was given, so the spec can check the call. It runs without RubyGems,
+# so it never trips over the app's Bundler setup from the temp directory
+# the CLI runs in.
+require "json"
+
+reply = ->(result) { JSON.dump(result, $stdout) }
+
+prompt = $stdin.read
+
+case prompt
+when "exit loudly"
+  warn("boom")
+  exit(1)
+when "exit quietly"
+  $stdout << "quiet"
+  exit(1)
+when "not json"
+  $stdout << "{oops"
+when "is error"
+  reply.call(is_error: true, subtype: "error_max_turns", result: "cut off")
+when "no answer"
+  reply.call(is_error: false, subtype: "success", result: "chat")
+else
+  structured_output = {
+    arguments: ARGV,
+    prompt:,
+    api_key: ENV.fetch("ANTHROPIC_API_KEY", nil),
+    directory: Dir.pwd,
+  }
+  usage = { input_tokens: 3, output_tokens: 5 }
+  reply.call(is_error: false, structured_output:, usage:)
+end
