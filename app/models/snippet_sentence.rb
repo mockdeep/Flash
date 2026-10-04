@@ -12,6 +12,7 @@ class SnippetSentence < ApplicationRecord
   validates :snippet, :body, :position, presence: true
 
   scope :unsegmented, -> { where("tokens = '[]'::jsonb") }
+  scope :segmented, -> { where.not("tokens = '[]'::jsonb") }
 
   def han = body.scan(HAN).join
 
@@ -30,6 +31,15 @@ class SnippetSentence < ApplicationRecord
       :finished
     else
       :in_progress
+    end
+  end
+
+  # Segmented, with a Chinese word not yet given a sense or an outcome:
+  # what resolving works on.
+  def awaiting_senses?
+    tokens.any? do |token|
+      token["text"].to_s.match?(HAN) &&
+        !token.key?("outcome") && !token.key?("sense_id")
     end
   end
 

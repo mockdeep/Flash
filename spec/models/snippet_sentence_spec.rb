@@ -26,6 +26,39 @@ RSpec.describe SnippetSentence do
     end
   end
 
+  describe ".segmented" do
+    it "finds sentences with tokens" do
+      create(:snippet_sentence, tokens: [])
+      sentence = create(:snippet_sentence, tokens: [{ "text" => "我" }])
+
+      expect(described_class.segmented).to eq([sentence])
+    end
+  end
+
+  describe "#awaiting_senses?" do
+    def awaiting_senses?(*tokens)
+      build(:snippet_sentence, tokens:).awaiting_senses?
+    end
+
+    it "is true while a word has neither a sense nor an outcome" do
+      expect(awaiting_senses?({ "text" => "我" })).to be(true)
+    end
+
+    it "is false once every word has an outcome" do
+      token = { "text" => "我", "outcome" => "unresolved", "note" => "?" }
+
+      expect(awaiting_senses?(token)).to be(false)
+    end
+
+    it "is false once every word has a sense" do
+      expect(awaiting_senses?({ "text" => "我", "sense_id" => 1 })).to be(false)
+    end
+
+    it "is false for tokens without a Han character" do
+      expect(awaiting_senses?({ "text" => "。" })).to be(false)
+    end
+  end
+
   describe "#han" do
     it "returns the sentence's Han characters without punctuation" do
       sentence = build(:snippet_sentence, body: "“你好，”他说。")

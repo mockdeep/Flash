@@ -1,8 +1,12 @@
 # frozen_string_literal: true
 
 module Snippets
-  # Segments a batch of sentences into words. The model's answer is checked
-  # mechanically: the words must rejoin to the sentence's Han characters. A
+  # Segments a batch of sentences into words, each with its simplified form
+  # (the headword it studies under), kept on the token only where it differs.
+  # The model sees the sentence, so it can pick by meaning where a
+  # traditional character simplifies more than one way. The answer is
+  # checked mechanically: the words must rejoin to the sentence's Han
+  # characters, and each simplified form must be as long as its word. A
   # sentence that fails is asked again on its own, and one that fails twice
   # falls back to one token per character.
   module Segment
@@ -19,8 +23,25 @@ module Snippets
       characters. Punctuation is never part of a word: quotation marks,
       title marks (《》), brackets and the rest are tokens of their own or
       left out ("《新黑客辞典》" is "《", "新黑客辞典", "》").
+
+      Return each word as `text`, exactly as written, and `simplified`, the
+      same word in simplified characters, character for character; it is
+      identical to `text` for a word already in simplified characters or
+      with no Chinese in it. Where a traditional character simplifies more
+      than one way, choose by its meaning here: 著 as an aspect particle is
+      着, but stays 著 for "to write"; 乾 is 干 for "dry", but stays 乾 in
+      乾坤.
     TEXT
     SYSTEM = [INSTRUCTIONS, Policy::SEGMENTATION].join("\n").freeze
+    WORD = {
+      type: "object",
+      additionalProperties: false,
+      required: ["text", "simplified"],
+      properties: {
+        text: { type: "string" },
+        simplified: { type: "string" },
+      },
+    }.freeze
     SCHEMA = {
       type: "object",
       additionalProperties: false,
@@ -34,7 +55,7 @@ module Snippets
             required: ["id", "words"],
             properties: {
               id: { type: "integer" },
-              words: { type: "array", items: { type: "string" } },
+              words: { type: "array", items: WORD },
             },
           },
         },
@@ -48,15 +69,23 @@ module Snippets
       answers = ask(sentences)
 
       sentences.each_with_index do |sentence, id|
-        tokens = words(sentence, answers[id]).map { |word| { "text" => word } }
-        sentence.update!(tokens:)
+        sentence.update!(tokens: tokens(sentence, answers[id]))
       end
     end
 
-    def self.words(sentence, row)
-      verified(sentence, row) ||
+    def self.tokens(sentence, row)
+      words =
+        verified(sentence, row) ||
         verified(sentence, ask([sentence]).values.first) ||
-        sentence.body.chars
+        sentence.body.chars.map { |char| { "text" => char } }
+
+      words.map { |word| token(*word.values_at("text", "simplified")) }
+    end
+
+    def self.token(text, simplified)
+      return { "text" => text } if simplified.nil? || simplified == text
+
+      { "text" => text, "simplified" => simplified }
     end
 
     def self.ask(sentences)
@@ -72,7 +101,10 @@ module Snippets
     # empty answer counts as a failure even for a sentence with no Han.
     def self.verified(sentence, row)
       words = row&.dig("words")
-      words if words.present? && sentence.partitioned_by?(words)
+      return if words.blank?
+
+      words if sentence.partitioned_by?(words.pluck("text")) &&
+        words.all? { |word| word["simplified"].length == word["text"].length }
     end
   end
 end

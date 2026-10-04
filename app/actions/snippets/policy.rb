@@ -43,5 +43,27 @@ module Snippets
       Characters that are not Chinese (kana, Latin letters) are never part
       of a word with Chinese characters.
     TEXT
+
+    READING = <<~TEXT
+      Reading and gloss rules:
+      - Write the tone changes of 一 and 不 as spoken (不错 búcuò, 一定
+        yídìng, 一样 yíyàng). 一 keeps yī when counted on its own, as an
+        ordinal, or at the end of a word (第一, 统一). A 一 or 不 that is a
+        token of its own reads yī / bù. Never write the third-tone change.
+      - Gloss what is written, as it is used in this sentence, even where
+        the text has a typo or a stray character. Never gloss the word the
+        author probably meant instead.
+    TEXT
+
+    FUNCTION_WORDS = <<~TEXT
+      Function words (particles, prepositions, conjunctions and adverbs) are
+      where a listed sense most often looks right and is not. A listed sense
+      fits a function word only if it names the role the word plays in this
+      sentence: a preposition introducing a place or a time is "in", "at"
+      or "during", not a verb meaning "to be located"; an adverb may mean
+      "already", "only then" or "mostly" rather than the commonest gloss; a
+      conjunction may mark contrast ("as for", "but") rather than sequence
+      ("then"). When no listed sense names the role, propose a new one.
+    TEXT
   end
 end
