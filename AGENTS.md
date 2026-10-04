@@ -329,9 +329,16 @@ app/
 │   │   ├── client.rb             # Creem HTTP client
 │   │   └── create_checkout.rb    # Creates a Creem checkout session
 │   ├── snippets/
+│   │   ├── briefing.rb           # Prompt for a list of occurrences: each sentence and word once, occurrences point at them
 │   │   ├── create.rb             # Saves a snippet + its sentences under a (found or new Mandarin) word_list
-│   │   ├── policy.rb             # Card rules shared by the pipeline's prompts (SEGMENTATION)
-│   │   ├── process.rb            # `rails snippets:process`: works through unprocessed sentences in batches
+│   │   ├── judge.rb              # Opus accepts or rejects proposed new senses
+│   │   ├── occurrence.rb         # One Han token: its simplified headword and the compendium's senses for it
+│   │   ├── policy.rb             # Card rules shared by the pipeline's prompts (segmentation, reading, function words)
+│   │   ├── process.rb            # `rails snippets:process`: segments, then resolves, unprocessed sentences in batches
+│   │   ├── proposal.rb           # A proposer's decision for one occurrence (existing / new / missegmented)
+│   │   ├── propose.rb            # Sonnet decides each occurrence
+│   │   ├── record.rb             # Turns a standing proposal into a token outcome; creates entry/sense
+│   │   ├── resolve.rb            # Propose → judge over a sentence batch, in slices of OCCURRENCE_BATCH tokens
 │   │   ├── segment.rb            # Sonnet segmentation, checked by the Han-rejoin test, with fallbacks
 │   │   └── split_sentences.rb    # Body → sentences on Chinese terminal punctuation
 │   ├── word_lists/
@@ -825,9 +832,11 @@ The content pipeline asks Claude structured questions through `Llm.client.call(m
 
 ### Snippet Processing
 
-Snippets are added in the app (see `Snippet`) and processed locally with `rails snippets:process`, which asks Claude through `Llm.client` and so only runs in development. It finds every sentence still unsegmented (`SnippetSentence.unsegmented`), segments them in batches of `Snippets::Process::SEGMENT_BATCH` and saves each batch, so a run that dies picks up where it stopped.
-- **Segment** (`Snippets::Segment`): Sonnet splits each sentence into words under `Snippets::Policy::SEGMENTATION`. The answer is checked mechanically (`SnippetSentence#partitioned_by?`: the words must rejoin to the sentence's Han characters); a sentence that fails, or comes back with no words, is asked again on its own, then falls back to one token per character.
-- A segmented sentence holds `{ "text" }` tokens only, so it and its snippet read `:in_progress` and block `compendium:push` until later steps fill in senses.
+Snippets are added in the app (see `Snippet`) and processed locally with `rails snippets:process`, which asks Claude through `Llm.client` and so only runs in development. It segments every unsegmented sentence (`SnippetSentence.unsegmented`, batches of `SEGMENT_BATCH`), then resolves every sentence still `awaiting_senses?` (batches of `RESOLVE_BATCH`, in snippet and position order so later batches see the senses earlier ones created). Each batch is saved as it finishes, so a run that dies picks up where it stopped.
+- **Segment** (`Snippets::Segment`): Sonnet splits each sentence into words under `Snippets::Policy::SEGMENTATION`, giving each word's simplified form too (kept on the token as `simplified` only where it differs from `text`). The answer is checked mechanically (`SnippetSentence#partitioned_by?`: the words must rejoin to the sentence's Han characters, and each simplified form must be as long as its word); a sentence that fails, or comes back with no words, is asked again on its own, then falls back to one token per character.
+- **Resolve** (`Snippets::Resolve`): every Han token is its own question (`Snippets::Occurrence`), marked 【…】 among its neighbours, so one word can take two senses even within a sentence. They are asked about in slices of `OCCURRENCE_BATCH` through `Snippets::Briefing` (each sentence and word once, for cost). Sonnet decides each (`Snippets::Propose`): an **existing** sense, a **new** one (headword, reading, gloss), or **missegmented**. Only new senses go to Opus (`Snippets::Judge`); `Snippets::Record` writes the result onto the token as `outcome` (`matched` / `created` / `unresolved`) plus `sense_id` or `note`. A rejected sense, a broken decision and a missegmented token are all left `unresolved` with the reason. Tokens without a Han character are left as they are.
+- **Traditional text**: the compendium is keyed by simplified headwords, so an occurrence looks up and creates senses under its token's `simplified` form (`Occurrence#headword`). The segmenter chooses it with the sentence in view, so a character that simplifies more than one way is settled by meaning (著 as a particle → 着, 乾 "dry" → 干); the judge can still reject a wrong headword. `Briefing` lists a word once per text-and-headword pair (`Occurrence#spelling`). An entry is matched on the reading's letters only, since seed readings carry the HSK syllabus's punctuation.
+- Until review strips them, the `outcome` / `note` / `simplified` keys (and any word without a `sense_id`) keep a sentence and its snippet `:in_progress`, which blocks `compendium:push`.
 
 ### Compendium Sync
 
