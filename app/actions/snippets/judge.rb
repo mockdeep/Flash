@@ -38,7 +38,7 @@ module Snippets
       Accept when the reading and gloss are right for the sentence and the
       sense is distinct from the listed ones. Give a verdict for every
       occurrence, and a one-sentence reason only when you reject: the reason
-      is kept for the person who reviews the text.
+      goes to the next proposer, or to the person who reviews the text.
     TEXT
     SYSTEM = [
       INSTRUCTIONS,

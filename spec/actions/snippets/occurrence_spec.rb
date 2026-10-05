@@ -117,6 +117,19 @@ RSpec.describe Snippets::Occurrence do
       expect(repeated.to_prompt(0, sid: 0, wid: 0)).to include(marked: "花钱买【花】")
     end
 
+    it "leaves out the rejection when there is none" do
+      expect(occurrence.to_prompt(0, sid: 0, wid: 0))
+        .not_to have_key(:rejection)
+    end
+
+    it "carries a rejection to the next proposer" do
+      rejected = occurrence
+      rejected.rejection = "wrong reading"
+
+      expect(rejected.to_prompt(0, sid: 0, wid: 0))
+        .to include(rejection: "wrong reading")
+    end
+
     it "shows a window of the sentence rather than all of it" do
       words = ["一", "二", "三", "四", "五", "六", "七", "八", "九"]
 

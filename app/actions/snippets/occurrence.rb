@@ -4,7 +4,7 @@ module Snippets
   # One Han token of a sentence, with what the compendium holds for it.
   # Every token is its own occurrence, so a word used in two senses, even
   # within one sentence, is decided twice. `rejection` keeps why a proposal
-  # for it did not stand.
+  # for it did not stand, and carries it to the next rung of the ladder.
   class Occurrence
     MARKS = ["【", "】"].freeze
     CONTEXT = 3
@@ -51,7 +51,7 @@ module Snippets
     # named as well as pointed at, so a question says what it is about and a
     # muddled id shows up as a mismatch instead of a quietly wrong sense.
     def to_prompt(id, sid:, wid:)
-      { id:, sid:, wid:, word:, marked: }
+      { id:, sid:, wid:, word:, marked:, rejection: }.compact
     end
 
     # What holds for every occurrence of the word, said once per briefing.

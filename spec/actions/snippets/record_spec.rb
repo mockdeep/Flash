@@ -17,9 +17,9 @@ RSpec.describe Snippets::Record do
   end
 
   describe ".call" do
-    it "leaves a missegmented token unresolved with its note" do
+    it "marks a missegmented token with its note" do
       expect(described_class.call(proposal("missegmented")))
-        .to eq("outcome" => "unresolved", "note" => "joins two words")
+        .to eq("outcome" => "missegmented", "note" => "joins two words")
     end
 
     it "records an existing sense as matched" do

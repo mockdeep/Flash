@@ -6,16 +6,34 @@ RSpec.describe Snippets::Process do
   # A whole pipeline in miniature: segments each sentence by character,
   # proposes a new sense for every occurrence, and accepts every proposal.
   def fake_pipeline
-    llm.respond do |call|
-      prompt = JSON.parse(call.prompt)
+    llm.respond { |call| pipeline_answer(call) }
+  end
 
-      case call.system
-      when Snippets::Segment::SYSTEM then segmented(prompt)
-      when Snippets::Propose::SYSTEM then proposed(prompt)
-      else judged(prompt)
-      end
+  def pipeline_answer(call)
+    prompt = JSON.parse(call.prompt)
+
+    case call.system
+    when Snippets::Segment::SYSTEM then segmented(prompt)
+    when Snippets::Propose::SYSTEM then proposed(prompt)
+    else judged(prompt)
     end
   end
+
+  # Calls the first word it is asked about missegmented, then runs as the
+  # fake pipeline does.
+  def missegmenting_pipeline
+    faulted = false
+    llm.respond do |call|
+      proposing = call.system == Snippets::Propose::SYSTEM
+      next pipeline_answer(call) if faulted || !proposing
+
+      faulted = true
+      note = "joins 花 and 了"
+      { decisions: [{ id: 0, decision: "missegmented", note: }] }
+    end
+  end
+
+  def reported_lines = [].tap { |lines| described_class.call { lines << it } }
 
   def segmented(prompt)
     sentences =
@@ -88,13 +106,20 @@ RSpec.describe Snippets::Process do
       expect(calls_to(Snippets::Propose::SYSTEM)).to eq(2)
     end
 
-    it "yields each step and the batch it finished" do
+    it "reports each batch it finishes" do
       fake_pipeline
-      sentence = create(:snippet_sentence, body: "我")
+      snippet = create(:snippet, title: "T")
+      create(:snippet_sentence, body: "我", snippet:)
 
-      expect { |block| described_class.call(&block) }.to yield_successive_args(
-        [:segmented, [sentence]], [:resolved, [sentence]]
-      )
+      expect(reported_lines)
+        .to eq(["Segmented 1 sentences of T", "Resolved 1 sentences of T"])
+    end
+
+    it "reports a sentence sent back to the segmenter" do
+      missegmenting_pipeline
+      create(:snippet_sentence, body: "花了", tokens: [{ "text" => "花了" }])
+
+      expect(reported_lines).to include("Re-segmented 花了 (花了: joins 花 and 了)")
     end
   end
 end

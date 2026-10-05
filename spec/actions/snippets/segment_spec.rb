@@ -61,6 +61,15 @@ RSpec.describe Snippets::Segment do
         .to eq('[{"id":0,"sentence":"我"},{"id":1,"sentence":"你"}]')
     end
 
+    it "passes on what was wrong with an earlier segmentation" do
+      llm.answer(answer("花", "了"))
+      sentence = create(:snippet_sentence, body: "花了")
+      described_class.call([sentence], feedback: { sentence => "花了: split" })
+
+      expect(llm.calls.sole.prompt)
+        .to eq('[{"id":0,"sentence":"花了","feedback":"花了: split"}]')
+    end
+
     it "asks again about a sentence whose words drop a character" do
       llm.answer(answer("我", "你"), answer("我", "爱你"))
 

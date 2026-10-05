@@ -84,25 +84,89 @@ RSpec.describe Snippets::Resolve do
         .to eq(["claude-sonnet-5-5", "claude-opus-5-5"])
     end
 
-    it "leaves a word unresolved with the judge's reason" do
-      llm.answer(decisions, verdicts(false, reason: "wrong tone"))
+    context "when the judge rejects the first proposal" do
+      it "records the second rung's proposal once accepted" do
+        second = decisions(gloss: "to be fond of")
+        llm.answer(decisions, verdicts(false), second, verdicts(true))
 
-      expect(resolved_token(sentence))
-        .to include("outcome" => "unresolved", "note" => "wrong tone")
+        described_class.call([sentence])
+
+        expect(Sense.pluck(:gloss)).to eq(["to be fond of"])
+      end
+
+      it "has Opus propose on the second rung" do
+        llm.answer(decisions, verdicts(false), decisions, verdicts(true))
+
+        described_class.call([sentence])
+
+        expect(llm.calls.map(&:model).count("claude-opus-5-5")).to eq(3)
+      end
+
+      it "shows the second proposer the rejection" do
+        rejected = verdicts(false, reason: "wrong tone")
+        llm.answer(decisions, rejected, decisions, verdicts(true))
+        described_class.call([sentence])
+
+        expect(llm.calls.third.prompt).to include('"rejection":"wrong tone"')
+      end
+
+      it "leaves the word unresolved when the top rung is rejected too" do
+        rejected = verdicts(false, reason: "still wrong")
+        llm.answer(decisions, verdicts(false), decisions, rejected)
+
+        expect(resolved_token(sentence))
+          .to include("outcome" => "unresolved", "note" => "still wrong")
+      end
+
+      it "creates no sense for an unresolved word" do
+        llm.answer(decisions, verdicts(false), decisions, verdicts(false))
+
+        expect { described_class.call([sentence]) }.not_to change(Sense, :count)
+      end
     end
 
-    it "creates no sense for an unresolved word" do
-      llm.answer(decisions, verdicts(false))
+    context "when a token is missegmented" do
+      def missegmented
+        faulting = decision(0, "missegmented").merge(note: "joins 花 and 了")
+        { decisions: [faulting] }
+      end
 
-      expect { described_class.call([sentence]) }.not_to change(Sense, :count)
-    end
+      def resegmented(*words)
+        words = words.map { |word| { text: word, simplified: word } }
+        { sentences: [{ id: 0, words: }] }
+      end
 
-    it "leaves a missegmented word unresolved with the complaint" do
-      faulting = decision(0, "missegmented").merge(note: "joins 花 and 了")
-      llm.answer({ decisions: [faulting] })
+      def undecided = { decisions: [] }
 
-      expect(resolved_token(sentence(["花了"])))
-        .to include("outcome" => "unresolved", "note" => "joins 花 and 了")
+      it "segments the sentence again" do
+        faulted = sentence(["花了"])
+        llm.answer(missegmented, resegmented("花", "了"), *[undecided] * 4)
+        described_class.call([faulted])
+
+        expect(faulted.reload.tokens.pluck("text")).to eq(["花", "了"])
+      end
+
+      it "gives the segmenter the complaint" do
+        llm.answer(missegmented, resegmented("花", "了"), *[undecided] * 4)
+        described_class.call([sentence(["花了"])])
+
+        expect(llm.calls.second.prompt).to include("花了: joins 花 and 了")
+      end
+
+      it "returns the complaint" do
+        faulted = sentence(["花了"])
+        llm.answer(missegmented, resegmented("花", "了"), *[undecided] * 4)
+
+        expect(described_class.call([faulted]))
+          .to eq(faulted => "花了: joins 花 and 了")
+      end
+
+      it "leaves the token unresolved when it is faulted again" do
+        llm.answer(missegmented, resegmented("花了"), missegmented)
+
+        expect(resolved_token(sentence(["花了"])))
+          .to include("outcome" => "unresolved", "note" => "joins 花 and 了")
+      end
     end
 
     it "asks about each token of a repeated word" do
@@ -130,7 +194,7 @@ RSpec.describe Snippets::Resolve do
 
         described_class.call([sentence(["花", "买", "花"])])
 
-        expect(asked.map(&:size)).to eq([2, 1])
+        expect(asked.map(&:size)).to eq([2, 2, 1, 1])
       end
 
       it "shows a later slice the senses an earlier one created" do
