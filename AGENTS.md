@@ -854,7 +854,7 @@ Snippets are added in the app (see `Snippet`) and processed locally with `rails 
 
 ### Compendium Review
 
-The compendium can be reviewed directly, not only through snippets. Both tools run locally; the results reach production through `compendium:push`.
+The compendium can be reviewed directly, not only through snippets. Both tools run locally; the results reach production through `compendium:push`. A Claude Code skill, `.claude/skills/compendium-review/SKILL.md`, walks a session through both kinds of review (a processed snippet, or any word), finishing and pushing; keep it in step with the commands here.
 - **Look up**: `rails compendium:lookup Q=花` lists every Mandarin entry with that headword (a query without Chinese characters searches glosses instead): each sense with its id, the lists that hold it (with the category there) and how many snippet sentences point at it.
 - **Edit** (`Compendium::Edit`, through `bin/rails runner`):
   - `add(headword:, reading:, gloss:)`: a sense, under the entry for that reading (matched on the reading's letters, as the pipeline does).
