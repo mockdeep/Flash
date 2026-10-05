@@ -7,6 +7,8 @@ class SenseMembership < ApplicationRecord
   belongs_to :sense
   belongs_to :word_list
 
+  scope :uncategorized, -> { where(category: nil) }
+
   validates :position, presence: true
   validates :sense_id, uniqueness: { scope: :word_list_id }
 end

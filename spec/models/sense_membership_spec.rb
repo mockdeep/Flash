@@ -21,4 +21,13 @@ RSpec.describe SenseMembership do
 
     expect(same_selection(membership)).not_to be_valid
   end
+
+  describe ".uncategorized" do
+    it "finds memberships without a category" do
+      create(:sense_membership, category: "verb")
+      membership = create(:sense_membership, category: nil)
+
+      expect(described_class.uncategorized).to eq([membership])
+    end
+  end
 end
