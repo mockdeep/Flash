@@ -329,8 +329,11 @@ app/
 │   │   ├── client.rb             # Creem HTTP client
 │   │   └── create_checkout.rb    # Creates a Creem checkout session
 │   ├── snippets/
+│   │   ├── attach.rb             # Appends a snippet's senses to its word_list, in snippet order
 │   │   ├── briefing.rb           # Prompt for a list of occurrences: each sentence and word once, occurrences point at them
+│   │   ├── categorize.rb         # Files memberships under a part of speech (Sonnet, headword + reading + gloss)
 │   │   ├── create.rb             # Saves a snippet + its sentences under a (found or new Mandarin) word_list
+│   │   ├── finish.rb             # Closes a reviewed snippet: strip working keys, attach, categorize
 │   │   ├── judge.rb              # Opus accepts or rejects proposed new senses
 │   │   ├── occurrence.rb         # One Han token: its simplified headword and the compendium's senses for it
 │   │   ├── policy.rb             # Card rules shared by the pipeline's prompts (segmentation, reading, function words)
@@ -839,6 +842,7 @@ Snippets are added in the app (see `Snippet`) and processed locally with `rails 
 - **Missegmented tokens**: a sentence with a token called missegmented is segmented again straight away, with the complaints as feedback, and resolved afresh; a second complaint leaves the token `unresolved` with its note. The once-only guard is just the inner call's `resegment: false`, so nothing is stored. `Resolve.call` returns the complaints for the report. Senses the sentence's other tokens created on the first pass stay in the compendium, unused unless a token picks them.
 - **Traditional text**: the compendium is keyed by simplified headwords, so an occurrence looks up and creates senses under its token's `simplified` form (`Occurrence#headword`). The segmenter chooses it with the sentence in view, so a character that simplifies more than one way is settled by meaning (著 as a particle → 着, 乾 "dry" → 干); the judge can still reject a wrong headword. `Briefing` lists a word once per text-and-headword pair (`Occurrence#spelling`). An entry is matched on the reading's letters only, since seed readings carry the HSK syllabus's punctuation.
 - Until review strips them, the `outcome` / `note` / `simplified` keys (and any word without a `sense_id`) keep a sentence and its snippet `:in_progress`, which blocks `compendium:push`.
+- **Finish** (`Snippets::Finish.call(snippet)`, run through `bin/rails runner` once a snippet is reviewed): refuses (`Finish::Unfinished`) while a Chinese word has no `sense_id`; otherwise strips every token to `text` + `sense_id` (so the snippet reads `:finished` and can be pushed), appends the snippet's senses to its word_list after the ones it holds (`Snippets::Attach`), and files the list's uncategorized memberships by part of speech in batches of `CATEGORIZE_BATCH` (`Snippets::Categorize`; a row the model leaves out is filed `other`). A list therefore only ever holds reviewed senses. Running it again on a finished snippet only categorizes whatever a failed run left undone.
 
 ### Compendium Sync
 
