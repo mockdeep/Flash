@@ -46,6 +46,24 @@ RSpec.describe SnippetsController do
       expect(rendered).to have_css("td", text: "New")
     end
 
+    it "offers to study a finished snippet's list" do
+      snippet = own_snippet(login_admin)
+      create(:snippet_sentence, snippet:, tokens: [{ "text" => "。" }])
+
+      get(snippets_path)
+
+      expect(rendered).to have_button("Study this list")
+    end
+
+    it "offers nothing to study before a snippet is finished" do
+      snippet = own_snippet(login_admin)
+      create(:snippet_sentence, snippet:, tokens: [{ "text" => "我" }])
+
+      get(snippets_path)
+
+      expect(rendered).to have_no_button("Study this list")
+    end
+
     it "leaves out another user's snippets" do
       create(:snippet, title: "孔乙己")
       login_admin

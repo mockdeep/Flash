@@ -417,6 +417,7 @@ app/
 │   ├── replacements_controller.rb     # Re-import a deck's cards (Decks::Replace)
 │   ├── sessions_controller.rb         # Login / logout
 │   ├── shares_controller.rb           # Owner toggle (via :deck_id) + public preview/copy/try (via :token)
+│   ├── snippet_decks_controller.rb    # "Study this list": find-or-create a ReadingDeck over a snippet's list (admin)
 │   ├── snippets_controller.rb         # Snippet index / new / create (admin)
 │   ├── studies_controller.rb          # Study show/update; dispatches text vs music views
 │   ├── study_goal_resets_controller.rb # Reset today's count on all decks, go to the first deck
@@ -491,7 +492,7 @@ app/
 │   │   ├── music_update.rb   # Music answer result
 │   │   └── study_frame_data.rb # Shared study-frame data helper (wires the text-size controller)
 │   ├── snippets/
-│   │   ├── index.rb          # Admin's snippets with their state (new / in progress / finished)
+│   │   ├── index.rb          # Admin's snippets with their status; "Study this list" on finished ones
 │   │   └── new.rb            # Title / author / list (type-or-pick) / body
 │   ├── subscriptions/
 │   │   └── show.rb
@@ -850,6 +851,7 @@ Snippets are added in the app (see `Snippet`) and processed locally with `rails 
   - `repoint(sentence, index, sense)` / `add_sense(sentence, index, reading:, gloss:)`: give a token a sense (an existing one, or a new one under its headword, made by `Compendium::Edit.add`); either clears the token's note.
   - `resegment(sentence, feedback)`: segment one sentence again with a complaint and resolve it afresh.
   - Edits to senses themselves (fixing wording, deleting leftovers) are `Compendium::Edit`'s; see Compendium Review.
+- **Study**: a finished snippet's row on `/snippets` has "Study this list" (`SnippetDecksController#create`), which finds or creates the admin's `ReadingDeck` over the snippet's word_list and goes to its page. Publishing that deck to the catalog (the existing admin toggle) lets others add the list by reference, like any language deck.
 - **Finish** (`Snippets::Finish.call(snippet)`, run through `bin/rails runner` once a snippet is reviewed): refuses (`Finish::Unfinished`) while a Chinese word has no `sense_id`; otherwise strips every token to `text` + `sense_id` (so the snippet reads `:finished` and can be pushed), appends the snippet's senses to its word_list after the ones it holds (`Snippets::Attach`), and files the list's uncategorized memberships by part of speech in batches of `CATEGORIZE_BATCH` (`Snippets::Categorize`; a row the model leaves out is filed `other`). A list therefore only ever holds reviewed senses. Running it again on a finished snippet only categorizes whatever a failed run left undone.
 
 ### Compendium Review
