@@ -3,7 +3,7 @@
 module Views
   module Snippets
     class Index < Views::Base
-      HEADINGS = ["Title", "Author", "List", "Status"].freeze
+      HEADINGS = ["Title", "Author", "List", "Status", ""].freeze
       STATUSES = {
         new: "New",
         in_progress: "In progress",
@@ -40,7 +40,21 @@ module Views
           table.cell { snippet.author }
           table.cell { snippet.word_list.name }
           table.cell { STATUSES[snippet.status] }
+          table.cell { render_study_button(snippet) }
         end
+      end
+
+      # A list only gains senses as its snippets are finished, so an
+      # unfinished one has nothing yet to study.
+      def render_study_button(snippet)
+        return unless snippet.status == :finished
+
+        button_to(
+          "Study this list",
+          snippet_deck_path(snippet),
+          method: :post,
+          class: button_class(:secondary, :compact),
+        )
       end
     end
   end
