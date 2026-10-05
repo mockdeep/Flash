@@ -3,12 +3,14 @@
 module Snippets
   # Turns a settled or accepted proposal into what its token records. The
   # decision is what the model said; the outcome is what happened, in the
-  # past tense. A new sense enters the compendium here.
+  # past tense. A new sense enters the compendium here. "missegmented" is
+  # never saved: Resolve sends the sentence back to the segmenter, or
+  # leaves the token unresolved.
   module Record
     def self.call(proposal)
       case proposal.decision
       when "missegmented"
-        { "outcome" => "unresolved", "note" => proposal.note }
+        { "outcome" => "missegmented", "note" => proposal.note }
       when "existing"
         { "outcome" => "matched", "sense_id" => proposal.sense_id }
       else record_new(proposal)

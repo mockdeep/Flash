@@ -31,6 +31,10 @@ module Snippets
       than one way, choose by its meaning here: 著 as an aspect particle is
       着, but stays 著 for "to write"; 乾 is 干 for "dry", but stays 乾 in
       乾坤.
+
+      A sentence may carry `feedback`: what a reviewer found wrong with an
+      earlier segmentation of it. Segment it again so that every complaint
+      is fixed.
     TEXT
     SYSTEM = [INSTRUCTIONS, Policy::SEGMENTATION].join("\n").freeze
     WORD = {
@@ -65,18 +69,20 @@ module Snippets
       list: "sentences", model: Llm::SONNET, system: SYSTEM, schema: SCHEMA
     }.freeze
 
-    def self.call(sentences)
-      answers = ask(sentences)
+    # `feedback` maps a sentence to what was wrong with its last
+    # segmentation, for one sent back to be segmented again.
+    def self.call(sentences, feedback: {})
+      answers = ask(sentences, feedback)
 
       sentences.each_with_index do |sentence, id|
-        sentence.update!(tokens: tokens(sentence, answers[id]))
+        sentence.update!(tokens: tokens(sentence, answers[id], feedback))
       end
     end
 
-    def self.tokens(sentence, row)
+    def self.tokens(sentence, row, feedback)
       words =
         verified(sentence, row) ||
-        verified(sentence, ask([sentence]).values.first) ||
+        verified(sentence, ask([sentence], feedback).values.first) ||
         sentence.body.chars.map { |char| { "text" => char } }
 
       words.map { |word| token(*word.values_at("text", "simplified")) }
@@ -88,10 +94,10 @@ module Snippets
       { "text" => text, "simplified" => simplified }
     end
 
-    def self.ask(sentences)
+    def self.ask(sentences, feedback)
       prompt =
         sentences.each_with_index.map do |sentence, id|
-          { id:, sentence: sentence.body }
+          { id:, sentence: sentence.body, feedback: feedback[sentence] }.compact
         end
 
       Llm::AskEach.call(sentences, prompt:, **ASK)

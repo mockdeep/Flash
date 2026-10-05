@@ -3,7 +3,8 @@
 module Snippets
   # The proposing tier: for each occurrence, pick an existing sense, propose
   # a new one, or call the token missegmented. A decision that breaks the
-  # rules is turned into a rejection, and the occurrence is left unresolved.
+  # rules is turned into a rejection, so the occurrence goes up to the next
+  # rung like any other.
   module Propose
     INSTRUCTIONS = <<~TEXT
       You build vocabulary cards from Chinese texts. The input has three
@@ -32,7 +33,10 @@ module Snippets
       - "missegmented": the token breaks the segmentation rules below: two
         words joined (a verb with its aspect particle, "花了"), a piece cut
         from a longer word, or a whole the rules split. Say in note how it
-        should have been split or joined.
+        should have been split or joined. The sentence is segmented again.
+
+      An occurrence may carry `rejection`: a reviewer's reason for turning
+      down an earlier proposal for it. Take it into account.
 
       Every token gets a sense: there is no skipping, even for a single
       numeral, a typo or a stray character. Return only the fields a
