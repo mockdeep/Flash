@@ -98,4 +98,11 @@ namespace(:compendium) do
     "(a dry run unless DRY_RUN=false)",
   )
   task(push: :environment) { CompendiumTasks.push }
+
+  desc("Show the compendium's entries for a headword or gloss (Q=…)")
+  task(lookup: :environment) do
+    query = ENV.fetch("Q") { abort("Say what to look up: Q=花 or Q=flower") }
+
+    puts(Compendium::Lookup.call(query))
+  end
 end

@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
-# Syncs the compendium between a local database and production through a
-# snapshot: one CSV per table (docs/compendium.md, Compendium sync). Every
-# operation takes a raw PG::Connection, so the same code runs against either
-# side.
+# The local tools for the compendium: looking it up and editing it
+# (Lookup, Edit), and syncing it between a local database and production
+# through a snapshot, one CSV per table (docs/compendium.md, Compendium
+# sync). The sync operations take a raw PG::Connection, so the same code
+# runs against either side.
 module Compendium
   # Parents before children: rows are added in this order and removed in
   # reverse, so no foreign key is ever left dangling.

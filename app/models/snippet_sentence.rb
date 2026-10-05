@@ -13,6 +13,17 @@ class SnippetSentence < ApplicationRecord
 
   scope :unsegmented, -> { where("tokens = '[]'::jsonb") }
   scope :segmented, -> { where.not("tokens = '[]'::jsonb") }
+  scope :pointing_at,
+        ->(sense) { where("tokens @> ?", [{ sense_id: sense.id }].to_json) }
+
+  # Every sense a token anywhere points at.
+  def self.sense_ids
+    connection.select_values(<<~SQL.squish).map { |id| Integer(id) }
+      SELECT DISTINCT (token ->> 'sense_id')::bigint
+      FROM snippet_sentences, jsonb_array_elements(tokens) AS token
+      WHERE token ? 'sense_id'
+    SQL
+  end
 
   def han = body.scan(HAN).join
 

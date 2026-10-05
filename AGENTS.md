@@ -315,11 +315,13 @@ app/
 ├── actions/                      # Service objects (`.call` → Result); see Actions below
 │   ├── catalog/
 │   │   └── copy_deck.rb          # Duplicates a public deck into a user's account
-│   ├── compendium.rb             # Sync namespace: TABLES (parents first), column helpers, Refused
+│   ├── compendium.rb             # Lookup / edit / sync namespace: TABLES (parents first), column helpers, Refused
 │   ├── compendium/
 │   │   ├── apply.rb              # Snapshot → database: add / update / delete by id, with a Report
+│   │   ├── edit.rb               # Sense edits: add / revise / remove / attach / detach (Refused)
 │   │   ├── export.rb             # Database → snapshot (COPY TO STDOUT)
 │   │   ├── load.rb               # Snapshot → empty database (Apply, then advance id sequences)
+│   │   ├── lookup.rb             # `rails compendium:lookup Q=…`: entries for a headword or gloss
 │   │   ├── pull.rb               # `unpushed?` check before a pull resets the database
 │   │   ├── push.rb               # Push guards, then Apply to production
 │   │   ├── snapshot.rb           # One CSV per table; checksum / empty?
@@ -341,6 +343,8 @@ app/
 │   │   ├── proposal.rb           # A proposer's decision for one occurrence (existing / new / missegmented)
 │   │   ├── propose.rb            # Sonnet decides each occurrence
 │   │   ├── record.rb             # Turns a standing proposal into a token outcome; creates entry/sense
+│   │   ├── report.rb             # `rails snippets:review`: a snippet token by token, plus unused senses
+│   │   ├── review.rb             # Token edits: repoint / add_sense / resegment
 │   │   ├── resolve.rb            # Escalation ladder (RUNGS) over a sentence batch, in slices; re-segments missegmented sentences once
 │   │   ├── segment.rb            # Sonnet segmentation, checked by the Han-rejoin test, with fallbacks
 │   │   └── split_sentences.rb    # Body → sentences on Chinese terminal punctuation
@@ -552,8 +556,8 @@ lib/
 ├── route_constraints/
 │   └── admin_constraint.rb  # Routes inside `constraints AdminConstraint.new` 404 for non-admins
 └── tasks/
-    ├── compendium.rake      # compendium:pull / compendium:push (see Compendium Sync)
-    └── snippets.rake        # snippets:process (see Snippet Processing)
+    ├── compendium.rake      # compendium:pull / compendium:push / compendium:lookup (see Compendium Sync)
+    └── snippets.rake        # snippets:process / snippets:review (see Snippet Processing)
 ```
 
 ### Actions
@@ -842,7 +846,23 @@ Snippets are added in the app (see `Snippet`) and processed locally with `rails 
 - **Missegmented tokens**: a sentence with a token called missegmented is segmented again straight away, with the complaints as feedback, and resolved afresh; a second complaint leaves the token `unresolved` with its note. The once-only guard is just the inner call's `resegment: false`, so nothing is stored. `Resolve.call` returns the complaints for the report. Senses the sentence's other tokens created on the first pass stay in the compendium, unused unless a token picks them.
 - **Traditional text**: the compendium is keyed by simplified headwords, so an occurrence looks up and creates senses under its token's `simplified` form (`Occurrence#headword`). The segmenter chooses it with the sentence in view, so a character that simplifies more than one way is settled by meaning (著 as a particle → 着, 乾 "dry" → 干); the judge can still reject a wrong headword. `Briefing` lists a word once per text-and-headword pair (`Occurrence#spelling`). An entry is matched on the reading's letters only, since seed readings carry the HSK syllabus's punctuation.
 - Until review strips them, the `outcome` / `note` / `simplified` keys (and any word without a `sense_id`) keep a sentence and its snippet `:in_progress`, which blocks `compendium:push`.
+- **Review**: `rails snippets:review ID=…` (or without `ID`, every unfinished snippet) prints `Snippets::Report`: a summary line, the unresolved words with their reasons, the senses the snippet created, then every sentence token by token with the sentence ids, token indexes and sense ids the edits take; it ends with the compendium's unused senses (no list holds them, no token points at them, such as leftovers from re-segmenting). Token edits are `Snippets::Review` actions, called through `bin/rails runner`:
+  - `repoint(sentence, index, sense)` / `add_sense(sentence, index, reading:, gloss:)`: give a token a sense (an existing one, or a new one under its headword, made by `Compendium::Edit.add`); either clears the token's note.
+  - `resegment(sentence, feedback)`: segment one sentence again with a complaint and resolve it afresh.
+  - Edits to senses themselves (fixing wording, deleting leftovers) are `Compendium::Edit`'s; see Compendium Review.
 - **Finish** (`Snippets::Finish.call(snippet)`, run through `bin/rails runner` once a snippet is reviewed): refuses (`Finish::Unfinished`) while a Chinese word has no `sense_id`; otherwise strips every token to `text` + `sense_id` (so the snippet reads `:finished` and can be pushed), appends the snippet's senses to its word_list after the ones it holds (`Snippets::Attach`), and files the list's uncategorized memberships by part of speech in batches of `CATEGORIZE_BATCH` (`Snippets::Categorize`; a row the model leaves out is filed `other`). A list therefore only ever holds reviewed senses. Running it again on a finished snippet only categorizes whatever a failed run left undone.
+
+### Compendium Review
+
+The compendium can be reviewed directly, not only through snippets. Both tools run locally; the results reach production through `compendium:push`.
+- **Look up**: `rails compendium:lookup Q=花` lists every Mandarin entry with that headword (a query without Chinese characters searches glosses instead): each sense with its id, the lists that hold it (with the category there) and how many snippet sentences point at it.
+- **Edit** (`Compendium::Edit`, through `bin/rails runner`):
+  - `add(headword:, reading:, gloss:)`: a sense, under the entry for that reading (matched on the reading's letters, as the pipeline does).
+  - `revise(sense, gloss:, reading:)`: fix a sense's wording; a new reading moves it to the entry for that reading.
+  - `remove(sense)`: delete a sense, refused (`Edit::Refused`) while any token, list or learner uses it. `revise` and `remove` delete an entry they leave without senses.
+  - `attach(sense, word_list, category:)` / `detach(sense, word_list)`: put a sense into a list (after the senses it holds) or take it out.
+- Splitting a seed sense that merges two meanings (花 "to spend / flower") is `revise` to narrow it, `add` for the other meaning, `attach` where the new sense belongs, and `Snippets::Review.repoint` for tokens; learners keep their progress on the narrowed sense.
+- **Learner data never comes down**, so locally `remove` cannot see progress on a sense and nothing shows what a `revise` changes for learners. The dry-run push is the check: it counts the progress and distractor history any deletes would take.
 
 ### Compendium Sync
 

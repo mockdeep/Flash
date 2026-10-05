@@ -35,6 +35,25 @@ RSpec.describe SnippetSentence do
     end
   end
 
+  describe ".pointing_at" do
+    it "finds sentences with a token on the sense" do
+      sense = create(:sense)
+      sentence = create(:snippet_sentence, tokens: [{ "sense_id" => sense.id }])
+      create(:snippet_sentence, tokens: [{ "sense_id" => create(:sense).id }])
+
+      expect(described_class.pointing_at(sense)).to eq([sentence])
+    end
+  end
+
+  describe ".sense_ids" do
+    it "is every sense a token points at, once" do
+      tokens = [{ "sense_id" => 7 }, { "text" => "。" }, { "sense_id" => 7 }]
+      create(:snippet_sentence, tokens:)
+
+      expect(described_class.sense_ids).to eq([7])
+    end
+  end
+
   describe "#awaiting_senses?" do
     def awaiting_senses?(*tokens)
       build(:snippet_sentence, tokens:).awaiting_senses?
