@@ -86,17 +86,6 @@ RSpec.describe StudyDay do
     end
   end
 
-  describe "#start_batch!" do
-    it "counts again from zero" do
-      study_days = create(:deck).study_days
-      study_day =
-        study_days.create!(studied_on: Date.current, completed_count: 5)
-
-      expect { study_day.start_batch! }
-        .to change_record(study_day, :completed_count).from(5).to(0)
-    end
-  end
-
   describe "#recalculate!" do
     def recalculated_day
       deck = create(:deck, :with_target)

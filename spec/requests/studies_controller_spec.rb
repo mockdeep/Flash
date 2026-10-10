@@ -151,6 +151,15 @@ RSpec.describe StudiesController do
       expect(rendered).to have_text("0 / 50 completed")
     end
 
+    it "recalculates the goal when reset_session param is present" do
+      deck = create(:deck, :with_target)
+      create_list(:basic_card, 2, deck:)
+      study_day = deck.study_days.create!(studied_on: Date.current, goal: 5)
+
+      expect { get(deck_study_path(deck, reset_session: true)) }
+        .to change_record(study_day, :goal).from(5).to(2)
+    end
+
     it "counts completions separately for each deck" do
       card = create(:basic_card, back: "Paris", correct_streak: 0)
       create(:basic_card, deck: card.deck)

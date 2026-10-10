@@ -12,6 +12,12 @@ RSpec.describe StudyGoalResetsController do
     study_days.create!(studied_on: Date.yesterday, completed_count: 5)
   end
 
+  def target_study_day
+    deck = create(:deck, :with_target)
+    create_list(:basic_card, 2, deck:)
+    deck.study_days.create!(studied_on: Date.current, goal: 5)
+  end
+
   describe "#create" do
     it "resets today's count on the user's decks" do
       login_as(default_user)
@@ -19,6 +25,14 @@ RSpec.describe StudyGoalResetsController do
 
       expect { post(study_goal_reset_path) }
         .to change_record(study_day, :completed_count).to(0)
+    end
+
+    it "works today's goal out again from the deck's target" do
+      login_as(default_user)
+      study_day = target_study_day
+
+      expect { post(study_goal_reset_path) }
+        .to change_record(study_day, :goal).from(5).to(2)
     end
 
     it "leaves earlier days alone" do
