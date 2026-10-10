@@ -7,7 +7,7 @@ class StudiesController < ApplicationController
   def show
     deck = current_user.decks.find(params.expect(:deck_id))
     study = Study.for(deck:, exclude_card_id: params[:exclude])
-    deck.study_days.today.start_batch! if params[:reset_session]
+    deck.study_days.today.recalculate! if params[:reset_session]
     render_study(show_view_class(deck), deck:, study:)
   end
 

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 # The cards a deck completed in the current batch on one day in its owner's
-# time zone. "Keep Going" starts a new batch, counting again from zero. A
-# deck with a level target saves the day's goal here when the row is made,
-# and again whenever it is recalculated.
+# time zone. A deck with a level target saves the day's goal here when the
+# row is made. Recalculating works the goal out again and starts a new
+# batch, counting again from zero.
 class StudyDay < ApplicationRecord
   belongs_to :deck
 
@@ -20,8 +20,6 @@ class StudyDay < ApplicationRecord
   def study_goal = (goal if deck.target_active?) || deck.study_goal
 
   def record_completion! = increment!(:completed_count)
-
-  def start_batch! = update!(completed_count: 0)
 
   def recalculate! = update!(goal: deck.target_goal, completed_count: 0)
 end
