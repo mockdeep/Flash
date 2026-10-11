@@ -888,6 +888,23 @@ RSpec.describe StudiesController do
       expect(rendered).to have_css(".answer-button", text: "liǎng")
     end
 
+    it "asks for the reading by typing at the fuzzy find level" do
+      card = reading_card
+      card.deck.update!(level: Study::FUZZY_FIND_LEVEL)
+      get(deck_study_path(card.deck))
+
+      expect(rendered).to have_text("Type the reading")
+    end
+
+    it "submits the typed reading as the reading stage" do
+      card = reading_card
+      card.deck.update!(level: Study::FUZZY_FIND_LEVEL)
+      get(deck_study_path(card.deck))
+
+      expect(rendered)
+        .to have_field("answer[stage]", type: :hidden, with: "reading")
+    end
+
     it "skips the gate when the card has no reading" do
       card = reading_card(reading: nil)
       get(deck_study_path(card.deck))

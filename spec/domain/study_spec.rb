@@ -173,6 +173,29 @@ RSpec.describe Study do
       end
     end
 
+    context "when the deck is at the fuzzy find level" do
+      def fuzzy_find_deck
+        create(:deck, level: described_class::FUZZY_FIND_LEVEL)
+      end
+
+      it "returns :fuzzy_reading when the next card has a reading" do
+        deck = fuzzy_find_deck
+        create(:basic_card, deck:, reading: "liǎng")
+
+        expect(described_class.new(deck:).presentation_mode)
+          .to eq(:fuzzy_reading)
+      end
+
+      it "returns :fuzzy_find when pinned to a card by card_id" do
+        deck = fuzzy_find_deck
+        card = create(:basic_card, deck:, reading: "liǎng")
+
+        study = described_class.new(deck:, card_id: card.id)
+
+        expect(study.presentation_mode).to eq(:fuzzy_find)
+      end
+    end
+
     it "returns :multiple_choice below the reading level" do
       deck = create(:deck, level: described_class::READING_LEVEL - 1)
       create(:basic_card, deck:, reading: "liǎng")
@@ -339,6 +362,45 @@ RSpec.describe Study do
         answers = described_class.new(deck:).possible_answers
 
         expect(answers).to eq(["Paris"])
+      end
+    end
+
+    context "when in fuzzy reading mode" do
+      def deck_with_prompt(reading:)
+        deck = create(:deck, level: Study::FUZZY_FIND_LEVEL)
+        create(:basic_card, deck:, reading:)
+        deck
+      end
+
+      it "returns every reading in the deck" do
+        deck = deck_with_prompt(reading: "liǎng")
+        create(:basic_card, :done, deck:, reading: "sān")
+
+        expect(described_class.new(deck:).possible_answers)
+          .to contain_exactly("liǎng", "sān")
+      end
+
+      it "deduplicates repeated readings" do
+        deck = deck_with_prompt(reading: "shì")
+        create(:basic_card, :done, deck:, reading: "shì")
+
+        expect(described_class.new(deck:).possible_answers).to eq(["shì"])
+      end
+
+      it "skips cards without a reading" do
+        deck = deck_with_prompt(reading: "liǎng")
+        create(:basic_card, :done, deck:, reading: nil)
+
+        expect(described_class.new(deck:).possible_answers).to eq(["liǎng"])
+      end
+
+      it "excludes the readings of homograph twins" do
+        deck = create(:reading_deck, level: Study::FUZZY_FIND_LEVEL)
+        create(:language_card, deck:, front: "过", reading: "guò")
+        create(:language_card, deck:, front: "过", reading: "guo")
+        study = described_class.new(deck:)
+
+        expect(study.possible_answers).to eq([study.next_card.reading])
       end
     end
 

@@ -63,7 +63,7 @@ module Views
                 ),
               )
 
-              render_active_card(card)
+              render(Components::StudyAnswers.new(deck:, study:))
 
               # Claim the space hotkey to prevent scrolling down
               span(data: { hotkeys_target: "click", hotkey: " " }, hidden: true)
@@ -75,49 +75,6 @@ module Views
       private
 
       def goal_reached? = !deck.no_goal? && completed >= study_goal
-
-      def render_active_card(card)
-        answers = study.possible_answers
-        case study.presentation_mode
-        when :fuzzy_find
-          render(Components::FuzzyFindAnswers.new(deck:, card:, answers:))
-        when :reading
-          p(class: "keyboard-hint") { "Pick the reading" }
-          render_answers(card, answers, stage: "reading")
-          p(class: "keyboard-hint") { "Press 1-5 to answer" }
-        else
-          render_answers(card, answers)
-          p(class: "keyboard-hint") { "Press 1-5 to answer" }
-        end
-      end
-
-      def render_answers(card, answers, stage: nil)
-        ol(class: "study-answers-grid") do
-          answers.each_with_index do |answer, index|
-            li do
-              params = {
-                answer: {
-                  answer:,
-                  card_id: card.id,
-                  possible_answers: answers,
-                  stage:,
-                }.compact,
-              }
-              data = { hotkeys_target: "click", hotkey: (index + 1).to_s }
-              button_to(
-                deck_study_path(deck),
-                data:,
-                params:,
-                method: :patch,
-                class: "answer-button",
-              ) do
-                span(class: "answer-number") { (index + 1).to_s }
-                span(class: "answer-text") { answer }
-              end
-            end
-          end
-        end
-      end
     end
   end
 end

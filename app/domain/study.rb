@@ -66,8 +66,8 @@ class Study
 
   def presentation_mode
     if reading_stage?
-      :reading
-    elsif deck.level >= FUZZY_FIND_LEVEL
+      fuzzy_find? ? :fuzzy_reading : :reading
+    elsif fuzzy_find?
       :fuzzy_find
     else
       :multiple_choice
@@ -95,6 +95,7 @@ class Study
 
     case presentation_mode
     when :fuzzy_find then fuzzy_answers
+    when :fuzzy_reading then fuzzy_reading_answers
     when :reading then reading_answers
     else multiple_choice_answers
     end
@@ -155,9 +156,11 @@ class Study
 
   private
 
+  def fuzzy_find? = deck.level >= FUZZY_FIND_LEVEL
+
   def reading_stage?
     !reading_confirmed &&
-      deck.level == READING_LEVEL &&
+      deck.level >= READING_LEVEL &&
       next_card&.reading.present?
   end
 
@@ -229,5 +232,9 @@ class Study
 
   def fuzzy_answers
     deck.backs.uniq
+  end
+
+  def fuzzy_reading_answers
+    [*sibling_pool(next_card.reading).map(&:last), next_card.reading].uniq
   end
 end
