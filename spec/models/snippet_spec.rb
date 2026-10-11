@@ -11,6 +11,20 @@ RSpec.describe Snippet do
   it { is_expected.to validate_presence_of(:body) }
   it { is_expected.to validate_length_of(:body).is_at_most(20_000) }
 
+  it do
+    expect(build(:snippet)).to validate_inclusion_of(:license)
+      .in_array(Snippet::LICENSES.keys)
+  end
+
+  it { is_expected.to allow_value("https://zh.wikipedia.org/").for(:source_url) }
+  it { is_expected.to allow_value("").for(:source_url) }
+  it { is_expected.not_to allow_value("zh.wikipedia.org").for(:source_url) }
+  it { is_expected.not_to allow_value("https://a.org/ b").for(:source_url) }
+
+  it "shares with nobody by default" do
+    expect(described_class.new.license).to eq("all_rights_reserved")
+  end
+
   it "rejects a list in another language" do
     snippet = build(:snippet, word_list: build(:word_list, language: "ja"))
 
@@ -54,6 +68,24 @@ RSpec.describe Snippet do
       tokens = [{ "text" => "我", "sense_id" => 1 }]
 
       expect(snippet_with(tokens).status).to eq(:finished)
+    end
+  end
+
+  describe "#license_name" do
+    it "names the license" do
+      expect(build(:snippet, license: "cc_by_sa").license_name)
+        .to eq("CC BY-SA 4.0")
+    end
+  end
+
+  describe "#license_url" do
+    it "links to the license's terms" do
+      expect(build(:snippet, license: "cc_by_sa").license_url)
+        .to eq("https://creativecommons.org/licenses/by-sa/4.0/")
+    end
+
+    it "is nil for a license without terms to link" do
+      expect(build(:snippet, license: "public_domain").license_url).to be_nil
     end
   end
 

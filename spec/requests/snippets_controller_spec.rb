@@ -12,7 +12,16 @@ RSpec.describe SnippetsController do
   end
 
   def snippet_params(title: "孔乙己")
-    { snippet: { list_name: "Lu Xun", title:, author: "鲁迅", body: "我爱你。" } }
+    {
+      snippet: {
+        list_name: "Lu Xun",
+        title:,
+        author: "鲁迅",
+        source_url: "https://zh.wikisource.org/",
+        license: "public_domain",
+        body: "我爱你。",
+      },
+    }
   end
 
   describe "#index" do
@@ -90,6 +99,15 @@ RSpec.describe SnippetsController do
 
       expect(rendered).to have_css("datalist option[value='Lu Xun']")
     end
+
+    it "starts on the license that shares with nobody" do
+      login_admin
+
+      get(new_snippet_path)
+
+      expect(rendered)
+        .to have_select("License", selected: "All rights reserved")
+    end
   end
 
   describe "#create" do
@@ -106,6 +124,16 @@ RSpec.describe SnippetsController do
 
       expect { post(snippets_path, params: snippet_params) }
         .to change(Snippet, :count).by(1)
+    end
+
+    it "saves the source and license" do
+      login_admin
+
+      post(snippets_path, params: snippet_params)
+
+      saved = snippet_params[:snippet].slice(:source_url, :license)
+
+      expect(Snippet.last).to have_attributes(saved)
     end
 
     it "redirects to the snippets" do
@@ -130,6 +158,14 @@ RSpec.describe SnippetsController do
       post(snippets_path, params: snippet_params(title: ""))
 
       expect(rendered).to have_field("Word List", with: "Lu Xun")
+    end
+
+    it "keeps the license chosen" do
+      login_admin
+
+      post(snippets_path, params: snippet_params(title: ""))
+
+      expect(rendered).to have_select("License", selected: "Public domain")
     end
 
     it "renders the form again when a field is left out" do

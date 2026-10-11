@@ -30,8 +30,30 @@ module Components
         h2 { snippet.title }
         author = snippet.author
         p(class: "reading-snippet__author") { author } if author.present?
+        render_credit(snippet)
         snippet.paragraphs.each { |sentences| render_paragraph(sentences) }
       end
+    end
+
+    def render_credit(snippet)
+      p(class: "reading-snippet__credit") do
+        if snippet.source_url.present?
+          credit_link("Source", snippet.source_url)
+          plain(" · ")
+        end
+        render_license(snippet)
+      end
+    end
+
+    def render_license(snippet)
+      url = snippet.license_url
+      return plain(snippet.license_name) unless url
+
+      credit_link(snippet.license_name, url)
+    end
+
+    def credit_link(text, url)
+      a(href: url, target: "_blank", rel: "noopener") { text }
     end
 
     # The popovers follow the paragraph rather than sit in it, so its text
