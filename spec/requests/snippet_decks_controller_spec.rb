@@ -35,13 +35,13 @@ RSpec.describe SnippetDecksController do
       expect { post(snippet_deck_path(snippet)) }.not_to change(Deck, :count)
     end
 
-    it "redirects to the deck" do
+    it "redirects to studying the deck" do
       snippet = admin_snippet
 
       post(snippet_deck_path(snippet))
 
       deck = snippet.word_list.user.decks.last
-      expect(response).to redirect_to(deck_path(deck))
+      expect(response).to redirect_to(deck_study_path(deck))
     end
   end
 end

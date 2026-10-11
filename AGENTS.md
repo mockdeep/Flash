@@ -203,7 +203,7 @@ end
 - `demo-banner.css` - Demo-mode banner
 - `dialog.css` - Modal dialog component styles (`.dialog`, `.dialog__header`, etc.)
 - `edit-card.css` - Edit card trigger button and form layout within the dialog (also the study-goal dialog's three goal-mode forms, toggled with `:has()`)
-- `flash.css` - Study/flashcard core (card front + kebab menu, answers grid, `.card-reading`)
+- `flash.css` - Study/flashcard core (card front + kebab menu, answers grid, `.card-reading`, the Study | Read `.study-tabs` and `.reading-snippet` on the Read tab)
 - `layout.css` - Header, footer, navigation
 - `music-study.css` - Mic-driven music study UI
 - `price-display.css` - `.price-display` component
@@ -231,7 +231,7 @@ end
 - `Pairing` - Join between a Front `item` and a Back `paired_item` (one row per gloss).
 - `ItemDistractor` - Join marking a Back item as a preset distractor for a Front `item`. The language-side counterpart of `CardDistractor`.
 - `CardDistractor` - A wrong-answer option owned directly by a flat card (uploaded presets and remembered study misses). Unique on `[card_id, text]`.
-- `Deck` (STI base) - A study form. `belongs_to :user`, `belongs_to :topic` (optional), and `belongs_to :word_list` — required *unless* `flat_cards?`, forbidden *if* it is (the presence/absence pair is what keeps the two content models apart). Flat families own a `name` column (unique per user); language decks delegate `name` to the word_list, and the `ordered` scope COALESCEs the two. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"` / `"preset"` / `"none"`, NOT NULL — set by the importer), `ordered`, `study_goal`, `last_studied_at`, nullable `share_token`, and `goal_mode` (`"none"` / `"session"` / `"target"`) with its level target (`target_level` + `target_date` — "finish level N by date"; see Level Targets). In `"none"` mode the study page shows a plain "N completed today" count with a "set goal" button instead of the progress bar, and never shows the milestone.
+- `Deck` (STI base) - A study form. `belongs_to :user`, `belongs_to :topic` (optional), and `belongs_to :word_list` — required *unless* `flat_cards?`, forbidden *if* it is (the presence/absence pair is what keeps the two content models apart). `has_many :snippets` through the word_list, oldest first (none on flat decks). Flat families own a `name` column (unique per user); language decks delegate `name` to the word_list, and the `ordered` scope COALESCEs the two. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"` / `"preset"` / `"none"`, NOT NULL — set by the importer), `ordered`, `study_goal`, `last_studied_at`, nullable `share_token`, and `goal_mode` (`"none"` / `"session"` / `"target"`) with its level target (`target_level` + `target_date` — "finish level N by date"; see Level Targets). In `"none"` mode the study page shows a plain "N completed today" count with a "set goal" button instead of the progress bar, and never shows the milestone.
 - `Card` (STI base) - `belongs_to :deck`, `belongs_to :item` (nullable — flat cards have none), `belongs_to :source_card` (catalog-copy provenance). `has_many :card_distractors`. Owns the content columns and the progress counters (`correct_count`, `correct_streak`, `view_count`), and holds the score handle (`record_correct!`, `record_miss!`, `record_view!`). `normalizes :back` is the single back-joining rule. Unique on `[deck_id, front]` where `front` is present.
 - `StudyDay` - Cards a deck completed on one day (`studied_on`, in the owner's time zone), unique on `[deck_id, studied_on]`. `completed_count` counts the current batch and drives the progress bar; the milestone's "Keep Going" starts a new batch by resetting it to 0 (and, under a level target, sizing the batch to lower tomorrow's goal by one). `goal` holds the day's goal worked out from a level target (nil without one; `#study_goal` falls back to the deck's). `deck.study_days.today` finds or creates the row.
 - `Subscription` - Payment/subscription info, belongs to user.
@@ -261,7 +261,7 @@ end
 
 ### Keyboard Hotkeys
 
-The app uses a **Stimulus hotkeys controller** (`app/javascript/controllers/hotkeys_controller.ts`) for keyboard shortcuts. It listens for `keydown` events at the document level and clicks the matching target element.
+The app uses a **Stimulus hotkeys controller** (`app/javascript/controllers/hotkeys_controller.ts`) for keyboard shortcuts. It listens for `keydown` events at the document level and clicks the matching target element. It skips a target behind an open dialog or inside a `display: none` ancestor (such as the study frame while the Read tab is showing); a target that is hidden itself still works, which the study page's space-claiming span relies on.
 
 **Adding a hotkey to any element:**
 ```ruby
@@ -387,6 +387,8 @@ app/
 │   ├── study_answers.rb          # Study answer area per presentation mode (buttons / fuzzy find, reading stage)
 │   ├── study_example.rb          # Optional example sentence on the answer view
 │   ├── study_goal_dialog.rb      # Edit daily study-goal dialog
+│   ├── snippet_reading.rb        # Read tab text: each snippet's title, author and body paragraphs
+│   ├── study_tabs.rb             # Study | Read radios (CSS `:has()` toggles study frame vs. text)
 │   ├── table.rb                  # `.table` pattern; block fills each row via `table.cell`
 │   ├── target_goal_fields.rb     # Level-target fields + today's goal and Recalculate
 │   ├── target_prompt.rb          # Missed / reached level-target note under the progress bar
@@ -853,7 +855,8 @@ Snippets are added in the app (see `Snippet`) and processed locally with `rails 
   - `repoint(sentence, index, sense)` / `add_sense(sentence, index, reading:, gloss:)`: give a token a sense (an existing one, or a new one under its headword, made by `Compendium::Edit.add`); either clears the token's note.
   - `resegment(sentence, feedback)`: segment one sentence again with a complaint and resolve it afresh.
   - Edits to senses themselves (fixing wording, deleting leftovers) are `Compendium::Edit`'s; see Compendium Review.
-- **Study**: a finished snippet's row on `/snippets` has "Study this list" (`SnippetDecksController#create`), which finds or creates the admin's `ReadingDeck` over the snippet's word_list and goes to its page. Publishing that deck to the catalog (the existing admin toggle) lets others add the list by reference, like any language deck.
+- **Study**: a finished snippet's row on `/snippets` has "Study this list" (`SnippetDecksController#create`), which finds or creates the admin's `ReadingDeck` over the snippet's word_list and goes to its study page. Publishing that deck to the catalog (the existing admin toggle) lets others add the list by reference, like any language deck.
+- **Read**: for admins, the study page of a deck whose word_list has snippets shows "Study | Read" radios (`Components::StudyTabs`) and renders every snippet, oldest first, below the study frame as plain text (`Components::SnippetReading`: title, author, and the body split into paragraphs on line breaks). A `:has()` rule in `flash.css` shows the frame or the text to match the checked radio, so switching keeps both the current card and the reading position; there is no JS and no separate route. Frame requests (each next card) leave the radios and text out, since Turbo keeps only the frame.
 - **Finish** (`Snippets::Finish.call(snippet)`, run through `bin/rails runner` once a snippet is reviewed): refuses (`Finish::Unfinished`) while a Chinese word has no `sense_id`; otherwise strips every token to `text` + `sense_id` (so the snippet reads `:finished` and can be pushed), appends the snippet's senses to its word_list after the ones it holds (`Snippets::Attach`), and files the list's uncategorized memberships by part of speech in batches of `CATEGORIZE_BATCH` (`Snippets::Categorize`; a row the model leaves out is filed `other`). A list therefore only ever holds reviewed senses. Running it again on a finished snippet only categorizes whatever a failed run left undone.
 
 ### Compendium Review

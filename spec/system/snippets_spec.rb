@@ -91,6 +91,7 @@ RSpec.describe "snippets" do
     process_and_finish
 
     click_on("Study this list")
+    click_on("View Deck")
 
     expect(page).to have_css("td", text: "to love")
   end

@@ -54,6 +54,7 @@ class Deck < ApplicationRecord
   belongs_to :user
   belongs_to :topic
   has_many :cards, dependent: :delete_all
+  has_many :snippets, -> { order(:created_at) }, through: :word_list
   has_many :study_days, dependent: :delete_all
   has_one :todays_study_day,
           -> { where(studied_on: Date.current) },

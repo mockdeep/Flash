@@ -11,7 +11,7 @@ class SnippetDecksController < ApplicationController
     deck = current_user.decks.create_with(deck_defaults)
       .find_or_create_by!(type: "ReadingDeck", word_list: snippet.word_list)
 
-    redirect_to(deck_path(deck))
+    redirect_to(deck_study_path(deck))
   end
 
   private

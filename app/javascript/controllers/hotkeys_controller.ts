@@ -30,6 +30,22 @@ function isBehindDialog(element: HTMLElement): boolean {
   return dialog !== null && !dialog.contains(element);
 }
 
+/*
+ * Only ancestors count: a target may itself be hidden on purpose, like the
+ * study page's span that claims the space key to stop scrolling.
+ */
+function isInHiddenSection(element: HTMLElement): boolean {
+  for (let el = element.parentElement; el; el = el.parentElement) {
+    if (getComputedStyle(el).display === "none") { return true; }
+  }
+
+  return false;
+}
+
+function isOutOfView(element: HTMLElement): boolean {
+  return isBehindDialog(element) || isInHiddenSection(element);
+}
+
 export default class extends Controller {
   static override targets = ["click"];
 
@@ -53,7 +69,7 @@ export default class extends Controller {
 
     if (!clickable) { return; }
     if (!key.startsWith(CTRL_PREFIX) && isFormField(event.target)) { return; }
-    if (isBehindDialog(clickable)) { return; }
+    if (isOutOfView(clickable)) { return; }
 
     event.preventDefault();
     clickable.click();
