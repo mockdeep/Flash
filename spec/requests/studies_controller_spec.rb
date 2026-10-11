@@ -416,10 +416,16 @@ RSpec.describe StudiesController do
     end
 
     context "with the Read tab" do
-      def admin_deck
-        admin = create(:user, :admin)
-        login_as(admin)
-        deck = create(:reading_deck, user: admin)
+      def own_deck
+        deck = create(:reading_deck)
+        create(:language_card, deck:)
+        deck
+      end
+
+      # A deck over a list someone else owns, as a catalog add makes.
+      def borrowed_deck
+        word_list = create(:word_list, user: create(:user))
+        deck = create(:reading_deck, word_list:)
         create(:language_card, deck:)
         deck
       end
@@ -431,8 +437,8 @@ RSpec.describe StudiesController do
         snippet
       end
 
-      it "shows it to an admin when the deck has snippets" do
-        deck = admin_deck
+      it "shows it when the deck has snippets" do
+        deck = own_deck
         finished_snippet(deck.word_list)
 
         get(deck_study_path(deck))
@@ -441,7 +447,7 @@ RSpec.describe StudiesController do
       end
 
       it "shows the snippets' text" do
-        deck = admin_deck
+        deck = own_deck
         finished_snippet(deck.word_list, title: "筷子")
 
         get(deck_study_path(deck))
@@ -450,7 +456,7 @@ RSpec.describe StudiesController do
       end
 
       it "hides it when the deck has no snippets" do
-        deck = admin_deck
+        deck = own_deck
 
         get(deck_study_path(deck))
 
@@ -458,7 +464,7 @@ RSpec.describe StudiesController do
       end
 
       it "hides it when no snippet is finished" do
-        deck = admin_deck
+        deck = own_deck
         create(:snippet, word_list: deck.word_list)
 
         get(deck_study_path(deck))
@@ -466,18 +472,36 @@ RSpec.describe StudiesController do
         expect(rendered).to have_no_field("Read")
       end
 
-      it "hides it from a user who is not an admin" do
-        deck = create(:reading_deck)
-        create(:language_card, deck:)
+      it "shows a shareable snippet over someone else's list" do
+        deck = borrowed_deck
+        finished_snippet(deck.word_list, license: "cc_by_sa", title: "筷子")
+
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_css(".reading-snippet h2", text: "筷子")
+      end
+
+      it "leaves out a snippet over someone else's list it may not share" do
+        deck = borrowed_deck
+        finished_snippet(deck.word_list, license: "cc_by_sa", title: "筷子")
+        finished_snippet(deck.word_list, title: "孔乙己")
+
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_no_css(".reading-snippet h2", text: "孔乙己")
+      end
+
+      it "hides it when no snippet over someone else's list may be shared" do
+        deck = borrowed_deck
         finished_snippet(deck.word_list)
 
         get(deck_study_path(deck))
 
-        expect(rendered).to have_no_css(".reading-snippets")
+        expect(rendered).to have_no_field("Read")
       end
 
       it "leaves the text out of a study frame request" do
-        deck = admin_deck
+        deck = own_deck
         finished_snippet(deck.word_list)
 
         get(deck_study_path(deck), headers: { "Turbo-Frame" => "study" })

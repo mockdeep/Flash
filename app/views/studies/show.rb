@@ -80,15 +80,17 @@ module Views
 
       def goal_reached? = !deck.no_goal? && completed >= study_goal
 
-      # Admin-only until snippets have a way to be shared. Turbo keeps only
-      # the study frame from a frame request, so the text is left out of it.
+      # Turbo keeps only the study frame from a frame request, so the text
+      # is left out of it.
       def reading?
-        !turbo_frame_request? && current_user.admin? && snippets.any?
+        !turbo_frame_request? && snippets.any?
       end
 
       def snippets
         @snippets ||=
-          deck.snippets.select { |snippet| snippet.status == :finished }
+          deck.snippets.select do |snippet|
+            snippet.status == :finished && snippet.readable_by?(current_user)
+          end
       end
     end
   end

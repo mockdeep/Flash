@@ -9,10 +9,11 @@ class Snippet < ApplicationRecord
   MAX_BODY = 20_000
   LICENSES = {
     "all_rights_reserved" => { name: "All rights reserved" },
-    "public_domain" => { name: "Public domain" },
+    "public_domain" => { name: "Public domain", shareable: true },
     "cc_by_sa" => {
       name: "CC BY-SA 4.0",
       url: "https://creativecommons.org/licenses/by-sa/4.0/",
+      shareable: true,
     },
   }.freeze
 
@@ -32,6 +33,11 @@ class Snippet < ApplicationRecord
 
   def license_name = LICENSES[license][:name]
   def license_url = LICENSES[license][:url]
+  def shareable? = LICENSES[license].fetch(:shareable, false)
+
+  # Anyone with a deck over the list may read a shareable snippet; the
+  # list's owner may read them all.
+  def readable_by?(user) = shareable? || word_list.user_id == user.id
 
   # New or finished when every sentence is; in progress otherwise.
   def status
