@@ -370,12 +370,13 @@ app/
 │       ├── claude_cli.rb         # Development client: `claude -p` on the developer's subscription
 │       └── fake.rb               # Spec client: queued answers / responder block, records calls
 ├── components/                   # Phlex view components
-│   ├── base.rb                   # Base component (supporter_badge / music_badge / catalog_badge)
+│   ├── base.rb                   # Base component (supporter_badge / music_badge / texts_badge / catalog_badge)
 │   ├── card_front.rb             # Study card-front box + kebab menu; renders the reading gloss inside it
 │   ├── card_menu.rb              # Card-front kebab menu (study text sizes, edit/delete actions)
 │   ├── card_preview.rb           # 5-card preview block (shared by catalog and share preview)
 │   ├── card_reading.rb           # Pronunciation/pinyin gloss (rendered inside CardFront on reveal)
 │   ├── catalog_toggle_button.rb  # Publish / unpublish a deck to the public catalog
+│   ├── deck_texts.rb             # "Texts" block under the card preview (catalog + share preview): title / author / license, unshareable ones marked not included
 │   ├── demo_banner.rb            # Demo-mode banner
 │   ├── error_explanation.rb      # Styled validation-error box
 │   ├── fuzzy_find_answers.rb     # Typed-answer input for fuzzy-find mode (level 3+); optional reading `stage`
@@ -389,6 +390,7 @@ app/
 │   ├── study_answers.rb          # Study answer area per presentation mode (buttons / fuzzy find, reading stage)
 │   ├── study_example.rb          # Optional example sentence on the answer view
 │   ├── study_goal_dialog.rb      # Edit daily study-goal dialog
+│   ├── snippet_license.rb        # A snippet's license name, linked to its terms when it has them
 │   ├── snippet_reading.rb        # Read tab text: finished snippets word by word; readings / gaps fade by deck level; lookup popovers
 │   ├── study_tabs.rb             # Study | Read radios (CSS `:has()` toggles study frame vs. text)
 │   ├── table.rb                  # `.table` pattern; block fills each row via `table.cell`
@@ -475,8 +477,8 @@ app/
 │   ├── cards/
 │   │   └── edit_form.rb      # In-dialog card edit form (front / back / reading / category / example)
 │   ├── catalog/
-│   │   ├── index.rb          # Public deck grid (mic badge for music decks)
-│   │   └── show.rb           # Deck preview + copy action (mic badge in header)
+│   │   ├── index.rb          # Public deck grid (mic badge for music decks, 📖 for decks with shareable texts)
+│   │   └── show.rb           # Deck preview + texts + copy action (mic badge in header)
 │   ├── decks/
 │   │   ├── index.rb          # Decks grouped into topic sections + "Other Decks"; each features its first unmet-goal deck, else its most recently studied
 │   │   ├── new.rb            # Three-way deck-type radio + language select
@@ -745,7 +747,8 @@ end
 
 Users can browse and copy public decks at `/catalog`:
 - **Browse**: `/catalog` — grid of all public decks (no auth required)
-- **Preview**: `/catalog/:id` — card preview (first 5 cards), deck info (no auth required)
+- **Preview**: `/catalog/:id` — card preview (first 5 cards), deck info, and the texts the deck's words came from (`Components::DeckTexts`, also on the share-link preview: each finished snippet's title, author and license, or "Not included — words only" when its license keeps it from sharing) (no auth required)
+- **Texts badge**: a deck whose list has a finished shareable snippet (`Deck#shares_texts?`) gets a 📖 on its catalog grid card
 - **Copy**: `POST /catalog/:id/copy` — adds the deck to the current user's account (auth required). A **Basic or Music** deck is duplicated, cards and all. A **language** deck is added *by reference*: the new deck points at the source's `word_list`, and only its cards (the progress anchors) are new — the words themselves are canonical and shared. A `Deck` validation blocks a second deck over the same word_list for one user, so adding twice errors instead of silently duplicating.
 - Deck visibility is controlled by `deck.visibility` (`"public"` / `"private"`)
 - **Admins** publish/unpublish a deck to the catalog from the deck-show page (`Components::CatalogToggleButton` → `CatalogListingsController#create`/`#destroy`, which flips `visibility`). Non-admins have no visibility UI.

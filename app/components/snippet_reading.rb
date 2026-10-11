@@ -41,15 +41,8 @@ module Components
           credit_link("Source", snippet.source_url)
           plain(" · ")
         end
-        render_license(snippet)
+        render(SnippetLicense.new(snippet:))
       end
-    end
-
-    def render_license(snippet)
-      url = snippet.license_url
-      return plain(snippet.license_name) unless url
-
-      credit_link(snippet.license_name, url)
     end
 
     def credit_link(text, url)

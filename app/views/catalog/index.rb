@@ -61,14 +61,19 @@ module Views
 
       def render_card_header(deck)
         div(class: "catalog-card-header") do
-          h3(class: "catalog-card-title") do
-            plain(deck.name)
-            music_badge if deck.music?
-          end
+          render_card_title(deck)
           div(class: "card-count") do
             span(class: "count-number") { deck.cards_count }
             span(class: "count-label") { "cards" }
           end
+        end
+      end
+
+      def render_card_title(deck)
+        h3(class: "catalog-card-title") do
+          plain(deck.name)
+          music_badge if deck.music?
+          texts_badge if deck.shares_texts?
         end
       end
 

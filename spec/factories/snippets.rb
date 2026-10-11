@@ -5,6 +5,13 @@ FactoryBot.define do
     word_list
     sequence(:title, 100) { |n| "Snippet #{n}" }
     body { "我爱你。" }
+
+    # Its one sentence holds no word, so nothing is left to resolve.
+    trait(:finished) do
+      after(:create) do |snippet|
+        create(:snippet_sentence, snippet:, tokens: [{ "text" => "。" }])
+      end
+    end
   end
 
   factory(:snippet_reader) do

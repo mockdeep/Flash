@@ -40,6 +40,14 @@ module Components
       ) { "🎤" }
     end
 
+    def texts_badge
+      span(
+        class: "badge",
+        title: "Comes with texts to read",
+        aria: { label: "Comes with texts to read" },
+      ) { "📖" }
+    end
+
     def catalog_badge
       span(
         class: "badge",
