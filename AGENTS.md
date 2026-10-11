@@ -203,7 +203,7 @@ end
 - `demo-banner.css` - Demo-mode banner
 - `dialog.css` - Modal dialog component styles (`.dialog`, `.dialog__header`, etc.)
 - `edit-card.css` - Edit card trigger button and form layout within the dialog (also the study-goal dialog's three goal-mode forms, toggled with `:has()`)
-- `flash.css` - Study/flashcard core (card front + kebab menu, answers grid, `.card-reading`, the Study | Read `.study-tabs` and `.reading-snippet` on the Read tab)
+- `flash.css` - Study/flashcard core (card front + kebab menu, answers grid, `.card-reading`, the Study | Read `.study-tabs` and `.reading-snippet` on the Read tab, with its lookup popovers)
 - `layout.css` - Header, footer, navigation
 - `music-study.css` - Mic-driven music study UI
 - `price-display.css` - `.price-display` component
@@ -387,7 +387,7 @@ app/
 │   ├── study_answers.rb          # Study answer area per presentation mode (buttons / fuzzy find, reading stage)
 │   ├── study_example.rb          # Optional example sentence on the answer view
 │   ├── study_goal_dialog.rb      # Edit daily study-goal dialog
-│   ├── snippet_reading.rb        # Read tab text: finished snippets word by word; readings / gaps fade by deck level
+│   ├── snippet_reading.rb        # Read tab text: finished snippets word by word; readings / gaps fade by deck level; lookup popovers
 │   ├── study_tabs.rb             # Study | Read radios (CSS `:has()` toggles study frame vs. text)
 │   ├── table.rb                  # `.table` pattern; block fills each row via `table.cell`
 │   ├── target_goal_fields.rb     # Level-target fields + today's goal and Recalculate
@@ -414,6 +414,7 @@ app/
 │   │   ├── demo_session.rb            # Demo guest-session helpers
 │   │   └── projects_cards.rb          # save_card/destroy_card → Decks::FlatCards (flat decks only)
 │   ├── decks_controller.rb            # `#create` dispatches CreateMusic vs CreateBasic on :deck_type
+│   ├── lookups_controller.rb          # Read-tab word lookup: resets the sense's streak (admin)
 │   ├── demo_controller.rb             # Starts a guest demo study session
 │   ├── milestones_controller.rb       # Updates a deck's study goal
 │   ├── pages_controller.rb            # pricing / privacy / terms
@@ -518,6 +519,7 @@ app/
 │   │   ├── file_upload_controller.ts
 │   │   ├── fuzzy_find_controller.ts  # Typed-answer matching for fuzzy-find study mode
 │   │   ├── hotkeys_controller.ts     # Document-level keyboard shortcuts
+│   │   ├── lookup_controller.ts      # POSTs a looked-up Read-tab word to reset its streak
 │   │   ├── mobile_nav_controller.ts
 │   │   ├── music_study_controller.ts # Mic capture + RAF loop + sequence-state-machine glue
 │   │   ├── music_study_helpers.ts    # Helpers for music_study_controller
@@ -857,6 +859,7 @@ Snippets are added in the app (see `Snippet`) and processed locally with `rails 
   - Edits to senses themselves (fixing wording, deleting leftovers) are `Compendium::Edit`'s; see Compendium Review.
 - **Study**: a finished snippet's row on `/snippets` has "Study this list" (`SnippetDecksController#create`), which finds or creates the admin's `ReadingDeck` over the snippet's word_list and goes to its study page. Publishing that deck to the catalog (the existing admin toggle) lets others add the list by reference, like any language deck.
 - **Read**: for admins, the study page of a deck whose word_list has snippets shows "Study | Read" radios (`Components::StudyTabs`) and renders every finished snippet, oldest first, below the study frame (`Components::SnippetReading`: title, author, and the paragraphs rebuilt from the sentences' tokens by `Snippet#paragraphs`). The deck's level sets how much help the text gives: each word in a `<ruby>` with its reading above at level 1, words spaced apart without readings at level 2, and plain running text from level 3. Unfinished snippets are left out, and with none finished the radios don't show. A `:has()` rule in `flash.css` shows the frame or the text to match the checked radio, so switching keeps both the current card and the reading position; there is no JS and no separate route. Frame requests (each next card) leave the radios and text out, since Turbo keeps only the frame.
+- **Look up**: each word on the Read tab is a button that opens a native popover (`popovertarget`) with the word's reading and gloss; the popovers follow their paragraph in the markup and sit under the word via CSS anchor positioning where supported. Every click also POSTs the word's `sense_id` (`lookup_controller.ts`) to `LookupsController#create` (admin-only, `/decks/:deck_id/lookups`), which records a miss on the user's reading `SkillScore` for that sense, so its card comes back in study.
 - **Finish** (`Snippets::Finish.call(snippet)`, run through `bin/rails runner` once a snippet is reviewed): refuses (`Finish::Unfinished`) while a Chinese word has no `sense_id`; otherwise strips every token to `text` + `sense_id` (so the snippet reads `:finished` and can be pushed), appends the snippet's senses to its word_list after the ones it holds (`Snippets::Attach`), and files the list's uncategorized memberships by part of speech in batches of `CATEGORIZE_BATCH` (`Snippets::Categorize`; a row the model leaves out is filed `other`). A list therefore only ever holds reviewed senses. Running it again on a finished snippet only categorizes whatever a failed run left undone.
 
 ### Compendium Review

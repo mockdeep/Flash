@@ -1,14 +1,15 @@
 # frozen_string_literal: true
 
-RSpec.describe Components::SnippetReading do
-  def render_for(*snippets, level: 1)
-    Capybara.string(described_class.new(snippets:, level:).call)
+RSpec.describe Components::SnippetReading, type: :view do
+  def render_for(*snippets, level: 1, deck: create(:reading_deck, level:))
+    Capybara.string(view.render(described_class.new(snippets:, deck:)))
   end
 
   def texts_of(page, selector) = page.all(selector).map(&:text)
 
-  def word(text, reading)
-    sense = create(:sense, entry: create(:entry, headword: text, reading:))
+  def word(text, reading, gloss: "gloss")
+    entry = create(:entry, headword: text, reading:)
+    sense = create(:sense, entry:, gloss:)
     { "text" => text, "sense_id" => sense.id }
   end
 
@@ -87,5 +88,34 @@ RSpec.describe Components::SnippetReading do
     page = render_for(love_snippet, level: 3)
 
     expect(page).to have_no_css(".reading-snippets--gaps")
+  end
+
+  it "shows each word's reading and gloss in its popover" do
+    page = render_for(snippet_with("爱。", [word("爱", "ài", gloss: "love")]))
+
+    expect(page).to have_css("[popover]", text: "àilove")
+  end
+
+  it "opens the word's own popover from the word" do
+    page = render_for(love_snippet)
+
+    targets = page.all("button").pluck("popovertarget")
+    expect(targets).to eq(page.all("[popover]").pluck("id"))
+  end
+
+  it "passes the word's sense to the lookup" do
+    snippet = snippet_with("爱。", [word("爱", "ài")])
+    page = render_for(snippet)
+
+    sense_id = snippet.sentences.first.tokens.first["sense_id"]
+    expect(page).to have_css("[data-lookup-sense-id-param='#{sense_id}']")
+  end
+
+  it "sends lookups to the deck" do
+    deck = create(:reading_deck)
+    page = render_for(love_snippet, deck:)
+
+    url = "/decks/#{deck.id}/lookups"
+    expect(page).to have_css("[data-lookup-url-value='#{url}']")
   end
 end

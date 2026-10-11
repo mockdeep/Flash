@@ -42,6 +42,9 @@ application.register("fuzzy-find", FuzzyFindController);
 import HotkeysController from "./hotkeys_controller";
 application.register("hotkeys", HotkeysController);
 
+import LookupController from "./lookup_controller";
+application.register("lookup", LookupController);
+
 import MobileNavController from "./mobile_nav_controller";
 application.register("mobile-nav", MobileNavController);
 
