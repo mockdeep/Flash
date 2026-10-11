@@ -113,4 +113,32 @@ RSpec.describe StudyDay do
         .to change_record(study_day, :goal).from(5).to(nil)
     end
   end
+
+  describe "#keep_going!" do
+    def kept_going_day
+      deck = create(:deck, :with_target, target_date: Date.tomorrow)
+      create_list(:basic_card, 3, deck:)
+      study_day = deck.study_days.create!(
+        studied_on: Date.current, goal: 5, completed_count: 3,
+      )
+      study_day.keep_going!
+      study_day
+    end
+
+    it "sizes the batch to lower tomorrow's goal by one" do
+      expect(kept_going_day.goal).to eq(1)
+    end
+
+    it "starts a new batch" do
+      expect(kept_going_day.completed_count).to eq(0)
+    end
+
+    it "clears the goal when the deck has no target" do
+      study_day =
+        create(:deck).study_days.create!(studied_on: Date.current, goal: 5)
+
+      expect { study_day.keep_going! }
+        .to change_record(study_day, :goal).from(5).to(nil)
+    end
+  end
 end

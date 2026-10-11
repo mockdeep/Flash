@@ -13,8 +13,8 @@ RSpec.describe StudyGoalResetsController do
   end
 
   def target_study_day
-    deck = create(:deck, :with_target)
-    create_list(:basic_card, 2, deck:)
+    deck = create(:deck, :with_target, target_date: Date.tomorrow)
+    create_list(:basic_card, 3, deck:)
     deck.study_days.create!(studied_on: Date.current, goal: 5)
   end
 
@@ -27,12 +27,12 @@ RSpec.describe StudyGoalResetsController do
         .to change_record(study_day, :completed_count).to(0)
     end
 
-    it "works today's goal out again from the deck's target" do
+    it "sizes the new batch to lower tomorrow's goal" do
       login_as(default_user)
       study_day = target_study_day
 
       expect { post(study_goal_reset_path) }
-        .to change_record(study_day, :goal).from(5).to(2)
+        .to change_record(study_day, :goal).from(5).to(1)
     end
 
     it "leaves earlier days alone" do

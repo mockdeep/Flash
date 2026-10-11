@@ -12,11 +12,19 @@ module Components
     def view_template
       div(class: "session-milestone") do
         p { "You've completed #{@study_goal} cards — nice work!" }
+        next_goal_note
         div(class: "session-milestone-actions") { render_actions }
       end
     end
 
     private
+
+    def next_goal_note
+      next_goal = @deck.next_target_goal
+      return unless next_goal
+
+      p { "Your daily goal is now #{pluralize(next_goal, "card")}." }
+    end
 
     def render_actions
       if @demo

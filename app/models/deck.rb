@@ -165,9 +165,27 @@ class Deck < ApplicationRecord
   def target_goal
     return unless target_active?
 
-    work_left = (level..target_level).sum { |at| not_done_count(at) }
     days_left = [(Date.current..target_date).count, 1].max
-    work_left.fdiv(days_left).ceil
+    target_work_left.fdiv(days_left).ceil
+  end
+
+  # Tomorrow's goal: the work left spread over the days after today, so
+  # studying past today's goal lowers it. Nil without a day after today.
+  def next_target_goal
+    return unless target_active? && days_after_today.positive?
+
+    target_work_left.fdiv(days_after_today).ceil
+  end
+
+  # Card completions that would lower tomorrow's goal by one. With no day
+  # after today, or a goal of one already, that is all the work left.
+  def cards_to_lower_goal
+    return unless target_active?
+
+    next_goal = next_target_goal
+    return target_work_left unless next_goal && next_goal > 1
+
+    target_work_left - ((next_goal - 1) * days_after_today)
   end
 
   def backs(except: nil, category: nil)
@@ -225,6 +243,10 @@ class Deck < ApplicationRecord
     self.target_level = nil
     self.target_date = nil
   end
+
+  def target_work_left = (level..target_level).sum { |at| not_done_count(at) }
+
+  def days_after_today = (Date.tomorrow..target_date).count
 
   # Cards whose studied answer carries the given category, for category-pool
   # distractors. Flat-card families read the card column; language decks

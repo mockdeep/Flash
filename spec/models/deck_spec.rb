@@ -566,6 +566,71 @@ RSpec.describe Deck do
     end
   end
 
+  describe "#next_target_goal" do
+    def target_deck(target_date:)
+      deck = create(:deck, :with_target, target_level: 2, target_date:)
+      create_list(:basic_card, 3, deck:, correct_streak: 0)
+      create(:basic_card, deck:, correct_streak: 1)
+      deck
+    end
+
+    it "is nil without an active target" do
+      expect(create(:deck).next_target_goal).to be_nil
+    end
+
+    it "spreads the work left over the days after today" do
+      # 3 cards left at level 1, plus 4 at level 2, over 2 days.
+      deck = target_deck(target_date: 2.days.from_now.to_date)
+
+      expect(deck.next_target_goal).to eq(4)
+    end
+
+    it "is nil on the target date itself" do
+      deck = target_deck(target_date: Date.current)
+
+      expect(deck.next_target_goal).to be_nil
+    end
+
+    it "is nil once the date has passed" do
+      deck = target_deck(target_date: Date.current)
+      travel_to(3.days.from_now)
+
+      expect(deck.next_target_goal).to be_nil
+    end
+  end
+
+  describe "#cards_to_lower_goal" do
+    def target_deck(target_date:)
+      deck = create(:deck, :with_target, target_level: 2, target_date:)
+      create_list(:basic_card, 3, deck:, correct_streak: 0)
+      create(:basic_card, deck:, correct_streak: 1)
+      deck
+    end
+
+    it "is nil without an active target" do
+      expect(create(:deck).cards_to_lower_goal).to be_nil
+    end
+
+    it "is the cards that would lower tomorrow's goal by one" do
+      # 7 left over 4 days is 2 a day; 3 more brings it to 1 a day.
+      deck = target_deck(target_date: 4.days.from_now.to_date)
+
+      expect(deck.cards_to_lower_goal).to eq(3)
+    end
+
+    it "is all the work left once tomorrow's goal is one card" do
+      deck = target_deck(target_date: 10.days.from_now.to_date)
+
+      expect(deck.cards_to_lower_goal).to eq(7)
+    end
+
+    it "is all the work left on the target date itself" do
+      deck = target_deck(target_date: Date.current)
+
+      expect(deck.cards_to_lower_goal).to eq(7)
+    end
+  end
+
   describe "#backs" do
     it "lists every card's back" do
       deck = create(:deck)

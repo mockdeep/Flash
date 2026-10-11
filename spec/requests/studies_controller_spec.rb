@@ -151,13 +151,13 @@ RSpec.describe StudiesController do
       expect(rendered).to have_text("0 / 50 completed")
     end
 
-    it "recalculates the goal when reset_session param is present" do
-      deck = create(:deck, :with_target)
-      create_list(:basic_card, 2, deck:)
+    it "sizes the batch to lower tomorrow's goal when keeping going" do
+      deck = create(:deck, :with_target, target_date: Date.tomorrow)
+      create_list(:basic_card, 3, deck:)
       study_day = deck.study_days.create!(studied_on: Date.current, goal: 5)
 
       expect { get(deck_study_path(deck, reset_session: true)) }
-        .to change_record(study_day, :goal).from(5).to(2)
+        .to change_record(study_day, :goal).from(5).to(1)
     end
 
     it "counts completions separately for each deck" do
@@ -375,6 +375,29 @@ RSpec.describe StudiesController do
         get(deck_study_path(complete_milestone_goal))
 
         expect(rendered).to have_link("Done for Now")
+      end
+
+      it "does not mention tomorrow's goal without a level target" do
+        get(deck_study_path(complete_milestone_goal))
+
+        expect(rendered).to have_no_text("Your daily goal is now")
+      end
+    end
+
+    context "when returning after reaching a level target's milestone" do
+      def met_target_deck
+        deck = create(:deck, :with_target, target_date: 2.days.from_now.to_date)
+        create_list(:basic_card, 4, deck:)
+        deck.study_days.create!(
+          studied_on: Date.current, goal: 1, completed_count: 1,
+        )
+        deck
+      end
+
+      it "shows tomorrow's goal" do
+        get(deck_study_path(met_target_deck))
+
+        expect(rendered).to have_text("Your daily goal is now 2 cards.")
       end
     end
 

@@ -3,7 +3,8 @@
 # The cards a deck completed in the current batch on one day in its owner's
 # time zone. A deck with a level target saves the day's goal here when the
 # row is made. Recalculating works the goal out again and starts a new
-# batch, counting again from zero.
+# batch, counting again from zero. Keeping going also starts a new batch, but
+# one sized to lower tomorrow's goal by one card.
 class StudyDay < ApplicationRecord
   belongs_to :deck
 
@@ -22,4 +23,8 @@ class StudyDay < ApplicationRecord
   def record_completion! = increment!(:completed_count)
 
   def recalculate! = update!(goal: deck.target_goal, completed_count: 0)
+
+  def keep_going!
+    update!(goal: deck.cards_to_lower_goal, completed_count: 0)
+  end
 end
