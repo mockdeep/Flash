@@ -23,6 +23,7 @@ class Snippet < ApplicationRecord
            class_name: "SnippetSentence",
            dependent: :delete_all,
            inverse_of: :snippet
+  has_many :readers, class_name: "SnippetReader", dependent: :delete_all
 
   validates :word_list, :title, :body, presence: true
   validates :body, length: { maximum: MAX_BODY }
@@ -36,8 +37,11 @@ class Snippet < ApplicationRecord
   def shareable? = LICENSES[license].fetch(:shareable, false)
 
   # Anyone with a deck over the list may read a shareable snippet; the
-  # list's owner may read them all.
-  def readable_by?(user) = shareable? || word_list.user_id == user.id
+  # list's owner may read them all, and a reader the one they were let in.
+  def readable_by?(user)
+    shareable? || word_list.user_id == user.id ||
+      readers.any? { |reader| reader.user_id == user.id }
+  end
 
   # New or finished when every sentence is; in progress otherwise.
   def status

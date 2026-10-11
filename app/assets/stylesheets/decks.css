@@ -347,6 +347,10 @@
   background: var(--stripe-large);
 }
 
+.form-card > .table {
+  margin-bottom: 2rem;
+}
+
 .deck-form {
   display: flex;
   flex-direction: column;

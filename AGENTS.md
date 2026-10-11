@@ -209,7 +209,7 @@ end
 - `price-display.css` - `.price-display` component
 - `pricing.css` - Pricing page
 - `subscription.css` - Subscription page
-- `table.css` - Generic `.table` pattern (catalog preview, deck cards)
+- `table.css` - Generic `.table` pattern (catalog preview, deck cards); `.table__actions` lines up a cell's buttons
 - `welcome.css` - Landing page styles
 
 **Key Principles:**
@@ -236,6 +236,7 @@ end
 - `StudyDay` - Cards a deck completed on one day (`studied_on`, in the owner's time zone), unique on `[deck_id, studied_on]`. `completed_count` counts the current batch and drives the progress bar; the milestone's "Keep Going" starts a new batch by resetting it to 0 (and, under a level target, sizing the batch to lower tomorrow's goal by one). `goal` holds the day's goal worked out from a level target (nil without one; `#study_goal` falls back to the deck's). `deck.study_days.today` finds or creates the row.
 - `Subscription` - Payment/subscription info, belongs to user.
 - `Snippet` - A source text feeding one word_list (`belongs_to :word_list`; destroyed with it). Has `title`, `author` and `body`, kept as written, plus an optional `source_url` and a `license` (a key of `Snippet::LICENSES`, defaulting to `all_rights_reserved`); the Read tab credits the source and license under the author; the body is capped at `Snippet::MAX_BODY` characters (processing costs LLM calls per sentence) and the list must be Mandarin (`Snippet::LANGUAGE`). `has_many :sentences`, ordered by `position`. `#status` is `:new` or `:finished` when every sentence is, and `:in_progress` otherwise. Admins add snippets at `/snippets` (`SnippetsController`, `Snippets::Create`), in production or locally; processing happens locally.
+- `SnippetReader` - A user an admin has let read a snippet whatever its license (`snippet.readers`), unique on `[snippet_id, user_id]`. Production-only user data: not in the compendium snapshot, and removed with its snippet or user.
 - `SnippetSentence` - One sentence of a snippet, unique on `[snippet_id, position]`. `tokens` (jsonb) holds the pieces it was cut into, in order: each token's `text` as written (traditional stays traditional) and, for a word, the `sense_id` it is studied as; punctuation and other non-words carry no `sense_id`. `#status` is `:new` with no tokens, `:finished` once every Han token has a `sense_id` and no token carries other keys, and `:in_progress` between.
 **`WordList` languages:** `LANGUAGES` (on `WordList`) maps every individual ISO 639-2 language to its display name, keyed by shortest available code per BCP 47 ("zh", not "zho"; "tlh" works). Nothing in the app creates a word list any more — the deck form has no Language option — so the validation guards what the seed account and catalog copies carry.
 
@@ -336,6 +337,7 @@ app/
 │   │   ├── categorize.rb         # Files memberships under a part of speech (Sonnet, headword + reading + gloss)
 │   │   ├── create.rb             # Saves a snippet + its sentences under a (found or new Mandarin) word_list
 │   │   ├── finish.rb             # Closes a reviewed snippet: strip working keys, attach, categorize
+│   │   ├── grant.rb              # Lets a user (by username) read a snippet + gives them a ReadingDeck over its list
 │   │   ├── judge.rb              # Opus accepts or rejects proposed new senses
 │   │   ├── occurrence.rb         # One Han token: its simplified headword and the compendium's senses for it
 │   │   ├── policy.rb             # Card rules shared by the pipeline's prompts (segmentation, reading, function words)
@@ -422,6 +424,7 @@ app/
 │   ├── sessions_controller.rb         # Login / logout
 │   ├── shares_controller.rb           # Owner toggle (via :deck_id) + public preview/copy/try (via :token)
 │   ├── snippet_decks_controller.rb    # "Study this list": find-or-create a ReadingDeck over a snippet's list (admin)
+│   ├── snippet_readers_controller.rb  # Who may read a snippet whatever its license: list / grant / revoke (admin)
 │   ├── snippets_controller.rb         # Snippet index / new / create (admin)
 │   ├── studies_controller.rb          # Study show/update; dispatches text vs music views
 │   ├── study_goal_resets_controller.rb # Reset today's count on all decks, go to the first deck
@@ -452,6 +455,7 @@ app/
 │   ├── study_day.rb        # Per-deck, per-day completion count (current batch)
 │   ├── subscription.rb
 │   ├── snippet.rb          # Source text feeding a word_list
+│   ├── snippet_reader.rb   # A user let read a snippet whatever its license
 │   └── snippet_sentence.rb # Sentence + its tokens, each pointing at a sense
 ├── nulls/
 │   ├── null_topic.rb         # Null-object Topic over a user's un-topiced decks ("Other Decks")
@@ -495,8 +499,10 @@ app/
 │   │   ├── music_show.rb     # Mic-driven music study prompt
 │   │   ├── music_update.rb   # Music answer result
 │   │   └── study_frame_data.rb # Shared study-frame data helper (wires the text-size controller)
+│   ├── snippet_readers/
+│   │   └── index.rb          # A snippet's readers (Remove each) + add-by-username form
 │   ├── snippets/
-│   │   ├── index.rb          # Admin's snippets with their status; "Study this list" on finished ones
+│   │   ├── index.rb          # Admin's snippets with their status; "Study this list" and "Share" on finished ones
 │   │   └── new.rb            # Title / author / source URL / license / list (type-or-pick) / body
 │   ├── subscriptions/
 │   │   └── show.rb
@@ -857,8 +863,9 @@ Snippets are added in the app (see `Snippet`) and processed locally with `rails 
   - `repoint(sentence, index, sense)` / `add_sense(sentence, index, reading:, gloss:)`: give a token a sense (an existing one, or a new one under its headword, made by `Compendium::Edit.add`); either clears the token's note.
   - `resegment(sentence, feedback)`: segment one sentence again with a complaint and resolve it afresh.
   - Edits to senses themselves (fixing wording, deleting leftovers) are `Compendium::Edit`'s; see Compendium Review.
-- **Study**: a finished snippet's row on `/snippets` has "Study this list" (`SnippetDecksController#create`), which finds or creates the admin's `ReadingDeck` over the snippet's word_list and goes to its study page. Publishing that deck to the catalog (the existing admin toggle) lets others add the list by reference, like any language deck.
-- **Read**: the study page of a deck whose word_list has snippets shows "Study | Read" radios (`Components::StudyTabs`) and renders every finished snippet the user may read (`Snippet#readable_by?`: the list's owner reads them all, anyone else only those whose license is `shareable?` — public domain and CC BY-SA), oldest first, below the study frame (`Components::SnippetReading`: title, author, and the paragraphs rebuilt from the sentences' tokens by `Snippet#paragraphs`). The deck's level sets how much help the text gives: each word in a `<ruby>` with its reading above at level 1, words spaced apart without readings at level 2, and plain running text from level 3. Unfinished and unreadable snippets are left out, and with none left the radios don't show. A `:has()` rule in `flash.css` shows the frame or the text to match the checked radio, so switching keeps both the current card and the reading position; there is no JS and no separate route. Frame requests (each next card) leave the radios and text out, since Turbo keeps only the frame.
+- **Study**: a finished snippet's row on `/snippets` has "Study this list" (`SnippetDecksController#create`), which finds or creates the admin's `ReadingDeck` over the snippet's word_list (`User#reading_deck_over`) and goes to its study page. Publishing that deck to the catalog (the existing admin toggle) lets others add the list by reference, like any language deck.
+- **Share**: the row's "Share" goes to `/snippets/:id/readers` (`SnippetReadersController`), which lists the snippet's readers and adds one by username (`Snippets::Grant`, which also finds or creates their `ReadingDeck` over the list; guests can't be added). Removing a reader takes away the text but leaves their deck and progress.
+- **Read**: the study page of a deck whose word_list has snippets shows "Study | Read" radios (`Components::StudyTabs`) and renders every finished snippet the user may read (`Snippet#readable_by?`: the list's owner reads them all, a reader let in reads that snippet, and anyone else only those whose license is `shareable?` — public domain and CC BY-SA), oldest first, below the study frame (`Components::SnippetReading`: title, author, and the paragraphs rebuilt from the sentences' tokens by `Snippet#paragraphs`). The deck's level sets how much help the text gives: each word in a `<ruby>` with its reading above at level 1, words spaced apart without readings at level 2, and plain running text from level 3. Unfinished and unreadable snippets are left out, and with none left the radios don't show. A `:has()` rule in `flash.css` shows the frame or the text to match the checked radio, so switching keeps both the current card and the reading position; there is no JS and no separate route. Frame requests (each next card) leave the radios and text out, since Turbo keeps only the frame.
 - **Look up**: each word on the Read tab is a button that opens a native popover (`popovertarget`) with the word's reading and gloss; the popovers follow their paragraph in the markup and sit under the word via CSS anchor positioning where supported. Every click also POSTs the word's `sense_id` (`lookup_controller.ts`) to `LookupsController#create` (`/decks/:deck_id/lookups`, the user's own deck only), which records a miss on the user's reading `SkillScore` for that sense, so its card comes back in study.
 - **Finish** (`Snippets::Finish.call(snippet)`, run through `bin/rails runner` once a snippet is reviewed): refuses (`Finish::Unfinished`) while a Chinese word has no `sense_id`; otherwise strips every token to `text` + `sense_id` (so the snippet reads `:finished` and can be pushed), appends the snippet's senses to its word_list after the ones it holds (`Snippets::Attach`), and files the list's uncategorized memberships by part of speech in batches of `CATEGORIZE_BATCH` (`Snippets::Categorize`; a row the model leaves out is filed `other`). A list therefore only ever holds reviewed senses. Running it again on a finished snippet only categorizes whatever a failed run left undone.
 
@@ -878,7 +885,7 @@ The compendium can be reviewed directly, not only through snippets. Both tools r
 
 The compendium tables (`Compendium::TABLES`: entries, senses, sense_examples, word_lists, sense_memberships, snippets, snippet_sentences) move between a local database and production as a **snapshot**: one CSV per table under `tmp/compendium/`, streamed with `COPY`. Users, decks, cards and learner data never leave production. Production carries no sync code; both tasks run locally and fetch production's `DATABASE_URL` from `heroku` each run.
 - **`rails compendium:pull`**: refuses if the local compendium differs from what the last pull or push left (`FORCE=true` discards it), then exports production, runs `db:reset`, and loads the snapshot with every word list given to the seed admin. A plain `db:reset` never touches production.
-- **`rails compendium:push`**: refuses while any snippet is `:in_progress` (a `:new` one travels untouched), both databases have the same `schema_migrations`, `COMPENDIUM_USERNAME` names a production admin, and production still matches the last pull's checksum. Then it applies the local snapshot to production in one transaction and prints the adds / updates / deletes per table plus the learner data the deletes take. It rolls back unless `DRY_RUN=false`.
+- **`rails compendium:push`**: refuses while any snippet is `:in_progress` (a `:new` one travels untouched), both databases have the same `schema_migrations`, `COMPENDIUM_USERNAME` names a production admin, and production still matches the last pull's checksum. Then it applies the local snapshot to production in one transaction and prints the adds / updates / deletes per table plus the learner data the deletes take (`Apply::LOSSES`: skill_scores, sense_distractors, snippet_readers). It rolls back unless `DRY_RUN=false`.
 - **Owners**: `word_lists.user_id` is never in a snapshot. Apply never changes an existing list's owner, and gives new lists to `COMPENDIUM_USERNAME`.
 - **Checksum**: kept under `compendium_checksum` in `ar_internal_metadata`, updated by every pull and committed push.
 - **Specs** run Export / Load / Apply / Push against the one test database; only the rake glue in `lib/tasks/compendium.rake` is unspecced.

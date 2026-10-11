@@ -5,6 +5,7 @@ require "rails_helper"
 RSpec.describe Snippet do
   it { is_expected.to belong_to(:word_list) }
   it { is_expected.to have_many(:sentences).dependent(:delete_all) }
+  it { is_expected.to have_many(:readers).dependent(:delete_all) }
 
   it { is_expected.to validate_presence_of(:word_list) }
   it { is_expected.to validate_presence_of(:title) }
@@ -110,6 +111,12 @@ RSpec.describe Snippet do
       snippet = build(:snippet, license: "cc_by_sa")
 
       expect(snippet.readable_by?(create(:user))).to be(true)
+    end
+
+    it "is true for a reader let in" do
+      reader = create(:snippet_reader)
+
+      expect(reader.snippet.readable_by?(reader.user)).to be(true)
     end
 
     it "is false for anyone else when the snippet is not shareable" do

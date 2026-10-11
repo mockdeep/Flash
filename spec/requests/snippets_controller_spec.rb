@@ -64,6 +64,25 @@ RSpec.describe SnippetsController do
       expect(rendered).to have_button("Study this list")
     end
 
+    it "offers to share a finished snippet" do
+      snippet = own_snippet(login_admin)
+      create(:snippet_sentence, snippet:, tokens: [{ "text" => "。" }])
+
+      get(snippets_path)
+
+      expect(rendered)
+        .to have_link("Share", href: snippet_readers_path(snippet))
+    end
+
+    it "offers nothing to share before a snippet is finished" do
+      snippet = own_snippet(login_admin)
+      create(:snippet_sentence, snippet:, tokens: [{ "text" => "我" }])
+
+      get(snippets_path)
+
+      expect(rendered).to have_no_link("Share")
+    end
+
     it "offers nothing to study before a snippet is finished" do
       snippet = own_snippet(login_admin)
       create(:snippet_sentence, snippet:, tokens: [{ "text" => "我" }])

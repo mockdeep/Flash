@@ -40,15 +40,26 @@ module Views
           table.cell { snippet.author }
           table.cell { snippet.word_list.name }
           table.cell { STATUSES[snippet.status] }
-          table.cell { render_study_button(snippet) }
+          table.cell { render_actions(snippet) }
         end
       end
 
       # A list only gains senses as its snippets are finished, so an
-      # unfinished one has nothing yet to study.
-      def render_study_button(snippet)
+      # unfinished one has nothing yet to study or read.
+      def render_actions(snippet)
         return unless snippet.status == :finished
 
+        div(class: "table__actions") do
+          render_study_button(snippet)
+          link_to(
+            "Share",
+            snippet_readers_path(snippet),
+            class: button_class(:ghost, :compact),
+          )
+        end
+      end
+
+      def render_study_button(snippet)
         button_to(
           "Study this list",
           snippet_deck_path(snippet),

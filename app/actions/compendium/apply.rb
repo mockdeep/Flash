@@ -8,6 +8,15 @@ module Compendium
   # changed; a new list goes to `owner_id`. It runs no transaction of its
   # own: the caller decides whether to commit.
   module Apply
+    # Each table of learner data, with the columns that tie it to the
+    # compendium.
+    LOSSES = {
+      "skill_scores" => [["sense_id", "senses"]],
+      "sense_distractors" =>
+        [["sense_id", "senses"], ["distractor_sense_id", "senses"]],
+      "snippet_readers" => [["snippet_id", "snippets"]],
+    }.freeze
+
     Report =
       Data.define(:changes, :losses) do
         def to_s
@@ -76,18 +85,22 @@ module Compendium
       SQL
     end
 
-    # Learner data that goes with the senses it points at. Counted before
-    # anything changes, so a dry run can say what a push would cost.
+    # Learner data that goes with the senses or snippets it points at.
+    # Counted before anything changes, so a dry run can say what a push
+    # would cost.
     def self.losses(connection)
-      gone = "SELECT id FROM senses EXCEPT " \
-             "SELECT id FROM #{Staging.name("senses")}"
-      distracted = "sense_id IN (#{gone}) OR distractor_sense_id IN (#{gone})"
-      {
-        "skill_scores" =>
-          count(connection, "skill_scores", "sense_id IN (#{gone})"),
-        "sense_distractors" =>
-          count(connection, "sense_distractors", distracted),
-      }
+      LOSSES.to_h do |table, pointers|
+        condition =
+          pointers.map { |column, parent| gone(column, parent) }.join(" OR ")
+
+        [table, count(connection, table, condition)]
+      end
+    end
+
+    # Rows whose column points at a row the snapshot no longer has.
+    def self.gone(column, table)
+      "#{column} IN (SELECT id FROM #{table} " \
+        "EXCEPT SELECT id FROM #{Staging.name(table)})"
     end
 
     def self.count(connection, table, condition)

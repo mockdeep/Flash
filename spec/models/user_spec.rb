@@ -20,6 +20,7 @@ RSpec.describe User do
   it { is_expected.to have_many(:snippets).through(:word_lists) }
   it { is_expected.to have_many(:sense_distractors).dependent(:delete_all) }
   it { is_expected.to have_many(:skill_scores).dependent(:delete_all) }
+  it { is_expected.to have_many(:snippet_readers).dependent(:delete_all) }
 
   it "destroys its own decks before its word_lists" do
     deck = create(:reading_deck)
@@ -192,6 +193,28 @@ RSpec.describe User do
       met_goal_deck
 
       expect(default_user.next_unmet_deck).to be_nil
+    end
+  end
+
+  describe "#reading_deck_over" do
+    it "creates a reading deck over the list" do
+      user = create(:user)
+      word_list = create(:word_list)
+
+      expect(user.reading_deck_over(word_list))
+        .to have_attributes(type: "ReadingDeck", word_list:)
+    end
+
+    it "starts the deck at the user's study goal" do
+      user = create(:user, study_goal: 20)
+
+      expect(user.reading_deck_over(create(:word_list)).study_goal).to eq(20)
+    end
+
+    it "reuses the deck the user already has over the list" do
+      deck = create(:reading_deck)
+
+      expect(deck.user.reading_deck_over(deck.word_list)).to eq(deck)
     end
   end
 
