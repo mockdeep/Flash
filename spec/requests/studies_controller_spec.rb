@@ -424,9 +424,16 @@ RSpec.describe StudiesController do
         deck
       end
 
+      def finished_snippet(word_list, **)
+        snippet = create(:snippet, word_list:, **)
+        tokens = [{ "text" => "我", "sense_id" => create(:sense).id }]
+        create(:snippet_sentence, snippet:, body: "我", tokens:)
+        snippet
+      end
+
       it "shows it to an admin when the deck has snippets" do
         deck = admin_deck
-        create(:snippet, word_list: deck.word_list)
+        finished_snippet(deck.word_list)
 
         get(deck_study_path(deck))
 
@@ -435,7 +442,7 @@ RSpec.describe StudiesController do
 
       it "shows the snippets' text" do
         deck = admin_deck
-        create(:snippet, word_list: deck.word_list, title: "筷子")
+        finished_snippet(deck.word_list, title: "筷子")
 
         get(deck_study_path(deck))
 
@@ -450,10 +457,19 @@ RSpec.describe StudiesController do
         expect(rendered).to have_no_field("Read")
       end
 
+      it "hides it when no snippet is finished" do
+        deck = admin_deck
+        create(:snippet, word_list: deck.word_list)
+
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_no_field("Read")
+      end
+
       it "hides it from a user who is not an admin" do
         deck = create(:reading_deck)
         create(:language_card, deck:)
-        create(:snippet, word_list: deck.word_list)
+        finished_snippet(deck.word_list)
 
         get(deck_study_path(deck))
 
@@ -462,7 +478,7 @@ RSpec.describe StudiesController do
 
       it "leaves the text out of a study frame request" do
         deck = admin_deck
-        create(:snippet, word_list: deck.word_list)
+        finished_snippet(deck.word_list)
 
         get(deck_study_path(deck), headers: { "Turbo-Frame" => "study" })
 

@@ -72,7 +72,11 @@ module Views
             end
           end
 
-          render(Components::SnippetReading.new(snippets:)) if reading?
+          if reading?
+            render(
+              Components::SnippetReading.new(snippets:, level: deck.level),
+            )
+          end
         end
       end
 
@@ -86,7 +90,10 @@ module Views
         !turbo_frame_request? && current_user.admin? && snippets.any?
       end
 
-      def snippets = deck.snippets
+      def snippets
+        @snippets ||=
+          deck.snippets.select { |snippet| snippet.status == :finished }
+      end
     end
   end
 end

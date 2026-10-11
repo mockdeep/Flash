@@ -27,6 +27,15 @@ class Snippet < ApplicationRecord
     statuses.first || :new
   end
 
+  # The sentences grouped by the body's lines, which splitting drops. No
+  # sentence spans a line, so each line holds as many as it splits into.
+  def paragraphs
+    remaining = sentences.to_a
+    body.split(/\s*\n\s*/).compact_blank.map do |line|
+      remaining.shift(Snippets::SplitSentences.call(line).size)
+    end
+  end
+
   private
 
   def mandarin

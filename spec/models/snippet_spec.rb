@@ -56,4 +56,19 @@ RSpec.describe Snippet do
       expect(snippet_with(tokens).status).to eq(:finished)
     end
   end
+
+  describe "#paragraphs" do
+    def sentences_of(snippet, *bodies)
+      bodies.map.with_index do |body, position|
+        create(:snippet_sentence, snippet:, body:, position:)
+      end
+    end
+
+    it "groups the sentences by the body's lines" do
+      snippet = create(:snippet, body: "我爱你。\n\n你爱我。他爱她。")
+      sentences = sentences_of(snippet, "我爱你。", "你爱我。", "他爱她。")
+
+      expect(snippet.paragraphs).to eq([sentences.take(1), sentences.drop(1)])
+    end
+  end
 end
