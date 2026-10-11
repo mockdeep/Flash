@@ -5,6 +5,23 @@
 # streak. Not a row - built from the deck's enumeration - which is what lets
 # a deck be a single row over a shared word_list.
 class LanguageCard
+  CORRECT = <<~SQL.squish
+    correct_count = skill_scores.correct_count + 1,
+    correct_streak = skill_scores.correct_streak + 1,
+    view_count = skill_scores.view_count + 1,
+    updated_at = excluded.updated_at
+  SQL
+  MISS = <<~SQL.squish
+    correct_streak = 0,
+    view_count = skill_scores.view_count + 1,
+    updated_at = excluded.updated_at
+  SQL
+  REMEMBER = <<~SQL.squish
+    miss_count = sense_distractors.miss_count + 1,
+    last_missed_at = excluded.last_missed_at,
+    updated_at = excluded.updated_at
+  SQL
+
   attr_reader :deck, :correct_streak
 
   def initialize(deck, entry)
@@ -29,7 +46,7 @@ class LanguageCard
 
   # Credit fans out to every member sense, so the streak moves in lockstep.
   def record_correct!
-    SkillScore.transaction { scores.each(&:record_correct!) }
+    score(CORRECT, correct_count: 1, correct_streak: 1)
     @correct_streak += 1
   end
 
@@ -39,7 +56,7 @@ class LanguageCard
   def record_miss!(chosen_answer = nil)
     shown_as = chosen_answer ? deck.sense_ids_shown_as(chosen_answer) : []
     SkillScore.transaction do
-      scores.each(&:record_miss!)
+      score(MISS)
       remember(shown_as)
     end
     @correct_streak = 0
@@ -49,23 +66,47 @@ class LanguageCard
 
   attr_reader :entry
 
-  def scores
+  # One statement for every member sense, however many there are: a new
+  # score starts from the given counters, an existing one moves by the SQL.
+  def score(on_duplicate, **counters)
+    SkillScore.upsert_all(
+      score_rows(**counters),
+      unique_by: [:user_id, :sense_id, :skill],
+      on_duplicate: Arel.sql(on_duplicate),
+    )
+  end
+
+  def score_rows(**counters)
     sense_ids.map do |sense_id|
-      SkillScore.find_or_initialize_by(
-        user_id: deck.user_id, sense_id:, skill: deck.skill,
-      )
+      {
+        user_id: deck.user_id,
+        sense_id:,
+        skill: deck.skill,
+        view_count: 1,
+        **counters,
+      }
     end
   end
 
   # Every member sense links to every sense the chosen option displayed.
   def remember(distractor_sense_ids)
-    sense_ids.product(distractor_sense_ids).each do
+    SenseDistractor.upsert_all(
+      miss_rows(distractor_sense_ids),
+      unique_by: [:user_id, :sense_id, :distractor_sense_id],
+      on_duplicate: Arel.sql(REMEMBER),
+    )
+  end
+
+  def miss_rows(distractor_sense_ids)
+    sense_ids.product(distractor_sense_ids).map do
       |sense_id, distractor_sense_id|
-      miss = SenseDistractor.find_or_initialize_by(
-        user_id: deck.user_id, sense_id:, distractor_sense_id:,
-      )
-      miss.miss_count += 1
-      miss.update!(last_missed_at: Time.current)
+      {
+        user_id: deck.user_id,
+        sense_id:,
+        distractor_sense_id:,
+        miss_count: 1,
+        last_missed_at: Time.current,
+      }
     end
   end
 
