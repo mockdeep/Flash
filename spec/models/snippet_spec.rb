@@ -89,6 +89,34 @@ RSpec.describe Snippet do
     end
   end
 
+  describe "#shareable?" do
+    it "is true for a license that lets others read it" do
+      expect(build(:snippet, license: "public_domain")).to be_shareable
+    end
+
+    it "is false for all rights reserved" do
+      expect(build(:snippet)).not_to be_shareable
+    end
+  end
+
+  describe "#readable_by?" do
+    it "is true for the list's owner" do
+      snippet = build(:snippet)
+
+      expect(snippet.readable_by?(snippet.word_list.user)).to be(true)
+    end
+
+    it "is true for anyone when the snippet is shareable" do
+      snippet = build(:snippet, license: "cc_by_sa")
+
+      expect(snippet.readable_by?(create(:user))).to be(true)
+    end
+
+    it "is false for anyone else when the snippet is not shareable" do
+      expect(build(:snippet).readable_by?(create(:user))).to be(false)
+    end
+  end
+
   describe "#paragraphs" do
     def sentences_of(snippet, *bodies)
       bodies.map.with_index do |body, position|

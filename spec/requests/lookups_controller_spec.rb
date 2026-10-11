@@ -3,10 +3,9 @@
 require "rails_helper"
 
 RSpec.describe LookupsController do
-  def admin_deck_with_sense
-    admin = create(:user, :admin)
-    login_as(admin)
-    deck = create(:reading_deck, user: admin)
+  def deck_with_sense
+    login_as(default_user)
+    deck = create(:reading_deck)
     sense = create(:sense)
     create(:sense_membership, word_list: deck.word_list, sense:)
     [deck, sense]
@@ -17,17 +16,8 @@ RSpec.describe LookupsController do
   end
 
   describe "#create" do
-    it "is not found for a user who is not an admin" do
-      login_as(default_user)
-      deck = create(:reading_deck)
-
-      post(deck_lookups_path(deck), params: { sense_id: create(:sense).id })
-
-      expect(response).to have_http_status(:not_found)
-    end
-
     it "resets the user's streak on the sense" do
-      deck, sense = admin_deck_with_sense
+      deck, sense = deck_with_sense
       create(:skill_score, user: deck.user, sense:, correct_streak: 3)
 
       post(deck_lookups_path(deck), params: { sense_id: sense.id })
@@ -36,7 +26,7 @@ RSpec.describe LookupsController do
     end
 
     it "counts the lookup as a view" do
-      deck, sense = admin_deck_with_sense
+      deck, sense = deck_with_sense
       create(:skill_score, user: deck.user, sense:, view_count: 2)
 
       post(deck_lookups_path(deck), params: { sense_id: sense.id })
@@ -45,7 +35,7 @@ RSpec.describe LookupsController do
     end
 
     it "creates the score when the user has none on the sense" do
-      deck, sense = admin_deck_with_sense
+      deck, sense = deck_with_sense
 
       post(deck_lookups_path(deck), params: { sense_id: sense.id })
 
@@ -53,7 +43,7 @@ RSpec.describe LookupsController do
     end
 
     it "responds with no content" do
-      deck, sense = admin_deck_with_sense
+      deck, sense = deck_with_sense
 
       post(deck_lookups_path(deck), params: { sense_id: sense.id })
 
@@ -61,7 +51,7 @@ RSpec.describe LookupsController do
     end
 
     it "is not found for a sense outside the deck's list" do
-      deck, = admin_deck_with_sense
+      deck, = deck_with_sense
 
       post(deck_lookups_path(deck), params: { sense_id: create(:sense).id })
 
@@ -69,7 +59,7 @@ RSpec.describe LookupsController do
     end
 
     it "is not found for another user's deck" do
-      _, sense = admin_deck_with_sense
+      _, sense = deck_with_sense
       deck = create(:reading_deck, user: create(:user))
 
       post(deck_lookups_path(deck), params: { sense_id: sense.id })
