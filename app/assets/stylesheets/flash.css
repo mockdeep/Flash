@@ -817,6 +817,66 @@ body {
   display: none;
 }
 
+.study-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.study-tabs__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.study-tabs__tab {
+  padding: 0.35rem 1.4rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background: var(--color-background-elevated);
+  border: 3px solid var(--color-border-dark);
+}
+
+.study-tabs__tab:last-child {
+  border-left: none;
+}
+
+.study-tabs__tab:hover {
+  color: var(--color-primary);
+}
+
+.study-tabs__input:checked + .study-tabs__tab {
+  color: var(--color-background-elevated);
+  background: var(--color-primary);
+  border-color: var(--color-primary-dark);
+}
+
+.study-tabs__input:focus-visible + .study-tabs__tab {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.content-container:has(.study-tabs__input[value="read"]:checked) .study-frame,
+.content-container:has(.study-tabs__input[value="study"]:checked) .reading-snippets {
+  display: none;
+}
+
+.reading-snippet p {
+  font-size: 20px;
+  line-height: 1.8;
+}
+
+.reading-snippet .reading-snippet__author {
+  margin-top: 0;
+  color: var(--color-text-muted);
+  font-size: 15px;
+}
+
 .next-card-button {
   position: fixed;
   bottom: var(--spacing-lg);

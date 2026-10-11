@@ -161,6 +161,26 @@ it("allows hotkeys for elements inside an open dialog", async () => {
   expect(clickSpy).toHaveBeenCalledWith();
 });
 
+it("ignores hotkeys for elements in a hidden section", async () => {
+  await setupController();
+  const clickSpy = vi.spyOn(button(), "click");
+  element().style.display = "none";
+
+  controller().handleKeydown(new KeyboardEvent("keydown", {key: "a"}));
+
+  expect(clickSpy).not.toHaveBeenCalled();
+});
+
+it("allows hotkeys for elements that are hidden themselves", async () => {
+  await setupController();
+  const clickSpy = vi.spyOn(button(), "click");
+  button().hidden = true;
+
+  controller().handleKeydown(new KeyboardEvent("keydown", {key: "a"}));
+
+  expect(clickSpy).toHaveBeenCalledWith();
+});
+
 function setHotkey(hotkey: string): void {
   controller().clickTargetDisconnected(button());
   button().dataset.hotkey = hotkey;

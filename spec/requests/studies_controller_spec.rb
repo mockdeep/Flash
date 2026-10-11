@@ -414,6 +414,61 @@ RSpec.describe StudiesController do
 
       expect(rendered).to have_css("h2", text: "No cards to study")
     end
+
+    context "with the Read tab" do
+      def admin_deck
+        admin = create(:user, :admin)
+        login_as(admin)
+        deck = create(:reading_deck, user: admin)
+        create(:language_card, deck:)
+        deck
+      end
+
+      it "shows it to an admin when the deck has snippets" do
+        deck = admin_deck
+        create(:snippet, word_list: deck.word_list)
+
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_field("Read", type: "radio")
+      end
+
+      it "shows the snippets' text" do
+        deck = admin_deck
+        create(:snippet, word_list: deck.word_list, title: "筷子")
+
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_css(".reading-snippet h2", text: "筷子")
+      end
+
+      it "hides it when the deck has no snippets" do
+        deck = admin_deck
+
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_no_field("Read")
+      end
+
+      it "hides it from a user who is not an admin" do
+        deck = create(:reading_deck)
+        create(:language_card, deck:)
+        create(:snippet, word_list: deck.word_list)
+
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_no_css(".reading-snippets")
+      end
+
+      it "leaves the text out of a study frame request" do
+        deck = admin_deck
+        create(:snippet, word_list: deck.word_list)
+
+        get(deck_study_path(deck), headers: { "Turbo-Frame" => "study" })
+
+        expect(rendered).to have_no_css(".reading-snippets")
+      end
+    end
   end
 
   describe "demo mode" do

@@ -28,6 +28,8 @@ module Views
 
           h1 { deck.name }
 
+          render(Components::StudyTabs.new) if reading?
+
           turbo_frame_tag(
             "study",
             class: "study-frame",
@@ -69,12 +71,22 @@ module Views
               span(data: { hotkeys_target: "click", hotkey: " " }, hidden: true)
             end
           end
+
+          render(Components::SnippetReading.new(snippets:)) if reading?
         end
       end
 
       private
 
       def goal_reached? = !deck.no_goal? && completed >= study_goal
+
+      # Admin-only until snippets have a way to be shared. Turbo keeps only
+      # the study frame from a frame request, so the text is left out of it.
+      def reading?
+        !turbo_frame_request? && current_user.admin? && snippets.any?
+      end
+
+      def snippets = deck.snippets
     end
   end
 end
