@@ -48,10 +48,37 @@ RSpec.describe Components::SnippetReading, type: :view do
     expect(page).to have_no_css(".reading-snippet__author")
   end
 
+  it "links to the source when there is one" do
+    page = render_for(build(:snippet, source_url: "https://zh.wikipedia.org/"))
+
+    expect(page).to have_link("Source", href: "https://zh.wikipedia.org/")
+  end
+
+  it "leaves out the source when there is none" do
+    page = render_for(build(:snippet, source_url: ""))
+
+    expect(page).to have_no_link("Source")
+  end
+
+  it "links to the license's terms when it has them" do
+    page = render_for(build(:snippet, license: "cc_by_sa"))
+    url = "https://creativecommons.org/licenses/by-sa/4.0/"
+
+    expect(page).to have_link("CC BY-SA 4.0", href: url)
+  end
+
+  it "names a license without terms to link" do
+    page = render_for(build(:snippet, license: "public_domain"))
+
+    expect(page).to have_css(".reading-snippet__credit", text: "Public domain")
+  end
+
   it "shows each line of the body as its own paragraph" do
     page = render_for(two_line_snippet, level: 3)
 
-    expect(texts_of(page, ".reading-snippet p")).to eq(["我。", "你。他。"])
+    paragraphs = texts_of(page, ".reading-snippet p:not([class])")
+
+    expect(paragraphs).to eq(["我。", "你。他。"])
   end
 
   it "shows each word's reading at level 1" do

@@ -4,10 +4,10 @@ module Snippets
   # Saves a snippet and its sentences under the user's word_list of the given
   # name, made here as a Mandarin list when new.
   module Create
-    def self.call(user:, list_name: nil, title: nil, body: nil, author: nil)
+    def self.call(user:, list_name: nil, **attributes)
       word_list = user.word_lists.find_or_initialize_by(name: list_name)
       word_list.language ||= Snippet::LANGUAGE
-      snippet = word_list.snippets.build(title:, author:, body:)
+      snippet = word_list.snippets.build(attributes)
       build_sentences(snippet)
 
       Result.new(success: save(word_list, snippet), record: snippet)

@@ -36,18 +36,38 @@ module Views
         form_with(**options) do |form|
           render(Components::ErrorExplanation.new(errors: snippet.errors))
 
-          render_field(form, :title, "Title", required: true)
-          render_field(form, :author, "Author")
+          render_source_fields(form)
           render_list_field(form)
           render_body_field(form)
           render_actions(form)
         end
       end
 
+      def render_source_fields(form)
+        render_field(form, :title, "Title", required: true)
+        render_field(form, :author, "Author")
+        render_field(form, :source_url, "Source URL", type: "url")
+        render_license_field(form)
+      end
+
       def render_field(form, name, label, **)
         div(class: "form-field") do
           form.label(name, label, class: "form-label")
           form.text_field(name, value: snippet[name], class: "form-input", **)
+        end
+      end
+
+      def render_license_field(form)
+        licenses = Snippet::LICENSES.map { |key, license| [license[:name], key] }
+
+        div(class: "form-field") do
+          form.label(:license, "License", class: "form-label")
+          form.select(
+            :license,
+            licenses,
+            { selected: snippet.license },
+            class: "form-input",
+          )
         end
       end
 

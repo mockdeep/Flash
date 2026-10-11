@@ -28,7 +28,9 @@ class SnippetsController < ApplicationController
   def list_names = current_user.word_lists.order(:name).pluck(:name)
 
   def snippet_params
-    params.expect(snippet: [:list_name, :title, :author, :body])
+    params.expect(
+      snippet: [:list_name, :title, :author, :source_url, :license, :body],
+    )
       .to_h.symbolize_keys
   end
 end
