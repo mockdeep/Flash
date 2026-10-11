@@ -72,11 +72,7 @@ module Views
             end
           end
 
-          if reading?
-            render(
-              Components::SnippetReading.new(snippets:, level: deck.level),
-            )
-          end
+          render(Components::SnippetReading.new(snippets:, deck:)) if reading?
         end
       end
 

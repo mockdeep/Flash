@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   end
   resource :demo, only: [:show, :create], controller: "demo"
   resources :decks, only: [:new, :create, :index, :show, :destroy] do
+    resources :lookups, only: [:create]
     resource :milestone, only: [:update]
     resource :catalog_listing, only: [:create, :destroy], controller: "catalog_listings"
     resource :replacement, only: [:new, :create], controller: "replacements"
