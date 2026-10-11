@@ -7,6 +7,11 @@ FactoryBot.define do
     body { "我爱你。" }
   end
 
+  factory(:snippet_reader) do
+    snippet
+    user
+  end
+
   factory(:snippet_sentence) do
     snippet
     sequence(:position, 100)

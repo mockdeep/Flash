@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_11_205818) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_11_213810) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -129,6 +129,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_205818) do
     t.integer "view_count", default: 0, null: false
     t.index ["sense_id"], name: "index_skill_scores_on_sense_id"
     t.index ["user_id", "sense_id", "skill"], name: "index_skill_scores_on_user_id_and_sense_id_and_skill", unique: true
+  end
+
+  create_table "snippet_readers", force: :cascade do |t|
+    t.bigint "snippet_id", null: false
+    t.bigint "user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["snippet_id", "user_id"], name: "index_snippet_readers_on_snippet_id_and_user_id", unique: true
+    t.index ["user_id"], name: "index_snippet_readers_on_user_id"
   end
 
   create_table "snippet_sentences", force: :cascade do |t|
@@ -383,6 +392,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_205818) do
   add_foreign_key "senses", "entries"
   add_foreign_key "skill_scores", "senses", on_delete: :cascade
   add_foreign_key "skill_scores", "users", on_delete: :cascade
+  add_foreign_key "snippet_readers", "snippets", on_delete: :cascade
+  add_foreign_key "snippet_readers", "users", on_delete: :cascade
   add_foreign_key "snippet_sentences", "snippets", on_delete: :cascade
   add_foreign_key "snippets", "word_lists", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade

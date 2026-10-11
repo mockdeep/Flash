@@ -491,6 +491,16 @@ RSpec.describe StudiesController do
         expect(rendered).to have_no_css(".reading-snippet h2", text: "孔乙己")
       end
 
+      it "shows a snippet over someone else's list the user was let read" do
+        deck = borrowed_deck
+        snippet = finished_snippet(deck.word_list, title: "孔乙己")
+        create(:snippet_reader, snippet:, user: deck.user)
+
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_css(".reading-snippet h2", text: "孔乙己")
+      end
+
       it "hides it when no snippet over someone else's list may be shared" do
         deck = borrowed_deck
         finished_snippet(deck.word_list)

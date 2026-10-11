@@ -29,6 +29,7 @@ class User < ApplicationRecord
   has_many :topics, dependent: :destroy
   has_many :sense_distractors, dependent: :delete_all
   has_many :skill_scores, dependent: :delete_all
+  has_many :snippet_readers, dependent: :delete_all
   has_one :subscription, dependent: :destroy
 
   def self.find_by(args)
@@ -52,6 +53,11 @@ class User < ApplicationRecord
   end
 
   def next_unmet_deck = decks.goal_unmet_today.topic_ordered.first
+
+  def reading_deck_over(word_list)
+    decks.create_with(distractor_pool: "category", study_goal:)
+      .find_or_create_by!(type: "ReadingDeck", word_list:)
+  end
 
   def supporter?
     subscription&.active? || false
