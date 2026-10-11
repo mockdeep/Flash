@@ -10,13 +10,14 @@ module Components
       spellcheck: "false",
     }.freeze
 
-    attr_accessor :deck, :card, :answers
+    attr_accessor :deck, :card, :answers, :stage
 
-    def initialize(deck:, card:, answers:)
+    def initialize(deck:, card:, answers:, stage:)
       super()
       self.deck = deck
       self.card = card
       self.answers = answers
+      self.stage = stage
     end
 
     def view_template
@@ -77,6 +78,7 @@ module Components
 
     def render_form_fields(form)
       form.hidden_field("answer[card_id]", value: card.id)
+      form.hidden_field("answer[stage]", value: stage) if stage
       form.hidden_field(
         "answer[answer]",
         data: { fuzzy_find_target: "answerInput" },

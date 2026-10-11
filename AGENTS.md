@@ -376,7 +376,7 @@ app/
 │   ├── catalog_toggle_button.rb  # Publish / unpublish a deck to the public catalog
 │   ├── demo_banner.rb            # Demo-mode banner
 │   ├── error_explanation.rb      # Styled validation-error box
-│   ├── fuzzy_find_answers.rb     # Typed-answer input for fuzzy-find mode (level 3+)
+│   ├── fuzzy_find_answers.rb     # Typed-answer input for fuzzy-find mode (level 3+); optional reading `stage`
 │   ├── goal_form.rb              # One study-goal form per goal mode (no goal / daily goal / target date)
 │   ├── level_progress.rb         # Deck level indicator (LEVELS = 3)
 │   ├── music_card_body.rb        # Mic-driven music study widget
@@ -384,6 +384,7 @@ app/
 │   ├── replace_cards_dialog.rb   # Confirm dialog for re-importing a deck's cards
 │   ├── session_milestone.rb      # Study milestone prompt (daily goal reached; Next Deck / Reset All Goals)
 │   ├── session_progress.rb       # Study session progress bar
+│   ├── study_answers.rb          # Study answer area per presentation mode (buttons / fuzzy find, reading stage)
 │   ├── study_example.rb          # Optional example sentence on the answer view
 │   ├── study_goal_dialog.rb      # Edit daily study-goal dialog
 │   ├── table.rb                  # `.table` pattern; block fills each row via `table.cell`
@@ -486,7 +487,7 @@ app/
 │   ├── shares/
 │   │   └── show.rb           # Public share-link preview (attributed to owner)
 │   ├── studies/
-│   │   ├── show.rb           # Text-deck study prompt (multiple-choice / fuzzy-find)
+│   │   ├── show.rb           # Text-deck study prompt (answers via StudyAnswers)
 │   │   ├── update.rb         # Text-deck answer result (renders CardReading + StudyExample)
 │   │   ├── music_show.rb     # Mic-driven music study prompt
 │   │   ├── music_update.rb   # Music answer result
@@ -795,24 +796,24 @@ Microphone-driven music study (target: guitar / ukulele). Public music decks app
 Cards can carry an optional pronunciation/gloss (e.g. Mandarin pinyin) kept separate from `back`. Keeping it out of `back` keeps the multiple-choice options clean — the gloss is revealed with the card rather than baked into every answer string.
 - **Data**: `cards.reading` for the flat families; `items.reading` on the Front item for language decks, which `LanguageCard` delegates through. Imported via an optional `reading` CSV column (`Decks::CsvReading`, wired through the create actions / `Decks::Replace` / `Catalog::CopyDeck`) and editable in the card edit form on flat decks (the card view is kept in sync by a `card-reading` turbo-stream replace from `CardsController`).
 - **Display**: `Components::CardFront` takes an optional `reading:` and renders `Components::CardReading` *inside* the card-front box, directly under the character, so the two read as one unit. The answer (update) view passes `reading:`, and so does the question view when it re-renders after a passed reading stage (the confirmed reading stays visible while the translation is answered — see Study Algorithm). The initial pre-answer and music views omit it, so nothing shows before answering and the gloss never lands on the distractor options.
-- **Study**: the reading also powers the level-2 **reading stage** — pick the reading, then the translation (see Study Algorithm). The box border/stripe/shadow live on `.card-front-wrapper` (not the `.card-front` `<h2>`) so the character and reading share one frame. There is no show/hide configuration; a deck that shouldn't show readings simply omits the `reading` column.
+- **Study**: the reading also powers the **reading stage** from level 2 up — answer the reading, then the translation (see Study Algorithm). The box border/stripe/shadow live on `.card-front-wrapper` (not the `.card-front` `<h2>`) so the character and reading share one frame. There is no show/hide configuration; a deck that shouldn't show readings simply omits the `reading` column.
 
 ### Study Algorithm
 
 The study engine (`app/domain/study.rb`) manages card selection and answer processing:
 - **Active window**: picks randomly from the not-done cards (at the current level) capped at `2^(level-1) × 20` — the pool of cards in play grows as the deck levels up
-- **Presentation mode**: multiple-choice below level 3, **fuzzy-find** (typed-answer) at level 3+ (`FUZZY_FIND_LEVEL`); at level 2 (`READING_LEVEL`) a card with a `reading` on a forward deck gets a **reading stage** first (see below). `possible_answers` branches on the mode
+- **Presentation mode**: multiple-choice below level 3, **fuzzy-find** (typed-answer) at level 3+ (`FUZZY_FIND_LEVEL`); from level 2 (`READING_LEVEL`) up, a card with a `reading` gets a **reading stage** first (see below) — `:reading` (multiple choice) at level 2, `:fuzzy_reading` at 3+. `possible_answers` branches on the mode, and `Components::StudyAnswers` renders it
 - **Multiple choice**: 4 distractors + the answer, shuffled. Distractors come from the card's own preset `distractors` (`card_distractors` rows for flat families, `ItemDistractor`s for language); a `"category"`-pool deck tops up from same-category then any sibling cards via `deck.cards_in_category`
 - On correct answer: increments `correct_count` and `correct_streak`; if the last not-done card at the level is completed, advances `deck.level`
 - On incorrect answer: `Card#record_miss!` resets `correct_streak` and records the wrong guess as a decoy via `record_distractor` — a `card_distractors` row on flat cards, an item-side decoy through `WordLists::Projection.add_distractor` on language cards
 - Level advancement happens in `Study#answer_card`, not in the controller
 
-**Reading stage (level 2)**: on a forward text deck at level 2, a card with a `reading` is asked in two parts — pick the reading (multiple choice), then pick the translation. It gates the translation question but never scores it:
-- The stage is stateless — answer buttons carry `stage: "reading"` in their params and `Study#record_answer` routes those to `answer_reading`
+**Reading stage (level 2+)**: on a text deck at level 2 or above, a card with a `reading` is asked in two parts — the reading, then the translation. At level 2 the reading is multiple choice; at level 3+ it is fuzzy find over every distinct reading in the deck (minus homograph twins' readings, as below). The fuzzy matcher ignores tone marks, so tones are only tested when the deck holds readings that differ just by tone. It gates the translation question but never scores it:
+- The stage is stateless — answer buttons (and the fuzzy-find form's hidden field) carry `stage: "reading"` in their params and `Study#record_answer` routes those to `answer_reading`
 - A **miss** resets `correct_streak` and bumps `view_count`, but does **not** call `add_distractor` (a wrong pinyin pick must not pollute the translation distractor pool); the regular result view renders it
 - A **pass** writes nothing; the controller re-renders the question view pinned to the same card (`Study.for(deck:, card_id:)` forces the translation stage, and the confirmed reading stays visible under the character). The translation answer then flows through `answer_card` as usual
-- **Decoys are computed, not stored**: sibling (front, reading) pairs from `deck.reading_pairs(except:)`, ranked by how close each sibling front's **character count** is to the prompt's — the learner predicts phoneme count by counting the prompt's characters, so a wrong-count option is a free elimination. Two slots prefer siblings that share the prompt's first or last character *and* match its character count exactly (knowing one character's reading then can't eliminate them). Sibling readings equal to the card's own (homophones) are excluded
-- Cards without a `reading` behave exactly as before, even at level 2
+- **Multiple-choice decoys (level 2) are computed, not stored**: sibling (front, reading) pairs from `deck.reading_pairs(except:)`, ranked by how close each sibling front's **character count** is to the prompt's — the learner predicts phoneme count by counting the prompt's characters, so a wrong-count option is a free elimination. Two slots prefer siblings that share the prompt's first or last character *and* match its character count exactly (knowing one character's reading then can't eliminate them). Sibling readings equal to the card's own (homophones) are excluded
+- Cards without a `reading` skip the stage at every level
 
 ### Milestone: Next Deck
 

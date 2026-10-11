@@ -183,6 +183,36 @@ RSpec.describe "studying a deck" do
     end
   end
 
+  context "when a card has a reading at the fuzzy find level" do
+    def visit_fuzzy_reading_deck
+      deck = create(:deck, user: default_user, level: Study::FUZZY_FIND_LEVEL)
+      create(:basic_card, deck:, front: "两", back: "two", reading: "liǎng")
+      create(:basic_card, :done, deck:, back: "three", reading: "sān")
+      sign_in(default_user)
+      visit(deck_study_path(deck))
+    end
+
+    def type_and_pick(text, answer)
+      fuzzy_input.fill_in(with: text)
+      click_on(answer)
+    end
+
+    it "asks the translation of the same card once the reading is typed" do
+      visit_fuzzy_reading_deck
+      type_and_pick("li", "liǎng")
+
+      expect(page).to have_css("#card-reading", text: "liǎng")
+    end
+
+    it "completes the card through both stages" do
+      visit_fuzzy_reading_deck
+      type_and_pick("li", "liǎng")
+      type_and_pick("tw", "two")
+
+      expect(page).to have_css("#correct-answer-text", text: "two")
+    end
+  end
+
   context "when the deck is at the reading level" do
     def visit_reading_deck
       deck = create(:deck, user: default_user, level: Study::READING_LEVEL)
