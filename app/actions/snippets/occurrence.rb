@@ -5,25 +5,30 @@ module Snippets
   # Every token is its own occurrence, so a word used in two senses, even
   # within one sentence, is decided twice. `rejection` keeps why a proposal
   # for it did not stand, and carries it to the next rung of the ladder.
+  # `complaint` is why its sentence was already segmented again, if it was.
   class Occurrence
     MARKS = ["【", "】"].freeze
     CONTEXT = 3
 
-    attr_reader :sentence, :index
+    attr_reader :sentence, :index, :complaint
     attr_accessor :rejection
 
     # The Han tokens of a sentence batch, one occurrence per token.
-    def self.for(sentences)
+    def self.for(sentences, resegmented: {})
       sentences.flat_map do |sentence|
+        complaint = resegmented[sentence]
         sentence.tokens.each_with_index.filter_map do |token, index|
-          new(sentence:, index:) if token["text"].match?(SnippetSentence::HAN)
+          next unless token["text"].match?(SnippetSentence::HAN)
+
+          new(sentence:, index:, complaint:)
         end
       end
     end
 
-    def initialize(sentence:, index:)
+    def initialize(sentence:, index:, complaint: nil)
       @sentence = sentence
       @index = index
+      @complaint = complaint
     end
 
     def key = [sentence, index]

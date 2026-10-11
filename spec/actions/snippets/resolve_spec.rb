@@ -153,6 +153,14 @@ RSpec.describe Snippets::Resolve do
         expect(llm.calls.second.prompt).to include("花了: joins 花 and 了")
       end
 
+      it "shows the complaint when resolving the sentence again" do
+        llm.answer(missegmented, resegmented("花", "了"), *[undecided] * 4)
+        described_class.call([sentence(["花了"])])
+
+        expect(llm.calls.third.prompt)
+          .to include('"resegmented":"花了: joins 花 and 了"')
+      end
+
       it "returns the complaint" do
         faulted = sentence(["花了"])
         llm.answer(missegmented, resegmented("花", "了"), *[undecided] * 4)

@@ -67,6 +67,15 @@ RSpec.describe Snippets::Review do
       expect(llm.calls.first.prompt).to include("split 花 and 了")
     end
 
+    it "shows the complaint when resolving the new tokens" do
+      llm.answer(segmented_as("花", "了"), *[{ decisions: [] }] * 4)
+      sentence = create(:snippet_sentence, body: "花了", tokens: [unresolved])
+      described_class.resegment(sentence, "split 花 and 了")
+
+      expect(llm.calls.second.prompt)
+        .to include('"resegmented":"split 花 and 了"')
+    end
+
     it "resolves the new tokens" do
       llm.answer(segmented_as("花", "了"), *[{ decisions: [] }] * 4)
       sentence = create(:snippet_sentence, body: "花了", tokens: [unresolved])

@@ -28,8 +28,9 @@ module Snippets
     # Segments the sentence again with the reviewer's complaint and resolves
     # it afresh, without sending it back a second time.
     def self.resegment(sentence, feedback)
-      Segment.call([sentence], feedback: { sentence => feedback })
-      Resolve.call([sentence], resegment: false)
+      complaint = { sentence => feedback }
+      Segment.call([sentence], feedback: complaint)
+      Resolve.call([sentence], resegmented: complaint)
     end
   end
 end

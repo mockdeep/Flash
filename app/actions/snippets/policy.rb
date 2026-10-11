@@ -64,6 +64,11 @@ module Snippets
       "already", "only then" or "mostly" rather than the commonest gloss; a
       conjunction may mark contrast ("as for", "but") rather than sequence
       ("then"). When no listed sense names the role, propose a new one.
+      The same holds for a direction or result word split off after a verb
+      (拿起 → 拿, 起; 跑出 → 跑, 出; 写完 → 写, 完): it names what it adds to
+      the verb ("up", "out", "finished"), not its meaning as a verb on its
+      own ("to rise", "to go out"). Gloss it in plain English, with no
+      grammar label ("up", not "up (direction complement)").
     TEXT
   end
 end

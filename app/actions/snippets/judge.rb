@@ -35,6 +35,10 @@ module Snippets
         meanings, or explanation beyond a short gloss
       - the reading or gloss breaks the reading and gloss rules below
 
+      A sentence may carry `resegmented`: the complaint it was already
+      segmented again over. A word the complaint asked for is not bad
+      segmentation on that ground alone.
+
       Accept when the reading and gloss are right for the sentence and the
       sense is distinct from the listed ones. Give a verdict for every
       occurrence, and a one-sentence reason only when you reject: the reason
