@@ -145,6 +145,12 @@ class Deck < ApplicationRecord
 
   def card(id) = cards.find(id)
 
+  def finished_snippets
+    snippets.select { |snippet| snippet.status == :finished }
+  end
+
+  def shares_texts? = finished_snippets.any?(&:shareable?)
+
   def study_pool(limit:) = cards.not_done(level).ordered.limit(limit).to_a
 
   def all_done? = progress.done == progress.total

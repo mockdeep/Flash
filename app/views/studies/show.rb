@@ -88,8 +88,8 @@ module Views
 
       def snippets
         @snippets ||=
-          deck.snippets.select do |snippet|
-            snippet.status == :finished && snippet.readable_by?(current_user)
+          deck.finished_snippets.select do |snippet|
+            snippet.readable_by?(current_user)
           end
       end
     end

@@ -406,6 +406,33 @@ RSpec.describe Deck do
     end
   end
 
+  describe "#finished_snippets" do
+    it "leaves out a snippet not yet finished" do
+      deck = create(:reading_deck)
+      finished = create(:snippet, :finished, word_list: deck.word_list)
+      create(:snippet, word_list: deck.word_list)
+
+      expect(deck.finished_snippets).to eq([finished])
+    end
+  end
+
+  describe "#shares_texts?" do
+    it "is true with a finished snippet others may read" do
+      deck = create(:reading_deck)
+      word_list = deck.word_list
+      create(:snippet, :finished, word_list:, license: "public_domain")
+
+      expect(deck.shares_texts?).to be(true)
+    end
+
+    it "is false when no finished snippet may be shared" do
+      deck = create(:reading_deck)
+      create(:snippet, :finished, word_list: deck.word_list)
+
+      expect(deck.shares_texts?).to be(false)
+    end
+  end
+
   describe "#card" do
     it "finds the deck's card by id" do
       card = create(:basic_card)

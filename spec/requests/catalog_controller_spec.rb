@@ -78,9 +78,36 @@ RSpec.describe CatalogController do
 
       expect(rendered).to have_no_css("[title='Microphone required']")
     end
+
+    it "shows a texts badge for a deck with texts to read" do
+      deck = create(:reading_deck, user: create(:user), visibility: "public")
+      word_list = deck.word_list
+      create(:snippet, :finished, word_list:, license: "public_domain")
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_css("[title='Comes with texts to read']")
+    end
+
+    it "does not show a texts badge for a deck without them" do
+      public_deck
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_no_css("[title='Comes with texts to read']")
+    end
   end
 
   describe "#show" do
+    it "lists the texts the deck's words came from" do
+      deck = create(:reading_deck, user: create(:user), visibility: "public")
+      create(:snippet, :finished, word_list: deck.word_list, title: "筷子")
+
+      get(catalog_path(deck))
+
+      expect(rendered).to have_css(".catalog-preview td", text: "筷子")
+    end
+
     it "renders without authentication" do
       deck = public_deck
 

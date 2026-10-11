@@ -9,6 +9,16 @@ RSpec.describe SharesController do
   end
 
   describe "#show" do
+    it "lists the texts the deck's words came from" do
+      deck = create(:reading_deck, user: create(:user))
+      deck.generate_share_token!
+      create(:snippet, :finished, word_list: deck.word_list, title: "筷子")
+
+      get(shared_deck_path(deck.share_token))
+
+      expect(rendered).to have_css(".catalog-preview td", text: "筷子")
+    end
+
     it "renders without authentication" do
       deck = shared_deck
 

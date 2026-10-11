@@ -14,6 +14,7 @@ module Views
         div(class: "catalog-show-container") do
           render_header
           render_card_preview
+          render(Components::DeckTexts.new(deck:))
           render_action
         end
       end
