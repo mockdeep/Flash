@@ -4,7 +4,7 @@ module Snippets
   # Saves a snippet and its sentences as the next section of a source.
   module Create
     def self.call(source:, **attributes)
-      snippet = source.snippets.build(word_list: source.word_list, **attributes)
+      snippet = source.snippets.build(attributes)
       build_sentences(snippet)
 
       Result.new(success: snippet.save, record: snippet)

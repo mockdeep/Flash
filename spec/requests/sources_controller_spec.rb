@@ -151,14 +151,13 @@ RSpec.describe SourcesController do
       expect(rendered).to have_button("Study this list")
     end
 
-    it "offers to share a finished snippet" do
+    it "offers to share a source with a finished snippet" do
       source = own_source(login_admin)
-      snippet = finished_snippet(source)
+      finished_snippet(source)
 
       get(source_path(source))
 
-      expect(rendered)
-        .to have_link("Share", href: snippet_readers_path(snippet))
+      expect(rendered).to have_link("Share", href: source_readers_path(source))
     end
 
     it "offers nothing to share before a snippet is finished" do

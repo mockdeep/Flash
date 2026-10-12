@@ -3,12 +3,9 @@
 require "rails_helper"
 
 RSpec.describe Snippet do
-  it { is_expected.to belong_to(:word_list) }
   it { is_expected.to belong_to(:source) }
   it { is_expected.to have_many(:sentences).dependent(:delete_all) }
-  it { is_expected.to have_many(:readers).dependent(:delete_all) }
 
-  it { is_expected.to validate_presence_of(:word_list) }
   it { is_expected.to validate_presence_of(:source) }
   it { is_expected.to validate_presence_of(:body) }
   it { is_expected.to validate_length_of(:body).is_at_most(20_000) }
@@ -19,6 +16,12 @@ RSpec.describe Snippet do
     first = create(:snippet_sentence, snippet:, position: 1)
 
     expect(snippet.sentences).to eq([first, second])
+  end
+
+  it "reaches its word_list through its source" do
+    source = create(:source)
+
+    expect(create(:snippet, source:).word_list).to eq(source.word_list)
   end
 
   it "is removed with its word_list" do
@@ -64,30 +67,6 @@ RSpec.describe Snippet do
       source = build(:source, title: "春节")
 
       expect(build(:snippet, source:).title).to eq("春节")
-    end
-  end
-
-  describe "#readable_by?" do
-    it "is true for the list's owner" do
-      snippet = build(:snippet)
-
-      expect(snippet.readable_by?(snippet.word_list.user)).to be(true)
-    end
-
-    it "is true for anyone when the source is shareable" do
-      snippet = build(:snippet, source: build(:source, license: "cc_by_sa"))
-
-      expect(snippet.readable_by?(create(:user))).to be(true)
-    end
-
-    it "is true for a reader let in" do
-      reader = create(:snippet_reader)
-
-      expect(reader.snippet.readable_by?(reader.user)).to be(true)
-    end
-
-    it "is false for anyone else when the source is not shareable" do
-      expect(build(:snippet).readable_by?(create(:user))).to be(false)
     end
   end
 

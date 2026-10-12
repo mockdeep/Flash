@@ -89,7 +89,7 @@ module Views
       def snippets
         @snippets ||=
           deck.finished_snippets.select do |snippet|
-            snippet.readable_by?(current_user)
+            snippet.source.readable_by?(current_user)
           end
       end
     end

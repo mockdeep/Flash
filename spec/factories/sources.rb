@@ -5,4 +5,9 @@ FactoryBot.define do
     word_list
     sequence(:title, 100) { |n| "Source #{n}" }
   end
+
+  factory(:source_reader) do
+    source
+    user
+  end
 end

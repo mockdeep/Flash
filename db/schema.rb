@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_212831) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_215159) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -151,7 +151,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_212831) do
   end
 
   create_table "snippets", force: :cascade do |t|
-    t.bigint "word_list_id", null: false
+    t.bigint "word_list_id"
     t.string "title"
     t.string "author"
     t.text "body", null: false
@@ -325,6 +325,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_212831) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "source_readers", force: :cascade do |t|
+    t.bigint "source_id", null: false
+    t.bigint "user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["source_id", "user_id"], name: "index_source_readers_on_source_id_and_user_id", unique: true
+    t.index ["user_id"], name: "index_source_readers_on_user_id"
+  end
+
   create_table "sources", force: :cascade do |t|
     t.bigint "word_list_id", null: false
     t.string "title", null: false
@@ -419,6 +428,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_212831) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "source_readers", "sources", on_delete: :cascade
+  add_foreign_key "source_readers", "users", on_delete: :cascade
   add_foreign_key "sources", "word_lists", on_delete: :cascade
   add_foreign_key "study_days", "decks", on_delete: :cascade
   add_foreign_key "subscriptions", "users"

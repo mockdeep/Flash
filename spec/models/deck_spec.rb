@@ -5,6 +5,7 @@ RSpec.describe Deck do
   it { is_expected.to have_many(:cards).dependent(:delete_all) }
   it { is_expected.to have_many(:study_days).dependent(:delete_all) }
   it { is_expected.to have_one(:source).through(:word_list) }
+  it { is_expected.to have_many(:snippets).through(:source) }
 
   def flat_deck_attributes
     {

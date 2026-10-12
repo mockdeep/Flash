@@ -1,26 +1,26 @@
 # frozen_string_literal: true
 
-module Snippets
-  # Lets a user read a snippet whatever its license, and gives them a deck
+module Sources
+  # Lets a user read a source whatever its license, and gives them a deck
   # over its word_list to read it from.
   module Grant
-    def self.call(snippet:, username:)
+    def self.call(source:, username:)
       user = User.where.not(role: "guest").find_by(username:)
-      return refuse(snippet, username) unless user
+      return refuse(source, username) unless user
 
-      reader = snippet.readers.find_or_initialize_by(user:)
-      SnippetReader.transaction do
+      reader = source.readers.find_or_initialize_by(user:)
+      SourceReader.transaction do
         reader.save!
-        user.reading_deck_over(snippet.word_list)
+        user.reading_deck_over(source.word_list)
       end
 
       Result.new(success: true, record: reader)
     end
 
-    # The failed reader stays off snippet.readers, so the page listing them
+    # The failed reader stays off source.readers, so the page listing them
     # doesn't show it.
-    def self.refuse(snippet, username)
-      reader = SnippetReader.new(snippet:)
+    def self.refuse(source, username)
+      reader = SourceReader.new(source:)
       reader.errors.add(:base, "No user named #{username}")
 
       Result.new(success: false, record: reader)

@@ -433,7 +433,7 @@ RSpec.describe StudiesController do
       def finished_snippet(word_list, heading: nil, license: nil)
         source = word_list.source ||
           create(:source, word_list:, license: license || "all_rights_reserved")
-        snippet = create(:snippet, word_list:, source:, heading:)
+        snippet = create(:snippet, source:, heading:)
         tokens = [{ "text" => "我", "sense_id" => create(:sense).id }]
         create(:snippet_sentence, snippet:, body: "我", tokens:)
         snippet
@@ -441,7 +441,7 @@ RSpec.describe StudiesController do
 
       def let_in(deck, heading)
         snippet = finished_snippet(deck.word_list, heading:)
-        create(:snippet_reader, snippet:, user: deck.user)
+        create(:source_reader, source: snippet.source, user: deck.user)
       end
 
       it "shows it when the deck has snippets" do
@@ -486,16 +486,6 @@ RSpec.describe StudiesController do
         get(deck_study_path(deck))
 
         expect(rendered).to have_css(".reading-snippet h3", text: "筷子")
-      end
-
-      it "leaves out a snippet over someone else's list it may not read" do
-        deck = borrowed_deck
-        let_in(deck, "筷子")
-        finished_snippet(deck.word_list, heading: "孔乙己")
-
-        get(deck_study_path(deck))
-
-        expect(rendered).to have_no_css(".reading-snippet h3", text: "孔乙己")
       end
 
       it "shows a snippet over someone else's list the user was let read" do

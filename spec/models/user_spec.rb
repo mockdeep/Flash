@@ -18,10 +18,9 @@ RSpec.describe User do
   it { is_expected.to have_many(:decks).dependent(:destroy) }
   it { is_expected.to have_many(:word_lists).dependent(:destroy) }
   it { is_expected.to have_many(:sources).through(:word_lists) }
-  it { is_expected.to have_many(:snippets).through(:word_lists) }
   it { is_expected.to have_many(:sense_distractors).dependent(:delete_all) }
   it { is_expected.to have_many(:skill_scores).dependent(:delete_all) }
-  it { is_expected.to have_many(:snippet_readers).dependent(:delete_all) }
+  it { is_expected.to have_many(:source_readers).dependent(:delete_all) }
 
   it "destroys its own decks before its word_lists" do
     deck = create(:reading_deck)
