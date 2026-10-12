@@ -7,17 +7,9 @@ class Snippet < ApplicationRecord
   # pasted novel must not get through; a long work goes in chapter by
   # chapter.
   MAX_BODY = 20_000
-  LICENSES = {
-    "all_rights_reserved" => { name: "All rights reserved" },
-    "public_domain" => { name: "Public domain", shareable: true },
-    "cc_by_sa" => {
-      name: "CC BY-SA 4.0",
-      url: "https://creativecommons.org/licenses/by-sa/4.0/",
-      shareable: true,
-    },
-  }.freeze
 
   belongs_to :word_list
+  belongs_to :source
   has_many :sentences,
            -> { order(:position) },
            class_name: "SnippetSentence",
@@ -27,14 +19,14 @@ class Snippet < ApplicationRecord
 
   validates :word_list, :title, :body, presence: true
   validates :body, length: { maximum: MAX_BODY }
-  validates :license, inclusion: { in: LICENSES.keys }
+  validates :license, inclusion: { in: Source::LICENSES.keys }
   validates :source_url,
             format: { with: %r{\Ahttps?://\S+\z}, allow_blank: true }
   validate(:mandarin)
 
-  def license_name = LICENSES[license][:name]
-  def license_url = LICENSES[license][:url]
-  def shareable? = LICENSES[license].fetch(:shareable, false)
+  def license_name = Source::LICENSES[license][:name]
+  def license_url = Source::LICENSES[license][:url]
+  def shareable? = Source::LICENSES[license].fetch(:shareable, false)
 
   # Anyone with a deck over the list may read a shareable snippet; the
   # list's owner may read them all, and a reader the one they were let in.

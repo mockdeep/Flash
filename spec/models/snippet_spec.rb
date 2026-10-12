@@ -4,6 +4,7 @@ require "rails_helper"
 
 RSpec.describe Snippet do
   it { is_expected.to belong_to(:word_list) }
+  it { is_expected.to belong_to(:source).optional }
   it { is_expected.to have_many(:sentences).dependent(:delete_all) }
   it { is_expected.to have_many(:readers).dependent(:delete_all) }
 
@@ -14,7 +15,7 @@ RSpec.describe Snippet do
 
   it do
     expect(build(:snippet)).to validate_inclusion_of(:license)
-      .in_array(Snippet::LICENSES.keys)
+      .in_array(Source::LICENSES.keys)
   end
 
   it { is_expected.to allow_value("https://zh.wikipedia.org/").for(:source_url) }

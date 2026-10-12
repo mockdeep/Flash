@@ -14,6 +14,7 @@ module Compendium
     "sense_examples",
     "word_lists",
     "sense_memberships",
+    "sources",
     "snippets",
     "snippet_sentences",
   ].freeze

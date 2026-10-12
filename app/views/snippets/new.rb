@@ -58,7 +58,7 @@ module Views
       end
 
       def render_license_field(form)
-        licenses = Snippet::LICENSES.map { |key, license| [license[:name], key] }
+        licenses = Source::LICENSES.map { |key, license| [license[:name], key] }
 
         div(class: "form-field") do
           form.label(:license, "License", class: "form-label")
