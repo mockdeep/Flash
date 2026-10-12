@@ -12,13 +12,13 @@ module Snippets
   module Segment
     INSTRUCTIONS = <<~TEXT
       You segment Chinese sentences into words for a vocabulary
-      builder. For each sentence, return its words in order. Keep names,
-      idioms and set phrases whole. Each word should be one a learner could
-      look up in a dictionary, so split grammatical particles off the word
-      they follow: aspect particles (了, 着/著, 过/過) and structural particles
-      (的, 地, 得) are words of their own ("花了" is "花", "了"; "看着" is "看", "着"),
-      unless the combination is itself a dictionary word ("为了", "除了",
-      "觉得", "目的"). Every character of the sentence must appear in
+      builder. For each sentence, return its words in order. Keep names and
+      idioms whole. Each word should be one a learner could look up, so
+      split grammatical particles off the word they follow: aspect
+      particles (了, 着/著, 过/過) and structural particles (的, 地, 得) are
+      words of their own ("花了" is "花", "了"; "看着" is "看", "着"), unless
+      the combination has a meaning of its own ("为了", "除了", "觉得",
+      "目的"). Every character of the sentence must appear in
       exactly one word, unchanged: do not drop, add, convert or correct
       characters. Punctuation is never part of a word: quotation marks,
       title marks (《》), brackets and the rest are tokens of their own or
