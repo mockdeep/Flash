@@ -84,7 +84,7 @@ Token edits (`Snippets::Review`), on a processed snippet:
 sentence = SnippetSentence.find(12)
 Snippets::Review.repoint(sentence, 3, Sense.find(456))       # an existing sense
 Snippets::Review.add_sense(sentence, 3, reading: "huā", gloss: "to spend")
-Snippets::Review.resegment(sentence, "花了 is 花 + 了")        # re-cut, re-resolve
+Snippets::Review.resegment(sentence, "花了 is 花 + 了")        # re-cut; changed tokens re-resolved
 ```
 
 Sense edits (`Compendium::Edit`), on any sense:

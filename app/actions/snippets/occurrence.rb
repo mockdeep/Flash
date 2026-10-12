@@ -13,12 +13,14 @@ module Snippets
     attr_reader :sentence, :index, :complaint
     attr_accessor :rejection
 
-    # The Han tokens of a sentence batch, one occurrence per token.
+    # The Han tokens of a sentence batch still without a sense, one
+    # occurrence per token.
     def self.for(sentences, resegmented: {})
       sentences.flat_map do |sentence|
         complaint = resegmented[sentence]
         sentence.tokens.each_with_index.filter_map do |token, index|
           next unless token["text"].match?(SnippetSentence::HAN)
+          next if token["sense_id"]
 
           new(sentence:, index:, complaint:)
         end

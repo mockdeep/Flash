@@ -26,7 +26,7 @@ module Snippets
     end
 
     # Segments the sentence again with the reviewer's complaint and resolves
-    # it afresh, without sending it back a second time.
+    # the tokens that changed, without sending it back a second time.
     def self.resegment(sentence, feedback)
       complaint = { sentence => feedback }
       Segment.call([sentence], feedback: complaint)
