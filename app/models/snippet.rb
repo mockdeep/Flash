@@ -9,10 +9,6 @@ class Snippet < ApplicationRecord
   # chapter.
   MAX_BODY = 20_000
 
-  # Moved to the source; the columns go once this is deployed.
-  self.ignored_columns +=
-    ["title", "author", "source_url", "license", "word_list_id"]
-
   belongs_to :source
   has_many :sentences,
            -> { order(:position) },
