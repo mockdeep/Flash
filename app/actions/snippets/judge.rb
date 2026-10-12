@@ -20,8 +20,11 @@ module Snippets
       wrong entry reaches every learner, so reject whenever you have a
       concrete objection:
 
-      - a listed existing sense already covers this occurrence (say which);
-        for a function word, only one that names the same role does
+      - a listed existing sense already covers this occurrence (say which):
+        one covers it only if its gloss could stand in for the word in an
+        English rendering of the sentence, so 健康 "healthy" does not cover
+        人体健康 "human health"; for a function word, only one that names
+        the same role does
       - the reading is wrong for this occurrence
       - the gloss is not what the word means in this sentence
       - the headword is not the right simplified form of the word for this

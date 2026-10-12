@@ -20,7 +20,9 @@ module Snippets
 
       - "existing": one of the listed senses covers this occurrence. Return
         its id as sense_id. Prefer this whenever a listed sense fits: a sense
-        fits when a learner who knows it would understand the word here.
+        fits when its gloss could stand in for the word in an English
+        rendering of this sentence. 人体健康 is "human health", so 健康
+        "healthy" does not fit there, and a new sense "health" is needed.
       - "new": no listed sense covers this occurrence. Return a reading and a
         gloss. The reading is pinyin with tone marks and the syllables
         joined ("niànshū"), capitalised for names; when a listed sense is
