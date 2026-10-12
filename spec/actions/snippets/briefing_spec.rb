@@ -26,6 +26,15 @@ RSpec.describe Snippets::Briefing do
         .to eq([{ sid: 0, text: "花买花。" }])
     end
 
+    it "gives a sentence's complaint when it was segmented again" do
+      faulted = sentence(["花", "了"])
+      resegmented = { faulted => "split 花 and 了" }
+      occurrences = Snippets::Occurrence.for([faulted], resegmented:)
+
+      expect(described_class.call(occurrences)[:sentences])
+        .to eq([{ sid: 0, text: "花了。", resegmented: "split 花 and 了" }])
+    end
+
     it "gives each distinct word once" do
       expect(briefing(sentence(["花", "买", "花"]))[:words].pluck(:word))
         .to eq(["花", "买"])

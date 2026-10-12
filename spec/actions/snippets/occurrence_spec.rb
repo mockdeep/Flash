@@ -36,6 +36,20 @@ RSpec.describe Snippets::Occurrence do
 
       expect(described_class.for(sentences).map(&:sentence)).to eq(sentences)
     end
+
+    it "gives each occurrence its sentence's complaint" do
+      sentences = [sentence(["花", "了"])]
+      resegmented = { sentences.first => "split 花 and 了" }
+
+      expect(described_class.for(sentences, resegmented:).map(&:complaint))
+        .to eq(["split 花 and 了"] * 2)
+    end
+
+    it "gives no complaint to a sentence not segmented again" do
+      sentences = [sentence(["我"])]
+
+      expect(described_class.for(sentences).sole.complaint).to be_nil
+    end
   end
 
   describe "#word" do

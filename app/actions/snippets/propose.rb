@@ -38,6 +38,11 @@ module Snippets
       An occurrence may carry `rejection`: a reviewer's reason for turning
       down an earlier proposal for it. Take it into account.
 
+      A sentence may carry `resegmented`: the complaint it was already
+      segmented again over, which settles how it is cut. Never call a token
+      missegmented to undo what the complaint asked for; do so only when the
+      new segmentation breaks the rules some other way.
+
       Every token gets a sense: there is no skipping, even for a single
       numeral, a typo or a stray character. Return only the fields a
       decision uses: sense_id for "existing"; reading and gloss for "new";

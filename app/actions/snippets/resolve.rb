@@ -8,9 +8,10 @@ module Snippets
   # New senses escalate up a ladder, each rung's judge sitting at or above
   # its proposer; an occurrence still rejected at the top stays unresolved.
   # A sentence with a token called missegmented goes back to the segmenter
-  # once, with the complaint, and is resolved afresh; complained about
-  # again, its fragments stay unresolved. Senses its other tokens created on
-  # the first pass stay in the compendium, unused unless a token picks them.
+  # once, with the complaint, and is resolved afresh with the complaint in
+  # view; complained about again, its fragments stay unresolved. Senses its
+  # other tokens created on the first pass stay in the compendium, unused
+  # unless a token picks them.
   module Resolve
     RUNGS = [
       { proposer: Llm::SONNET, judge: Llm::OPUS },
@@ -24,12 +25,15 @@ module Snippets
     OCCURRENCE_BATCH = 25
 
     # Returns the complaints that sent sentences back to the segmenter.
-    def self.call(sentences, resegment: true)
+    # `resegmented` holds the complaint each sentence was already segmented
+    # again over; the prompts show it, and it is not sent back a second time.
+    def self.call(sentences, resegmented: {})
       results = {}
-      Occurrence.for(sentences).each_slice(OCCURRENCE_BATCH) do |slice|
+      occurrences = Occurrence.for(sentences, resegmented:)
+      occurrences.each_slice(OCCURRENCE_BATCH) do |slice|
         results.merge!(escalate(slice))
       end
-      faulted = resegment ? complaints(sentences, results) : {}
+      faulted = resegmented.empty? ? complaints(sentences, results) : {}
       (sentences - faulted.keys).each { |sentence| save(sentence, results) }
 
       resegment(faulted)
@@ -38,7 +42,7 @@ module Snippets
     def self.resegment(faulted)
       if faulted.any?
         Segment.call(faulted.keys, feedback: faulted)
-        call(faulted.keys, resegment: false)
+        call(faulted.keys, resegmented: faulted)
       end
       faulted
     end
