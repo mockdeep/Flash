@@ -67,7 +67,9 @@ module Snippets
       or "during", not a verb meaning "to be located"; an adverb may mean
       "already", "only then" or "mostly" rather than the commonest gloss; a
       conjunction may mark contrast ("as for", "but") rather than sequence
-      ("then"). When no listed sense names the role, propose a new one.
+      ("then"); 以 in 以X为Y and its short forms (以X最…, 以X较为…) marks the
+      thing taken as Y or singled out: "to take as", not "by means of". When
+      no listed sense names the role, propose a new one.
       The same holds for a direction or result word split off after a verb
       (拿起 → 拿, 起; 跑出 → 跑, 出; 写完 → 写, 完): it names what it adds to
       the verb ("up", "out", "finished"), not its meaning as a verb on its
