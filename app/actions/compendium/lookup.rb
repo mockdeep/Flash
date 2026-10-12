@@ -14,10 +14,9 @@ module Compendium
     end
 
     def self.matching(query)
-      entries = Entry.where(language: Snippet::LANGUAGE).order(:headword, :id)
-      if query.match?(SnippetSentence::HAN)
-        return entries.where(headword: query)
-      end
+      mandarin = Language::MANDARIN
+      entries = Entry.where(language: mandarin.code).order(:headword, :id)
+      return entries.where(headword: query) if mandarin.word?(query)
 
       pattern = "%#{Sense.sanitize_sql_like(query)}%"
       entries.where(id: Sense.where("gloss ILIKE ?", pattern).select(:entry_id))

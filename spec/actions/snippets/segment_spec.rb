@@ -37,7 +37,7 @@ RSpec.describe Snippets::Segment do
       llm.answer(answer(["圖書館", "图书馆"]))
 
       expect(segmented_tokens("圖書館").sole)
-        .to eq("text" => "圖書館", "simplified" => "图书馆")
+        .to eq("text" => "圖書館", "headword" => "图书馆")
     end
 
     it "keeps no simplified form for a word already simplified" do
@@ -49,7 +49,7 @@ RSpec.describe Snippets::Segment do
     it "asks again when a simplified form is not as long as its word" do
       llm.answer(answer(["圖書館", "图书"]), answer(["圖書館", "图书馆"]))
 
-      expect(segmented_tokens("圖書館").sole["simplified"]).to eq("图书馆")
+      expect(segmented_tokens("圖書館").sole["headword"]).to eq("图书馆")
     end
 
     it "asks Sonnet" do

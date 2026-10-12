@@ -3,24 +3,27 @@
 module Snippets
   # The tokens of a sentence cut again, each one the cut left as it was
   # keeping its sense, so resolving asks only about the words that changed.
-  # "As it was" is the same text and headword after the same Han characters,
+  # "As it was" is the same text and headword after the same word characters,
   # which holds however the punctuation around it was cut.
   module Recut
-    def self.call(previous, tokens)
+    def self.call(sentence, tokens)
+      language = sentence.language
       kept =
-        placed(previous).filter_map do |place, token|
+        placed(sentence.tokens, language).filter_map do |place, token|
           [place, token.slice("sense_id", "outcome")] if token["sense_id"]
         end
 
       senses = kept.to_h
-      placed(tokens).map { |place, token| token.merge(senses.fetch(place, {})) }
+      placed(tokens, language).map do |place, token|
+        token.merge(senses.fetch(place, {}))
+      end
     end
 
-    def self.placed(tokens)
-      han = 0
+    def self.placed(tokens, language)
+      chars = 0
       tokens.map do |token|
-        place = [han, *token.values_at("text", "simplified")]
-        han += token["text"].scan(SnippetSentence::HAN).size
+        place = [chars, *token.values_at("text", "headword")]
+        chars += language.word_chars(token["text"]).size
         [place, token]
       end
     end

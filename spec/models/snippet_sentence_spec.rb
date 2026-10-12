@@ -78,11 +78,11 @@ RSpec.describe SnippetSentence do
     end
   end
 
-  describe "#han" do
-    it "returns the sentence's Han characters without punctuation" do
+  describe "#word_chars" do
+    it "returns the sentence's word characters without punctuation" do
       sentence = build(:snippet_sentence, body: "“你好，”他说。")
 
-      expect(sentence.han).to eq("你好他说")
+      expect(sentence.word_chars).to eq("你好他说")
     end
   end
 

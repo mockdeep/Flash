@@ -25,8 +25,9 @@ class Source < ApplicationRecord
   validates :license, inclusion: { in: LICENSES.keys }
   validates :source_url,
             format: { with: %r{\Ahttps?://\S+\z}, allow_blank: true }
-  validate(:mandarin)
+  validate(:supported_language)
 
+  def language = Language.for(word_list.language)
   def license_name = LICENSES[license][:name]
   def license_url = LICENSES[license][:url]
   def shareable? = LICENSES[license].fetch(:shareable, false)
@@ -51,9 +52,9 @@ class Source < ApplicationRecord
 
   private
 
-  def mandarin
-    return if word_list.nil? || word_list.language == Snippet::LANGUAGE
+  def supported_language
+    return if word_list.nil? || Language.supported?(word_list.language)
 
-    errors.add(:base, "List language must be Mandarin")
+    errors.add(:base, "List language is not supported")
   end
 end

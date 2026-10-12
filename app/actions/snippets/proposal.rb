@@ -13,7 +13,7 @@ module Snippets
 
       def new_sense? = decision == "new"
 
-      delegate :headword, to: :occurrence
+      delegate :headword, :language, to: :occurrence
 
       def problem
         if decision == "existing" && !listed_sense?

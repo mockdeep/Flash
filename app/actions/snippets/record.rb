@@ -20,8 +20,12 @@ module Snippets
     # A sense the judge passed as new can still be one the entry already
     # holds under that gloss, in which case the token matched it after all.
     def self.record_new(proposal)
-      sense = entry_for(proposal.headword, proposal.reading).senses
-        .find_or_create_by!(gloss: proposal.gloss)
+      entry = entry_for(
+        proposal.language.code,
+        proposal.headword,
+        proposal.reading,
+      )
+      sense = entry.senses.find_or_create_by!(gloss: proposal.gloss)
       outcome = sense.previously_new_record? ? "created" : "matched"
 
       { "outcome" => outcome, "sense_id" => sense.id }
@@ -30,8 +34,8 @@ module Snippets
     # Seed readings follow the HSK syllabus's spelling (curly apostrophes,
     # hyphenated idioms), so an entry matches on the letters alone rather
     # than gaining a twin that differs only in punctuation.
-    def self.entry_for(headword, reading)
-      twins = Entry.where(language: Snippet::LANGUAGE, headword:)
+    def self.entry_for(language, headword, reading)
+      twins = Entry.where(language:, headword:)
       twins.find { |entry| letters(entry.reading) == letters(reading) } ||
         twins.create!(reading:)
     end

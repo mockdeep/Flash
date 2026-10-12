@@ -4,12 +4,13 @@
 # order, each a hash of "text" as written and, for a word, the "sense_id" it
 # is studied as. Punctuation and other non-words will have no sense_id.
 class SnippetSentence < ApplicationRecord
-  HAN = /\p{Han}/
   TOKEN_KEYS = ["text", "sense_id"].freeze
 
   belongs_to :snippet
 
   validates :snippet, :body, :position, presence: true
+
+  delegate :language, to: :snippet
 
   scope :unsegmented, -> { where("tokens = '[]'::jsonb") }
   scope :segmented, -> { where.not("tokens = '[]'::jsonb") }
@@ -25,14 +26,14 @@ class SnippetSentence < ApplicationRecord
     SQL
   end
 
-  def han = body.scan(HAN).join
+  def word_chars = language.word_chars(body)
 
-  # Whether the words rejoin to exactly this sentence's Han characters:
+  # Whether the words rejoin to exactly this sentence's word characters:
   # nothing dropped, invented or substituted. Says nothing about where the
   # boundaries fall.
-  def partitioned_by?(words) = words.join.scan(HAN).join == han
+  def partitioned_by?(words) = language.word_chars(words.join) == word_chars
 
-  # New until segmented. Finished once every Chinese word has a sense and
+  # New until segmented. Finished once every word has a sense and
   # nothing else is left on the tokens: what a sentence must be before it
   # can leave the machine it was processed on.
   def status
@@ -45,11 +46,11 @@ class SnippetSentence < ApplicationRecord
     end
   end
 
-  # Segmented, with a Chinese word not yet given a sense or an outcome:
+  # Segmented, with a word not yet given a sense or an outcome:
   # what resolving works on.
   def awaiting_senses?
     tokens.any? do |token|
-      token["text"].to_s.match?(HAN) &&
+      language.word?(token["text"]) &&
         !token.key?("outcome") && !token.key?("sense_id")
     end
   end
@@ -58,6 +59,6 @@ class SnippetSentence < ApplicationRecord
 
   def finished_token?(token)
     (token.keys - TOKEN_KEYS).empty? &&
-      (token["sense_id"].present? || !token["text"].to_s.match?(HAN))
+      (token["sense_id"].present? || !language.word?(token["text"]))
   end
 end

@@ -41,7 +41,7 @@ RSpec.describe Snippets::Briefing do
     end
 
     it "lists a word once per headword it stands for" do
-      tokens = [{ "text" => "著", "simplified" => "着" }, { "text" => "著" }]
+      tokens = [{ "text" => "著", "headword" => "着" }, { "text" => "著" }]
       zhe = build(:snippet_sentence, body: "著著", tokens:)
 
       expect(briefing(zhe)[:words].pluck(:headword)).to eq(["着", "著"])

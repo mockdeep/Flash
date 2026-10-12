@@ -6,7 +6,7 @@ module Sources
   module Create
     def self.call(user:, **attributes)
       title = attributes[:title]
-      word_list = user.word_lists.build(name: title, language: Snippet::LANGUAGE)
+      word_list = user.word_lists.build(name: title, language: Language::MANDARIN.code)
       source = word_list.build_source(attributes)
 
       Result.new(success: save(word_list, source), record: source)

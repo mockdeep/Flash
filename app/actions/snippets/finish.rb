@@ -24,7 +24,7 @@ module Snippets
       words =
         snippet.sentences.flat_map(&:tokens).filter_map do |token|
           text = token["text"]
-          text if text.match?(SnippetSentence::HAN) && token["sense_id"].nil?
+          text if snippet.language.word?(text) && token["sense_id"].nil?
         end
       return if words.empty?
 

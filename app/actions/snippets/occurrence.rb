@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Snippets
-  # One Han token of a sentence, with what the compendium holds for it.
+  # One word token of a sentence, with what the compendium holds for it.
   # Every token is its own occurrence, so a word used in two senses, even
   # within one sentence, is decided twice. `rejection` keeps why a proposal
   # for it did not stand, and carries it to the next rung of the ladder.
@@ -13,13 +13,13 @@ module Snippets
     attr_reader :sentence, :index, :complaint
     attr_accessor :rejection
 
-    # The Han tokens of a sentence batch still without a sense, one
+    # The word tokens of a sentence batch still without a sense, one
     # occurrence per token.
     def self.for(sentences, resegmented: {})
       sentences.flat_map do |sentence|
         complaint = resegmented[sentence]
         sentence.tokens.each_with_index.filter_map do |token, index|
-          next unless token["text"].match?(SnippetSentence::HAN)
+          next unless sentence.language.word?(token["text"])
           next if token["sense_id"]
 
           new(sentence:, index:, complaint:)
@@ -33,6 +33,8 @@ module Snippets
       @complaint = complaint
     end
 
+    delegate :language, to: :sentence
+
     def key = [sentence, index]
 
     def word = sentence.tokens[index]["text"]
@@ -41,15 +43,15 @@ module Snippets
     # can stand for two simplified words in one text.
     def spelling = [word, headword]
 
-    # The simplified form the token studies under, which the segmenter gave
-    # where it differs from the text.
-    def headword = sentence.tokens[index]["simplified"] || word
+    # The form the token studies under, which the segmenter gave where it
+    # differs from the text.
+    def headword = sentence.tokens[index]["headword"] || word
 
     # Read afresh on every call: a sense created for an earlier token is there
     # for the next rung to pick.
     def senses
       Sense.joins(:entry)
-        .where(entries: { language: Snippet::LANGUAGE, headword: })
+        .where(entries: { language: language.code, headword: })
         .order(:id).to_a
     end
 
