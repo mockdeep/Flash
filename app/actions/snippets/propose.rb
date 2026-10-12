@@ -28,8 +28,9 @@ module Snippets
         joined ("niànshū"), capitalised for names; when a listed sense is
         pronounced the same way, copy its reading exactly. The gloss is a
         short English gloss of this one meaning. No hanzi, no pinyin, no
-        cross-references. Gloss a proper noun by what it names in this text,
-        and a function word by its function ("possessive particle"). When
+        cross-references. Gloss a proper noun by the English name of what it
+        names in this text (新 in 新马 is "Singapore"), and a function word
+        by its function ("possessive particle"). When
         two occurrences are the same word in the same new meaning, give them
         the identical reading and gloss.
       - "missegmented": the token breaks the segmentation rules below: two
