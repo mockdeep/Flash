@@ -62,18 +62,19 @@ module Snippets
       senses = Sense.where(id: sentence.tokens.pluck("sense_id")).index_by(&:id)
       lines =
         sentence.tokens.each_with_index.map do |token, index|
-          "  #{index} #{token_line(token, senses[token["sense_id"]])}"
+          sense = senses[token["sense_id"]]
+          "  #{index} #{token_line(token, sense, sentence.language)}"
         end
 
       ["Sentence #{sentence.id}: #{sentence.body}", *lines]
     end
 
-    def self.token_line(token, sense)
+    def self.token_line(token, sense, language)
       text = token["text"]
       outcome = token["outcome"] && " [#{token["outcome"]}]"
       return "#{text} → #{describe(sense)}#{outcome}" if sense
       return "#{text}: unresolved (#{token["note"]})" if token["note"]
-      return "#{text}: not resolved yet" if text.match?(SnippetSentence::HAN)
+      return "#{text}: not resolved yet" if language.word?(text)
 
       text
     end

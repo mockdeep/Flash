@@ -11,7 +11,8 @@ module Snippets
     end
 
     def self.build_sentences(snippet)
-      SplitSentences.call(snippet.body.to_s).each_with_index do |body, position|
+      sentences = SplitSentences.call(snippet.body.to_s, snippet.language)
+      sentences.each_with_index do |body, position|
         snippet.sentences.build(body:, position:)
       end
     end

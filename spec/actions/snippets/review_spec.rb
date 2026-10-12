@@ -40,7 +40,7 @@ RSpec.describe Snippets::Review do
     end
 
     it "creates the sense under the token's headword" do
-      add(sentence_with(unresolved("愛", simplified: "爱")))
+      add(sentence_with(unresolved("愛", headword: "爱")))
 
       expect(Sense.last.entry.headword).to eq("爱")
     end

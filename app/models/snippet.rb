@@ -3,7 +3,6 @@
 # One section of a source, under an optional heading, whose words feed the
 # source's word_list.
 class Snippet < ApplicationRecord
-  LANGUAGE = "zh"
   # Every sentence costs LLM calls when the snippet is processed, so a
   # pasted novel must not get through; a long work goes in chapter by
   # chapter.
@@ -19,7 +18,7 @@ class Snippet < ApplicationRecord
   validates :source, :body, presence: true
   validates :body, length: { maximum: MAX_BODY }
 
-  delegate :word_list, to: :source
+  delegate :word_list, :language, to: :source
 
   def title = [source.title, heading].compact_blank.join(" · ")
 
@@ -36,7 +35,7 @@ class Snippet < ApplicationRecord
   def paragraphs
     remaining = sentences.to_a
     body.split(/\s*\n\s*/).compact_blank.map do |line|
-      remaining.shift(Snippets::SplitSentences.call(line).size)
+      remaining.shift(Snippets::SplitSentences.call(line, language).size)
     end
   end
 end

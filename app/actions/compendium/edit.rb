@@ -10,8 +10,8 @@ module Compendium
 
     # A sense under a headword, made unless the entry for that reading
     # already holds the gloss.
-    def self.add(headword:, reading:, gloss:)
-      Snippets::Record.entry_for(headword, reading).senses
+    def self.add(headword:, reading:, gloss:, language: Language::MANDARIN.code)
+      Snippets::Record.entry_for(language, headword, reading).senses
         .find_or_create_by!(gloss:)
     end
 
@@ -19,11 +19,14 @@ module Compendium
     # entry for that reading; an entry left without senses goes.
     def self.revise(sense, gloss: nil, reading: nil)
       old_entry = sense.entry
-      entry = old_entry
-      entry = Snippets::Record.entry_for(old_entry.headword, reading) if reading
+      entry = reading ? reread(old_entry, reading) : old_entry
       sense.update!(entry:, gloss: gloss || sense.gloss)
       old_entry.destroy! if old_entry.senses.none?
       sense
+    end
+
+    def self.reread(entry, reading)
+      Snippets::Record.entry_for(entry.language, entry.headword, reading)
     end
 
     # Deletes a sense nothing uses: no token, no list and no learner.

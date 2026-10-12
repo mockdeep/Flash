@@ -257,6 +257,7 @@ Style/HashLookupMethod:
     - 'app/actions/creem/create_checkout.rb'
     - 'app/actions/data_sets/projection.rb'
     - 'app/controllers/webhooks/creem_controller.rb'
+    - 'app/domain/language.rb'
     - 'config/application.rb'
     - 'exe/eslint_autogen'
     - 'exe/stylelint_autogen'

@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe Snippets::Record do
   def occurrence(word, simplified)
-    tokens = [{ "text" => word, "simplified" => simplified }.compact]
+    tokens = [{ "text" => word, "headword" => simplified }.compact]
     sentence = build(:snippet_sentence, body: word, tokens:)
     Snippets::Occurrence.new(sentence:, index: 0)
   end

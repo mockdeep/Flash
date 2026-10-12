@@ -81,7 +81,7 @@ RSpec.describe Snippets::Occurrence do
     end
 
     it "is the simplified form the segmenter gave" do
-      tokens = [{ "text" => "愛", "simplified" => "爱" }]
+      tokens = [{ "text" => "愛", "headword" => "爱" }]
       sentence = build(:snippet_sentence, body: "愛", tokens:)
 
       expect(described_class.new(sentence:, index: 0).headword).to eq("爱")

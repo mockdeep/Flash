@@ -20,7 +20,8 @@ module Snippets
     # reading already holds the gloss.
     def self.add_sense(sentence, index, reading:, gloss:)
       headword = Occurrence.new(sentence:, index:).headword
-      sense = Compendium::Edit.add(headword:, reading:, gloss:)
+      language = sentence.language.code
+      sense = Compendium::Edit.add(headword:, reading:, gloss:, language:)
       repoint(sentence, index, sense)
       sense
     end

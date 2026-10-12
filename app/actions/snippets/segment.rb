@@ -2,7 +2,8 @@
 
 module Snippets
   # Segments a batch of sentences into words, each with its simplified form
-  # (the headword it studies under), kept on the token only where it differs.
+  # (the headword it studies under), kept on the token as `headword` only
+  # where it differs.
   # The model sees the sentence, so it can pick by meaning where a
   # traditional character simplifies more than one way. The answer is
   # checked mechanically: the words must rejoin to the sentence's Han
@@ -78,7 +79,7 @@ module Snippets
 
       sentences.each_with_index do |sentence, id|
         tokens = tokens(sentence, answers[id], feedback)
-        tokens = Recut.call(sentence.tokens, tokens) if feedback.key?(sentence)
+        tokens = Recut.call(sentence, tokens) if feedback.key?(sentence)
         sentence.update!(tokens:)
       end
     end
@@ -95,7 +96,7 @@ module Snippets
     def self.token(text, simplified)
       return { "text" => text } if simplified.nil? || simplified == text
 
-      { "text" => text, "simplified" => simplified }
+      { "text" => text, "headword" => simplified }
     end
 
     def self.ask(sentences, feedback)
