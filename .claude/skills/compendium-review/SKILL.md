@@ -54,7 +54,9 @@ text, so run it in the background and report when it finishes. Lines starting
      (`compendium:lookup Q=<headword>`).
    - **Matched** words: scan for wrong picks, especially function words
      (在, 的, 了, 就, 才…) and seed senses whose gloss merges two meanings
-     (花 "to spend (money, time) / flower").
+     (花 "to spend (money, time) / flower"). A pick is right only if its
+     gloss could stand in for the word in an English rendering of the
+     sentence: 健康 "healthy" is wrong in 人体健康 "human health".
 3. Propose the fixes; apply the approved ones (see Edits); run the report again.
 4. When nothing is unresolved, finish it:
    `bin/rails runner 'Snippets::Finish.call(Snippet.find(<id>))'`. It strips
