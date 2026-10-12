@@ -6,38 +6,42 @@ module Snippets
   # not taken from the texts the rules were tested on.
   module Policy
     SEGMENTATION = <<~TEXT
-      Segmentation rules. The base rule: a word is one a standard dictionary
-      lists. Keep every listed word whole (心碎, 有趣, 只是, 看到, 民主主义,
-      公共汽车), except where one of the fixed patterns below splits it. A
-      combination no dictionary lists splits into dictionary words, unless
-      it is a personal name, place or era name. A listed word only counts
-      when it carries its listed meaning here: 东西 is "thing", but in
-      东西两边 it is 东 "east" + 西 "west".
+      Segmentation rules. The base rule: a word is a unit whose meaning a
+      learner could not get from its parts. Keep a word whole when it means
+      more than, or something other than, its parts put together (心碎,
+      有趣, 只是, 看到, 民主主义, 公共汽车 "bus"). Split a combination whose
+      parts, each glossed on its own, already say what the whole means
+      (除夕夜 → 除夕, 夜; 空气质量 → 空气, 质量; 等地 → 等, 地). When unsure,
+      keep a word a standard dictionary lists whole. A word only counts
+      when it carries its own meaning here: 东西 is "thing", but in 东西两边
+      it is 东 "east" + 西 "west". The fixed patterns below apply either
+      way.
       1. Numbers: Arabic digits stay one token. Chinese numerals split into
          single characters (二十五 → 二, 十, 五; 六百多 → 六, 百, 多). A word
          that merely contains a numeral is a word (四季, 五金).
       2. Dates and times split into number and unit (十八世纪 → 十, 八, 世纪;
-         十一月 → 十, 一, 月; 2008年 → 2008, 年). Era names (贞观, 康熙) are
-         words.
+         十一月 → 十, 一, 月; 2008年 → 2008, 年; 初一 → 初, 一). Era names
+         (贞观, 康熙) are words.
       3. A number and its measure word split, even when a dictionary lists
          the pair (一本 → 一, 本; 五人 → 五, 人), unless together they mean
          more than the number times the unit (一定, 一些, 一样, 一直).
-      4. An idiom a standard dictionary lists stays whole (一帆风顺, 画蛇添足,
-         自相矛盾). One-off classical phrases and quotations split into
-         their dictionary words, which may be two-character words, not
-         always single characters (学而时习之 → 学, 而, 时, 习, 之; 床前明月光
-         → 床, 前, 明月, 光).
+      4. An established idiom (成语) stays whole (一帆风顺, 画蛇添足,
+         自相矛盾). One-off phrases, quotations and parallel sayings split
+         into their words, which may be two-character words, not always
+         single characters (学而时习之 → 学, 而, 时, 习, 之; 床前明月光 → 床,
+         前, 明月, 光; 无灾无祸 → 无, 灾, 无, 祸).
       5. Personal names, places and era names stay whole (李白, 杭州). So
-         does any name or title a dictionary lists (红楼梦, 史记, 唐太宗,
-         唐诗三百首). An unlisted title or descriptive title splits into its
-         words (中国古代史研究 → 中国, 古代史, 研究; 燕王 → 燕, 王), as do an
-         unlisted grouping of surnames (李杜 → 李, 杜) and a surname with 氏
-         or 姓 (王氏 → 王, 氏).
+         does a well-known name or title (红楼梦, 史记, 唐太宗, 唐诗三百首,
+         春节联欢晚会). A title that only describes its subject splits into
+         its words (中国古代史研究 → 中国, 古代史, 研究; 燕王 → 燕, 王), as do
+         an unlisted grouping of surnames (李杜 → 李, 杜) and a surname with
+         氏 or 姓 (王氏 → 王, 氏).
       6. The grammatical pieces 们, 于 / 於, 之, 中 ("in"), 所, 者 always
          split off (出生于 → 出生, 于; 水中 → 水, 中; 老师们 → 老师, 们),
-         unless the whole is a listed word in its own right (位于, 于是,
-         之后, 总之). Verb results follow the base rule: whole when listed
-         (看见, 学会, 煮熟), split when not (炒熟 → 炒, 熟; 剪短 → 剪, 短).
+         unless the whole has a meaning of its own (位于, 于是, 之后, 总之).
+         Verb results follow the base rule: whole when the pair means more
+         than verb plus result (看见, 学会), split when the result just adds
+         its usual meaning (炒熟 → 炒, 熟; 剪短 → 剪, 短; 贴上 → 贴, 上).
          Suffixes that make a new word stay attached (科学家, 美国人, 营业员,
          可能性).
       Characters that are not Chinese (kana, Latin letters) are never part
