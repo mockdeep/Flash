@@ -3,22 +3,21 @@
 require "rails_helper"
 
 RSpec.describe Snippets::Create do
-  def create_snippet(list_name: "Kong Yiji", title: "孔乙己", body: "我爱你。你呢？")
-    described_class.call(user: default_user, list_name:, title:, body:)
+  def create_snippet(source: create(:source), body: "我爱你。你呢？")
+    described_class.call(source:, heading: "习俗", body:)
   end
 
   describe ".call" do
-    it "creates a Mandarin word_list of the given name" do
-      create_snippet
+    it "adds the snippet to the source" do
+      source = create(:source)
 
-      expect(default_user.word_lists.last)
-        .to have_attributes(name: "Kong Yiji", language: "zh")
+      expect(create_snippet(source:).record.source).to eq(source)
     end
 
-    it "reuses the user's word_list of that name" do
-      word_list = create(:word_list, name: "Kong Yiji")
+    it "feeds the source's word_list" do
+      source = create(:source)
 
-      expect(create_snippet.record.word_list).to eq(word_list)
+      expect(create_snippet(source:).record.word_list).to eq(source.word_list)
     end
 
     it "saves the snippet" do
@@ -38,43 +37,14 @@ RSpec.describe Snippets::Create do
 
     context "when the snippet is invalid" do
       it "returns a failure result" do
-        expect(create_snippet(title: "")).not_to be_success
+        expect(create_snippet(body: "")).not_to be_success
       end
 
-      it "does not create the word_list" do
-        expect { create_snippet(title: "") }.not_to change(WordList, :count)
-      end
-    end
+      it "saves nothing" do
+        source = create(:source)
 
-    context "when the list name is blank" do
-      it "reports the list's error on the snippet" do
-        snippet = create_snippet(list_name: "").record
-
-        expect(snippet.errors.full_messages)
-          .to include("List name can't be blank")
-      end
-    end
-
-    context "when the list is in another language" do
-      it "returns a failure result" do
-        create(:word_list, name: "Kong Yiji", language: "ja")
-
-        expect(create_snippet).not_to be_success
-      end
-
-      it "reports the language on the snippet" do
-        create(:word_list, name: "Kong Yiji", language: "ja")
-
-        expect(create_snippet.record.errors.full_messages)
-          .to include("List language must be Mandarin")
-      end
-    end
-
-    context "when a field is missing" do
-      it "returns a failure result rather than raising" do
-        result = described_class.call(user: default_user, title: "孔乙己")
-
-        expect(result).not_to be_success
+        expect { create_snippet(source:, body: "") }
+          .not_to change(Snippet, :count)
       end
     end
   end

@@ -27,7 +27,7 @@ module Views
 
       def render_header
         div(class: "form-header") do
-          link_to("← Back to Snippets", snippets_path, class: "back-link")
+          render_back_link
           h1(class: "form-title") { "Share #{snippet.title}" }
           p(class: "form-subtitle") do
             <<~TEXT
@@ -36,6 +36,12 @@ module Views
             TEXT
           end
         end
+      end
+
+      def render_back_link
+        source = snippet.source
+        text = "← Back to #{source.title}"
+        link_to(text, source_path(source), class: "back-link")
       end
 
       def render_form

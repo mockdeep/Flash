@@ -14,11 +14,38 @@ class Source < ApplicationRecord
   }.freeze
 
   belongs_to :word_list
-  has_many :snippets, dependent: :destroy
+  has_many :snippets,
+           -> { order(:created_at) },
+           dependent: :destroy,
+           inverse_of: :source
 
   validates :word_list, :title, presence: true
   validates :word_list_id, uniqueness: true
   validates :license, inclusion: { in: LICENSES.keys }
   validates :source_url,
             format: { with: %r{\Ahttps?://\S+\z}, allow_blank: true }
+  validate(:mandarin)
+
+  def license_name = LICENSES[license][:name]
+  def license_url = LICENSES[license][:url]
+  def shareable? = LICENSES[license].fetch(:shareable, false)
+
+  # New or finished when every snippet is; in progress otherwise.
+  def status
+    statuses = snippets.map(&:status).uniq
+    return :in_progress if statuses.many?
+
+    statuses.first || :new
+  end
+
+  # Its list only gains senses as snippets are finished.
+  def studyable? = snippets.any? { |snippet| snippet.status == :finished }
+
+  private
+
+  def mandarin
+    return if word_list.nil? || word_list.language == Snippet::LANGUAGE
+
+    errors.add(:base, "List language must be Mandarin")
+  end
 end

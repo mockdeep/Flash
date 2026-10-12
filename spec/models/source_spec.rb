@@ -28,4 +28,87 @@ RSpec.describe Source do
 
     expect { source.word_list.destroy! }.to delete_record(source)
   end
+
+  it "rejects a list in another language" do
+    source = build(:source, word_list: build(:word_list, language: "ja"))
+
+    expect(source).not_to be_valid
+  end
+
+  it "orders its snippets oldest first" do
+    source = create(:source)
+    word_list = source.word_list
+    second = create(:snippet, word_list:, created_at: 1.day.ago)
+    first = create(:snippet, word_list:, created_at: 2.days.ago)
+
+    expect(source.snippets).to eq([first, second])
+  end
+
+  describe "#status" do
+    def source_with(*traits)
+      source = create(:source)
+      traits.each do |trait|
+        create(:snippet, *trait, word_list: source.word_list)
+      end
+      source
+    end
+
+    it "is new without snippets" do
+      expect(source_with.status).to eq(:new)
+    end
+
+    it "is new while every snippet is" do
+      expect(source_with([], []).status).to eq(:new)
+    end
+
+    it "is in progress while its snippets differ" do
+      expect(source_with([:finished], []).status).to eq(:in_progress)
+    end
+
+    it "is finished once every snippet is" do
+      expect(source_with([:finished]).status).to eq(:finished)
+    end
+  end
+
+  describe "#studyable?" do
+    it "is true once a snippet is finished" do
+      snippet = create(:snippet, :finished)
+
+      expect(snippet.source).to be_studyable
+    end
+
+    it "is false before any snippet is finished" do
+      snippet = create(:snippet)
+
+      expect(snippet.source).not_to be_studyable
+    end
+  end
+
+  describe "#license_name" do
+    it "names the license" do
+      expect(build(:source, license: "cc_by_sa").license_name)
+        .to eq("CC BY-SA 4.0")
+    end
+  end
+
+  describe "#license_url" do
+    it "links to the license's terms" do
+      expect(build(:source, license: "cc_by_sa").license_url)
+        .to eq("https://creativecommons.org/licenses/by-sa/4.0/")
+    end
+
+    it "is nil for a license without terms to link" do
+      expect(build(:source, license: "public_domain").license_url).to be_nil
+    end
+  end
+
+  describe "#shareable?" do
+    it "is true for a license that lets others read it" do
+      expect(build(:source, license: "public_domain")).to be_shareable
+    end
+
+    it "is false for all rights reserved" do
+      expect(build(:source)).not_to be_shareable
+    end
+  end
 end

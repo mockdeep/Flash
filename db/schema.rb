@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_210200) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_212831) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -152,7 +152,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_210200) do
 
   create_table "snippets", force: :cascade do |t|
     t.bigint "word_list_id", null: false
-    t.string "title", null: false
+    t.string "title"
     t.string "author"
     t.text "body", null: false
     t.datetime "created_at", null: false

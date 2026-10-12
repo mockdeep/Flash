@@ -4,6 +4,7 @@ RSpec.describe Deck do
   it { is_expected.to belong_to(:user) }
   it { is_expected.to have_many(:cards).dependent(:delete_all) }
   it { is_expected.to have_many(:study_days).dependent(:delete_all) }
+  it { is_expected.to have_one(:source).through(:word_list) }
 
   def flat_deck_attributes
     {
@@ -420,7 +421,8 @@ RSpec.describe Deck do
     it "is true with a finished snippet others may read" do
       deck = create(:reading_deck)
       word_list = deck.word_list
-      create(:snippet, :finished, word_list:, license: "public_domain")
+      create(:source, word_list:, license: "public_domain")
+      create(:snippet, :finished, word_list:)
 
       expect(deck.shares_texts?).to be(true)
     end

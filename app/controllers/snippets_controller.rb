@@ -3,34 +3,27 @@
 class SnippetsController < ApplicationController
   before_action(:require_admin)
 
-  def index
-    snippets = current_user.snippets.order(created_at: :desc)
-
-    render(Views::Snippets::Index.new(snippets:))
-  end
-
   def new
-    render(Views::Snippets::New.new(snippet: Snippet.new, list_names:))
+    render(Views::Snippets::New.new(snippet: source.snippets.build))
   end
 
   def create
-    result = Snippets::Create.call(user: current_user, **snippet_params)
-    return redirect_to(snippets_path) if result.success?
+    result = Snippets::Create.call(source:, **snippet_params)
+    return redirect_to(source_path(source)) if result.success?
 
     render(
-      Views::Snippets::New.new(snippet: result.record, list_names:),
+      Views::Snippets::New.new(snippet: result.record),
       status: :unprocessable_content,
     )
   end
 
   private
 
-  def list_names = current_user.word_lists.order(:name).pluck(:name)
+  def source
+    @source ||= current_user.sources.find(params.expect(:source_id))
+  end
 
   def snippet_params
-    params.expect(
-      snippet: [:list_name, :title, :author, :source_url, :license, :body],
-    )
-      .to_h.symbolize_keys
+    params.expect(snippet: [:heading, :body]).to_h.symbolize_keys
   end
 end

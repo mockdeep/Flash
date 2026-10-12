@@ -430,11 +430,18 @@ RSpec.describe StudiesController do
         deck
       end
 
-      def finished_snippet(word_list, **)
-        snippet = create(:snippet, word_list:, **)
+      def finished_snippet(word_list, heading: nil, license: nil)
+        source = word_list.source ||
+          create(:source, word_list:, license: license || "all_rights_reserved")
+        snippet = create(:snippet, word_list:, source:, heading:)
         tokens = [{ "text" => "我", "sense_id" => create(:sense).id }]
         create(:snippet_sentence, snippet:, body: "我", tokens:)
         snippet
+      end
+
+      def let_in(deck, heading)
+        snippet = finished_snippet(deck.word_list, heading:)
+        create(:snippet_reader, snippet:, user: deck.user)
       end
 
       it "shows it when the deck has snippets" do
@@ -448,11 +455,11 @@ RSpec.describe StudiesController do
 
       it "shows the snippets' text" do
         deck = own_deck
-        finished_snippet(deck.word_list, title: "筷子")
+        finished_snippet(deck.word_list, heading: "筷子")
 
         get(deck_study_path(deck))
 
-        expect(rendered).to have_css(".reading-snippet h2", text: "筷子")
+        expect(rendered).to have_css(".reading-snippet h3", text: "筷子")
       end
 
       it "hides it when the deck has no snippets" do
@@ -474,31 +481,30 @@ RSpec.describe StudiesController do
 
       it "shows a shareable snippet over someone else's list" do
         deck = borrowed_deck
-        finished_snippet(deck.word_list, license: "cc_by_sa", title: "筷子")
+        finished_snippet(deck.word_list, license: "cc_by_sa", heading: "筷子")
 
         get(deck_study_path(deck))
 
-        expect(rendered).to have_css(".reading-snippet h2", text: "筷子")
+        expect(rendered).to have_css(".reading-snippet h3", text: "筷子")
       end
 
-      it "leaves out a snippet over someone else's list it may not share" do
+      it "leaves out a snippet over someone else's list it may not read" do
         deck = borrowed_deck
-        finished_snippet(deck.word_list, license: "cc_by_sa", title: "筷子")
-        finished_snippet(deck.word_list, title: "孔乙己")
+        let_in(deck, "筷子")
+        finished_snippet(deck.word_list, heading: "孔乙己")
 
         get(deck_study_path(deck))
 
-        expect(rendered).to have_no_css(".reading-snippet h2", text: "孔乙己")
+        expect(rendered).to have_no_css(".reading-snippet h3", text: "孔乙己")
       end
 
       it "shows a snippet over someone else's list the user was let read" do
         deck = borrowed_deck
-        snippet = finished_snippet(deck.word_list, title: "孔乙己")
-        create(:snippet_reader, snippet:, user: deck.user)
+        let_in(deck, "孔乙己")
 
         get(deck_study_path(deck))
 
-        expect(rendered).to have_css(".reading-snippet h2", text: "孔乙己")
+        expect(rendered).to have_css(".reading-snippet h3", text: "孔乙己")
       end
 
       it "hides it when no snippet over someone else's list may be shared" do

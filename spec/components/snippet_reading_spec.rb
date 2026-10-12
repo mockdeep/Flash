@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 RSpec.describe Components::SnippetReading, type: :view do
-  def render_for(*snippets, level: 1, deck: create(:reading_deck, level:))
+  def render_for(*snippets, level: 1, source: create(:source))
+    deck = create(:reading_deck, level:, word_list: source.word_list)
     Capybara.string(view.render(described_class.new(snippets:, deck:)))
   end
 
@@ -30,47 +31,40 @@ RSpec.describe Components::SnippetReading, type: :view do
     snippet_with("我。\n\n你。他。", *words.map { |w| [w, { "text" => "。" }] })
   end
 
-  it "shows each snippet's title in order" do
-    page = render_for(*["第一", "第二"].map { |title| build(:snippet, title:) })
+  it "shows the source's title" do
+    page = render_for(source: create(:source, title: "春节"))
 
-    expect(texts_of(page, ".reading-snippet h2")).to eq(["第一", "第二"])
+    expect(page).to have_css("h2", text: "春节")
+  end
+
+  it "shows each snippet's heading in order" do
+    page = render_for(*["第一", "第二"].map { build(:snippet, heading: it) })
+
+    expect(texts_of(page, ".reading-snippet h3")).to eq(["第一", "第二"])
+  end
+
+  it "leaves out the heading when there is none" do
+    page = render_for(build(:snippet, heading: ""))
+
+    expect(page).to have_no_css(".reading-snippet h3")
   end
 
   it "shows the author when there is one" do
-    page = render_for(build(:snippet, author: "鲁迅"))
+    page = render_for(source: create(:source, author: "鲁迅"))
 
-    expect(page).to have_css(".reading-snippet__author", text: "鲁迅")
+    expect(page).to have_css(".reading-snippets__author", text: "鲁迅")
   end
 
   it "leaves out the author when there is none" do
-    page = render_for(build(:snippet, author: ""))
+    page = render_for(source: create(:source, author: ""))
 
-    expect(page).to have_no_css(".reading-snippet__author")
+    expect(page).to have_no_css(".reading-snippets__author")
   end
 
-  it "links to the source when there is one" do
-    page = render_for(build(:snippet, source_url: "https://zh.wikipedia.org/"))
+  it "credits the source" do
+    page = render_for(source: create(:source, license: "public_domain"))
 
-    expect(page).to have_link("Source", href: "https://zh.wikipedia.org/")
-  end
-
-  it "leaves out the source when there is none" do
-    page = render_for(build(:snippet, source_url: ""))
-
-    expect(page).to have_no_link("Source")
-  end
-
-  it "links to the license's terms when it has them" do
-    page = render_for(build(:snippet, license: "cc_by_sa"))
-    url = "https://creativecommons.org/licenses/by-sa/4.0/"
-
-    expect(page).to have_link("CC BY-SA 4.0", href: url)
-  end
-
-  it "names a license without terms to link" do
-    page = render_for(build(:snippet, license: "public_domain"))
-
-    expect(page).to have_css(".reading-snippet__credit", text: "Public domain")
+    expect(page).to have_css(".reading-snippets__credit", text: "Public domain")
   end
 
   it "shows each line of the body as its own paragraph" do
@@ -139,10 +133,9 @@ RSpec.describe Components::SnippetReading, type: :view do
   end
 
   it "sends lookups to the deck" do
-    deck = create(:reading_deck)
-    page = render_for(love_snippet, deck:)
+    page = render_for(love_snippet)
 
-    url = "/decks/#{deck.id}/lookups"
+    url = "/decks/#{Deck.sole.id}/lookups"
     expect(page).to have_css("[data-lookup-url-value='#{url}']")
   end
 end

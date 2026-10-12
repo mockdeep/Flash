@@ -1,12 +1,16 @@
 # frozen_string_literal: true
 
-# A source text used for generating a word_list.
+# One section of a source, under an optional heading, whose words feed the
+# source's word_list.
 class Snippet < ApplicationRecord
   LANGUAGE = "zh"
   # Every sentence costs LLM calls when the snippet is processed, so a
   # pasted novel must not get through; a long work goes in chapter by
   # chapter.
   MAX_BODY = 20_000
+
+  # Moved to the source; the columns go once this is deployed.
+  self.ignored_columns += ["title", "author", "source_url", "license"]
 
   belongs_to :word_list
   belongs_to :source
@@ -17,21 +21,15 @@ class Snippet < ApplicationRecord
            inverse_of: :snippet
   has_many :readers, class_name: "SnippetReader", dependent: :delete_all
 
-  validates :word_list, :title, :body, presence: true
+  validates :word_list, :source, :body, presence: true
   validates :body, length: { maximum: MAX_BODY }
-  validates :license, inclusion: { in: Source::LICENSES.keys }
-  validates :source_url,
-            format: { with: %r{\Ahttps?://\S+\z}, allow_blank: true }
-  validate(:mandarin)
 
-  def license_name = Source::LICENSES[license][:name]
-  def license_url = Source::LICENSES[license][:url]
-  def shareable? = Source::LICENSES[license].fetch(:shareable, false)
+  def title = [source.title, heading].compact_blank.join(" · ")
 
   # Anyone with a deck over the list may read a shareable snippet; the
   # list's owner may read them all, and a reader the one they were let in.
   def readable_by?(user)
-    shareable? || word_list.user_id == user.id ||
+    source.shareable? || word_list.user_id == user.id ||
       readers.any? { |reader| reader.user_id == user.id }
   end
 
@@ -50,13 +48,5 @@ class Snippet < ApplicationRecord
     body.split(/\s*\n\s*/).compact_blank.map do |line|
       remaining.shift(Snippets::SplitSentences.call(line).size)
     end
-  end
-
-  private
-
-  def mandarin
-    return if word_list.nil? || word_list.language == LANGUAGE
-
-    errors.add(:base, "List language must be Mandarin")
   end
 end

@@ -235,8 +235,8 @@ end
 - `Card` (STI base) - `belongs_to :deck`, `belongs_to :item` (nullable — flat cards have none), `belongs_to :source_card` (catalog-copy provenance). `has_many :card_distractors`. Owns the content columns and the progress counters (`correct_count`, `correct_streak`, `view_count`), and holds the score handle (`record_correct!`, `record_miss!`, `record_view!`). `normalizes :back` is the single back-joining rule. Unique on `[deck_id, front]` where `front` is present.
 - `StudyDay` - Cards a deck completed on one day (`studied_on`, in the owner's time zone), unique on `[deck_id, studied_on]`. `completed_count` counts the current batch and drives the progress bar; the milestone's "Keep Going" starts a new batch by resetting it to 0 (and, under a level target, sizing the batch to lower tomorrow's goal by one). `goal` holds the day's goal worked out from a level target (nil without one; `#study_goal` falls back to the deck's). `deck.study_days.today` finds or creates the row.
 - `Subscription` - Payment/subscription info, belongs to user.
-- `Snippet` - A source text feeding one word_list (`belongs_to :word_list`; destroyed with it). Has `title`, `author` and `body`, kept as written, plus an optional `source_url` and a `license` (a key of `Source::LICENSES`, defaulting to `all_rights_reserved`); the Read tab credits the source and license under the author; the body is capped at `Snippet::MAX_BODY` characters (processing costs LLM calls per sentence) and the list must be Mandarin (`Snippet::LANGUAGE`). `has_many :sentences`, ordered by `position`. `#status` is `:new` or `:finished` when every sentence is, and `:in_progress` otherwise. Admins add snippets at `/snippets` (`SnippetsController`, `Snippets::Create`), in production or locally; processing happens locally.
-- `Source` - Where a word_list's snippets come from (an article, a book, a drawer of scraps), one per word_list (`belongs_to :word_list`, unique; `WordList has_one :source`). Holds what its snippets share: `title`, `author`, `source_url`, `license` (`Source::LICENSES`). Each snippet is one of its sections (`snippets.source_id`, plus a `heading`). Being introduced in steps: the source columns still live on `Snippet` too and every read uses those; the one-off `Snippets::BackfillSources` gives existing snippets their source (dry run unless `dry_run: false`; run locally, then push).
+- `Snippet` - One section of a source, feeding the source's word_list (`belongs_to :source` and `:word_list`, both required; destroyed with either). Has an optional `heading` and a `body`, kept as written; `#title` joins the source's title and the heading for reports. Its old `title` / `author` / `source_url` / `license` columns are ignored, waiting to be dropped. The body is capped at `Snippet::MAX_BODY` characters (processing costs LLM calls per sentence) and the list must be Mandarin (`Snippet::LANGUAGE`). `has_many :sentences`, ordered by `position`. `#status` is `:new` or `:finished` when every sentence is, and `:in_progress` otherwise. Admins add snippets from a source's page (`/sources/:id/snippets/new`, `SnippetsController`, `Snippets::Create`), in production or locally; processing happens locally.
+- `Source` - Where a word_list's snippets come from (an article, a book, a drawer of scraps), one per word_list (`belongs_to :word_list`, unique; `WordList has_one :source`). Holds what its snippets share: `title`, `author`, `source_url`, and a `license` (a key of `Source::LICENSES`, defaulting to `all_rights_reserved`; `#shareable?` decides who else may read it). `has_many :snippets`, oldest first. `#status` is `:new` or `:finished` when every snippet is, and `:in_progress` otherwise; `#studyable?` once any snippet is finished. Its list must be Mandarin (`Snippet::LANGUAGE`). Admins add sources at `/sources` (`SourcesController`, `Sources::Create`, which makes the word_list, named after the source's title).
 - `SnippetReader` - A user an admin has let read a snippet whatever its license (`snippet.readers`), unique on `[snippet_id, user_id]`. Production-only user data: not in the compendium snapshot, and removed with its snippet or user.
 - `SnippetSentence` - One sentence of a snippet, unique on `[snippet_id, position]`. `tokens` (jsonb) holds the pieces it was cut into, in order: each token's `text` as written (traditional stays traditional) and, for a word, the `sense_id` it is studied as; punctuation and other non-words carry no `sense_id`. `#status` is `:new` with no tokens, `:finished` once every Han token has a `sense_id` and no token carries other keys, and `:in_progress` between.
 **`WordList` languages:** `LANGUAGES` (on `WordList`) maps every individual ISO 639-2 language to its display name, keyed by shortest available code per BCP 47 ("zh", not "zho"; "tlh" works). Nothing in the app creates a word list any more — the deck form has no Language option — so the validation guards what the seed account and catalog copies carry.
@@ -332,12 +332,13 @@ app/
 │   │   ├── cancel_subscription.rb
 │   │   ├── client.rb             # Creem HTTP client
 │   │   └── create_checkout.rb    # Creates a Creem checkout session
+│   ├── sources/
+│   │   └── create.rb             # Saves a source + the Mandarin word_list named after it
 │   ├── snippets/
-│   │   ├── backfill_sources.rb   # One-off: gives each snippet its list's Source, title prefix → heading
 │   │   ├── attach.rb             # Appends a snippet's senses to its word_list, in snippet order
 │   │   ├── briefing.rb           # Prompt for a list of occurrences: each sentence and word once, occurrences point at them
 │   │   ├── categorize.rb         # Files memberships under a part of speech (Sonnet, headword + reading + gloss)
-│   │   ├── create.rb             # Saves a snippet + its sentences under a (found or new Mandarin) word_list
+│   │   ├── create.rb             # Saves a snippet + its sentences as a section of a source
 │   │   ├── finish.rb             # Closes a reviewed snippet: strip working keys, attach, categorize
 │   │   ├── grant.rb              # Lets a user (by username) read a snippet + gives them a ReadingDeck over its list
 │   │   ├── judge.rb              # Opus accepts or rejects proposed new senses
@@ -379,7 +380,7 @@ app/
 │   ├── card_preview.rb           # 5-card preview block (shared by catalog and share preview)
 │   ├── card_reading.rb           # Pronunciation/pinyin gloss (rendered inside CardFront on reveal)
 │   ├── catalog_toggle_button.rb  # Publish / unpublish a deck to the public catalog
-│   ├── deck_texts.rb             # "Texts" block under the card preview (catalog + share preview): title / author / license, unshareable ones marked not included
+│   ├── deck_texts.rb             # "Source" block under the card preview (catalog + share preview): title / author / license, marked not included when unshareable
 │   ├── demo_banner.rb            # Demo-mode banner
 │   ├── error_explanation.rb      # Styled validation-error box
 │   ├── fuzzy_find_answers.rb     # Typed-answer input for fuzzy-find mode (level 3+); optional reading `stage`
@@ -393,8 +394,9 @@ app/
 │   ├── study_answers.rb          # Study answer area per presentation mode (buttons / fuzzy find, reading stage)
 │   ├── study_example.rb          # Optional example sentence on the answer view
 │   ├── study_goal_dialog.rb      # Edit daily study-goal dialog
-│   ├── snippet_license.rb        # A snippet's license name, linked to its terms when it has them
-│   ├── snippet_reading.rb        # Read tab text: finished snippets word by word; readings / gaps fade by deck level; lookup popovers
+│   ├── snippet_reading.rb        # Read tab text: the source's credit, then finished snippets word by word; readings / gaps fade by deck level; lookup popovers
+│   ├── source_credit.rb          # A source's link (when it has one) · its license
+│   ├── source_license.rb         # A source's license name, linked to its terms when it has them
 │   ├── study_tabs.rb             # Study | Read radios (CSS `:has()` toggles study frame vs. text)
 │   ├── table.rb                  # `.table` pattern; block fills each row via `table.cell`
 │   ├── target_goal_fields.rb     # Level-target fields + today's goal and Recalculate
@@ -428,9 +430,10 @@ app/
 │   ├── replacements_controller.rb     # Re-import a deck's cards (Decks::Replace)
 │   ├── sessions_controller.rb         # Login / logout
 │   ├── shares_controller.rb           # Owner toggle (via :deck_id) + public preview/copy/try (via :token)
-│   ├── snippet_decks_controller.rb    # "Study this list": find-or-create a ReadingDeck over a snippet's list (admin)
 │   ├── snippet_readers_controller.rb  # Who may read a snippet whatever its license: list / grant / revoke (admin)
-│   ├── snippets_controller.rb         # Snippet index / new / create (admin)
+│   ├── snippets_controller.rb         # Snippet new / create under a source (admin)
+│   ├── source_decks_controller.rb     # "Study this list": find-or-create a ReadingDeck over a source's list (admin)
+│   ├── sources_controller.rb          # Source index / show / new / create (admin)
 │   ├── studies_controller.rb          # Study show/update; dispatches text vs music views
 │   ├── study_goal_resets_controller.rb # Reset today's count on all decks, go to the first deck
 │   ├── subscriptions_controller.rb    # Creem subscription show / create / destroy
@@ -508,8 +511,11 @@ app/
 │   ├── snippet_readers/
 │   │   └── index.rb          # A snippet's readers (Remove each) + add-by-username form
 │   ├── snippets/
-│   │   ├── index.rb          # Admin's snippets with their status; "Study this list" and "Share" on finished ones
-│   │   └── new.rb            # Title / author / source URL / license / list (type-or-pick) / body
+│   │   └── new.rb            # Heading (optional) / body, under a source
+│   ├── sources/
+│   │   ├── index.rb          # Admin's sources with their status; "Study this list" once one has a finished snippet
+│   │   ├── new.rb            # Title / author / source URL / license
+│   │   └── show.rb           # A source's credit and its snippets with their status; "Add a snippet", "Study this list", "Share" on finished snippets
 │   ├── subscriptions/
 │   │   └── show.rb
 │   └── welcome/
@@ -751,8 +757,8 @@ end
 
 Users can browse and copy public decks at `/catalog`:
 - **Browse**: `/catalog` — grid of all public decks (no auth required)
-- **Preview**: `/catalog/:id` — card preview (first 5 cards), deck info, and the texts the deck's words came from (`Components::DeckTexts`, also on the share-link preview: each finished snippet's title, author and license, or "Not included — words only" when its license keeps it from sharing) (no auth required)
-- **Texts badge**: a deck whose list has a finished shareable snippet (`Deck#shares_texts?`) gets a 📖 on its catalog grid card
+- **Preview**: `/catalog/:id` — card preview (first 5 cards), deck info, and the source the deck's words came from (`Components::DeckTexts`, also on the share-link preview, once a snippet is finished: the source's title, author and license, or "Not included — words only" when its license keeps it from sharing) (no auth required)
+- **Texts badge**: a deck whose list has a finished snippet and a shareable source (`Deck#shares_texts?`) gets a 📖 on its catalog grid card
 - **Copy**: `POST /catalog/:id/copy` — adds the deck to the current user's account (auth required). A **Basic or Music** deck is duplicated, cards and all. A **language** deck is added *by reference*: the new deck points at the source's `word_list`, and only its cards (the progress anchors) are new — the words themselves are canonical and shared. A `Deck` validation blocks a second deck over the same word_list for one user, so adding twice errors instead of silently duplicating.
 - Deck visibility is controlled by `deck.visibility` (`"public"` / `"private"`)
 - **Admins** publish/unpublish a deck to the catalog from the deck-show page (`Components::CatalogToggleButton` → `CatalogListingsController#create`/`#destroy`, which flips `visibility`). Non-admins have no visibility UI.
@@ -870,9 +876,9 @@ Snippets are added in the app (see `Snippet`) and processed locally with `rails 
   - `repoint(sentence, index, sense)` / `add_sense(sentence, index, reading:, gloss:)`: give a token a sense (an existing one, or a new one under its headword, made by `Compendium::Edit.add`); either clears the token's note.
   - `resegment(sentence, feedback)`: segment one sentence again with a complaint and resolve the tokens that changed; tokens it left as they were keep their sense.
   - Edits to senses themselves (fixing wording, deleting leftovers) are `Compendium::Edit`'s; see Compendium Review.
-- **Study**: a finished snippet's row on `/snippets` has "Study this list" (`SnippetDecksController#create`), which finds or creates the admin's `ReadingDeck` over the snippet's word_list (`User#reading_deck_over`) and goes to its study page. Publishing that deck to the catalog (the existing admin toggle) lets others add the list by reference, like any language deck.
-- **Share**: the row's "Share" goes to `/snippets/:id/readers` (`SnippetReadersController`), which lists the snippet's readers and adds one by username (`Snippets::Grant`, which also finds or creates their `ReadingDeck` over the list; guests can't be added). Removing a reader takes away the text but leaves their deck and progress.
-- **Read**: the study page of a deck whose word_list has snippets shows "Study | Read" radios (`Components::StudyTabs`) and renders every finished snippet the user may read (`Snippet#readable_by?`: the list's owner reads them all, a reader let in reads that snippet, and anyone else only those whose license is `shareable?` — public domain and CC BY-SA), oldest first, below the study frame (`Components::SnippetReading`: title, author, and the paragraphs rebuilt from the sentences' tokens by `Snippet#paragraphs`). The deck's level sets how much help the text gives: each word in a `<ruby>` with its reading above at level 1, words spaced apart without readings at level 2, and plain running text from level 3. Unfinished and unreadable snippets are left out, and with none left the radios don't show. A `:has()` rule in `flash.css` shows the frame or the text to match the checked radio, so switching keeps both the current card and the reading position; there is no JS and no separate route. Frame requests (each next card) leave the radios and text out, since Turbo keeps only the frame.
+- **Study**: a source with a finished snippet has "Study this list" on `/sources` and its own page (`SourceDecksController#create`), which finds or creates the admin's `ReadingDeck` over the source's word_list (`User#reading_deck_over`) and goes to its study page. Publishing that deck to the catalog (the existing admin toggle) lets others add the list by reference, like any language deck.
+- **Share**: a finished snippet's "Share" on its source's page goes to `/snippets/:id/readers` (`SnippetReadersController`), which lists the snippet's readers and adds one by username (`Snippets::Grant`, which also finds or creates their `ReadingDeck` over the list; guests can't be added). Removing a reader takes away the text but leaves their deck and progress.
+- **Read**: the study page of a deck whose word_list has snippets shows "Study | Read" radios (`Components::StudyTabs`) and renders every finished snippet the user may read (`Snippet#readable_by?`: the list's owner reads them all, a reader let in reads that snippet, and anyone else all of them when the source's license is `shareable?` — public domain and CC BY-SA), oldest first, below the study frame (`Components::SnippetReading`: the source's title, author and credit once, then each snippet's heading, when it has one, and paragraphs rebuilt from the sentences' tokens by `Snippet#paragraphs`). The deck's level sets how much help the text gives: each word in a `<ruby>` with its reading above at level 1, words spaced apart without readings at level 2, and plain running text from level 3. Unfinished and unreadable snippets are left out, and with none left the radios don't show. A `:has()` rule in `flash.css` shows the frame or the text to match the checked radio, so switching keeps both the current card and the reading position; there is no JS and no separate route. Frame requests (each next card) leave the radios and text out, since Turbo keeps only the frame.
 - **Look up**: each word on the Read tab is a button that opens a native popover (`popovertarget`) with the word's reading and gloss; the popovers follow their paragraph in the markup and sit under the word via CSS anchor positioning where supported. Every click also POSTs the word's `sense_id` (`lookup_controller.ts`) to `LookupsController#create` (`/decks/:deck_id/lookups`, the user's own deck only), which records a miss on the user's reading `SkillScore` for that sense, so its card comes back in study.
 - **Finish** (`Snippets::Finish.call(snippet)`, run through `bin/rails runner` once a snippet is reviewed): refuses (`Finish::Unfinished`) while a Chinese word has no `sense_id`; otherwise strips every token to `text` + `sense_id` (so the snippet reads `:finished` and can be pushed), appends the snippet's senses to its word_list after the ones it holds (`Snippets::Attach`), and files the list's uncategorized memberships by part of speech in batches of `CATEGORIZE_BATCH` (`Snippets::Categorize`; a row the model leaves out is filed `other`). A list therefore only ever holds reviewed senses. Running it again on a finished snippet only categorizes whatever a failed run left undone.
 
