@@ -8,7 +8,7 @@ RSpec.describe Snippets::Report do
   end
 
   def report(*tokens, title: "Love")
-    snippet = create(:snippet, title:)
+    snippet = create(:snippet, source: create(:source, title:))
     create(:snippet_sentence, snippet:, body: "我爱你。", tokens:)
     described_class.call(snippet)
   end

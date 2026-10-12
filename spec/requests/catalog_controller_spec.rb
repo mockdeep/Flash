@@ -81,8 +81,8 @@ RSpec.describe CatalogController do
 
     it "shows a texts badge for a deck with texts to read" do
       deck = create(:reading_deck, user: create(:user), visibility: "public")
-      word_list = deck.word_list
-      create(:snippet, :finished, word_list:, license: "public_domain")
+      create(:source, word_list: deck.word_list, license: "public_domain")
+      create(:snippet, :finished, word_list: deck.word_list)
 
       get(catalog_index_path)
 
@@ -99,9 +99,10 @@ RSpec.describe CatalogController do
   end
 
   describe "#show" do
-    it "lists the texts the deck's words came from" do
+    it "shows the source the deck's words came from" do
       deck = create(:reading_deck, user: create(:user), visibility: "public")
-      create(:snippet, :finished, word_list: deck.word_list, title: "筷子")
+      create(:source, word_list: deck.word_list, title: "筷子")
+      create(:snippet, :finished, word_list: deck.word_list)
 
       get(catalog_path(deck))
 

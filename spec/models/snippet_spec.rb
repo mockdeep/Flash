@@ -4,34 +4,14 @@ require "rails_helper"
 
 RSpec.describe Snippet do
   it { is_expected.to belong_to(:word_list) }
-  it { is_expected.to belong_to(:source).optional }
+  it { is_expected.to belong_to(:source) }
   it { is_expected.to have_many(:sentences).dependent(:delete_all) }
   it { is_expected.to have_many(:readers).dependent(:delete_all) }
 
   it { is_expected.to validate_presence_of(:word_list) }
-  it { is_expected.to validate_presence_of(:title) }
+  it { is_expected.to validate_presence_of(:source) }
   it { is_expected.to validate_presence_of(:body) }
   it { is_expected.to validate_length_of(:body).is_at_most(20_000) }
-
-  it do
-    expect(build(:snippet)).to validate_inclusion_of(:license)
-      .in_array(Source::LICENSES.keys)
-  end
-
-  it { is_expected.to allow_value("https://zh.wikipedia.org/").for(:source_url) }
-  it { is_expected.to allow_value("").for(:source_url) }
-  it { is_expected.not_to allow_value("zh.wikipedia.org").for(:source_url) }
-  it { is_expected.not_to allow_value("https://a.org/ b").for(:source_url) }
-
-  it "shares with nobody by default" do
-    expect(described_class.new.license).to eq("all_rights_reserved")
-  end
-
-  it "rejects a list in another language" do
-    snippet = build(:snippet, word_list: build(:word_list, language: "ja"))
-
-    expect(snippet).not_to be_valid
-  end
 
   it "orders its sentences by position" do
     snippet = create(:snippet)
@@ -73,31 +53,17 @@ RSpec.describe Snippet do
     end
   end
 
-  describe "#license_name" do
-    it "names the license" do
-      expect(build(:snippet, license: "cc_by_sa").license_name)
-        .to eq("CC BY-SA 4.0")
-    end
-  end
+  describe "#title" do
+    it "joins the source's title and the heading" do
+      source = build(:source, title: "春节")
 
-  describe "#license_url" do
-    it "links to the license's terms" do
-      expect(build(:snippet, license: "cc_by_sa").license_url)
-        .to eq("https://creativecommons.org/licenses/by-sa/4.0/")
+      expect(build(:snippet, source:, heading: "习俗").title).to eq("春节 · 习俗")
     end
 
-    it "is nil for a license without terms to link" do
-      expect(build(:snippet, license: "public_domain").license_url).to be_nil
-    end
-  end
+    it "is the source's title without a heading" do
+      source = build(:source, title: "春节")
 
-  describe "#shareable?" do
-    it "is true for a license that lets others read it" do
-      expect(build(:snippet, license: "public_domain")).to be_shareable
-    end
-
-    it "is false for all rights reserved" do
-      expect(build(:snippet)).not_to be_shareable
+      expect(build(:snippet, source:).title).to eq("春节")
     end
   end
 
@@ -108,8 +74,8 @@ RSpec.describe Snippet do
       expect(snippet.readable_by?(snippet.word_list.user)).to be(true)
     end
 
-    it "is true for anyone when the snippet is shareable" do
-      snippet = build(:snippet, license: "cc_by_sa")
+    it "is true for anyone when the source is shareable" do
+      snippet = build(:snippet, source: build(:source, license: "cc_by_sa"))
 
       expect(snippet.readable_by?(create(:user))).to be(true)
     end
@@ -120,7 +86,7 @@ RSpec.describe Snippet do
       expect(reader.snippet.readable_by?(reader.user)).to be(true)
     end
 
-    it "is false for anyone else when the snippet is not shareable" do
+    it "is false for anyone else when the source is not shareable" do
       expect(build(:snippet).readable_by?(create(:user))).to be(false)
     end
   end

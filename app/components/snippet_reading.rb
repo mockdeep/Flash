@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 module Components
-  # The Read tab: a deck's snippets, word by word. The deck's level takes
-  # the help away: readings over each word at level 1, gaps between words
-  # up to level 2, plain text after that. Clicking a word shows its reading
-  # and gloss in a popover, and resets its streak so study brings it back.
+  # The Read tab: a deck's source, then its snippets word by word. The
+  # deck's level takes the help away: readings over each word at level 1,
+  # gaps between words up to level 2, plain text after that. Clicking a
+  # word shows its reading and gloss in a popover, and resets its streak so
+  # study brings it back.
   class SnippetReading < Components::Base
     READINGS_LEVEL = 1
     GAPS_LEVEL = 2
@@ -19,34 +20,27 @@ module Components
 
     def view_template
       div(class: classes, data:) do
+        render_source(deck.source)
         snippets.each { |snippet| render_snippet(snippet) }
       end
     end
 
     private
 
+    def render_source(source)
+      h2 { source.title }
+      author = source.author
+      p(class: "reading-snippets__author") { author } if author.present?
+      p(class: "reading-snippets__credit") do
+        render(SourceCredit.new(source:))
+      end
+    end
+
     def render_snippet(snippet)
       section(class: "reading-snippet") do
-        h2 { snippet.title }
-        author = snippet.author
-        p(class: "reading-snippet__author") { author } if author.present?
-        render_credit(snippet)
+        h3 { snippet.heading } if snippet.heading.present?
         snippet.paragraphs.each { |sentences| render_paragraph(sentences) }
       end
-    end
-
-    def render_credit(snippet)
-      p(class: "reading-snippet__credit") do
-        if snippet.source_url.present?
-          credit_link("Source", snippet.source_url)
-          plain(" · ")
-        end
-        render(SnippetLicense.new(snippet:))
-      end
-    end
-
-    def credit_link(text, url)
-      a(href: url, target: "_blank", rel: "noopener") { text }
     end
 
     # The popovers follow the paragraph rather than sit in it, so its text

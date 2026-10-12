@@ -49,10 +49,12 @@ RSpec.describe "snippets" do
 
   def add_snippet
     sign_in(create(:user, :admin))
-    click_on("Snippets")
+    click_on("Sources")
+    click_on("Add a source")
+    fill_in("Title", with: "Love Letters")
+    click_on("Add Source")
     click_on("Add a snippet")
-    fill_in("Title", with: "Love")
-    fill_in("Word List", with: "Love Letters")
+    fill_in("Heading (optional)", with: "First")
     fill_in("Text", with: "我爱你。")
     click_on("Add Snippet")
   end
@@ -62,13 +64,13 @@ RSpec.describe "snippets" do
     fake_pipeline
     Snippets::Process.call
     Snippets::Finish.call(Snippet.sole)
-    visit(snippets_path)
+    visit(source_path(Source.sole))
   end
 
   it "lists a new snippet" do
     add_snippet
 
-    expect(page).to have_css("tr", text: "Love Love Letters New")
+    expect(page).to have_css("tr", text: "First New")
   end
 
   it "offers nothing to study before the snippet is finished" do

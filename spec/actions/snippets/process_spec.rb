@@ -108,7 +108,7 @@ RSpec.describe Snippets::Process do
 
     it "reports each batch it finishes" do
       fake_pipeline
-      snippet = create(:snippet, title: "T")
+      snippet = create(:snippet, source: create(:source, title: "T"))
       create(:snippet_sentence, body: "我", snippet:)
 
       expect(reported_lines)

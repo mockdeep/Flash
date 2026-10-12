@@ -63,7 +63,7 @@ module Views
                     link_to_unless_current("Log In", new_session_path, class: "nav-link nav-link-primary")
                   elsif current_user.logged_in?
                     render_decks_nav_link
-                    render_snippets_nav_link
+                    render_sources_nav_link
                     link_to("Account", account_path, class: "nav-link")
                     link_to("Subscription", subscription_path, class: "nav-link")
                     span(class: "nav-user") do
@@ -143,10 +143,10 @@ module Views
         link_to("Decks", decks_path, class: "nav-link")
       end
 
-      def render_snippets_nav_link
+      def render_sources_nav_link
         return unless current_user.admin?
 
-        link_to("Snippets", snippets_path, class: "nav-link")
+        link_to("Sources", sources_path, class: "nav-link")
       end
 
       def repo_url

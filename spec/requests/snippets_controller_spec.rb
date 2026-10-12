@@ -3,129 +3,37 @@
 require "rails_helper"
 
 RSpec.describe SnippetsController do
-  def login_admin
-    create(:user, :admin).tap { |admin| login_as(admin) }
+  def admin_source
+    admin = create(:user, :admin)
+    login_as(admin)
+    create(:source, word_list: create(:word_list, user: admin), title: "春节")
   end
 
-  def own_snippet(admin, **)
-    create(:snippet, word_list: create(:word_list, user: admin), **)
-  end
-
-  def snippet_params(title: "孔乙己")
-    {
-      snippet: {
-        list_name: "Lu Xun",
-        title:,
-        author: "鲁迅",
-        source_url: "https://zh.wikisource.org/",
-        license: "public_domain",
-        body: "我爱你。",
-      },
-    }
-  end
-
-  describe "#index" do
-    it "requires authentication" do
-      get(snippets_path)
-
-      expect(response).to redirect_to(new_session_path)
-    end
-
-    it "is not found for a user who is not an admin" do
-      login_as(default_user)
-
-      get(snippets_path)
-
-      expect(response).to have_http_status(:not_found)
-    end
-
-    it "lists the admin's snippets" do
-      own_snippet(login_admin, title: "孔乙己")
-
-      get(snippets_path)
-
-      expect(rendered).to have_css("td", text: "孔乙己")
-    end
-
-    it "shows each snippet's state" do
-      own_snippet(login_admin)
-
-      get(snippets_path)
-
-      expect(rendered).to have_css("td", text: "New")
-    end
-
-    it "offers to study a finished snippet's list" do
-      snippet = own_snippet(login_admin)
-      create(:snippet_sentence, snippet:, tokens: [{ "text" => "。" }])
-
-      get(snippets_path)
-
-      expect(rendered).to have_button("Study this list")
-    end
-
-    it "offers to share a finished snippet" do
-      snippet = own_snippet(login_admin)
-      create(:snippet_sentence, snippet:, tokens: [{ "text" => "。" }])
-
-      get(snippets_path)
-
-      expect(rendered)
-        .to have_link("Share", href: snippet_readers_path(snippet))
-    end
-
-    it "offers nothing to share before a snippet is finished" do
-      snippet = own_snippet(login_admin)
-      create(:snippet_sentence, snippet:, tokens: [{ "text" => "我" }])
-
-      get(snippets_path)
-
-      expect(rendered).to have_no_link("Share")
-    end
-
-    it "offers nothing to study before a snippet is finished" do
-      snippet = own_snippet(login_admin)
-      create(:snippet_sentence, snippet:, tokens: [{ "text" => "我" }])
-
-      get(snippets_path)
-
-      expect(rendered).to have_no_button("Study this list")
-    end
-
-    it "leaves out another user's snippets" do
-      create(:snippet, title: "孔乙己")
-      login_admin
-
-      get(snippets_path)
-
-      expect(rendered).to have_text("No snippets yet")
-    end
+  def snippet_params(body: "我爱你。")
+    { snippet: { heading: "习俗", body: } }
   end
 
   describe "#new" do
     it "is not found for a user who is not an admin" do
       login_as(default_user)
 
-      get(new_snippet_path)
+      get(new_source_snippet_path(create(:source)))
 
       expect(response).to have_http_status(:not_found)
     end
 
-    it "offers the admin's word_lists by name" do
-      create(:word_list, user: login_admin, name: "Lu Xun")
+    it "is not found for another user's source" do
+      admin_source
 
-      get(new_snippet_path)
+      get(new_source_snippet_path(create(:source)))
 
-      expect(rendered).to have_css("datalist option[value='Lu Xun']")
+      expect(response).to have_http_status(:not_found)
     end
 
-    it "starts on the license that shares with nobody" do
-      login_admin
+    it "names the source the snippet joins" do
+      get(new_source_snippet_path(admin_source))
 
-      get(new_snippet_path)
-
-      expect(rendered)
-        .to have_select("License", selected: "All rights reserved")
+      expect(rendered).to have_link("← Back to 春节")
     end
   end
 
@@ -133,66 +41,41 @@ RSpec.describe SnippetsController do
     it "is not found for a user who is not an admin" do
       login_as(default_user)
 
-      post(snippets_path, params: snippet_params)
+      post(source_snippets_path(create(:source)), params: snippet_params)
 
       expect(response).to have_http_status(:not_found)
     end
 
-    it "creates the snippet" do
-      login_admin
+    it "adds the snippet to the source" do
+      source = admin_source
 
-      expect { post(snippets_path, params: snippet_params) }
-        .to change(Snippet, :count).by(1)
+      post(source_snippets_path(source), params: snippet_params)
+
+      expect(source.snippets.sole.heading).to eq("习俗")
     end
 
-    it "saves the source and license" do
-      login_admin
+    it "redirects to the source" do
+      source = admin_source
 
-      post(snippets_path, params: snippet_params)
+      post(source_snippets_path(source), params: snippet_params)
 
-      saved = snippet_params[:snippet].slice(:source_url, :license)
-
-      expect(Snippet.last).to have_attributes(saved)
-    end
-
-    it "redirects to the snippets" do
-      login_admin
-
-      post(snippets_path, params: snippet_params)
-
-      expect(response).to redirect_to(snippets_path)
+      expect(response).to redirect_to(source_path(source))
     end
 
     it "renders the form again with the errors" do
-      login_admin
+      source = admin_source
 
-      post(snippets_path, params: snippet_params(title: ""))
+      post(source_snippets_path(source), params: snippet_params(body: ""))
 
-      expect(rendered).to have_text("Title can't be blank")
+      expect(rendered).to have_text("Body can't be blank")
     end
 
     it "keeps what was typed" do
-      login_admin
+      source = admin_source
 
-      post(snippets_path, params: snippet_params(title: ""))
+      post(source_snippets_path(source), params: snippet_params(body: ""))
 
-      expect(rendered).to have_field("Word List", with: "Lu Xun")
-    end
-
-    it "keeps the license chosen" do
-      login_admin
-
-      post(snippets_path, params: snippet_params(title: ""))
-
-      expect(rendered).to have_select("License", selected: "Public domain")
-    end
-
-    it "renders the form again when a field is left out" do
-      login_admin
-
-      post(snippets_path, params: { snippet: { title: "孔乙己" } })
-
-      expect(response).to have_http_status(:unprocessable_content)
+      expect(rendered).to have_field("Heading (optional)", with: "习俗")
     end
   end
 end

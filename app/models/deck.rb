@@ -54,6 +54,7 @@ class Deck < ApplicationRecord
   belongs_to :user
   belongs_to :topic
   has_many :cards, dependent: :delete_all
+  has_one :source, through: :word_list
   has_many :snippets, -> { order(:created_at) }, through: :word_list
   has_many :study_days, dependent: :delete_all
   has_one :todays_study_day,
@@ -149,7 +150,7 @@ class Deck < ApplicationRecord
     snippets.select { |snippet| snippet.status == :finished }
   end
 
-  def shares_texts? = finished_snippets.any?(&:shareable?)
+  def shares_texts? = finished_snippets.any? && source.shareable?
 
   def study_pool(limit:) = cards.not_done(level).ordered.limit(limit).to_a
 

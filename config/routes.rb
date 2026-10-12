@@ -28,8 +28,11 @@ Rails.application.routes.draw do
   resource :session, only: [:new, :create, :destroy]
   resource :study_goal_reset, only: [:create]
   resource :subscription, only: [:show, :create, :destroy]
-  resources :snippets, only: [:index, :new, :create] do
-    resource :deck, only: [:create], controller: "snippet_decks"
+  resources :sources, only: [:index, :show, :new, :create] do
+    resource :deck, only: [:create], controller: "source_decks"
+    resources :snippets, only: [:new, :create]
+  end
+  resources :snippets, only: [] do
     resources :readers, only: [:index, :create, :destroy], controller: "snippet_readers"
   end
 

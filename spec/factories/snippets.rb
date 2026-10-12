@@ -3,7 +3,7 @@
 FactoryBot.define do
   factory(:snippet) do
     word_list
-    sequence(:title, 100) { |n| "Snippet #{n}" }
+    source { word_list.source || association(:source, word_list:) }
     body { "我爱你。" }
 
     # Its one sentence holds no word, so nothing is left to resolve.

@@ -922,8 +922,8 @@ body {
   font-size: 14px;
 }
 
-.reading-snippet .reading-snippet__author,
-.reading-snippet .reading-snippet__credit {
+.reading-snippets__author,
+.reading-snippets__credit {
   margin-block: 0 var(--spacing-xs);
   line-height: 1.5;
   color: var(--color-text-muted);
