@@ -33,8 +33,10 @@ module Snippets
       乾坤.
 
       A sentence may carry `feedback`: what a reviewer found wrong with an
-      earlier segmentation of it. Segment it again so that every complaint
-      is fixed.
+      earlier segmentation of it, and `previous`: that segmentation's words.
+      Segment it again so that every complaint is fixed, and keep every
+      other word of `previous` exactly as it was: change only the words a
+      complaint names.
     TEXT
     SYSTEM = [INSTRUCTIONS, Policy::SEGMENTATION].join("\n").freeze
     WORD = {
@@ -75,7 +77,9 @@ module Snippets
       answers = ask(sentences, feedback)
 
       sentences.each_with_index do |sentence, id|
-        sentence.update!(tokens: tokens(sentence, answers[id], feedback))
+        tokens = tokens(sentence, answers[id], feedback)
+        tokens = Recut.call(sentence.tokens, tokens) if feedback.key?(sentence)
+        sentence.update!(tokens:)
       end
     end
 
@@ -97,10 +101,18 @@ module Snippets
     def self.ask(sentences, feedback)
       prompt =
         sentences.each_with_index.map do |sentence, id|
-          { id:, sentence: sentence.body, feedback: feedback[sentence] }.compact
+          { id:, sentence: sentence.body, **revision(sentence, feedback) }
         end
 
       Llm::AskEach.call(sentences, prompt:, **ASK)
+    end
+
+    # The complaint, with the cut it is about, so the answer can keep the
+    # words the complaint leaves alone.
+    def self.revision(sentence, feedback)
+      return {} unless feedback.key?(sentence)
+
+      { feedback: feedback[sentence], previous: sentence.tokens.pluck("text") }
     end
 
     # No words at all would leave the sentence looking unsegmented, so an

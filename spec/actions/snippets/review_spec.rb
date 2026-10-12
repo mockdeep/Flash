@@ -83,5 +83,14 @@ RSpec.describe Snippets::Review do
 
       expect(sentence.reload.tokens.pluck("outcome")).to all(eq("unresolved"))
     end
+
+    it "asks only about the tokens that changed" do
+      llm.answer(segmented_as("我", "花", "了"), *[{ decisions: [] }] * 4)
+      tokens = [{ "text" => "我", "sense_id" => 7 }, unresolved("花了")]
+      sentence = create(:snippet_sentence, body: "我花了", tokens:)
+      described_class.resegment(sentence, "split 花 and 了")
+
+      expect(llm.calls.second.prompt).not_to include('"word":"我"')
+    end
   end
 end

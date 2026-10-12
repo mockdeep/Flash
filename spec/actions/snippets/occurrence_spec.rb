@@ -25,6 +25,13 @@ RSpec.describe Snippets::Occurrence do
       expect(described_class.for(sentences).map(&:word)).to eq(["我"])
     end
 
+    it "leaves out tokens that already have a sense" do
+      tokens = [{ "text" => "我", "sense_id" => 7 }, { "text" => "爱" }]
+      sentences = [build(:snippet_sentence, body: "我爱", tokens:)]
+
+      expect(described_class.for(sentences).map(&:word)).to eq(["爱"])
+    end
+
     it "gives a word repeated within a sentence an occurrence per token" do
       sentences = [sentence(["花", "钱", "买", "花"])]
 

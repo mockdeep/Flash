@@ -18,6 +18,14 @@ RSpec.describe Snippets::Segment do
 
   def segmented_words(body) = segmented_tokens(body).pluck("text")
 
+  def recut(tokens, *words)
+    llm.answer(answer(*words))
+    body = tokens.pluck(:text).join
+    sentence = create(:snippet_sentence, body:, tokens:)
+    described_class.call([sentence], feedback: { sentence => "split 花了" })
+    sentence.reload.tokens
+  end
+
   describe ".call" do
     it "stores the words as tokens" do
       llm.answer(answer("我", "爱", "你"))
@@ -62,12 +70,10 @@ RSpec.describe Snippets::Segment do
     end
 
     it "passes on what was wrong with an earlier segmentation" do
-      llm.answer(answer("花", "了"))
-      sentence = create(:snippet_sentence, body: "花了")
-      described_class.call([sentence], feedback: { sentence => "花了: split" })
+      recut([{ text: "花了" }], "花", "了")
 
       expect(llm.calls.sole.prompt)
-        .to eq('[{"id":0,"sentence":"花了","feedback":"花了: split"}]')
+        .to include('"feedback":"split 花了","previous":["花了"]')
     end
 
     it "asks again about a sentence whose words drop a character" do
@@ -92,6 +98,34 @@ RSpec.describe Snippets::Segment do
       llm.answer(answer("我", "你"), answer("我", "你"))
 
       expect(segmented_words("我爱你")).to eq(["我", "爱", "你"])
+    end
+  end
+
+  describe ".call with feedback" do
+    it "keeps the sense of a token the new cut leaves alone" do
+      tokens = [{ text: "我", sense_id: 7 }, { text: "花了", sense_id: 8 }]
+
+      expect(recut(tokens, "我", "花", "了").first)
+        .to eq("text" => "我", "sense_id" => 7)
+    end
+  end
+
+  describe ".call without feedback" do
+    it "sends no previous segmentation" do
+      llm.answer(answer("我"))
+      sentence = create(:snippet_sentence, body: "我", tokens: [{ text: "我" }])
+      described_class.call([sentence])
+
+      expect(llm.calls.sole.prompt).to eq('[{"id":0,"sentence":"我"}]')
+    end
+
+    it "keeps no sense from the earlier tokens" do
+      llm.answer(answer("我"))
+      tokens = [{ text: "我", outcome: "matched", sense_id: 7 }]
+      sentence = create(:snippet_sentence, body: "我", tokens:)
+      described_class.call([sentence])
+
+      expect(sentence.reload.tokens.sole).to eq("text" => "我")
     end
   end
 end
