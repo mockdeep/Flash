@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_11_213810) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_210200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -159,6 +159,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_213810) do
     t.datetime "updated_at", null: false
     t.string "license", default: "all_rights_reserved", null: false
     t.string "source_url"
+    t.bigint "source_id"
+    t.string "heading"
+    t.index ["source_id"], name: "index_snippets_on_source_id"
     t.index ["word_list_id"], name: "index_snippets_on_word_list_id"
   end
 
@@ -322,6 +325,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_213810) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "sources", force: :cascade do |t|
+    t.bigint "word_list_id", null: false
+    t.string "title", null: false
+    t.string "author"
+    t.string "source_url"
+    t.string "license", default: "all_rights_reserved", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["word_list_id"], name: "index_sources_on_word_list_id", unique: true
+  end
+
   create_table "study_days", force: :cascade do |t|
     t.integer "completed_count", default: 0, null: false
     t.datetime "created_at", null: false
@@ -395,6 +409,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_213810) do
   add_foreign_key "snippet_readers", "snippets", on_delete: :cascade
   add_foreign_key "snippet_readers", "users", on_delete: :cascade
   add_foreign_key "snippet_sentences", "snippets", on_delete: :cascade
+  add_foreign_key "snippets", "sources", on_delete: :cascade
   add_foreign_key "snippets", "word_lists", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
@@ -404,6 +419,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_213810) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "sources", "word_lists", on_delete: :cascade
   add_foreign_key "study_days", "decks", on_delete: :cascade
   add_foreign_key "subscriptions", "users"
   add_foreign_key "topics", "users", on_delete: :cascade
