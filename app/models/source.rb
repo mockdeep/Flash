@@ -18,6 +18,7 @@ class Source < ApplicationRecord
            -> { order(:created_at) },
            dependent: :destroy,
            inverse_of: :source
+  has_many :readers, class_name: "SourceReader", dependent: :delete_all
 
   validates :word_list, :title, presence: true
   validates :word_list_id, uniqueness: true
@@ -29,6 +30,13 @@ class Source < ApplicationRecord
   def license_name = LICENSES[license][:name]
   def license_url = LICENSES[license][:url]
   def shareable? = LICENSES[license].fetch(:shareable, false)
+
+  # Anyone with a deck over the list may read a shareable source; the
+  # list's owner may read any, and a reader the one they were let in.
+  def readable_by?(user)
+    shareable? || word_list.user_id == user.id ||
+      readers.any? { |reader| reader.user_id == user.id }
+  end
 
   # New or finished when every snippet is; in progress otherwise.
   def status

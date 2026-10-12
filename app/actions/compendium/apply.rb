@@ -14,7 +14,7 @@ module Compendium
       "skill_scores" => [["sense_id", "senses"]],
       "sense_distractors" =>
         [["sense_id", "senses"], ["distractor_sense_id", "senses"]],
-      "snippet_readers" => [["snippet_id", "snippets"]],
+      "source_readers" => [["source_id", "sources"]],
     }.freeze
 
     Report =

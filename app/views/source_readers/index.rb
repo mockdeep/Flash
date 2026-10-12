@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
 module Views
-  module SnippetReaders
+  module SourceReaders
     class Index < Views::Base
       HEADINGS = ["Reader", ""].freeze
 
-      attr_accessor :snippet, :reader
+      attr_accessor :source, :reader
 
-      def initialize(snippet:, reader:)
+      def initialize(source:, reader:)
         super()
-        self.snippet = snippet
+        self.source = source
         self.reader = reader
       end
 
@@ -28,10 +28,10 @@ module Views
       def render_header
         div(class: "form-header") do
           render_back_link
-          h1(class: "form-title") { "Share #{snippet.title}" }
+          h1(class: "form-title") { "Share #{source.title}" }
           p(class: "form-subtitle") do
             <<~TEXT
-              Readers can read this snippet whatever its license. Adding one
+              Readers can read this source whatever its license. Adding one
               also adds a deck over its word list to their account.
             TEXT
           end
@@ -39,13 +39,12 @@ module Views
       end
 
       def render_back_link
-        source = snippet.source
         text = "← Back to #{source.title}"
         link_to(text, source_path(source), class: "back-link")
       end
 
       def render_form
-        options = { url: snippet_readers_path(snippet), scope: :reader }
+        options = { url: source_readers_path(source), scope: :reader }
 
         form_with(**options, class: "deck-form") do |form|
           render(Components::ErrorExplanation.new(errors: reader.errors))
@@ -65,7 +64,7 @@ module Views
       end
 
       def render_readers
-        readers = snippet.readers.sort_by { |reader| reader.user.username }
+        readers = source.readers.sort_by { |reader| reader.user.username }
         return p(class: "form-subtitle") { "No readers yet" } if readers.none?
 
         readers_table = Components::Table.new(headings: HEADINGS, rows: readers)
@@ -79,7 +78,7 @@ module Views
       def render_remove_button(reader)
         button_to(
           "Remove",
-          snippet_reader_path(snippet, reader),
+          source_reader_path(source, reader),
           method: :delete,
           class: button_class(:ghost, :compact),
         )

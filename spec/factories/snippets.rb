@@ -2,8 +2,14 @@
 
 FactoryBot.define do
   factory(:snippet) do
-    word_list
-    source { word_list.source || association(:source, word_list:) }
+    # A snippet reaches its list through its source; naming the list picks
+    # (or makes) the source over it.
+    transient { word_list { nil } }
+    source do
+      next association(:source) unless word_list
+
+      word_list.source || association(:source, word_list:)
+    end
     body { "我爱你。" }
 
     # Its one sentence holds no word, so nothing is left to resolve.
@@ -12,11 +18,6 @@ FactoryBot.define do
         create(:snippet_sentence, snippet:, tokens: [{ "text" => "。" }])
       end
     end
-  end
-
-  factory(:snippet_reader) do
-    snippet
-    user
   end
 
   factory(:snippet_sentence) do

@@ -3,7 +3,7 @@
 module Views
   module Sources
     class Show < Views::Base
-      HEADINGS = ["Heading", "Status", ""].freeze
+      HEADINGS = ["Heading", "Status"].freeze
       STATUSES = {
         new: "New",
         in_progress: "In progress",
@@ -24,7 +24,7 @@ module Views
 
         div(class: "table__actions") do
           render_add_button
-          render_study_button if source.studyable?
+          render_finished_actions if source.studyable?
         end
 
         source.snippets.none? ? p { "No snippets yet" } : render_table
@@ -45,13 +45,16 @@ module Views
         )
       end
 
-      def render_study_button
+      # Only a finished snippet has anything to study or read.
+      def render_finished_actions
         button_to(
           "Study this list",
           source_deck_path(source),
           method: :post,
           class: button_class(:secondary),
         )
+        share_path = source_readers_path(source)
+        link_to("Share", share_path, class: button_class(:ghost))
       end
 
       def render_table
@@ -61,19 +64,7 @@ module Views
         render(snippets_table) do |table, snippet|
           table.cell { snippet.heading }
           table.cell { STATUSES[snippet.status] }
-          table.cell { render_share_link(snippet) }
         end
-      end
-
-      # Only a finished snippet has anything to read.
-      def render_share_link(snippet)
-        return unless snippet.status == :finished
-
-        link_to(
-          "Share",
-          snippet_readers_path(snippet),
-          class: button_class(:ghost, :compact),
-        )
       end
     end
   end

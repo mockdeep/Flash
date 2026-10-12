@@ -31,9 +31,7 @@ Rails.application.routes.draw do
   resources :sources, only: [:index, :show, :new, :create] do
     resource :deck, only: [:create], controller: "source_decks"
     resources :snippets, only: [:new, :create]
-  end
-  resources :snippets, only: [] do
-    resources :readers, only: [:index, :create, :destroy], controller: "snippet_readers"
+    resources :readers, only: [:index, :create, :destroy], controller: "source_readers"
   end
 
   get "pricing", to: "pages#pricing"

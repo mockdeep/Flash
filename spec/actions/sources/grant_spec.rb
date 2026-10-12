@@ -2,46 +2,46 @@
 
 require "rails_helper"
 
-RSpec.describe Snippets::Grant do
-  def grant(username, snippet: create(:snippet))
-    described_class.call(snippet:, username:)
+RSpec.describe Sources::Grant do
+  def grant(username, source: create(:source))
+    described_class.call(source:, username:)
   end
 
   describe ".call" do
-    it "lets the user read the snippet" do
-      snippet = create(:snippet)
+    it "lets the user read the source" do
+      source = create(:source)
       user = create(:user, username: "reader")
 
-      described_class.call(snippet:, username: "reader")
+      described_class.call(source:, username: "reader")
 
-      expect(snippet.readable_by?(user)).to be(true)
+      expect(source.readable_by?(user)).to be(true)
     end
 
-    it "gives the user a reading deck over the snippet's list" do
-      snippet = create(:snippet)
+    it "gives the user a reading deck over the source's list" do
+      source = create(:source)
       user = create(:user, username: "reader")
 
-      described_class.call(snippet:, username: "reader")
+      described_class.call(source:, username: "reader")
 
       expect(user.decks.sole)
-        .to have_attributes(type: "ReadingDeck", word_list: snippet.word_list)
+        .to have_attributes(type: "ReadingDeck", word_list: source.word_list)
     end
 
     it "keeps the deck the user already has over the list" do
-      snippet = create(:snippet)
-      deck = create(:reading_deck, word_list: snippet.word_list)
+      source = create(:source)
+      deck = create(:reading_deck, word_list: source.word_list)
       username = deck.user.username
 
-      expect { described_class.call(snippet:, username:) }
+      expect { described_class.call(source:, username:) }
         .not_to change(Deck, :count)
     end
 
     it "lets a reader in only once" do
-      reader = create(:snippet_reader)
+      reader = create(:source_reader)
       username = reader.user.username
 
-      expect { described_class.call(snippet: reader.snippet, username:) }
-        .not_to change(SnippetReader, :count)
+      expect { described_class.call(source: reader.source, username:) }
+        .not_to change(SourceReader, :count)
     end
 
     it "returns a success result" do

@@ -30,7 +30,7 @@ class WordList < ApplicationRecord
   has_many :senses, through: :sense_memberships
   has_many :decks, dependent: :restrict_with_exception
   has_one :source, dependent: :destroy
-  has_many :snippets, dependent: :destroy
+  has_many :snippets, through: :source
 
   validates :name, presence: true, uniqueness: { scope: :user_id }
   validates :language, presence: true, inclusion: { in: LANGUAGES.keys }

@@ -5,6 +5,7 @@ require "rails_helper"
 RSpec.describe Source do
   it { is_expected.to belong_to(:word_list) }
   it { is_expected.to have_many(:snippets).dependent(:destroy) }
+  it { is_expected.to have_many(:readers).dependent(:delete_all) }
 
   it { is_expected.to validate_presence_of(:word_list) }
   it { is_expected.to validate_presence_of(:title) }
@@ -42,6 +43,30 @@ RSpec.describe Source do
     first = create(:snippet, word_list:, created_at: 2.days.ago)
 
     expect(source.snippets).to eq([first, second])
+  end
+
+  describe "#readable_by?" do
+    it "is true for the list's owner" do
+      source = build(:source)
+
+      expect(source.readable_by?(source.word_list.user)).to be(true)
+    end
+
+    it "is true for anyone when it is shareable" do
+      source = build(:source, license: "cc_by_sa")
+
+      expect(source.readable_by?(create(:user))).to be(true)
+    end
+
+    it "is true for a reader let in" do
+      reader = create(:source_reader)
+
+      expect(reader.source.readable_by?(reader.user)).to be(true)
+    end
+
+    it "is false for anyone else when it is not shareable" do
+      expect(build(:source).readable_by?(create(:user))).to be(false)
+    end
   end
 
   describe "#status" do

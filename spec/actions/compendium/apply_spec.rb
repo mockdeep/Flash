@@ -77,11 +77,11 @@ RSpec.describe Compendium::Apply do
     expect(apply(snapshot).losses["sense_distractors"]).to eq(1)
   end
 
-  it "reports the readers deleted snippets take" do
+  it "reports the readers deleted sources take" do
     snapshot = export
-    create(:snippet_reader)
+    create(:source_reader)
 
-    expect(apply(snapshot).losses["snippet_readers"]).to eq(1)
+    expect(apply(snapshot).losses["source_readers"]).to eq(1)
   end
 
   it "keeps the owner of a list that exists" do
