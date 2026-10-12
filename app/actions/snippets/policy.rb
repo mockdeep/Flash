@@ -57,6 +57,11 @@ module Snippets
       - Gloss what is written, as it is used in this sentence, even where
         the text has a typo or a stray character. Never gloss the word the
         author probably meant instead.
+      - A gloss is what a reader needs in place of the word: usually one to
+        four words. A name is glossed by its usual English name alone
+        (Mencius, Tsuen Wan, Aojiu Festival), with no note on what it is.
+        Leave out explanations of use, customs or grammar, a literal
+        translation alongside the meaning, and the word's pinyin.
     TEXT
 
     FUNCTION_WORDS = <<~TEXT
