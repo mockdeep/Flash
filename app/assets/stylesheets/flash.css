@@ -870,6 +870,12 @@ body {
   word-spacing: 0.5em;
 }
 
+.reading-snippet + .reading-snippet {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 3px solid var(--color-border);
+}
+
 .reading-snippet p {
   font-size: 20px;
   line-height: 1.8;
