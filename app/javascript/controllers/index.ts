@@ -59,3 +59,6 @@ application.register("timezone", TimezoneController);
 
 import WakeLockController from "./wake_lock_controller";
 application.register("wake-lock", WakeLockController);
+
+import WordStatesController from "./word_states_controller";
+application.register("word-states", WordStatesController);

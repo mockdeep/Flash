@@ -2,12 +2,11 @@
 
 module Components
   # The Read tab: a deck's source, then its snippets word by word, laid out
-  # as written. The deck's level takes the help away: readings over each
-  # word at level 1 in a language that has them, gaps between words up to
-  # level 2, plain text after that. Clicking a word shows its reading and
+  # as written, with gaps between words up to level 2. Each word is grey
+  # until studied, green once done at the deck's level, and has its reading
+  # over it while its streak is zero. Clicking a word shows its reading and
   # gloss in a popover, and resets its streak so study brings it back.
   class SnippetReading < Components::Base
-    READINGS_LEVEL = 1
     GAPS_LEVEL = 2
 
     attr_accessor :snippets, :deck
@@ -69,7 +68,7 @@ module Components
       button(**word_attributes(id, sense)) do
         ruby do
           plain(text)
-          rt { sense.entry.reading } if readings?
+          rt { sense.entry.reading } if language.readings
         end
       end
     end
@@ -86,10 +85,15 @@ module Components
     def word_attributes(id, sense)
       {
         type: "button",
-        class: "reading-snippet__word",
+        class: ["reading-snippet__word", word_state(sense)],
         popovertarget: id,
         data: { action: "lookup#record", lookup_sense_id_param: sense.id },
       }
+    end
+
+    def word_state(sense)
+      state = scores.fetch(sense.id) { SkillScore.new }.state(deck.level)
+      "reading-snippet__word--#{state}" if state
     end
 
     def lookup_count
@@ -98,6 +102,11 @@ module Components
 
     def senses
       @senses ||= Sense.where(id: sense_ids).index_by(&:id)
+    end
+
+    def scores
+      @scores ||= deck.user.skill_scores
+        .where(skill: deck.skill, sense_id: sense_ids).index_by(&:sense_id)
     end
 
     def sense_ids
@@ -111,14 +120,13 @@ module Components
     def classes
       [
         "reading-snippets",
-        ("reading-snippets--readings" if readings?),
+        ("reading-snippets--readings" if language.readings),
         ("reading-snippets--gaps" if gaps?),
         ("reading-snippets--spaced" if language.spaces),
       ]
     end
 
     def language = deck.source.language
-    def readings? = language.readings && deck.level <= READINGS_LEVEL
     def gaps? = deck.level <= GAPS_LEVEL
   end
 end

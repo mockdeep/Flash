@@ -6,6 +6,10 @@ RSpec.describe Components::SnippetReading, type: :view do
     Capybara.string(view.render(described_class.new(snippets:, deck:)))
   end
 
+  def render_text(...)
+    Capybara.string(render_for(...).native.to_html.gsub(%r{<rt>.*?</rt>}, ""))
+  end
+
   def texts_of(page, selector) = page.all(selector).map(&:text)
 
   def word(text, reading, gloss: "gloss")
@@ -78,33 +82,71 @@ RSpec.describe Components::SnippetReading, type: :view do
   end
 
   it "shows each line of the body as its own paragraph" do
-    page = render_for(two_line_snippet, level: 3)
+    page = render_text(two_line_snippet, level: 3)
 
     paragraphs = texts_of(page, ".reading-snippet p:not([class])")
 
     expect(paragraphs).to eq(["我。", "你。他。"])
   end
 
-  it "shows each word's reading at level 1" do
-    page = render_for(love_snippet, level: 1)
+  def render_scored(level: 1, **score)
+    snippet = snippet_with("爱。", [word("爱", "ài")])
+    create(:skill_score, sense: Sense.sole, **score) if score.any?
+    render_for(snippet, level:)
+  end
+
+  it "gives each word its reading at any level" do
+    page = render_for(love_snippet, level: 3)
 
     expect(texts_of(page, "rt")).to eq(["wǒ", "ài"])
   end
 
-  it "leaves out the readings above level 1" do
-    page = render_for(love_snippet, level: 2)
+  it "marks a word never studied as new" do
+    page = render_scored
 
-    expect(page).to have_no_css("rt")
+    expect(page).to have_css(".reading-snippet__word--new")
+  end
+
+  it "marks a word studied but never seen as new" do
+    page = render_scored(view_count: 0)
+
+    expect(page).to have_css(".reading-snippet__word--new")
+  end
+
+  it "marks a word with no streak as missed" do
+    page = render_scored(view_count: 1, correct_streak: 0)
+
+    expect(page).to have_css(".reading-snippet__word--missed")
+  end
+
+  it "marks a word whose streak reaches the deck's level as done" do
+    page = render_scored(level: 2, view_count: 2, correct_streak: 2)
+
+    expect(page).to have_css(".reading-snippet__word--done")
+  end
+
+  it "leaves a word short of the deck's level unmarked" do
+    page = render_scored(level: 2, view_count: 1, correct_streak: 1)
+
+    word = page.find("button")
+    expect(word[:class]).to eq("reading-snippet__word")
+  end
+
+  it "reads only the deck owner's scores" do
+    user = create(:user)
+    page = render_scored(user:, view_count: 1, correct_streak: 1)
+
+    expect(page).to have_css(".reading-snippet__word--new")
   end
 
   it "marks each word apart" do
-    page = render_for(love_snippet, level: 2)
+    page = render_text(love_snippet, level: 2)
 
     expect(texts_of(page, "ruby")).to eq(["我", "爱"])
   end
 
   it "leaves punctuation out of the words" do
-    page = render_for(love_snippet, level: 3)
+    page = render_text(love_snippet, level: 3)
 
     expect(page).to have_css("p", exact_text: "我爱。")
   end

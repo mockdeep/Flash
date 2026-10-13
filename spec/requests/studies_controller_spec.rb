@@ -3,6 +3,10 @@
 RSpec.describe StudiesController do
   before { login_as(default_user) }
 
+  def word_states
+    rendered.all("[data-controller='word-states']", visible: :all)
+  end
+
   def submit_answer(card:, answer:)
     patch(
       deck_study_path(card.deck),
@@ -624,6 +628,22 @@ RSpec.describe StudiesController do
       expect(rendered).to have_no_button("Edit card")
     end
 
+    it "sends the answered words' states for the Read tab" do
+      card = create(:language_card, back: "Paris")
+      submit_answer(card:, answer: "London")
+
+      sender = word_states.sole
+      states = JSON.parse(sender["data-word-states-states-value"])
+      expect(states).to eq(Sense.sole.id.to_s => "missed")
+    end
+
+    it "sends no word states on a flat-card deck" do
+      card = create(:basic_card, back: "Paris")
+      submit_answer(card:, answer: "London")
+
+      expect(word_states).to be_empty
+    end
+
     context "when completed reaches milestone goal" do
       it "does not show the milestone prompt" do
         complete_milestone_goal
@@ -678,6 +698,14 @@ RSpec.describe StudiesController do
       submit_answer(card:, answer: "Paris")
 
       expect(rendered).to have_css(".level-fill--done", count: 1)
+    end
+
+    it "continues to the next level with a whole page" do
+      card = create(:basic_card, back: "Paris", correct_streak: 0)
+      submit_answer(card:, answer: "Paris")
+
+      link = "a[data-turbo-frame='_top']"
+      expect(rendered).to have_css(link, text: "Continue to Level 2")
     end
 
     it "advances deck level when last card is completed" do

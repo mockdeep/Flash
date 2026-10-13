@@ -17,6 +17,7 @@ function buildWord(): HTMLButtonElement {
   word.type = "button";
   word.setAttribute("data-action", "lookup#record");
   word.setAttribute("data-lookup-sense-id-param", "42");
+  word.className = "reading-snippet__word reading-snippet__word--new";
   word.textContent = "爱";
   return word;
 }
@@ -82,5 +83,18 @@ describe("record", () => {
     const fetchMock = await clickWord();
 
     expect(request(fetchMock).method).toBe("POST");
+  });
+});
+
+describe("record marks the word", () => {
+  it("as missed", async () => {
+    await clickWord();
+
+    const {classList} = findEl(document, "button");
+
+    expect([...classList]).toStrictEqual([
+      "reading-snippet__word",
+      "reading-snippet__word--missed",
+    ]);
   });
 });

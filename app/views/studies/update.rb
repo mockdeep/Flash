@@ -33,6 +33,9 @@ module Views
             )
 
             render_card_result
+            unless deck.flat_cards?
+              render(Components::WordStates.new(deck:, card: result.card))
+            end
           end
         end
       end
@@ -54,10 +57,12 @@ module Views
           end
         end
         div(class: "session-milestone-actions") do
+          # The whole page, so the Read tab picks up the new level.
           link_to(
             "Continue to Level #{deck.level}",
             deck_study_path(deck),
             class: "session-milestone-primary",
+            data: { turbo_frame: "_top" },
           )
           link_to(
             "All Decks",
