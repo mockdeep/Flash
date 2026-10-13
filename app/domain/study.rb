@@ -58,10 +58,11 @@ class Study
     (2**(deck.level - 1)) * ACTIVE_CARD_THRESHOLD
   end
 
+  # Unseen cards come first, in the pool's order; the rest at random.
   def pick_next_card(exclude_card_id:)
     pool = deck.study_pool(limit: active_card_threshold)
     fresh = pool.reject { |card| card.id.to_s == exclude_card_id.to_s }
-    fresh.sample || pool.sample
+    fresh.find { |card| card.view_count.zero? } || fresh.sample || pool.sample
   end
 
   def presentation_mode

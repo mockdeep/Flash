@@ -832,7 +832,7 @@ Cards can carry an optional pronunciation/gloss (e.g. Mandarin pinyin) kept sepa
 ### Study Algorithm
 
 The study engine (`app/domain/study.rb`) manages card selection and answer processing:
-- **Active window**: picks randomly from the not-done cards (at the current level) capped at `2^(level-1) × 20` — the pool of cards in play grows as the deck levels up
+- **Active window**: the not-done cards (at the current level) capped at `2^(level-1) × 20` — the pool of cards in play grows as the deck levels up. Within it, the first card never viewed (`view_count` 0; card order on flat decks, list order on language decks, where it is the entry's lowest `skill_scores.view_count`) comes first; once every card has been seen, it picks at random
 - **Presentation mode**: multiple-choice below level 3, **fuzzy-find** (typed-answer) at level 3+ (`FUZZY_FIND_LEVEL`); from level 2 (`READING_LEVEL`) up, a card with a `reading` gets a **reading stage** first (see below) — `:reading` (multiple choice) at level 2, `:fuzzy_reading` at 3+. `possible_answers` branches on the mode, and `Components::StudyAnswers` renders it
 - **Multiple choice**: 4 distractors + the answer, shuffled. Distractors come from the card's own preset `distractors` (`card_distractors` rows for flat families, `ItemDistractor`s for language); a `"category"`-pool deck tops up from same-category then any sibling cards via `deck.cards_in_category`
 - On correct answer: increments `correct_count` and `correct_streak`; if the last not-done card at the level is completed, advances `deck.level`

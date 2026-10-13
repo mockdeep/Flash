@@ -64,6 +64,20 @@ RSpec.describe LanguageDeck do
 
       expect(deck.study_pool(limit: 5).map(&:correct_streak)).to eq([0])
     end
+
+    it "counts an entry's views from its scores" do
+      deck = create(:reading_deck, level: 1)
+      create(:language_card, deck:, view_count: 2)
+
+      expect(deck.study_pool(limit: 5).map(&:view_count)).to eq([2])
+    end
+
+    it "counts an entry without scores as unseen" do
+      deck = create(:reading_deck, level: 1)
+      create(:language_card, deck:)
+
+      expect(deck.study_pool(limit: 5).map(&:view_count)).to eq([0])
+    end
   end
 
   def sense_of(card, gloss)

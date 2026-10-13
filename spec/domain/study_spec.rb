@@ -96,6 +96,29 @@ RSpec.describe Study do
       expect(study.next_card).to eq(excluded)
     end
 
+    it "picks the first unseen card in the pool" do
+      deck = create(:deck)
+      create(:basic_card, deck:, view_count: 1)
+      unseen = create_list(:basic_card, 2, deck:)
+
+      expect(described_class.new(deck:).next_card).to eq(unseen.first)
+    end
+
+    it "skips the excluded card when picking an unseen one" do
+      deck = create(:deck)
+      excluded, unseen = create_list(:basic_card, 2, deck:)
+      study = described_class.new(deck:, exclude_card_id: excluded.id)
+
+      expect(study.next_card).to eq(unseen)
+    end
+
+    it "picks a seen card when none are unseen" do
+      deck = create(:deck)
+      card = create(:basic_card, deck:, view_count: 1)
+
+      expect(described_class.new(deck:).next_card).to eq(card)
+    end
+
     it "pins next_card to the given card_id" do
       deck = create(:deck)
       card = create(:basic_card, deck:)

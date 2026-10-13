@@ -31,6 +31,7 @@ class LanguageCard
   end
 
   delegate :id, :reading, :back, :category, :sense_ids, to: :entry
+  delegate :view_count, to: :entry
 
   def front = entry.headword
 

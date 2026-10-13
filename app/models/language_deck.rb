@@ -13,7 +13,8 @@ class LanguageDeck < Deck
     ARRAY_AGG(senses.id ORDER BY sense_memberships.position) AS sense_ids,
     (ARRAY_AGG(sense_memberships.category
       ORDER BY sense_memberships.position))[1] AS category,
-    MIN(COALESCE(skill_scores.correct_streak, 0)) AS correct_streak
+    MIN(COALESCE(skill_scores.correct_streak, 0)) AS correct_streak,
+    MIN(COALESCE(skill_scores.view_count, 0)) AS view_count
   SQL
   SCORES_JOIN = <<~SQL.squish
     LEFT JOIN skill_scores ON skill_scores.sense_id = senses.id
