@@ -13,8 +13,8 @@ RSpec.describe Snippets::Process do
     prompt = JSON.parse(call.prompt)
 
     case call.system
-    when Snippets::Segment::SYSTEM then segmented(prompt)
-    when Snippets::Propose::SYSTEM then proposed(prompt)
+    when Language::MANDARIN.prompts.segment then segmented(prompt)
+    when Language::MANDARIN.prompts.propose then proposed(prompt)
     else judged(prompt)
     end
   end
@@ -24,7 +24,7 @@ RSpec.describe Snippets::Process do
   def missegmenting_pipeline
     faulted = false
     llm.respond do |call|
-      proposing = call.system == Snippets::Propose::SYSTEM
+      proposing = call.system == Language::MANDARIN.prompts.propose
       next pipeline_answer(call) if faulted || !proposing
 
       faulted = true
@@ -77,7 +77,7 @@ RSpec.describe Snippets::Process do
       segmented_sentence
       described_class.call
 
-      expect(calls_to(Snippets::Segment::SYSTEM)).to eq(0)
+      expect(calls_to(Language::MANDARIN.prompts.segment)).to eq(0)
     end
 
     it "leaves resolved sentences alone" do
@@ -94,7 +94,7 @@ RSpec.describe Snippets::Process do
       create_pair(:snippet_sentence, body: "我")
       described_class.call
 
-      expect(calls_to(Snippets::Segment::SYSTEM)).to eq(2)
+      expect(calls_to(Language::MANDARIN.prompts.segment)).to eq(2)
     end
 
     it "resolves in batches" do
@@ -103,7 +103,7 @@ RSpec.describe Snippets::Process do
       2.times { segmented_sentence }
       described_class.call
 
-      expect(calls_to(Snippets::Propose::SYSTEM)).to eq(2)
+      expect(calls_to(Language::MANDARIN.prompts.propose)).to eq(2)
     end
 
     it "reports each batch it finishes" do

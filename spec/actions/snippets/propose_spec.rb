@@ -15,7 +15,7 @@ RSpec.describe Snippets::Propose do
   end
 
   def propose(occurrences)
-    described_class.call(occurrences, model: Llm::SONNET)
+    described_class.call(occurrences, model: Llm::SONNET, language: Language::MANDARIN)
   end
 
   describe ".call" do

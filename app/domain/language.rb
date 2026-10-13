@@ -2,14 +2,15 @@
 
 # What processing a snippet needs to know about the language it is written
 # in: where its sentences end, and which characters make a token a word to
-# give a sense.
-Language = Data.define(:code, :sentence, :word_char)
+# give a sense, and what to ask a model about it.
+Language = Data.define(:code, :sentence, :word_char, :prompts)
 
 class Language
   MANDARIN = new(
     code: "zh",
     sentence: /[^。！？\n]+[。！？]*[」』”’）》]*/,
     word_char: /\p{Han}/,
+    prompts: Snippets::Mandarin::PROMPTS,
   )
   ALL = [MANDARIN].index_by(&:code).freeze
 

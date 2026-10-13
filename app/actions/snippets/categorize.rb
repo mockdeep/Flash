@@ -7,31 +7,7 @@ module Snippets
   # dulls a card's options. Every membership given leaves with a category,
   # so the step cannot be asked the same question twice.
   module Categorize
-    CATEGORIES = [
-      "noun",
-      "verb",
-      "adjective",
-      "adverb",
-      "pronoun",
-      "conjunction",
-      "preposition",
-      "particle",
-      "measure word",
-      "numeral",
-      "proper noun",
-      "idiom",
-      "phrase",
-      "other",
-    ].freeze
     UNFILED = "other"
-    SYSTEM = <<~TEXT
-      You file Chinese vocabulary by part of speech. Each item gives a
-      headword, its reading and one English gloss; choose the category that
-      fits the word in that meaning. Use "proper noun" for names of people,
-      places and works, "idiom" for chengyu and set sayings, "phrase" for a
-      multi-word expression that is none of the others, and "other" only
-      when nothing else fits.
-    TEXT
     SCHEMA = {
       type: "object",
       additionalProperties: false,
@@ -45,23 +21,30 @@ module Snippets
             required: ["id", "category"],
             properties: {
               id: { type: "integer" },
-              category: { type: "string", enum: CATEGORIES },
+              category: { type: "string" },
             },
           },
         },
       },
     }.freeze
-    ASK = {
-      list: "categories", model: Llm::SONNET, system: SYSTEM, schema: SCHEMA
-    }.freeze
 
-    def self.call(memberships)
+    def self.call(memberships, language)
       prompt = memberships.each_with_index.map { |one, id| prompt(one, id) }
-      rows = Llm::AskEach.call(memberships, prompt:, **ASK)
+      rows = Llm::AskEach.call(memberships, prompt:, **ask(language.prompts))
 
       memberships.each_with_index do |membership, id|
         membership.update!(category: rows.dig(id, "category") || UNFILED)
       end
+    end
+
+    # Each language files its words under its own categories.
+    def self.ask(prompts)
+      category = { enum: prompts.categories }
+      schema = SCHEMA.deep_merge(
+        properties: { categories: { items: { properties: { category: } } } },
+      )
+
+      { list: "categories", model: Llm::SONNET, system: prompts.categorize, schema: }
     end
 
     def self.prompt(membership, id)

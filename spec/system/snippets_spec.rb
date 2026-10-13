@@ -13,9 +13,9 @@ RSpec.describe "snippets" do
       prompt = JSON.parse(call.prompt)
 
       case call.system
-      when Snippets::Segment::SYSTEM then segmented(prompt)
-      when Snippets::Propose::SYSTEM then proposed(prompt)
-      when Snippets::Judge::SYSTEM then judged(prompt)
+      when Language::MANDARIN.prompts.segment then segmented(prompt)
+      when Language::MANDARIN.prompts.propose then proposed(prompt)
+      when Language::MANDARIN.prompts.judge then judged(prompt)
       else categorized(prompt)
       end
     end

@@ -5,54 +5,6 @@ module Snippets
   # Returns the proposals it accepts; a rejected proposal's occurrence keeps
   # the judge's reason.
   module Judge
-    INSTRUCTIONS = <<~TEXT
-      You review proposed new senses for a Chinese vocabulary
-      compendium. Another model proposed each one, claiming that none of
-      the listed existing senses covers the word as it is used in the
-      sentence. The input has three lists. `sentences` gives each sentence
-      once. `words` gives each distinct word once: the simplified
-      `headword` it studies under and the senses the compendium already
-      holds (`senses`).
-      `occurrences` are the proposals: each is one occurrence of a `word`
-      (listed under `wid`) in a sentence (`sid`), shown between 【 and 】
-      among its neighbours in `marked`, with the proposed headword, reading
-      and gloss. Nothing enters the compendium unless you accept it, and a
-      wrong entry reaches every learner, so reject whenever you have a
-      concrete objection:
-
-      - a listed existing sense already covers this occurrence (say which):
-        one covers it only if its gloss could stand in for the word in an
-        English rendering of the sentence, so 健康 "healthy" does not cover
-        人体健康 "human health"; for a function word, only one that names
-        the same role does
-      - the reading is wrong for this occurrence
-      - the gloss is not what the word means in this sentence
-      - the headword is not the right simplified form of the word for this
-        meaning (著 as a particle belongs under 着)
-      - another occurrence proposes the same word in the same meaning under a
-        different reading or gloss: accept the better wording and reject the
-        other
-      - the "word" is not a word, but a fragment of bad segmentation, or a
-        whole the segmentation rules below would split
-      - the gloss holds hanzi, pinyin, cross-references, several unrelated
-        meanings, or explanation beyond a short gloss
-      - the reading or gloss breaks the reading and gloss rules below
-
-      A sentence may carry `resegmented`: the complaint it was already
-      segmented again over. A word the complaint asked for is not bad
-      segmentation on that ground alone.
-
-      Accept when the reading and gloss are right for the sentence and the
-      sense is distinct from the listed ones. Give a verdict for every
-      occurrence, and a one-sentence reason only when you reject: the reason
-      goes to the next proposer, or to the person who reviews the text.
-    TEXT
-    SYSTEM = [
-      INSTRUCTIONS,
-      Policy::FUNCTION_WORDS,
-      Policy::READING,
-      Policy::SEGMENTATION,
-    ].join("\n").freeze
     UNREASONED = "rejected without a reason"
     SCHEMA = {
       type: "object",
@@ -74,16 +26,17 @@ module Snippets
         },
       },
     }.freeze
-    ASK = { list: "verdicts", system: SYSTEM, schema: SCHEMA }.freeze
+    ASK = { list: "verdicts", schema: SCHEMA }.freeze
     UNJUDGED = {
       "accept" => false,
       "reason" => "no verdict was returned",
     }.freeze
 
-    def self.call(proposals, model:)
+    def self.call(proposals, model:, language:)
       occurrences = proposals.map(&:occurrence)
       prompt = Briefing.call(occurrences, proposed: proposals.map(&:proposed))
-      verdicts = Llm::AskEach.call(proposals, prompt:, model:, **ASK)
+      system = language.prompts.judge
+      verdicts = Llm::AskEach.call(proposals, prompt:, model:, system:, **ASK)
 
       proposals.each_with_index.filter_map do |proposal, id|
         judged(proposal, verdicts.fetch(id, UNJUDGED))

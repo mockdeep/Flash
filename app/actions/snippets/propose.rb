@@ -6,57 +6,6 @@ module Snippets
   # rules is turned into a rejection, so the occurrence goes up to the next
   # rung like any other.
   module Propose
-    INSTRUCTIONS = <<~TEXT
-      You build vocabulary cards from Chinese texts. The input has three
-      lists. `sentences` gives each sentence once. `words` gives each
-      distinct word once: the simplified `headword` it studies under and the
-      senses our compendium already holds for it (`senses`). `occurrences` are the
-      questions: each is one occurrence of a `word` (listed under `wid`) in
-      a sentence (`sid`), and `marked` shows it between 【 and 】 among its
-      neighbours. A word may have several occurrences, even twice in one
-      sentence; decide each on its own, because the same word can be used
-      in different senses. Answer every occurrence, deciding how the marked
-      word is used:
-
-      - "existing": one of the listed senses covers this occurrence. Return
-        its id as sense_id. Prefer this whenever a listed sense fits: a sense
-        fits when its gloss could stand in for the word in an English
-        rendering of this sentence. 人体健康 is "human health", so 健康
-        "healthy" does not fit there, and a new sense "health" is needed.
-      - "new": no listed sense covers this occurrence. Return a reading and a
-        gloss. The reading is pinyin with tone marks and the syllables
-        joined ("niànshū"), capitalised for names; when a listed sense is
-        pronounced the same way, copy its reading exactly. The gloss is a
-        short English gloss of this one meaning. No hanzi, no pinyin, no
-        cross-references. Gloss a proper noun by the English name of what it
-        names in this text (新 in 新马 is "Singapore"), and a function word
-        by its function ("possessive particle"). When
-        two occurrences are the same word in the same new meaning, give them
-        the identical reading and gloss.
-      - "missegmented": the token breaks the segmentation rules below: two
-        words joined (a verb with its aspect particle, "花了"), a piece cut
-        from a longer word, or a whole the rules split. Say in note how it
-        should have been split or joined. The sentence is segmented again.
-
-      An occurrence may carry `rejection`: a reviewer's reason for turning
-      down an earlier proposal for it. Take it into account.
-
-      A sentence may carry `resegmented`: the complaint it was already
-      segmented again over, which settles how it is cut. Never call a token
-      missegmented to undo what the complaint asked for; do so only when the
-      new segmentation breaks the rules some other way.
-
-      Every token gets a sense: there is no skipping, even for a single
-      numeral, a typo or a stray character. Return only the fields a
-      decision uses: sense_id for "existing"; reading and gloss for "new";
-      note for "missegmented".
-    TEXT
-    SYSTEM = [
-      INSTRUCTIONS,
-      Policy::FUNCTION_WORDS,
-      Policy::READING,
-      Policy::SEGMENTATION,
-    ].join("\n").freeze
     DECISIONS = ["existing", "new", "missegmented"].freeze
     SCHEMA = {
       type: "object",
@@ -81,11 +30,12 @@ module Snippets
         },
       },
     }.freeze
-    ASK = { list: "decisions", system: SYSTEM, schema: SCHEMA }.freeze
+    ASK = { list: "decisions", schema: SCHEMA }.freeze
 
-    def self.call(occurrences, model:)
+    def self.call(occurrences, model:, language:)
       prompt = Briefing.call(occurrences)
-      rows = Llm::AskEach.call(occurrences, prompt:, model:, **ASK)
+      system = language.prompts.propose
+      rows = Llm::AskEach.call(occurrences, prompt:, model:, system:, **ASK)
 
       occurrences.each_with_index.filter_map do |occurrence, id|
         proposal(occurrence, rows[id])
