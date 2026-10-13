@@ -29,9 +29,10 @@ module Snippets
     # again over; the prompts show it, and it is not sent back a second time.
     def self.call(sentences, resegmented: {})
       results = {}
+      language = sentences.first.language
       occurrences = Occurrence.for(sentences, resegmented:)
       occurrences.each_slice(OCCURRENCE_BATCH) do |slice|
-        results.merge!(escalate(slice))
+        results.merge!(escalate(slice, language))
       end
       faulted = resegmented.empty? ? complaints(sentences, results) : {}
       (sentences - faulted.keys).each { |sentence| save(sentence, results) }
@@ -80,11 +81,11 @@ module Snippets
       result.merge("outcome" => "unresolved")
     end
 
-    def self.escalate(occurrences)
+    def self.escalate(occurrences, language)
       results = {}
       waiting =
         RUNGS.reduce(occurrences) do |remaining, rung|
-          results.merge!(attempt(remaining, **rung))
+          results.merge!(attempt(remaining, language, **rung))
           remaining.reject { |occurrence| results.key?(occurrence.key) }
         end
 
@@ -95,10 +96,10 @@ module Snippets
       { "outcome" => "unresolved", "note" => occurrence.rejection }
     end
 
-    def self.attempt(occurrences, proposer:, judge:)
-      proposals = Propose.call(occurrences, model: proposer)
+    def self.attempt(occurrences, language, proposer:, judge:)
+      proposals = Propose.call(occurrences, model: proposer, language:)
       new_senses, settled = proposals.partition(&:new_sense?)
-      accepted = Judge.call(new_senses, model: judge)
+      accepted = Judge.call(new_senses, model: judge, language:)
 
       (settled + accepted).to_h do |proposal|
         [proposal.occurrence.key, Record.call(proposal)]

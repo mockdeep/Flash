@@ -184,6 +184,7 @@ Metrics/MethodLength:
 Metrics/ModuleLength:
   Exclude:
     - 'app/actions/data_sets/projection.rb'
+    - 'app/actions/snippets/mandarin.rb'
 
 # Offense count: 1
 # Configuration parameters: Mode, AllowedMethods, AllowedPatterns, AllowBangMethods, WaywardPredicates.

@@ -3,6 +3,10 @@
 require "rails_helper"
 
 RSpec.describe Snippets::Categorize do
+  def categorize(memberships)
+    described_class.call(memberships, Language::MANDARIN)
+  end
+
   def membership(headword: "爱", gloss: "to love")
     entry = create(:entry, headword:, reading: "ài")
 
@@ -17,13 +21,13 @@ RSpec.describe Snippets::Categorize do
 
   describe ".call" do
     it "asks nothing when there are no memberships" do
-      expect(described_class.call([])).to eq([])
+      expect(categorize([])).to eq([])
     end
 
     it "asks Sonnet" do
       llm.answer(categories("verb"))
 
-      described_class.call([membership])
+      categorize([membership])
 
       expect(llm.calls.sole.model).to eq("claude-sonnet-5-5")
     end
@@ -32,7 +36,7 @@ RSpec.describe Snippets::Categorize do
       llm.answer(categories("verb"))
       prompt = [{ id: 0, headword: "爱", reading: "ài", gloss: "to love" }]
 
-      described_class.call([membership])
+      categorize([membership])
 
       expect(llm.calls.sole.prompt).to eq(prompt.to_json)
     end
@@ -41,7 +45,7 @@ RSpec.describe Snippets::Categorize do
       filed = [membership, membership(headword: "花", gloss: "flower")]
       llm.answer(categories("verb", "noun"))
 
-      described_class.call(filed)
+      categorize(filed)
 
       expect(filed.map(&:category)).to eq(["verb", "noun"])
     end
@@ -50,7 +54,7 @@ RSpec.describe Snippets::Categorize do
       unanswered = membership
       llm.answer(categories)
 
-      expect { described_class.call([unanswered]) }
+      expect { categorize([unanswered]) }
         .to change_record(unanswered, :category).to("other")
     end
 
@@ -58,7 +62,7 @@ RSpec.describe Snippets::Categorize do
       bare = membership
       llm.answer({ categories: [{ id: 0 }] })
 
-      expect { described_class.call([bare]) }
+      expect { categorize([bare]) }
         .to change_record(bare, :category).to("other")
     end
   end

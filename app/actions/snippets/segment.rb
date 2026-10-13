@@ -11,35 +11,6 @@ module Snippets
   # sentence that fails is asked again on its own, and one that fails twice
   # falls back to one token per character.
   module Segment
-    INSTRUCTIONS = <<~TEXT
-      You segment Chinese sentences into words for a vocabulary
-      builder. For each sentence, return its words in order. Keep names and
-      idioms whole. Each word should be one a learner could look up, so
-      split grammatical particles off the word they follow: aspect
-      particles (了, 着/著, 过/過) and structural particles (的, 地, 得) are
-      words of their own ("花了" is "花", "了"; "看着" is "看", "着"), unless
-      the combination has a meaning of its own ("为了", "除了", "觉得",
-      "目的"). Every character of the sentence must appear in
-      exactly one word, unchanged: do not drop, add, convert or correct
-      characters. Punctuation is never part of a word: quotation marks,
-      title marks (《》), brackets and the rest are tokens of their own or
-      left out ("《新黑客辞典》" is "《", "新黑客辞典", "》").
-
-      Return each word as `text`, exactly as written, and `simplified`, the
-      same word in simplified characters, character for character; it is
-      identical to `text` for a word already in simplified characters or
-      with no Chinese in it. Where a traditional character simplifies more
-      than one way, choose by its meaning here: 著 as an aspect particle is
-      着, but stays 著 for "to write"; 乾 is 干 for "dry", but stays 乾 in
-      乾坤.
-
-      A sentence may carry `feedback`: what a reviewer found wrong with an
-      earlier segmentation of it, and `previous`: that segmentation's words.
-      Segment it again so that every complaint is fixed, and keep every
-      other word of `previous` exactly as it was: change only the words a
-      complaint names.
-    TEXT
-    SYSTEM = [INSTRUCTIONS, Policy::SEGMENTATION].join("\n").freeze
     WORD = {
       type: "object",
       additionalProperties: false,
@@ -68,9 +39,7 @@ module Snippets
         },
       },
     }.freeze
-    ASK = {
-      list: "sentences", model: Llm::SONNET, system: SYSTEM, schema: SCHEMA
-    }.freeze
+    ASK = { list: "sentences", model: Llm::SONNET, schema: SCHEMA }.freeze
 
     # `feedback` maps a sentence to what was wrong with its last
     # segmentation, for one sent back to be segmented again.
@@ -105,7 +74,8 @@ module Snippets
           { id:, sentence: sentence.body, **revision(sentence, feedback) }
         end
 
-      Llm::AskEach.call(sentences, prompt:, **ASK)
+      system = sentences.first.language.prompts.segment
+      Llm::AskEach.call(sentences, prompt:, system:, **ASK)
     end
 
     # The complaint, with the cut it is about, so the answer can keep the

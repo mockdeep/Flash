@@ -19,7 +19,7 @@ what the user agrees to. AGENTS.md ("Snippet Processing", "Compendium Review",
   the word up on mdbg.net), Wiktionary, or another dictionary you can cite.
   Where references disagree or the call is a policy question, say so and let
   the user decide.
-- **Judge against the card rules** in `app/actions/snippets/policy.rb`
+- **Judge against the card rules** in `app/actions/snippets/mandarin/policy.rb`
   (segmentation, readings, function words). Read it at the start of a review.
 - **Propose fixes in batches and wait for approval** before running any edit.
   Reading commands (`snippets:review`, `compendium:lookup`) need no approval.

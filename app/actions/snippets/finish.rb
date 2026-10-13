@@ -17,7 +17,7 @@ module Snippets
         snippet.sentences.each { |sentence| strip(sentence) }
         Attach.call(snippet)
       end
-      categorize(snippet.word_list)
+      categorize(snippet)
     end
 
     def self.unsensed!(snippet)
@@ -39,10 +39,10 @@ module Snippets
       sentence.update!(tokens:)
     end
 
-    def self.categorize(word_list)
-      batches = word_list.sense_memberships.uncategorized
+    def self.categorize(snippet)
+      batches = snippet.word_list.sense_memberships.uncategorized
         .in_batches(of: CATEGORIZE_BATCH)
-      batches.each { |batch| Categorize.call(batch.to_a) }
+      batches.each { |batch| Categorize.call(batch.to_a, snippet.language) }
     end
   end
 end

@@ -20,7 +20,7 @@ RSpec.describe Snippets::Judge do
   end
 
   def judge(proposals)
-    described_class.call(proposals, model: Llm::OPUS)
+    described_class.call(proposals, model: Llm::OPUS, language: Language::MANDARIN)
   end
 
   describe ".call" do
