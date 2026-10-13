@@ -1,25 +1,24 @@
 # frozen_string_literal: true
 
 module Compendium
-  # The compendium's entries for a word, as plain text for a review: each
-  # sense with its id, the lists that hold it and how many snippet sentences
-  # point at it. A query with Chinese characters is a headword; anything else
-  # is looked for in the glosses.
+  # The compendium's entries in one language for a word, as plain text for a
+  # review: each sense with its id, the lists that hold it and how many
+  # snippet sentences point at it. A query is matched against headwords and
+  # looked for in glosses, since a Portuguese word reads like English.
   module Lookup
-    def self.call(query)
-      entries = matching(query)
+    def self.call(query, language)
+      entries = matching(query, language)
       return "Nothing matches #{query}" if entries.empty?
 
       entries.flat_map { |entry| entry_lines(entry) }.join("\n")
     end
 
-    def self.matching(query)
-      mandarin = Language::MANDARIN
-      entries = Entry.where(language: mandarin.code).order(:headword, :id)
-      return entries.where(headword: query) if mandarin.word?(query)
-
+    def self.matching(query, language)
       pattern = "%#{Sense.sanitize_sql_like(query)}%"
-      entries.where(id: Sense.where("gloss ILIKE ?", pattern).select(:entry_id))
+      glossed = Sense.where("gloss ILIKE ?", pattern).select(:entry_id)
+      entries = Entry.where(language: language.code).order(:headword, :id)
+
+      entries.where(headword: query).or(entries.where(id: glossed))
     end
 
     def self.entry_lines(entry)

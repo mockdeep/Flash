@@ -67,8 +67,8 @@ text, so run it in the background and report when it finishes. Lines starting
 
 ## Reviewing any word
 
-`bin/rails compendium:lookup Q=<headword>` (or `Q=<english>` to search glosses)
-shows each sense with its id, the lists that hold it and their category there,
+`bin/rails compendium:lookup Q=<headword>` (or `Q=<english>`; it matches headwords
+and searches glosses; add `IN=pt` for Portuguese) shows each sense with its id, the lists that hold it and their category there,
 and how many snippet sentences use it. Fix what is wrong with the edits below.
 
 **Splitting a merged sense** (花 "to spend / flower"): `revise` it down to one
@@ -92,7 +92,7 @@ Snippets::Review.resegment(sentence, "花了 is 花 + 了")        # re-cut; cha
 Sense edits (`Compendium::Edit`), on any sense:
 
 ```ruby
-Compendium::Edit.add(headword: "花", reading: "huā", gloss: "to spend")
+Compendium::Edit.add(language: "zh", headword: "花", reading: "huā", gloss: "to spend")
 Compendium::Edit.revise(Sense.find(456), gloss: "flower")     # or reading: "…"
 Compendium::Edit.remove(Sense.find(789))                      # refused if in use
 Compendium::Edit.attach(Sense.find(456), WordList.find(3), category: "verb")

@@ -21,6 +21,13 @@ RSpec.describe Entry do
     expect(build(:entry, headword: "过", reading: "guò")).not_to be_valid
   end
 
+  it "keeps one entry for a headword without a reading" do
+    create(:entry, language: "pt", headword: "casa", reading: nil)
+
+    expect(build(:entry, language: "pt", headword: "casa", reading: nil))
+      .not_to be_valid
+  end
+
   it "lets the same headword carry another reading" do
     create(:entry, headword: "过", reading: "guò")
 

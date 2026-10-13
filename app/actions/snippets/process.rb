@@ -6,7 +6,8 @@ module Snippets
   # picks up where it stopped: segment every sentence, then resolve them in
   # order, so later batches see the senses earlier ones created. Yields a
   # line for each batch it finishes and each sentence it sent back to the
-  # segmenter, for the caller to report.
+  # segmenter, for the caller to report. A batch holds one language, since
+  # the prompts it is asked under are that language's.
   module Process
     SEGMENT_BATCH = 10
     RESOLVE_BATCH = 2
@@ -22,17 +23,25 @@ module Snippets
           .order(:snippet_id, :position).limit(SEGMENT_BATCH).to_a
         break if batch.empty?
 
-        Segment.call(batch)
-        yield(summary("Segmented", batch)) if block_given?
+        by_language(batch).each do |run|
+          Segment.call(run)
+          yield(summary("Segmented", run)) if block_given?
+        end
       end
     end
 
     def self.resolve(&)
-      SnippetSentence.segmented.order(:snippet_id, :position)
-        .select(&:awaiting_senses?).each_slice(RESOLVE_BATCH) do |batch|
-          complaints = Resolve.call(batch)
-          report(batch, complaints, &) if block_given?
-        end
+      sentences = SnippetSentence.segmented.order(:snippet_id, :position)
+        .select(&:awaiting_senses?)
+      runs = by_language(sentences)
+      runs.flat_map { it.each_slice(RESOLVE_BATCH).to_a }.each do |batch|
+        complaints = Resolve.call(batch)
+        report(batch, complaints, &) if block_given?
+      end
+    end
+
+    def self.by_language(sentences)
+      sentences.slice_when { |one, other| one.language != other.language }
     end
 
     def self.report(batch, complaints)

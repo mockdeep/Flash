@@ -99,10 +99,14 @@ namespace(:compendium) do
   )
   task(push: :environment) { CompendiumTasks.push }
 
-  desc("Show the compendium's entries for a headword or gloss (Q=…)")
+  desc(
+    "Show the compendium's entries for a headword or gloss " \
+    "(Q=…, IN=pt for a language other than Mandarin)",
+  )
   task(lookup: :environment) do
     query = ENV.fetch("Q") { abort("Say what to look up: Q=花 or Q=flower") }
+    language = Language.for(ENV.fetch("IN", Language::MANDARIN.code))
 
-    puts(Compendium::Lookup.call(query))
+    puts(Compendium::Lookup.call(query, language))
   end
 end

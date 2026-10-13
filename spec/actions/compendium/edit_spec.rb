@@ -9,7 +9,7 @@ RSpec.describe Compendium::Edit do
 
   describe ".add" do
     def add(gloss: "to love")
-      described_class.add(headword: "爱", reading: "ài", gloss:)
+      described_class.add(language: "zh", headword: "爱", reading: "ài", gloss:)
     end
 
     it "creates the sense under the headword and reading" do

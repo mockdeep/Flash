@@ -30,6 +30,12 @@ RSpec.describe Source do
     expect { source.word_list.destroy! }.to delete_record(source)
   end
 
+  it "accepts a Portuguese list" do
+    source = build(:source, word_list: build(:word_list, language: "pt"))
+
+    expect(source).to be_valid
+  end
+
   it "rejects a list in another language" do
     source = build(:source, word_list: build(:word_list, language: "ja"))
 
