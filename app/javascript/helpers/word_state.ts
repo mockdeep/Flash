@@ -8,4 +8,12 @@ function setWordState(word: Element, state: string | null): void {
   if (state !== null) { word.classList.add(`${WORD}--${state}`); }
 }
 
-export {setWordState};
+// Marks every copy of a sense's word on the Read tab.
+function setSenseState(senseId: number | string, state: string | null): void {
+  const selector = `[data-lookup-sense-id-param="${senseId}"]`;
+  document.querySelectorAll(selector).forEach((word) => {
+    setWordState(word, state);
+  });
+}
+
+export {setSenseState};

@@ -32,7 +32,7 @@ function setupDOM(): void {
   const wrapper = document.createElement("div");
   wrapper.setAttribute("data-controller", "lookup");
   wrapper.setAttribute("data-lookup-url-value", url);
-  wrapper.appendChild(buildWord());
+  wrapper.append(buildWord(), buildWord());
   document.body.replaceChildren(wrapper);
 }
 
@@ -87,14 +87,15 @@ describe("record", () => {
 });
 
 describe("record marks the word", () => {
-  it("as missed", async () => {
+  it("as missed everywhere it shows", async () => {
     await clickWord();
 
-    const {classList} = findEl(document, "button");
+    const words = [...document.querySelectorAll("button")];
+    const classes = words.map((word) => { return [...word.classList]; });
 
-    expect([...classList]).toStrictEqual([
-      "reading-snippet__word",
-      "reading-snippet__word--missed",
+    expect(classes).toStrictEqual([
+      ["reading-snippet__word", "reading-snippet__word--missed"],
+      ["reading-snippet__word", "reading-snippet__word--missed"],
     ]);
   });
 });
