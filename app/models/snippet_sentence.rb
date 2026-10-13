@@ -2,9 +2,10 @@
 
 # One sentence of a snippet. `tokens` holds the pieces it was cut into, in
 # order, each a hash of "text" as written and, for a word, the "sense_id" it
-# is studied as. Punctuation and other non-words will have no sense_id.
+# is studied as. Punctuation and other non-words will have no sense_id, nor
+# will a word the segmenter skipped, which keeps why as "skip".
 class SnippetSentence < ApplicationRecord
-  TOKEN_KEYS = ["text", "sense_id"].freeze
+  TOKEN_KEYS = ["text", "sense_id", "skip"].freeze
 
   belongs_to :snippet
 
@@ -50,15 +51,18 @@ class SnippetSentence < ApplicationRecord
   # what resolving works on.
   def awaiting_senses?
     tokens.any? do |token|
-      language.word?(token["text"]) &&
-        !token.key?("outcome") && !token.key?("sense_id")
+      needs_sense?(token) && !token.key?("outcome") && !token.key?("sense_id")
     end
+  end
+
+  def needs_sense?(token)
+    language.word?(token["text"]) && !token.key?("skip")
   end
 
   private
 
   def finished_token?(token)
     (token.keys - TOKEN_KEYS).empty? &&
-      (token["sense_id"].present? || !language.word?(token["text"]))
+      (token["sense_id"].present? || !needs_sense?(token))
   end
 end

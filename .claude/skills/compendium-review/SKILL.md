@@ -49,6 +49,10 @@ text, so run it in the background and report when it finishes. Lines starting
 2. Work through it in this order:
    - **Unresolved** words, with the reason each was left: decide the right
      sense, or whether the sentence was cut wrongly.
+   - **Skipped** words, which get no card: in Portuguese, people's names
+     (`name`) and titles or other names left in another language (`foreign`).
+     Check each reason holds. Give a wrongly skipped one a
+     sense with `add_sense` or `repoint`, which takes the skip off.
    - **Created** senses: check each new reading and gloss against a reference
      and the policy. Look for twins of an existing sense
      (`compendium:lookup Q=<headword>`).

@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 module Sources
-  # Saves a source and the Mandarin word_list its snippets will fill, named
-  # after it.
+  # Saves a source and the word_list its snippets will fill, named after it
+  # and in the language chosen for it.
   module Create
-    def self.call(user:, **attributes)
+    def self.call(user:, language: nil, **attributes)
       title = attributes[:title]
-      word_list = user.word_lists.build(name: title, language: Language::MANDARIN.code)
+      word_list = user.word_lists.build(name: title, language:)
       source = word_list.build_source(attributes)
 
       Result.new(success: save(word_list, source), record: source)

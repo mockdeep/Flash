@@ -11,6 +11,13 @@ RSpec.describe Snippets::Review do
   end
 
   describe ".repoint" do
+    it "takes a skip off the token" do
+      sentence = sentence_with({ "text" => "爱", "skip" => "foreign" })
+      described_class.repoint(sentence, 0, create(:sense))
+
+      expect(sentence.reload.tokens.sole).not_to have_key("skip")
+    end
+
     it "points the token at the sense" do
       sense = create(:sense)
       sentence = sentence_with(unresolved)

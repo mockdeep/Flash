@@ -51,6 +51,25 @@ RSpec.describe Snippets::Report do
         .to end_with("  0 爱 → ##{sense.id} 爱 ài: to love")
     end
 
+    it "lists the skipped words with their reasons" do
+      token = { "text" => "爱", "skip" => "foreign" }
+
+      expect(report(token))
+        .to match(/Skipped:\n  sentence \d+ token 0 爱: foreign/)
+    end
+
+    it "shows a skipped word" do
+      expect(report({ "text" => "爱", "skip" => "foreign" }))
+        .to end_with("  0 爱: skipped (foreign)")
+    end
+
+    it "shows a sense without a reading" do
+      entry = create(:entry, language: "pt", headword: "casa", reading: nil)
+      sense = create(:sense, entry:, gloss: "house")
+
+      expect(report(resolved(sense))).to include("##{sense.id} casa: house")
+    end
+
     it "shows a word not yet resolved" do
       expect(report({ "text" => "爱" })).to end_with("  0 爱: not resolved yet")
     end

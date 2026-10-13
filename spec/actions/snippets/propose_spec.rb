@@ -77,8 +77,7 @@ RSpec.describe Snippets::Propose do
 
       propose([waiting])
 
-      expect(waiting.rejection)
-        .to eq("a new sense needs both a reading and a gloss")
+      expect(waiting.rejection).to eq("a new sense needs a gloss")
     end
 
     it "rejects an occurrence the answer leaves out" do

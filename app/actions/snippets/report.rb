@@ -13,6 +13,7 @@ module Snippets
         heading(snippet, tokens),
         *section("Unresolved", unresolved(snippet)),
         *section("Created", created(tokens)),
+        *section("Skipped", skipped(snippet)),
         *snippet.sentences.flat_map { |sentence| sentence_lines(sentence) },
       ].join("\n")
     end
@@ -51,6 +52,17 @@ module Snippets
       end
     end
 
+    def self.skipped(snippet)
+      snippet.sentences.flat_map do |sentence|
+        sentence.tokens.each_with_index.filter_map do |token, index|
+          next unless token["skip"]
+
+          "  sentence #{sentence.id} token #{index} #{token["text"]}: " \
+            "#{token["skip"]}"
+        end
+      end
+    end
+
     def self.created(tokens)
       created = tokens.select { |token| token["outcome"] == "created" }
       senses = Sense.where(id: created.pluck("sense_id")).order(:id)
@@ -63,18 +75,19 @@ module Snippets
       lines =
         sentence.tokens.each_with_index.map do |token, index|
           sense = senses[token["sense_id"]]
-          "  #{index} #{token_line(token, sense, sentence.language)}"
+          "  #{index} #{token_line(sentence, token, sense)}"
         end
 
       ["Sentence #{sentence.id}: #{sentence.body}", *lines]
     end
 
-    def self.token_line(token, sense, language)
+    def self.token_line(sentence, token, sense)
       text = token["text"]
       outcome = token["outcome"] && " [#{token["outcome"]}]"
       return "#{text} → #{describe(sense)}#{outcome}" if sense
       return "#{text}: unresolved (#{token["note"]})" if token["note"]
-      return "#{text}: not resolved yet" if language.word?(text)
+      return "#{text}: skipped (#{token["skip"]})" if token["skip"]
+      return "#{text}: not resolved yet" if sentence.needs_sense?(token)
 
       text
     end
@@ -82,7 +95,9 @@ module Snippets
     def self.describe(sense)
       entry = sense.entry
 
-      "##{sense.id} #{entry.headword} #{entry.reading}: #{sense.gloss}"
+      word = [entry.headword, entry.reading].compact_blank.join(" ")
+
+      "##{sense.id} #{word}: #{sense.gloss}"
     end
   end
 end

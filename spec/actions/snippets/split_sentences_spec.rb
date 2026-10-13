@@ -43,6 +43,11 @@ RSpec.describe Snippets::SplitSentences do
         .to eq(["O Sr. Almeida saiu."])
     end
 
+    it "does not split after an initial" do
+      expect(split_portuguese("Leu J. R. Ward ontem."))
+        .to eq(["Leu J. R. Ward ontem."])
+    end
+
     it "keeps a line of dialogue with its speech tag" do
       expect(split_portuguese("— Quem é? — perguntou ela. — Sou eu."))
         .to eq(["— Quem é? — perguntou ela.", "— Sou eu."])

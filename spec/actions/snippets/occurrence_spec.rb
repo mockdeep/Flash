@@ -13,6 +13,13 @@ RSpec.describe Snippets::Occurrence do
   end
 
   describe ".for" do
+    it "leaves out a skipped word" do
+      tokens = [{ "text" => "我", "skip" => "foreign" }, { "text" => "爱" }]
+      sentences = [create(:snippet_sentence, body: "我爱", tokens:)]
+
+      expect(described_class.for(sentences).map(&:word)).to eq(["爱"])
+    end
+
     it "returns an occurrence per Han token" do
       sentences = [sentence(["我", "爱", "你"])]
 
