@@ -22,6 +22,16 @@ RSpec.describe Components::SnippetReading, type: :view do
     snippet
   end
 
+  def portuguese_snippet(level: 1)
+    source = create(:source, word_list: create(:word_list, language: "pt"))
+    entry = create(:entry, language: "pt", headword: "casa", reading: nil)
+    sense = create(:sense, entry:, gloss: "house")
+    snippet = create(:snippet, source:, body: "A casa.")
+    tokens = [{ "text" => "A" }, { "text" => "casa", "sense_id" => sense.id }]
+    create(:snippet_sentence, snippet:, tokens:)
+    render_for(snippet, level:, source:)
+  end
+
   def love_snippet
     snippet_with("我爱。", [word("我", "wǒ"), word("爱", "ài"), { "text" => "。" }])
   end
@@ -109,6 +119,36 @@ RSpec.describe Components::SnippetReading, type: :view do
     page = render_for(love_snippet, level: 3)
 
     expect(page).to have_no_css(".reading-snippets--gaps")
+  end
+
+  it "keeps the spaces of a text written with them" do
+    page = portuguese_snippet(level: 3)
+
+    expect(page).to have_css("p", exact_text: "A casa.")
+  end
+
+  it "shows no readings in a language without them" do
+    page = portuguese_snippet
+
+    expect(page).to have_no_css(".reading-snippets--readings")
+  end
+
+  it "widens the spaces of a text written with them" do
+    page = portuguese_snippet
+
+    expect(page).to have_css(".reading-snippets--spaced")
+  end
+
+  it "marks no breaks in a text written with spaces" do
+    page = portuguese_snippet
+
+    expect(page).to have_no_css("wbr")
+  end
+
+  it "shows only the gloss in a language without readings" do
+    page = portuguese_snippet
+
+    expect(page).to have_no_css(".reading-snippet__lookup-reading")
   end
 
   it "shows each word's reading and gloss in its popover" do

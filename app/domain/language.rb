@@ -6,7 +6,8 @@
 # the form it studies under as `form`, which `form_fits` checks against the
 # word; `piece` cuts a sentence the segmenter fails on twice. A language
 # without `readings` takes new senses with a gloss alone. `skips` are the
-# reasons the segmenter may give for a word to get no card.
+# reasons the segmenter may give for a word to get no card. A language
+# written with `spaces` between its words breaks lines at them.
 Language = Data.define(
   :code,
   :sentence,
@@ -16,6 +17,7 @@ Language = Data.define(
   :form_fits,
   :readings,
   :skips,
+  :spaces,
   :prompts,
 )
 
@@ -30,6 +32,7 @@ class Language
     form_fits: ->(text, form) { form.length == text.length },
     readings: true,
     skips: [],
+    spaces: false,
     prompts: Snippets::Mandarin::PROMPTS,
   )
   # A sentence runs on past a full stop after a title (Sr., Dra.) or an
@@ -53,6 +56,7 @@ class Language
     form_fits: ->(text, form) { form.casecmp?(text) },
     readings: false,
     skips: ["foreign", "name"],
+    spaces: true,
     prompts: Snippets::Portuguese::PROMPTS,
   )
   ALL = [MANDARIN, PORTUGUESE].index_by(&:code).freeze

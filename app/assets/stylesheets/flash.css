@@ -866,6 +866,10 @@ body {
   display: none;
 }
 
+:where(.reading-snippets--gaps.reading-snippets--spaced) p {
+  word-spacing: 0.5em;
+}
+
 .reading-snippet p {
   font-size: 20px;
   line-height: 1.8;
@@ -874,6 +878,10 @@ body {
 .reading-snippets--gaps ruby {
   margin-inline: 0.35em;
   white-space: nowrap;
+}
+
+.reading-snippets--spaced ruby {
+  margin-inline: 0;
 }
 
 .reading-snippets--readings p {
@@ -887,6 +895,7 @@ body {
 
 .reading-snippet__word {
   padding: 0;
+  word-spacing: normal;
   border: 0;
   background: none;
   color: inherit;

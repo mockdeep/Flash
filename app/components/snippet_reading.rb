@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 module Components
-  # The Read tab: a deck's source, then its snippets word by word. The
-  # deck's level takes the help away: readings over each word at level 1,
-  # gaps between words up to level 2, plain text after that. Clicking a
-  # word shows its reading and gloss in a popover, and resets its streak so
-  # study brings it back.
+  # The Read tab: a deck's source, then its snippets word by word, laid out
+  # as written. The deck's level takes the help away: readings over each
+  # word at level 1 in a language that has them, gaps between words up to
+  # level 2, plain text after that. Clicking a word shows its reading and
+  # gloss in a popover, and resets its streak so study brings it back.
   class SnippetReading < Components::Base
     READINGS_LEVEL = 1
     GAPS_LEVEL = 2
@@ -39,33 +39,30 @@ module Components
     def render_snippet(snippet)
       section(class: "reading-snippet") do
         h3 { snippet.heading } if snippet.heading.present?
-        snippet.paragraphs.each { |sentences| render_paragraph(sentences) }
+        snippet.paragraphs.each { |paragraph| render_paragraph(paragraph) }
       end
     end
 
     # The popovers follow the paragraph rather than sit in it, so its text
     # stays just the words; each still opens beside its own word.
-    def render_paragraph(sentences)
+    def render_paragraph(paragraph)
       lookups = []
-      p do
-        sentences.each { |sentence| render_tokens(sentence.tokens, lookups) }
-      end
+      p { paragraph.tokens.each { |token| render_token(token, lookups) } }
       lookups.each { |id, sense| render_lookup(id, sense) }
     end
 
-    def render_tokens(tokens, lookups)
-      tokens.each do |token|
-        sense = senses[token["sense_id"]]
-        next plain(token["text"]) unless sense
+    def render_token(token, lookups)
+      sense = senses[token["sense_id"]]
+      return plain(token["text"]) unless sense
 
-        # While gapped, the CSS keeps a word on one line, which also stops
-        # Chrome breaking between words, so mark the place to break: before
-        # the word, so punctuation stays at the end of the line it closes.
-        wbr
-        id = "lookup-#{lookup_count}"
-        render_word(token["text"], sense, id)
-        lookups << [id, sense]
-      end
+      # While gapped, the CSS keeps a word on one line, which also stops
+      # Chrome breaking between words written without spaces, so mark the
+      # place to break: before the word, so punctuation stays at the end of
+      # the line it closes.
+      wbr unless language.spaces
+      id = "lookup-#{lookup_count}"
+      render_word(token["text"], sense, id)
+      lookups << [id, sense]
     end
 
     def render_word(text, sense, id)
@@ -79,7 +76,9 @@ module Components
 
     def render_lookup(id, sense)
       div(id:, popover: true, class: "reading-snippet__lookup") do
-        div(class: "reading-snippet__lookup-reading") { sense.entry.reading }
+        if language.readings
+          div(class: "reading-snippet__lookup-reading") { sense.entry.reading }
+        end
         plain(sense.gloss)
       end
     end
@@ -114,10 +113,12 @@ module Components
         "reading-snippets",
         ("reading-snippets--readings" if readings?),
         ("reading-snippets--gaps" if gaps?),
+        ("reading-snippets--spaced" if language.spaces),
       ]
     end
 
-    def readings? = deck.level <= READINGS_LEVEL
+    def language = deck.source.language
+    def readings? = language.readings && deck.level <= READINGS_LEVEL
     def gaps? = deck.level <= GAPS_LEVEL
   end
 end
