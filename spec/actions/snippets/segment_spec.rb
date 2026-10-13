@@ -18,12 +18,87 @@ RSpec.describe Snippets::Segment do
 
   def segmented_words(body) = segmented_tokens(body).pluck("text")
 
+  # Each word is a text, or a [text, headword] pair for a capitalised one.
+  def portuguese_answer(*words)
+    words = words.map { |text, headword = text| { text:, headword: } }
+
+    { sentences: [{ id: 0, words: }] }
+  end
+
+  def skipped_answer(text)
+    words = [{ text:, headword: text, skip: "foreign" }]
+
+    { sentences: [{ id: 0, words: }] }
+  end
+
+  def portuguese_tokens(body)
+    word_list = create(:word_list, language: "pt")
+    snippet = create(:snippet, word_list:)
+    sentence = create(:snippet_sentence, snippet:, body:)
+    described_class.call([sentence])
+    sentence.reload.tokens
+  end
+
   def recut(tokens, *words)
     llm.answer(answer(*words))
     body = tokens.pluck(:text).join
     sentence = create(:snippet_sentence, body:, tokens:)
     described_class.call([sentence], feedback: { sentence => "split 花了" })
     sentence.reload.tokens
+  end
+
+  describe ".call in Portuguese" do
+    it "keeps the lower-cased form of a capitalised word" do
+      llm.answer(portuguese_answer(["Ela", "ela"], "saiu", "."))
+
+      expect(portuguese_tokens("Ela saiu.").first)
+        .to eq("text" => "Ela", "headword" => "ela")
+    end
+
+    it "keeps a fixed phrase as one token" do
+      llm.answer(portuguese_answer(["De repente", "de repente"], "parou", "."))
+
+      expect(portuguese_tokens("De repente parou.").pluck("text"))
+        .to eq(["De repente", "parou", "."])
+    end
+
+    it "asks again when a headword is more than the word in lower case" do
+      llm.answer(portuguese_answer(["falava", "falar"]))
+      llm.answer(portuguese_answer("falava"))
+
+      expect(portuguese_tokens("falava")).to eq([{ "text" => "falava" }])
+    end
+
+    it "keeps why a word was skipped" do
+      title = "Gone with the Wind"
+      llm.answer(skipped_answer(title))
+
+      expect(portuguese_tokens(title).sole)
+        .to eq("text" => title, "skip" => "foreign")
+    end
+
+    it "offers the reasons to skip a word" do
+      llm.answer(portuguese_answer("sim"))
+      portuguese_tokens("sim")
+
+      expect(llm.calls.sole.schema.to_json)
+        .to include('"skip":{"type":"string","enum":["foreign","name"]}')
+    end
+
+    it "asks for each word's headword" do
+      llm.answer(portuguese_answer("sim"))
+      portuguese_tokens("sim")
+
+      expect(llm.calls.sole.schema.to_json)
+        .to include('"required":["text","headword"]')
+    end
+
+    it "falls back to words and punctuation after two failures" do
+      2.times { llm.answer({ sentences: [] }) }
+
+      expect(portuguese_tokens("Diga-me, Ana.").pluck("text"))
+        .to eq(["Diga-me", ",", "Ana", "."])
+    end
   end
 
   describe ".call" do
@@ -50,6 +125,13 @@ RSpec.describe Snippets::Segment do
       llm.answer(answer(["圖書館", "图书"]), answer(["圖書館", "图书馆"]))
 
       expect(segmented_tokens("圖書館").sole["headword"]).to eq("图书馆")
+    end
+
+    it "offers no reason to skip a word in Mandarin" do
+      llm.answer(answer("我"))
+      segmented_tokens("我")
+
+      expect(llm.calls.sole.schema.to_json).not_to include("skip")
     end
 
     it "asks Sonnet" do

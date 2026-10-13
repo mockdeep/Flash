@@ -22,9 +22,12 @@ module Snippets
 
     def self.unsensed!(snippet)
       words =
-        snippet.sentences.flat_map(&:tokens).filter_map do |token|
-          text = token["text"]
-          text if snippet.language.word?(text) && token["sense_id"].nil?
+        snippet.sentences.flat_map do |sentence|
+          sentence.tokens.filter_map do |token|
+            next unless sentence.needs_sense?(token) && token["sense_id"].nil?
+
+            token["text"]
+          end
         end
       return if words.empty?
 

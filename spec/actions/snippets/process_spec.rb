@@ -63,11 +63,7 @@ RSpec.describe Snippets::Process do
     create(:snippet_sentence, body:, tokens: [{ "text" => body }])
   end
 
-  # Portuguese has no prompts of its own yet, so it borrows Mandarin's.
   def portuguese_sentence(**)
-    prompts = Language::MANDARIN.prompts
-    portuguese = Language::PORTUGUESE.with(prompts:)
-    stub_const("Language::ALL", Language::ALL.merge("pt" => portuguese))
     word_list = create(:word_list, language: "pt")
     create(:snippet_sentence, snippet: create(:snippet, word_list:), **)
   end

@@ -1,24 +1,20 @@
 # frozen_string_literal: true
 
 module Snippets
-  # Segments a batch of sentences into words, each with its simplified form
-  # (the headword it studies under), kept on the token as `headword` only
-  # where it differs.
-  # The model sees the sentence, so it can pick by meaning where a
-  # traditional character simplifies more than one way. The answer is
-  # checked mechanically: the words must rejoin to the sentence's Han
-  # characters, and each simplified form must be as long as its word. A
-  # sentence that fails is asked again on its own, and one that fails twice
-  # falls back to one token per character.
+  # Segments a batch of sentences into words, each with the form it studies
+  # under (a simplified form, or a lower-cased one), kept on the token as
+  # `headword` only where it differs. The model sees the sentence, so it can
+  # pick by meaning where a traditional character simplifies more than one
+  # way. The answer is checked mechanically: the words must rejoin to the
+  # sentence's word characters, and each form must fit its word as the
+  # language says. A sentence that fails is asked again on its own, and one
+  # that fails twice falls back to the language's pieces (characters for
+  # Mandarin).
   module Segment
     WORD = {
       type: "object",
       additionalProperties: false,
-      required: ["text", "simplified"],
-      properties: {
-        text: { type: "string" },
-        simplified: { type: "string" },
-      },
+      properties: { text: { type: "string" } },
     }.freeze
     SCHEMA = {
       type: "object",
@@ -33,13 +29,13 @@ module Snippets
             required: ["id", "words"],
             properties: {
               id: { type: "integer" },
-              words: { type: "array", items: WORD },
+              words: { type: "array" },
             },
           },
         },
       },
     }.freeze
-    ASK = { list: "sentences", model: Llm::SONNET, schema: SCHEMA }.freeze
+    ASK = { list: "sentences", model: Llm::SONNET }.freeze
 
     # `feedback` maps a sentence to what was wrong with its last
     # segmentation, for one sent back to be segmented again.
@@ -54,18 +50,21 @@ module Snippets
     end
 
     def self.tokens(sentence, row, feedback)
+      language = sentence.language
       words =
         verified(sentence, row) ||
         verified(sentence, ask([sentence], feedback).values.first) ||
-        sentence.body.chars.map { |char| { "text" => char } }
+        sentence.body.scan(language.piece).map { |piece| { "text" => piece } }
 
-      words.map { |word| token(*word.values_at("text", "simplified")) }
+      words.map { |word| token(word, language) }
     end
 
-    def self.token(text, simplified)
-      return { "text" => text } if simplified.nil? || simplified == text
+    # The headword is kept only where it differs from the text.
+    def self.token(word, language)
+      text, headword, skip = word.values_at("text", language.form, "skip")
+      headword = nil if headword == text
 
-      { "text" => text, "headword" => simplified }
+      { "text" => text, "headword" => headword, "skip" => skip }.compact
     end
 
     def self.ask(sentences, feedback)
@@ -74,8 +73,26 @@ module Snippets
           { id:, sentence: sentence.body, **revision(sentence, feedback) }
         end
 
-      system = sentences.first.language.prompts.segment
-      Llm::AskEach.call(sentences, prompt:, system:, **ASK)
+      language = sentences.first.language
+      system = language.prompts.segment
+      schema = schema(language)
+      Llm::AskEach.call(sentences, prompt:, system:, schema:, **ASK)
+    end
+
+    # Each word comes with the form it studies under, named as the language
+    # names it.
+    def self.schema(language)
+      form = language.form
+      properties = { form.to_sym => { type: "string" } }
+      if language.skips.any?
+        properties[:skip] = { type: "string", enum: language.skips }
+      end
+      word = WORD.deep_merge(required: ["text", form], properties:)
+      words = { words: { items: word } }
+
+      SCHEMA.deep_merge(
+        properties: { sentences: { items: { properties: words } } },
+      )
     end
 
     # The complaint, with the cut it is about, so the answer can keep the
@@ -87,13 +104,16 @@ module Snippets
     end
 
     # No words at all would leave the sentence looking unsegmented, so an
-    # empty answer counts as a failure even for a sentence with no Han.
+    # empty answer counts as a failure even for a sentence with no words.
     def self.verified(sentence, row)
       words = row&.dig("words")
       return if words.blank?
 
+      language = sentence.language
       words if sentence.partitioned_by?(words.pluck("text")) &&
-        words.all? { |word| word["simplified"].length == word["text"].length }
+        words.all? do |word|
+          language.form_fits.call(word["text"], word[language.form])
+        end
     end
   end
 end

@@ -63,6 +63,13 @@ RSpec.describe Snippets::Finish do
       expect(llm.calls.size).to eq(2)
     end
 
+    it "finishes a snippet with a skipped word" do
+      snippet = snippet_with({ "text" => "爱", "skip" => "foreign" })
+      described_class.call(snippet)
+
+      expect(snippet.reload.status).to eq(:finished)
+    end
+
     it "refuses while a Chinese word has no sense" do
       snippet = snippet_with({ "text" => "爱", "outcome" => "unresolved" })
 

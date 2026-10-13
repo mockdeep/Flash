@@ -32,7 +32,7 @@ class SourcesController < ApplicationController
   private
 
   def source_params
-    params.expect(source: [:title, :author, :source_url, :license])
+    params.expect(source: [:title, :language, :author, :source_url, :license])
       .to_h.symbolize_keys
   end
 end

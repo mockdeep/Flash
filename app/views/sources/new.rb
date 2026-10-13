@@ -37,6 +37,7 @@ module Views
           render(Components::ErrorExplanation.new(errors: source.errors))
 
           render_field(form, :title, "Title", required: true)
+          render_language_field(form)
           render_field(form, :author, "Author")
           render_field(form, :source_url, "Source URL", type: "url")
           render_license_field(form)
@@ -48,6 +49,20 @@ module Views
         div(class: "form-field") do
           form.label(name, label, class: "form-label")
           form.text_field(name, value: source[name], class: "form-input", **)
+        end
+      end
+
+      def render_language_field(form)
+        languages = Language::ALL.keys.map { [WordList::LANGUAGES[it], it] }
+
+        div(class: "form-field") do
+          form.label(:language, "Language", class: "form-label")
+          form.select(
+            :language,
+            languages,
+            { selected: source.word_list&.language },
+            class: "form-input",
+          )
         end
       end
 

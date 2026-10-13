@@ -19,7 +19,7 @@ module Snippets
       sentences.flat_map do |sentence|
         complaint = resegmented[sentence]
         sentence.tokens.each_with_index.filter_map do |token, index|
-          next unless sentence.language.word?(token["text"])
+          next unless sentence.needs_sense?(token)
           next if token["sense_id"]
 
           new(sentence:, index:, complaint:)

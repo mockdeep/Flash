@@ -23,17 +23,25 @@ module Snippets
         end
       end
 
+      # A language without readings files its senses under none, whatever
+      # the proposer said.
+      def sense_reading
+        reading.presence if language.readings
+      end
+
       # What the judge is shown beside the occurrence.
-      def proposed = { headword:, reading:, gloss: }
+      def proposed = { headword:, reading: sense_reading, gloss: }.compact
 
       private
 
       def listed_sense? = occurrence.senses.map(&:id).include?(sense_id)
 
       def new_sense_problem
-        return if reading.present? && gloss.present?
-
-        "a new sense needs both a reading and a gloss"
+        missing = [
+          ("a reading" if language.readings && reading.blank?),
+          ("a gloss" if gloss.blank?),
+        ].compact
+        "a new sense needs #{missing.join(" and ")}" if missing.any?
       end
     end
 end

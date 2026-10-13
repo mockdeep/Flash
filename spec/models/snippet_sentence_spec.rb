@@ -59,6 +59,11 @@ RSpec.describe SnippetSentence do
       build(:snippet_sentence, tokens:).awaiting_senses?
     end
 
+    it "is false for a skipped word" do
+      expect(awaiting_senses?({ "text" => "我", "skip" => "foreign" }))
+        .to be(false)
+    end
+
     it "is true while a word has neither a sense nor an outcome" do
       expect(awaiting_senses?({ "text" => "我" })).to be(true)
     end
@@ -113,6 +118,10 @@ RSpec.describe SnippetSentence do
 
     it "is new before segmenting" do
       expect(status).to eq(:new)
+    end
+
+    it "is finished with a skipped word" do
+      expect(status({ "text" => "我", "skip" => "foreign" })).to eq(:finished)
     end
 
     it "is finished when every word has a sense" do

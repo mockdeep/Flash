@@ -9,6 +9,17 @@ RSpec.describe Snippets::Proposal do
     Snippets::Occurrence.new(sentence:, index: 0)
   end
 
+  def portuguese
+    word_list = create(:word_list, language: "pt")
+    snippet = create(:snippet, word_list:)
+    sentence = build(
+      :snippet_sentence,
+      snippet:,
+      tokens: [{ "text" => "casa" }],
+    )
+    Snippets::Occurrence.new(sentence:, index: 0)
+  end
+
   def proposal(decision, occurrence: self.occurrence, **fields)
     row = { sense_id: 0, reading: "", gloss: "", note: "" }
     row = row.merge(decision:, **fields).stringify_keys
@@ -55,12 +66,34 @@ RSpec.describe Snippets::Proposal do
 
     it "asks for a reading on a new sense without one" do
       expect(proposal("new", gloss: "to love").problem)
-        .to eq("a new sense needs both a reading and a gloss")
+        .to eq("a new sense needs a reading")
     end
 
     it "asks for a gloss on a new sense without one" do
       expect(proposal("new", reading: "ài").problem)
-        .to eq("a new sense needs both a reading and a gloss")
+        .to eq("a new sense needs a gloss")
+    end
+
+    it "asks for both on a new sense with neither" do
+      expect(proposal("new").problem)
+        .to eq("a new sense needs a reading and a gloss")
+    end
+
+    it "takes a gloss alone in a language without readings" do
+      expect(proposal("new", occurrence: portuguese, gloss: "house").problem)
+        .to be_nil
+    end
+  end
+
+  describe "#sense_reading" do
+    it "is the proposed reading" do
+      expect(proposal("new", reading: "ài").sense_reading).to eq("ài")
+    end
+
+    it "is nil in a language without readings" do
+      new_sense = proposal("new", occurrence: portuguese, reading: "ˈka.zɐ")
+
+      expect(new_sense.sense_reading).to be_nil
     end
   end
 
@@ -68,6 +101,12 @@ RSpec.describe Snippets::Proposal do
     it "is the headword, reading and gloss put before the judge" do
       expect(proposal("new", reading: "ài", gloss: "to love").proposed)
         .to eq(headword: "爱", reading: "ài", gloss: "to love")
+    end
+
+    it "puts no reading before the judge in a language without readings" do
+      new_sense = proposal("new", occurrence: portuguese, gloss: "house")
+
+      expect(new_sense.proposed).to eq(headword: "casa", gloss: "house")
     end
   end
 end

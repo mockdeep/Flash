@@ -15,10 +15,11 @@ RSpec.describe SourcesController do
     create(:snippet, :finished, word_list: source.word_list, **)
   end
 
-  def source_params(title: "孔乙己")
+  def source_params(title: "孔乙己", language: "zh")
     {
       source: {
         title:,
+        language:,
         author: "鲁迅",
         source_url: "https://zh.wikisource.org/",
         license: "public_domain",
@@ -210,7 +211,16 @@ RSpec.describe SourcesController do
 
       post(sources_path, params: source_params)
 
-      expect(Source.last).to have_attributes(source_params[:source])
+      expect(Source.last)
+        .to have_attributes(source_params[:source].except(:language))
+    end
+
+    it "makes its list in the language chosen" do
+      login_admin
+
+      post(sources_path, params: source_params(language: "pt"))
+
+      expect(Source.last.word_list.language).to eq("pt")
     end
 
     it "redirects to the source" do

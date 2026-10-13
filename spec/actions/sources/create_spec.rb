@@ -3,8 +3,8 @@
 require "rails_helper"
 
 RSpec.describe Sources::Create do
-  def create_source(title: "孔乙己")
-    described_class.call(user: default_user, title:, author: "鲁迅")
+  def create_source(title: "孔乙己", language: "zh")
+    described_class.call(user: default_user, title:, language:, author: "鲁迅")
   end
 
   describe ".call" do
@@ -18,6 +18,16 @@ RSpec.describe Sources::Create do
     it "makes a Mandarin word_list named after it" do
       expect(create_source.record.word_list)
         .to have_attributes(name: "孔乙己", language: "zh", user: default_user)
+    end
+
+    it "makes the word_list in the language chosen" do
+      expect(create_source(language: "pt").record.word_list.language)
+        .to eq("pt")
+    end
+
+    it "refuses a source without a language" do
+      expect(create_source(language: nil).record.errors[:base])
+        .to eq(["List language is not supported"])
     end
 
     it "returns a success result" do
