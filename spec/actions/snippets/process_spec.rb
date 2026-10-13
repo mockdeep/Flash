@@ -63,6 +63,22 @@ RSpec.describe Snippets::Process do
     create(:snippet_sentence, body:, tokens: [{ "text" => body }])
   end
 
+  # Portuguese has no prompts of its own yet, so it borrows Mandarin's.
+  def portuguese_sentence(**)
+    prompts = Language::MANDARIN.prompts
+    portuguese = Language::PORTUGUESE.with(prompts:)
+    stub_const("Language::ALL", Language::ALL.merge("pt" => portuguese))
+    word_list = create(:word_list, language: "pt")
+    create(:snippet_sentence, snippet: create(:snippet, word_list:), **)
+  end
+
+  # Answers every step with nothing, so only what was asked is checked.
+  def silent_pipeline
+    llm.respond { { sentences: [], decisions: [], verdicts: [] } }
+  end
+
+  def first_prompt = JSON.parse(llm.calls.first.prompt)
+
   describe ".call" do
     it "segments and resolves a new sentence" do
       fake_pipeline
@@ -104,6 +120,24 @@ RSpec.describe Snippets::Process do
       described_class.call
 
       expect(calls_to(Language::MANDARIN.prompts.propose)).to eq(2)
+    end
+
+    it "segments one language at a time" do
+      silent_pipeline
+      create(:snippet_sentence, body: "我")
+      portuguese_sentence(body: "Olá.")
+      described_class.call
+
+      expect(first_prompt.pluck("sentence")).to eq(["我"])
+    end
+
+    it "resolves one language at a time" do
+      silent_pipeline
+      segmented_sentence
+      portuguese_sentence(body: "Olá", tokens: [{ "text" => "Olá" }])
+      described_class.call
+
+      expect(first_prompt["sentences"].pluck("text")).to eq(["我"])
     end
 
     it "reports each batch it finishes" do

@@ -10,7 +10,7 @@ module Compendium
 
     # A sense under a headword, made unless the entry for that reading
     # already holds the gloss.
-    def self.add(headword:, reading:, gloss:, language: Language::MANDARIN.code)
+    def self.add(language:, headword:, reading:, gloss:)
       Snippets::Record.entry_for(language, headword, reading).senses
         .find_or_create_by!(gloss:)
     end

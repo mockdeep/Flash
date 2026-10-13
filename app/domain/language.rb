@@ -12,7 +12,23 @@ class Language
     word_char: /\p{Han}/,
     prompts: Snippets::Mandarin::PROMPTS,
   )
-  ALL = [MANDARIN].index_by(&:code).freeze
+  # A sentence runs on past a full stop after a title (Sr., Dra.), and past
+  # an ending followed by a lower-case word: the speech tag set off by a
+  # dash after a line of dialogue, or a trailing-off ellipsis.
+  PORTUGUESE = new(
+    code: "pt",
+    sentence: /
+      (?:
+        \b(?:Sra?|Srta|Dra?|Profa?)\. |
+        [.!?…]+[”»"’)]*(?=\s+[—–]?\s*[[:lower:]]) |
+        [^.!?…\n]
+      )+
+      [.!?…]*[”»"’)]*
+    /x,
+    word_char: /\p{L}/,
+    prompts: nil,
+  )
+  ALL = [MANDARIN, PORTUGUESE].index_by(&:code).freeze
 
   def self.for(code) = ALL.fetch(code)
   def self.supported?(code) = ALL.key?(code)
