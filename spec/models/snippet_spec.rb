@@ -81,7 +81,35 @@ RSpec.describe Snippet do
       snippet = create(:snippet, body: "我爱你。\n\n你爱我。他爱她。")
       sentences = sentences_of(snippet, "我爱你。", "你爱我。", "他爱她。")
 
-      expect(snippet.paragraphs).to eq([sentences.take(1), sentences.drop(1)])
+      expect(snippet.paragraphs.map(&:sentences))
+        .to eq([sentences.take(1), sentences.drop(1)])
+    end
+
+    # The texts a line as written comes back as, from its tokens' texts.
+    def paragraph_texts(text, *texts)
+      tokens = texts.map { { "text" => it } }
+      sentence = build(:snippet_sentence, tokens:)
+      Snippet::Paragraph.new(text:, sentences: [sentence]).tokens.pluck("text")
+    end
+
+    it "puts the spaces between tokens back" do
+      expect(paragraph_texts("de repente parou", "de repente", "parou"))
+        .to eq(["de repente", " ", "parou"])
+    end
+
+    it "puts back punctuation the tokens leave out" do
+      expect(paragraph_texts("“Sim.”", "Sim")).to eq(["“", "Sim", ".”"])
+    end
+
+    it "keeps a token not found as written where it falls" do
+      expect(paragraph_texts("J. R. Ward", "J.R. Ward"))
+        .to eq(["J.R. Ward", "J. R. Ward"])
+    end
+
+    it "keeps each line as written" do
+      snippet = create(:snippet, body: "  我爱你。 \n\n你爱我。 他爱她。")
+
+      expect(snippet.paragraphs.map(&:text)).to eq(["我爱你。", "你爱我。 他爱她。"])
     end
   end
 end
