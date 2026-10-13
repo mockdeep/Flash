@@ -63,4 +63,26 @@ RSpec.describe SkillScore do
         .to have_attributes(correct_count: 0, correct_streak: 2, view_count: 1)
     end
   end
+
+  describe "#state" do
+    def state(level: 1, **counters)
+      described_class.new(**counters).state(level)
+    end
+
+    it "is new before any view" do
+      expect(state(correct_streak: 1)).to eq("new")
+    end
+
+    it "is missed once seen with no streak" do
+      expect(state(view_count: 1)).to eq("missed")
+    end
+
+    it "is done once the streak reaches the level" do
+      expect(state(level: 2, view_count: 2, correct_streak: 2)).to eq("done")
+    end
+
+    it "is nothing while the streak is short of the level" do
+      expect(state(level: 2, view_count: 1, correct_streak: 1)).to be_nil
+    end
+  end
 end

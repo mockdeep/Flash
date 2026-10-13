@@ -398,14 +398,15 @@ app/
 │   ├── study_answers.rb          # Study answer area per presentation mode (buttons / fuzzy find, reading stage)
 │   ├── study_example.rb          # Optional example sentence on the answer view
 │   ├── study_goal_dialog.rb      # Edit daily study-goal dialog
-│   ├── snippet_reading.rb        # Read tab text: the source's credit, then finished snippets word by word; readings / gaps fade by deck level; lookup popovers
+│   ├── snippet_reading.rb        # Read tab text: the source's credit, then finished snippets word by word, each marked by its reading SkillScore (new / missed / done); gaps fade by deck level; lookup popovers
 │   ├── source_credit.rb          # A source's link (when it has one) · its license
 │   ├── source_license.rb         # A source's license name, linked to its terms when it has them
 │   ├── study_tabs.rb             # Study | Read radios (CSS `:has()` toggles study frame vs. text)
 │   ├── table.rb                  # `.table` pattern; block fills each row via `table.cell`
 │   ├── target_goal_fields.rb     # Level-target fields + today's goal and Recalculate
 │   ├── target_prompt.rb          # Missed / reached level-target note under the progress bar
-│   └── text_csv_instructions.rb  # CSV format help block for text decks
+│   ├── text_csv_instructions.rb  # CSV format help block for text decks
+│   └── word_states.rb            # An answered card's words as they now stand, for the Read tab (`word_states_controller.ts`)
 ├── domain/
 │   ├── language.rb               # What processing a snippet needs per language: sentence ends, word characters, the segmenter's form and its check, readings or none, skip reasons, whether words are spaced, prompts (`Language::MANDARIN`, `Language::PORTUGUESE`)
 │   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
@@ -530,7 +531,8 @@ app/
 │   ├── channels/
 │   │   └── consumer.ts
 │   ├── helpers/
-│   │   └── assert.ts                 # `assert` / `ensure` runtime guard
+│   │   ├── assert.ts                 # `assert` / `ensure` runtime guard
+│   │   └── word_state.ts             # `setWordState`: a Read-tab word's new / missed / done class
 │   ├── controllers/
 │   │   ├── application.ts             # Stimulus application bootstrap
 │   │   ├── index.ts                  # Controller manifest (register each controller here)
@@ -542,12 +544,13 @@ app/
 │   │   ├── file_upload_controller.ts
 │   │   ├── fuzzy_find_controller.ts  # Typed-answer matching for fuzzy-find study mode
 │   │   ├── hotkeys_controller.ts     # Document-level keyboard shortcuts
-│   │   ├── lookup_controller.ts      # POSTs a looked-up Read-tab word to reset its streak
+│   │   ├── lookup_controller.ts      # POSTs a looked-up Read-tab word to reset its streak; marks it missed
 │   │   ├── mobile_nav_controller.ts
 │   │   ├── music_study_controller.ts # Mic capture + RAF loop + sequence-state-machine glue
 │   │   ├── music_study_helpers.ts    # Helpers for music_study_controller
 │   │   ├── text_size_controller.ts   # Study text-size kebab menu (persists to localStorage)
-│   │   └── timezone_controller.ts    # Sets the browser time zone on a hidden field
+│   │   ├── timezone_controller.ts    # Sets the browser time zone on a hidden field
+│   │   └── word_states_controller.ts # Marks Read-tab words with the states an answer sent
 │   └── music/                        # Pure, framework-free audio modules (100% Vitest coverage)
 │       ├── note_utils.ts             # Note ↔ frequency, sequence parsing
 │       ├── pitch_detector.ts         # YIN-style pitch detection from Float32Array samples
@@ -883,8 +886,8 @@ Snippets are added in the app (see `Snippet`) and processed locally with `rails 
   - Edits to senses themselves (fixing wording, deleting leftovers) are `Compendium::Edit`'s; see Compendium Review.
 - **Study**: a source with a finished snippet has "Study this list" on `/sources` and its own page (`SourceDecksController#create`), which finds or creates the admin's `ReadingDeck` over the source's word_list (`User#reading_deck_over`) and goes to its study page. Publishing that deck to the catalog (the existing admin toggle) lets others add the list by reference, like any language deck.
 - **Share**: a source's "Share" (on its page, once a snippet is finished) goes to `/sources/:id/readers` (`SourceReadersController`), which lists the source's readers and adds one by username (`Sources::Grant`, which also finds or creates their `ReadingDeck` over the list; guests can't be added). Removing a reader takes away the text but leaves their deck and progress.
-- **Read**: the study page of a deck whose word_list has snippets shows "Study | Read" radios (`Components::StudyTabs`) and renders every finished snippet the user may read (`Source#readable_by?`: the list's owner and readers let in read them all, and so does anyone else when the source's license is `shareable?` — public domain and CC BY-SA), oldest first, below the study frame (`Components::SnippetReading`: the source's title, author and credit once, then each snippet's heading, when it has one, and paragraphs from `Snippet#paragraphs`: each line as written with its sentences, whose `Snippet::Paragraph#tokens` puts back what falls between the tokens, such as spaces and punctuation the segmenter left out). The deck's level sets how much help the text gives: each word in a `<ruby>` with its reading above at level 1 (only in a language with `Language#readings`; Portuguese shows none, and its popovers only the gloss), words spaced apart at levels 1–2 (margins around words in Mandarin, widened spaces in a language written with `Language#spaces`, so a phrase stays tight), and plain running text from level 3. Unfinished and unreadable snippets are left out, and with none left the radios don't show. A `:has()` rule in `flash.css` shows the frame or the text to match the checked radio, so switching keeps both the current card and the reading position; there is no JS and no separate route. Frame requests (each next card) leave the radios and text out, since Turbo keeps only the frame.
-- **Look up**: each word on the Read tab is a button that opens a native popover (`popovertarget`) with the word's reading and gloss; the popovers follow their paragraph in the markup and sit under the word via CSS anchor positioning where supported. Every click also POSTs the word's `sense_id` (`lookup_controller.ts`) to `LookupsController#create` (`/decks/:deck_id/lookups`, the user's own deck only), which records a miss on the user's reading `SkillScore` for that sense, so its card comes back in study.
+- **Read**: the study page of a deck whose word_list has snippets shows "Study | Read" radios (`Components::StudyTabs`) and renders every finished snippet the user may read (`Source#readable_by?`: the list's owner and readers let in read them all, and so does anyone else when the source's license is `shareable?` — public domain and CC BY-SA), oldest first, below the study frame (`Components::SnippetReading`: the source's title, author and credit once, then each snippet's heading, when it has one, and paragraphs from `Snippet#paragraphs`: each line as written with its sentences, whose `Snippet::Paragraph#tokens` puts back what falls between the tokens, such as spaces and punctuation the segmenter left out). Each word shows the user's reading `SkillScore` for its sense: grey (`reading-snippet__word--new`) while it has no views, green (`--done`) once its streak reaches the deck's level, and with its reading in a `<ruby>` above it only while its streak is zero (`--new` or `--missed`; the `<rt>` is always rendered and CSS hides the rest). Readings show only in a language with `Language#readings`; Portuguese shows none, and its popovers only the gloss. The deck's level sets the spacing: words spaced apart at levels 1–2 (margins around words in Mandarin, widened spaces in a language written with `Language#spaces`, so a phrase stays tight), and plain running text from level 3. Unfinished and unreadable snippets are left out, and with none left the radios don't show. A `:has()` rule in `flash.css` shows the frame or the text to match the checked radio, so switching keeps both the current card and the reading position; there is no JS and no separate route. Frame requests (each next card) leave the radios and text out, since Turbo keeps only the frame.
+- **Look up**: each word on the Read tab is a button that opens a native popover (`popovertarget`) with the word's reading and gloss; the popovers follow their paragraph in the markup and sit under the word via CSS anchor positioning where supported. Every click also POSTs the word's `sense_id` (`lookup_controller.ts`) to `LookupsController#create` (`/decks/:deck_id/lookups`, the user's own deck only), which records a miss on the user's reading `SkillScore` for that sense, so its card comes back in study; the script also marks the word `--missed` on the spot, so its reading shows without a reload. Answers update the Read tab the same way: the answer view (on a language deck) renders `Components::WordStates`, the answered card's senses and their `SkillScore#state`, and `word_states_controller.ts` marks every copy of those words. A level-up's "Continue to Level N" loads the whole page, so the Read tab picks up the new level.
 - **Finish** (`Snippets::Finish.call(snippet)`, run through `bin/rails runner` once a snippet is reviewed): refuses (`Finish::Unfinished`) while a word that isn't skipped has no `sense_id`; otherwise strips every token to `text` + `sense_id` (+ `skip`) (so the snippet reads `:finished` and can be pushed), appends the snippet's senses to its word_list after the ones it holds (`Snippets::Attach`), and files the list's uncategorized memberships by part of speech in batches of `CATEGORIZE_BATCH` (`Snippets::Categorize`; a row the model leaves out is filed `other`). A list therefore only ever holds reviewed senses. Running it again on a finished snippet only categorizes whatever a failed run left undone.
 
 ### Compendium Review

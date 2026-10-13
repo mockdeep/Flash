@@ -909,6 +909,25 @@ body {
   cursor: pointer;
 }
 
+.reading-snippet__word--new {
+  color: var(--color-border-medium);
+}
+
+.reading-snippet__word--new rt {
+  color: var(--color-border);
+}
+
+.reading-snippet__word--done {
+  color: var(--color-secondary);
+}
+
+.reading-snippet__word:not(
+  .reading-snippet__word--new,
+  .reading-snippet__word--missed
+) rt {
+  display: none;
+}
+
 .reading-snippet__lookup {
   margin: 0;
   padding: var(--spacing-sm) var(--spacing-md);
