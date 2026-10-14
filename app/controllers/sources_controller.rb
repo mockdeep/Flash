@@ -4,7 +4,7 @@ class SourcesController < ApplicationController
   before_action(:require_admin)
 
   def index
-    sources = current_user.sources.order(created_at: :desc)
+    sources = current_user.sources.order(id: :desc)
 
     render(Views::Sources::Index.new(sources:))
   end
