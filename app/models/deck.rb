@@ -185,15 +185,14 @@ class Deck < ApplicationRecord
     target_work_left.fdiv(days_after_today).ceil
   end
 
-  # Card completions that would lower tomorrow's goal by one. With no day
-  # after today, or a goal of one already, that is all the work left.
+  # Card completions that lower tomorrow's goal by one: a card for each day
+  # after today, which keeps every batch the same size. With no day after
+  # today, or less work left than that, it is all the work left.
   def cards_to_lower_goal
     return unless target_active?
+    return target_work_left unless days_after_today.positive?
 
-    next_goal = next_target_goal
-    return target_work_left unless next_goal && next_goal > 1
-
-    target_work_left - ((next_goal - 1) * days_after_today)
+    [days_after_today, target_work_left].min
   end
 
   def backs(except: nil, category: nil)
