@@ -15,7 +15,7 @@ class Source < ApplicationRecord
 
   belongs_to :word_list
   has_many :snippets,
-           -> { order(:created_at) },
+           -> { order(:id) },
            dependent: :destroy,
            inverse_of: :source
   has_many :readers, class_name: "SourceReader", dependent: :delete_all

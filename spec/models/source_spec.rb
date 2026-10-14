@@ -45,8 +45,8 @@ RSpec.describe Source do
   it "orders its snippets oldest first" do
     source = create(:source)
     word_list = source.word_list
-    second = create(:snippet, word_list:, created_at: 1.day.ago)
-    first = create(:snippet, word_list:, created_at: 2.days.ago)
+    first = create(:snippet, word_list:, created_at: 1.day.ago)
+    second = create(:snippet, word_list:, created_at: 2.days.ago)
 
     expect(source.snippets).to eq([first, second])
   end

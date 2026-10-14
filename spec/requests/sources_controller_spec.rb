@@ -50,6 +50,16 @@ RSpec.describe SourcesController do
       expect(rendered).to have_link("孔乙己", href: source_path(source))
     end
 
+    it "lists the newest source first" do
+      admin = login_admin
+      own_source(admin, title: "孔乙己", created_at: 1.day.ago)
+      own_source(admin, title: "西游记", created_at: 2.days.ago)
+
+      get(sources_path)
+
+      expect(rendered.all("td a").map(&:text)).to eq(["西游记", "孔乙己"])
+    end
+
     it "shows each source's state" do
       own_source(login_admin)
 
