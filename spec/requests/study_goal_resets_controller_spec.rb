@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 RSpec.describe StudyGoalResetsController do
-  def met_goal_deck(**)
-    deck = create(:deck, study_goal: 1, **)
+  def met_goal_deck(factory = :deck, **)
+    deck = create(factory, study_goal: 1, **)
     deck.study_days.create!(studied_on: Date.current, completed_count: 1)
     deck
   end
@@ -51,10 +51,10 @@ RSpec.describe StudyGoalResetsController do
         .not_to change_record(study_day, :completed_count)
     end
 
-    it "redirects to the first deck in topic order" do
+    it "redirects to the first deck in decks-page order" do
       login_as(default_user)
       met_goal_deck(name: "Alpha")
-      deck = met_goal_deck(name: "Zebra", topic: create(:topic))
+      deck = met_goal_deck(:reading_deck, name: "Zebra")
 
       post(study_goal_reset_path)
 
