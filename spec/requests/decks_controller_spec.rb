@@ -28,6 +28,15 @@ RSpec.describe DecksController do
       expect(rendered).to have_link("Flat Deck")
     end
 
+    it "titles a rail card for a language deck with its list's name" do
+      login_as(default_user)
+      create(:reading_deck, name: "HSK 1")
+
+      get(decks_path)
+
+      expect(rendered).to have_link("HSK 1")
+    end
+
     def deck_in_topic(name)
       deck = create(:deck, user: default_user)
       topic = create(:topic, name:, user: default_user)
@@ -203,75 +212,6 @@ RSpec.describe DecksController do
       get(decks_path)
 
       expect(rendered).to have_no_css(".rail-card--featured")
-    end
-
-    def mixed_types
-      create(:reading_deck, user: default_user)
-      create(:deck, user: default_user)
-    end
-
-    it "renders type tabs when a section mixes deck types" do
-      login_as(default_user)
-      mixed_types
-
-      get(decks_path)
-
-      expect(rendered).to have_css(".rail-tab", text: "Reading")
-    end
-
-    it "counts each type in its tab" do
-      login_as(default_user)
-      mixed_types
-
-      get(decks_path)
-
-      expect(rendered).to have_css(".rail-tab", text: /All\s*2/)
-    end
-
-    it "marks the All tab active on render" do
-      login_as(default_user)
-      mixed_types
-
-      get(decks_path)
-
-      expect(rendered).to have_css(".rail-tab--active", text: "All")
-    end
-
-    it "omits the tab bar when a section has one deck type" do
-      login_as(default_user)
-      create(:deck, user: default_user)
-
-      get(decks_path)
-
-      expect(rendered).to have_no_css(".rail-tab")
-    end
-
-    it "tags each card with its deck type for filtering" do
-      login_as(default_user)
-      create(:deck, user: default_user)
-
-      get(decks_path)
-
-      expect(rendered).to have_css(".rail-card[data-filter-value='Basic']")
-    end
-
-    it "keys the filter controller by topic for remembered tabs" do
-      login_as(default_user)
-      deck = deck_in_topic("Mandarin")
-
-      get(decks_path)
-
-      expect(rendered)
-        .to have_css("[data-filter-key-value='topic-#{deck.topic.id}']")
-    end
-
-    it "keys the topicless section as 'other'" do
-      login_as(default_user)
-      create(:deck, user: default_user)
-
-      get(decks_path)
-
-      expect(rendered).to have_css("[data-filter-key-value='other']")
     end
 
     it "renders the scroll arrows hidden for the controller to reveal" do

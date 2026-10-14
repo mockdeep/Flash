@@ -42,66 +42,26 @@ module Views
       def render_deck_sections
         topics = current_user.topics.where.associated(:decks).distinct
         topics.order(:name).each do |topic|
-          render_topic_section(topic, "topic-#{topic.id}")
+          render_topic_section(topic)
         end
 
         other = NullTopic.new(user: current_user)
         return if other.decks.none?
 
-        render_topic_section(other, "other", heading: topics.any?)
+        render_topic_section(other, heading: topics.any?)
       end
 
-      # The filter key names the remembered tab in localStorage, so it has to
-      # stay stable across visits, not across users -- localStorage is already
-      # per-browser.
-      def render_topic_section(topic, section_id, heading: true)
+      def render_topic_section(topic, heading: true)
         section_decks = topic.decks.ordered.with_progress
         section(
           class: "topic-section",
           data: {
-            controller: "filter rail",
-            filter_key_value: section_id,
-            filter_active_class: "rail-tab--active",
-            action: "resize@window->rail#syncArrows " \
-                    "filter:applied->rail#syncArrows",
+            controller: "rail",
+            action: "resize@window->rail#syncArrows",
           },
         ) do
           render_section_heading(topic.name, section_decks) if heading
-          render_rail_tabs(section_decks)
           render_rail_wrap(section_decks)
-        end
-      end
-
-      def render_rail_tabs(section_decks)
-        labels = type_labels(section_decks)
-        return if labels.size < 2
-
-        div(class: "rail-tabs") do
-          render_rail_tab("All", section_decks.size, active: true)
-          labels.each do |label|
-            count = section_decks.count { |deck| deck.type_label == label }
-            render_rail_tab(label, count)
-          end
-        end
-      end
-
-      def type_labels(section_decks)
-        section_decks.map(&:type_label).uniq.sort
-      end
-
-      def render_rail_tab(label, count, active: false)
-        classes = ["rail-tab", ("rail-tab--active" if active)].compact.join(" ")
-        button(
-          type: "button",
-          class: classes,
-          data: {
-            action: "filter#select",
-            filter_value_param: label,
-            filter_target: "tab",
-          },
-        ) do
-          plain(label)
-          span(class: "rail-tab-count") { count }
         end
       end
 
@@ -180,14 +140,9 @@ module Views
         render_featured_card(recent, "↻ Last studied #{ago} ago")
       end
 
-      # The divider carries the featured deck's type so the two hide together
-      # when a tab filters that type out.
       def render_featured_card(deck, label)
         render_rail_card(deck, featured_label: label)
-        div(
-          class: "rail-divider",
-          data: { filter_value: deck.type_label, filter_target: "item" },
-        )
+        div(class: "rail-divider")
       end
 
       def render_rail_card(deck, featured_label: nil, set_start: false)
@@ -197,10 +152,7 @@ module Views
           ("rail-card--set-start" if set_start),
         ].compact.join(" ")
 
-        div(
-          class: classes,
-          data: { filter_value: deck.type_label, filter_target: "item" },
-        ) do
+        div(class: classes) do
           div(class: "featured-label") { featured_label } if featured_label
           div(class: "rail-type") { deck.type_label }
           render_rail_title(deck)
