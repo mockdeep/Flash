@@ -16,7 +16,6 @@ module Components
         h2(class: "card-front", id: @id) { @text }
         render_reading
         render(Components::CardMenu.new(font_menu: @font_menu))
-        render_hotkey_targets
       end
     end
 
@@ -38,19 +37,6 @@ module Components
       return if @reading.nil?
 
       render(Components::CardReading.new(reading: @reading))
-    end
-
-    def render_hotkey_targets
-      span(hidden: true, data: hotkey_data("[", "smaller"))
-      span(hidden: true, data: hotkey_data("]", "larger"))
-    end
-
-    def hotkey_data(key, action)
-      {
-        hotkeys_target: "click",
-        hotkey: key,
-        action: "click->text-size##{action}",
-      }
     end
   end
 end

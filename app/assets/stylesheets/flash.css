@@ -324,23 +324,23 @@ body {
   animation: card-enter var(--transition-slow) ease-out;
 }
 
-.study-frame[data-size="s"]  .card-front { font-size: clamp(18px, 3.5vw, 24px); }
-.study-frame[data-size="l"]  .card-front { font-size: clamp(28px, 6vw, 44px); }
-.study-frame[data-size="xl"] .card-front { font-size: clamp(36px, 8vw, 60px); }
+.study-page[data-size="s"]  .card-front { font-size: clamp(18px, 3.5vw, 24px); }
+.study-page[data-size="l"]  .card-front { font-size: clamp(28px, 6vw, 44px); }
+.study-page[data-size="xl"] .card-front { font-size: clamp(36px, 8vw, 60px); }
 
-.study-frame[data-font="hei"] { --hanzi-font: 'Noto Sans SC'; }
-.study-frame[data-font="song"] { --hanzi-font: 'Noto Serif SC'; }
-.study-frame[data-font="kai"] { --hanzi-font: 'LXGW WenKai'; }
-.study-frame[data-font="hand"] { --hanzi-font: 'Ma Shan Zheng'; }
-.study-frame[data-font="semantic"] { --hanzi-font: 'Flash Hanzi Semantic', 'Noto Sans SC'; }
+.study-page[data-font="hei"] { --hanzi-font: 'Noto Sans SC'; }
+.study-page[data-font="song"] { --hanzi-font: 'Noto Serif SC'; }
+.study-page[data-font="kai"] { --hanzi-font: 'LXGW WenKai'; }
+.study-page[data-font="hand"] { --hanzi-font: 'Ma Shan Zheng'; }
+.study-page[data-font="semantic"] { --hanzi-font: 'Flash Hanzi Semantic', 'Noto Sans SC'; }
 
 /* The Latin face leads each stack so only hanzi (absent from it) fall
  * through; the hanzi face must precede the generics, which always match. */
-.study-frame[data-font] .card-front {
+.study-page[data-font] .card-front {
   font-family: 'DM Serif Display', var(--hanzi-font), Georgia, serif;
 }
 
-.study-frame[data-font] :is(.answer-text, .study-example__front, .study-example__back, .fuzzy-find__input) {
+.study-page[data-font] :is(.answer-text, .study-example__front, .study-example__back, .fuzzy-find__input, .reading-snippet p) {
   font-family: Manrope, var(--hanzi-font), system-ui, sans-serif;
 }
 
@@ -642,9 +642,9 @@ body {
   opacity: 0.7;
 }
 
-.study-frame[data-size="s"]  .answer-text { font-size: 15px; }
-.study-frame[data-size="l"]  .answer-text { font-size: 20px; }
-.study-frame[data-size="xl"] .answer-text { font-size: 24px; }
+.study-page[data-size="s"]  .answer-text { font-size: 15px; }
+.study-page[data-size="l"]  .answer-text { font-size: 20px; }
+.study-page[data-size="xl"] .answer-text { font-size: 24px; }
 
 .answer-incorrect .answer-number {
   border-color: var(--color-warning-border);
@@ -785,9 +785,9 @@ body {
   line-height: 1.5;
 }
 
-.study-frame[data-size="s"]  .study-example__front { font-size: 15px; }
-.study-frame[data-size="l"]  .study-example__front { font-size: 20px; }
-.study-frame[data-size="xl"] .study-example__front { font-size: 24px; }
+.study-page[data-size="s"]  .study-example__front { font-size: 15px; }
+.study-page[data-size="l"]  .study-example__front { font-size: 20px; }
+.study-page[data-size="xl"] .study-example__front { font-size: 24px; }
 
 .study-example__back {
   margin: 0;
@@ -797,9 +797,9 @@ body {
   line-height: 1.5;
 }
 
-.study-frame[data-size="s"]  .study-example__back { font-size: 13px; }
-.study-frame[data-size="l"]  .study-example__back { font-size: 17px; }
-.study-frame[data-size="xl"] .study-example__back { font-size: 21px; }
+.study-page[data-size="s"]  .study-example__back { font-size: 13px; }
+.study-page[data-size="l"]  .study-example__back { font-size: 17px; }
+.study-page[data-size="xl"] .study-example__back { font-size: 21px; }
 
 .card-reading {
   position: absolute;
@@ -876,8 +876,12 @@ body {
   border-top: 3px solid var(--color-border);
 }
 
+.study-page[data-size="s"]  { --reading-font-size: 16px; }
+.study-page[data-size="l"]  { --reading-font-size: 26px; }
+.study-page[data-size="xl"] { --reading-font-size: 32px; }
+
 .reading-snippet p {
-  font-size: 20px;
+  font-size: var(--reading-font-size, 20px);
   line-height: 1.8;
 }
 
@@ -1269,9 +1273,9 @@ body {
     font-size: clamp(22px, 6vw, 30px);
   }
 
-  .study-frame[data-size="s"]  .card-front { font-size: clamp(18px, 4.5vw, 24px); }
-  .study-frame[data-size="l"]  .card-front { font-size: clamp(28px, 8vw, 44px); }
-  .study-frame[data-size="xl"] .card-front { font-size: clamp(36px, 10vw, 60px); }
+  .study-page[data-size="s"]  .card-front { font-size: clamp(18px, 4.5vw, 24px); }
+  .study-page[data-size="l"]  .card-front { font-size: clamp(28px, 8vw, 44px); }
+  .study-page[data-size="xl"] .card-front { font-size: clamp(36px, 10vw, 60px); }
 
   .answer-button,
   .answer-row {

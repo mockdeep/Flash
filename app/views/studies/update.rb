@@ -3,7 +3,7 @@
 module Views
   module Studies
     class Update < Views::Base
-      include StudyFrameData
+      include StudyPageData
 
       attr_accessor :deck, :result, :completed, :study_goal, :demo
 
@@ -17,12 +17,8 @@ module Views
       end
 
       def view_template
-        div(class: "content-container") do
-          turbo_frame_tag(
-            "study",
-            class: "study-frame",
-            data: study_frame_data,
-          ) do
+        div(class: "content-container study-page", data: study_page_data) do
+          turbo_frame_tag("study", class: "study-frame") do
             if result.level_completed?
               render_level_complete
               next
@@ -37,6 +33,7 @@ module Views
               render(Components::WordStates.new(deck:, card: result.card))
             end
           end
+          render_text_size_hotkeys
         end
       end
 

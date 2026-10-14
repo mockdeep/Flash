@@ -16,9 +16,18 @@ function resolveEvent(event: KeyboardEvent): string {
   return key;
 }
 
+const UNTYPED_INPUTS = ["checkbox", "radio"];
+
+/*
+ * Fields the user types into. A focused radio, such as the Study | Read tab
+ * just clicked, takes no text, so hotkeys still apply.
+ */
 function isFormField(target: EventTarget | null): boolean {
+  if (target instanceof HTMLInputElement) {
+    return !UNTYPED_INPUTS.includes(target.type);
+  }
+
   return (
-    target instanceof HTMLInputElement ||
     target instanceof HTMLTextAreaElement ||
     target instanceof HTMLSelectElement
   );

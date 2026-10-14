@@ -65,7 +65,7 @@ RSpec.describe StudiesController do
       create(:language_card, deck:, front: "他", back: "he; him")
       get(deck_study_path(deck))
 
-      expect(rendered).to have_css(".study-frame[data-controller~='font']")
+      expect(rendered).to have_css(".study-page[data-controller~='font']")
       expect(rendered).to have_css("[data-font='kai']", visible: :all)
     end
 
@@ -73,14 +73,14 @@ RSpec.describe StudiesController do
       card = create(:basic_card)
       get(deck_study_path(card.deck))
 
-      expect(rendered).to have_no_css(".study-frame[data-controller~='font']")
+      expect(rendered).to have_no_css(".study-page[data-controller~='font']")
     end
 
     it "wires the wake-lock controller on the study frame" do
       card = create(:basic_card)
       get(deck_study_path(card.deck))
 
-      expect(rendered).to have_css(".study-frame[data-controller~='wake-lock']")
+      expect(rendered).to have_css(".study-page[data-controller~='wake-lock']")
     end
 
     it "embeds the deck's hanzi for font prewarming on full page loads" do
@@ -464,6 +464,16 @@ RSpec.describe StudiesController do
         get(deck_study_path(deck))
 
         expect(rendered).to have_css(".reading-snippet h3", text: "筷子")
+      end
+
+      it "gives the text the study controls' font and size" do
+        deck = own_deck
+        finished_snippet(deck.word_list)
+
+        get(deck_study_path(deck))
+
+        controls = "[data-controller~='font'][data-controller~='text-size']"
+        expect(rendered).to have_css(".study-page#{controls} .reading-snippet")
       end
 
       it "hides it when the deck has no snippets" do

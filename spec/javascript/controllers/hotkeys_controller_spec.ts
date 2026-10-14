@@ -111,6 +111,20 @@ it("ignores keypresses originating from <input> elements", async () => {
   expect(clickSpy).not.toHaveBeenCalled();
 });
 
+it("handles keypresses originating from radio inputs", async () => {
+  await setupController();
+  const clickSpy = vi.spyOn(button(), "click");
+  const field = document.createElement("input");
+  field.type = "radio";
+  element().appendChild(field);
+  const event = new KeyboardEvent("keydown", {bubbles: true, key: "a"});
+  Object.defineProperty(event, "target", {value: field});
+
+  controller().handleKeydown(event);
+
+  expect(clickSpy).toHaveBeenCalledWith();
+});
+
 it("ignores keypresses originating from <textarea> elements", async () => {
   await setupController();
   const clickSpy = vi.spyOn(button(), "click");

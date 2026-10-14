@@ -40,7 +40,7 @@ RSpec.describe "study font" do
   it "applies the hei default on a hanzi deck" do
     visit_hanzi_study_page
 
-    expect(page).to have_css(".study-frame[data-font='hei']")
+    expect(page).to have_css(".study-page[data-font='hei']")
   end
 
   it "applies a font picked from the kebab menu" do
@@ -49,7 +49,7 @@ RSpec.describe "study font" do
 
     pick_font("kai")
 
-    expect(page).to have_css(".study-frame[data-font='kai']")
+    expect(page).to have_css(".study-page[data-font='kai']")
   end
 
   it "applies the semantic radicals font" do
@@ -58,7 +58,7 @@ RSpec.describe "study font" do
 
     pick_font("semantic")
 
-    expect(page).to have_css(".study-frame[data-font='semantic']")
+    expect(page).to have_css(".study-page[data-font='semantic']")
   end
 
   it "persists the selected font across page reloads" do
@@ -68,13 +68,13 @@ RSpec.describe "study font" do
 
     visit(deck_study_path(deck))
 
-    expect(page).to have_css(".study-frame[data-font='song']")
+    expect(page).to have_css(".study-page[data-font='song']")
   end
 
   def pick_random_and_read_font
     open_card_menu
     pick_font("random")
-    find(".study-frame")["data-font"]
+    find(".study-page")["data-font"]
   end
 
   it "keeps the rolled font while answering a card" do
@@ -83,7 +83,7 @@ RSpec.describe "study font" do
 
     first(".answer-button").click
 
-    expect(page).to have_css(".study-frame[data-font='#{asked}'] .answer-row")
+    expect(page).to have_css(".study-page[data-font='#{asked}'] .answer-row")
   end
 
   it "omits the font section on a deck without hanzi", :aggregate_failures do
@@ -98,6 +98,6 @@ RSpec.describe "study font" do
     visit_latin_study_page
 
     expect(page).to have_css(".study-frame")
-    expect(page).to have_no_css(".study-frame[data-font]")
+    expect(page).to have_no_css(".study-page[data-font]")
   end
 end
