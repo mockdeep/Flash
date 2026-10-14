@@ -641,11 +641,11 @@ RSpec.describe Deck do
       expect(create(:deck).cards_to_lower_goal).to be_nil
     end
 
-    it "is the cards that would lower tomorrow's goal by one" do
-      # 7 left over 4 days is 2 a day; 3 more brings it to 1 a day.
+    it "is a card for each day after today" do
+      # 7 left over 4 days is 2 a day; 4 more brings it to 1 a day.
       deck = target_deck(target_date: 4.days.from_now.to_date)
 
-      expect(deck.cards_to_lower_goal).to eq(3)
+      expect(deck.cards_to_lower_goal).to eq(4)
     end
 
     it "is all the work left once tomorrow's goal is one card" do
