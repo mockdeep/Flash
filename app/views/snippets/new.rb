@@ -21,12 +21,15 @@ module Views
 
       def source = snippet.source
 
+      def language = WordList::LANGUAGES[source.word_list.language]
+
       def render_header
         div(class: "form-header") do
           render_back_link
           h1(class: "form-title") { "Add a Snippet" }
           p(class: "form-subtitle") do
-            "Paste a Chinese snippet and its words join #{source.title}'s list"
+            "Paste a #{language} snippet and its words join " \
+              "#{source.title}'s list"
           end
         end
       end
