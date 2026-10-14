@@ -342,51 +342,6 @@ RSpec.describe DecksController do
       create(:language_card, deck: create(:reading_deck)).deck
     end
 
-    it "shows the topic form when the deck has no topic" do
-      deck = deck_with_card
-      login_as(default_user)
-
-      get(deck_path(deck))
-
-      expect(rendered).to have_button("Add to topic")
-    end
-
-    def deck_in_topic(name)
-      deck = deck_with_card
-      topic = create(:topic, name:, user: default_user)
-      deck.update!(topic:)
-      deck
-    end
-
-    it "shows the assigned topic" do
-      deck = deck_in_topic("Mandarin")
-      login_as(default_user)
-
-      get(deck_path(deck))
-
-      expect(rendered).to have_text("Topic: Mandarin")
-    end
-
-    it "suggests the user's existing topics in the topic form" do
-      create(:topic, name: "Mandarin", user: default_user)
-      login_as(default_user)
-
-      get(deck_path(deck_with_card))
-
-      expect(rendered)
-        .to have_css("datalist option[value='Mandarin']", visible: :all)
-    end
-
-    it "does not suggest another user's topics" do
-      create(:topic, name: "Mandarin", user: create(:user))
-      login_as(default_user)
-
-      get(deck_path(deck_with_card))
-
-      expect(rendered)
-        .to have_no_css("datalist option[value='Mandarin']", visible: :all)
-    end
-
     it "offers no create-reverse button" do
       deck = deck_with_card
       login_as(default_user)

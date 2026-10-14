@@ -49,9 +49,11 @@ class Deck < ApplicationRecord
     END AS done_count
   SQL
 
+  # Topics are gone; the column goes once this is deployed.
+  self.ignored_columns += ["topic_id"]
+
   belongs_to :word_list
   belongs_to :user
-  belongs_to :topic
   has_many :cards, dependent: :delete_all
   has_one :source, through: :word_list
   has_many :snippets, through: :source

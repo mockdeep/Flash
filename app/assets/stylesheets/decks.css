@@ -559,22 +559,6 @@
   flex-wrap: wrap;
 }
 
-.deck-topic,
-.deck-topic-form {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.deck-topic {
-  margin: 1rem 0;
-}
-
-.deck-topic-form .form-input {
-  width: auto;
-}
-
 .deck-share-url {
   display: flex;
   align-items: center;

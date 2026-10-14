@@ -224,14 +224,13 @@ end
 **Two content models, one card table.** Basic and Music decks are **flat**: the card owns its content (`front`, `back`, `category`, `reading`, `example_front`, `example_back`) and its progress counters directly, with `card_distractors` rows for decoys. Language decks still keep content in a shared, neutral **word list** of items and pairings — `LanguageCard` overrides the column readers to go through its `item`. `Deck#flat_cards?` is the switch between them. The language side is slated to leave the item layer too, at which point the item machinery goes away entirely.
 
 **Core Models:**
-- `User` - Authentication. Has `username` (unique, `/\A[a-zA-Z0-9_.]+\z/` — letters, digits, `_`, `.`), `role` (`"user"` / `"admin"` / `"guest"`), `study_goal`, `time_zone`. `has_many :word_lists`, `has_many :sources` (through word_lists), `has_many :decks` (**direct** — every deck carries `user_id`), `has_many :topics`, `has_one :subscription`.
+- `User` - Authentication. Has `username` (unique, `/\A[a-zA-Z0-9_.]+\z/` — letters, digits, `_`, `.`), `role` (`"user"` / `"admin"` / `"guest"`), `study_goal`, `time_zone`. `has_many :word_lists`, `has_many :sources` (through word_lists), `has_many :decks` (**direct** — every deck carries `user_id`), `has_one :subscription`.
 - `WordList` - A selection of language study content, reusable across decks. `belongs_to :user`, `has_many :items`, `has_many :decks`, `has_one :source` (and its `snippets`). `name` unique per user. Requires a `language` code. Not STI: Basic and Music left this layer for flat cards, so every word list is language content, and the compendium distinguishes kinds (HSK level, chapter, curated) by column rather than by class.
-- `Topic` - User-created container grouping **decks** (e.g. "Mandarin", "Music"); no longer shown on the decks index, which groups decks by `DeckSection`. `name` unique per user; destroying a topic nullifies its decks. Assigned per deck from the deck show page (type-or-pick datalist input → `TopicAssignmentsController`, `find_or_create_by` name).
 - `Item` - One neutral term. Has `side` (`"Front"` / `"Back"`), `text`, and (Front-side) `category`, `reading`, `example`, `paired_example`. Belongs to a word list; unique on `[word_list_id, side, text]`. Front↔back meaning is expressed through `Pairing`; distractor candidates through `ItemDistractor`. `#glosses` returns the paired Back texts in authored order.
 - `Pairing` - Join between a Front `item` and a Back `paired_item` (one row per gloss).
 - `ItemDistractor` - Join marking a Back item as a preset distractor for a Front `item`. The language-side counterpart of `CardDistractor`.
 - `CardDistractor` - A wrong-answer option owned directly by a flat card (uploaded presets and remembered study misses). Unique on `[card_id, text]`.
-- `Deck` (STI base) - A study form. `belongs_to :user`, `belongs_to :topic` (optional), and `belongs_to :word_list` — required *unless* `flat_cards?`, forbidden *if* it is (the presence/absence pair is what keeps the two content models apart). `has_many :snippets` through the word_list, oldest first (none on flat decks). Flat families own a `name` column (unique per user); language decks delegate `name` to the word_list, and the `ordered` scope COALESCEs the two. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"` / `"preset"` / `"none"`, NOT NULL — set by the importer), `ordered`, `study_goal`, `last_studied_at`, nullable `share_token`, and `goal_mode` (`"none"` / `"session"` / `"target"`) with its level target (`target_level` + `target_date` — "finish level N by date"; see Level Targets). In `"none"` mode the study page shows a plain "N completed today" count with a "set goal" button instead of the progress bar, and never shows the milestone.
+- `Deck` (STI base) - A study form. `belongs_to :user` and `belongs_to :word_list` — required *unless* `flat_cards?`, forbidden *if* it is (the presence/absence pair is what keeps the two content models apart). `has_many :snippets` through the word_list, oldest first (none on flat decks). Flat families own a `name` column (unique per user); language decks delegate `name` to the word_list, and the `ordered` scope COALESCEs the two. Has `visibility` (`"public"` / `"private"`), `level` (default 1, current study level), `distractor_pool` (`"category"` / `"preset"` / `"none"`, NOT NULL — set by the importer), `ordered`, `study_goal`, `last_studied_at`, nullable `share_token`, and `goal_mode` (`"none"` / `"session"` / `"target"`) with its level target (`target_level` + `target_date` — "finish level N by date"; see Level Targets). In `"none"` mode the study page shows a plain "N completed today" count with a "set goal" button instead of the progress bar, and never shows the milestone.
 - `Card` (STI base) - `belongs_to :deck`, `belongs_to :item` (nullable — flat cards have none), `belongs_to :source_card` (catalog-copy provenance). `has_many :card_distractors`. Owns the content columns and the progress counters (`correct_count`, `correct_streak`, `view_count`), and holds the score handle (`record_correct!`, `record_miss!`, `record_view!`). `normalizes :back` is the single back-joining rule. Unique on `[deck_id, front]` where `front` is present.
 - `StudyDay` - Cards a deck completed on one day (`studied_on`, in the owner's time zone), unique on `[deck_id, studied_on]`. `completed_count` counts the current batch and drives the progress bar; the milestone's "Keep Going" starts a new batch by resetting it to 0 (and, under a level target, sizing the batch to lower tomorrow's goal by one). `goal` holds the day's goal worked out from a level target (nil without one; `#study_goal` falls back to the deck's). `deck.study_days.today` finds or creates the row.
 - `Subscription` - Payment/subscription info, belongs to user.
@@ -241,7 +240,7 @@ end
 - `SnippetSentence` - One sentence of a snippet, unique on `[snippet_id, position]`. `tokens` (jsonb) holds the pieces it was cut into, in order: each token's `text` as written (traditional stays traditional) and, for a word, the `sense_id` it is studied as; punctuation and other non-words carry no `sense_id`, nor does a word the segmenter skipped, which keeps why as `skip` (a Portuguese text's people's names, `"name"`, and other names and titles left in another language, `"foreign"`). `#status` is `:new` with no tokens, `:finished` once every Han token has a `sense_id` and no token carries other keys, and `:in_progress` between.
 **`WordList` languages:** `LANGUAGES` (on `WordList`) maps every individual ISO 639-2 language to its display name, keyed by shortest available code per BCP 47 ("zh", not "zho"; "tlh" works). Nothing in the app creates a word list any more — the deck form has no Language option — so the validation guards what the seed account and catalog copies carry.
 
-**Deck/Card STI subclasses** (deck class names match their UI representation — the future topic-page tabs). Both hierarchies have an abstract language intermediate:
+**Deck/Card STI subclasses** (deck class names match their UI representation — the future skill tabs within a language section). Both hierarchies have an abstract language intermediate:
 - `LanguageDeck < Deck` / `LanguageCard < Card` — never instantiated. `LanguageDeck` delegates `name` and `language` to the word_list and holds `mandarin?` and `hanzi_chars` (font features), and overrides `cards_in_category` / `reading_pairs` to join through items. `LanguageCard` overrides the content readers to read its `item`, requires one, and records a miss as an item-side decoy rather than a `card_distractors` row. The base `Deck#mandarin?` is `false`.
 - `ReadingDeck < LanguageDeck` / `ReadingCard < LanguageCard` — forward study: multiple-choice (or fuzzy-find) recognition.
 - `BasicDeck < Deck` / `BasicCard < Card` — plain forward flashcards on flat cards.
@@ -251,7 +250,7 @@ end
 
 **STI convention — `model_name` override:** each direct subclass of `Deck` / `Card` overrides `self.model_name` to return the parent's, so `form_with(model: reading_deck)` keeps routing to `decks_path` (not `reading_decks_path`). `LanguageDeck` and `LanguageCard` carry it for their own subclasses, which inherit it. Apply this to any new STI subclass of the base.
 
-**`belongs_to` is optional by default** (`config.active_record.belongs_to_required_by_default = false`), so required associations are stated explicitly. `Topic` marks `user` with `optional: false`; `Deck` and `Card` use validations instead — `validates :deck_id, presence: true` on `Card`, `validates :item, presence: true` on `LanguageCard`, and the `word_list` presence/absence pair on `Deck` — backed by NOT NULL columns where the requirement is absolute.
+**`belongs_to` is optional by default** (`config.active_record.belongs_to_required_by_default = false`), so required associations are stated explicitly. `Deck` and `Card` use validations — `validates :deck_id, presence: true` on `Card`, `validates :item, presence: true` on `LanguageCard`, and the `word_list` presence/absence pair on `Deck` — backed by NOT NULL columns where the requirement is absolute.
 
 **Card Progress:**
 - A card is "done" at the current level when `correct_streak >= deck.level`
@@ -444,20 +443,18 @@ app/
 │   ├── studies_controller.rb          # Study show/update; dispatches text vs music views
 │   ├── study_goal_resets_controller.rb # Reset today's count on all decks, go to the first deck
 │   ├── subscriptions_controller.rb    # Creem subscription show / create / destroy
-│   ├── topic_assignments_controller.rb # Assign/release a deck to a topic
 │   ├── webhooks/
 │   │   └── creem_controller.rb        # Creem webhook receiver
 │   └── welcome_controller.rb          # Landing page
 ├── models/
 │   ├── application_record.rb
-│   ├── user.rb              # has_many :word_lists, :decks (direct), :topics; has_one :subscription
+│   ├── user.rb              # has_many :word_lists, :decks (direct); has_one :subscription
 │   ├── word_list.rb          # Language content selection decks point at; LANGUAGES lookup
-│   ├── topic.rb            # User-created container grouping decks
 │   ├── item.rb             # Neutral term (side/text + Front-side metadata); glosses/distractors
 │   ├── pairing.rb          # Front item ↔ Back paired_item join
 │   ├── item_distractor.rb  # Front item ↔ Back distractor_item join (language decoys)
 │   ├── card_distractor.rb  # Card-owned decoy text (flat-card decoys)
-│   ├── deck.rb             # STI base — user/topic/word_list; flat_cards?/replaceable?
+│   ├── deck.rb             # STI base — user/word_list; flat_cards?/replaceable?
 │   ├── language_deck.rb    # Abstract parent of the item-backed decks — mandarin?/hanzi_chars
 │   ├── reading_deck.rb     # STI subclass — forward language study
 │   ├── basic_deck.rb       # STI subclass — plain flashcards on flat cards; replaceable
@@ -495,7 +492,7 @@ app/
 │   ├── decks/
 │   │   ├── index.rb          # Decks grouped into `DeckSection`s (each language, Basic, Music); each features its first unmet-goal deck, else its most recently studied
 │   │   ├── new.rb            # Three-way deck-type radio + language select
-│   │   ├── show.rb           # Share-link, topic assignment, replace link, cards table
+│   │   ├── show.rb           # Share-link, replace link, cards table
 │   │   └── replacements/
 │   │       └── new.rb        # Re-import (replace) a deck's cards form
 │   ├── demo/
