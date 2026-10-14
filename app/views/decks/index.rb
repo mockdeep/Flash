@@ -36,37 +36,28 @@ module Views
         end
       end
 
-      # Topic sections first (alphabetical), then the un-topiced decks -- under
-      # an "Other Decks" heading only when there are topics to distinguish
-      # them from.
       def render_deck_sections
-        topics = current_user.topics.where.associated(:decks).distinct
-        topics.order(:name).each do |topic|
-          render_topic_section(topic, "topic-#{topic.id}")
+        DeckSection.for(current_user).each do |section|
+          render_section(section)
         end
-
-        other = NullTopic.new(user: current_user)
-        return if other.decks.none?
-
-        render_topic_section(other, "other", heading: topics.any?)
       end
 
       # The filter key names the remembered tab in localStorage, so it has to
       # stay stable across visits, not across users -- localStorage is already
       # per-browser.
-      def render_topic_section(topic, section_id, heading: true)
-        section_decks = topic.decks.ordered.with_progress
+      def render_section(deck_section)
+        section_decks = deck_section.decks.ordered.with_progress
         section(
-          class: "topic-section",
+          class: "deck-section",
           data: {
             controller: "filter rail",
-            filter_key_value: section_id,
+            filter_key_value: deck_section.name,
             filter_active_class: "rail-tab--active",
             action: "resize@window->rail#syncArrows " \
                     "filter:applied->rail#syncArrows",
           },
         ) do
-          render_section_heading(topic.name, section_decks) if heading
+          render_section_heading(deck_section.name, section_decks)
           render_rail_tabs(section_decks)
           render_rail_wrap(section_decks)
         end
@@ -131,7 +122,7 @@ module Views
       def render_section_heading(title, section_decks)
         h2(class: "decks-section-title") do
           plain(title)
-          span(class: "topic-meta") do
+          span(class: "section-meta") do
             pluralize(section_decks.size, "deck")
           end
         end
@@ -167,8 +158,8 @@ module Views
           end
       end
 
-      # Name order matches User#next_unmet_deck within a topic, so the
-      # milestone's Next Deck and the featured deck agree.
+      # Same order as DeckSection#first_unmet, so the milestone's Next Deck
+      # and the featured deck agree.
       def render_featured(section_decks)
         unmet = section_decks.goal_unmet_today.first
         return render_featured_card(unmet, "→ Up next") if unmet

@@ -52,7 +52,9 @@ class User < ApplicationRecord
     role == "guest"
   end
 
-  def next_unmet_deck = decks.goal_unmet_today.topic_ordered.first
+  def next_unmet_deck
+    DeckSection.for(self).lazy.filter_map(&:first_unmet).first
+  end
 
   def reading_deck_over(word_list)
     decks.create_with(distractor_pool: "category", study_goal:)

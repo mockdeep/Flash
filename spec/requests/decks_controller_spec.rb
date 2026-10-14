@@ -28,48 +28,40 @@ RSpec.describe DecksController do
       expect(rendered).to have_link("Flat Deck")
     end
 
-    def deck_in_topic(name)
-      deck = create(:deck, user: default_user)
-      topic = create(:topic, name:, user: default_user)
-      deck.update!(topic:)
-      deck
-    end
-
-    it "groups decks under their topic heading" do
+    it "groups language decks under their language" do
       login_as(default_user)
-      deck_in_topic("Mandarin")
+      create(:reading_deck, language: "pt")
 
       get(decks_path)
 
-      expect(rendered).to have_css("h2", text: "Mandarin")
+      expect(rendered).to have_css("h2", text: "Portuguese")
     end
 
-    it "lists un-topiced decks under 'Other Decks' when topics exist" do
+    it "groups basic decks under Basic" do
       login_as(default_user)
-      deck_in_topic("Mandarin")
-      create(:deck, user: default_user)
+      create(:deck)
 
       get(decks_path)
 
-      expect(rendered).to have_css("h2", text: "Other Decks")
+      expect(rendered).to have_css("h2", text: "Basic")
     end
 
-    it "omits the 'Other Decks' heading when no topics exist" do
+    it "groups music decks under Music" do
       login_as(default_user)
-      create(:deck, user: default_user)
+      create(:music_deck)
 
       get(decks_path)
 
-      expect(rendered).to have_no_css("h2", text: "Other Decks")
+      expect(rendered).to have_css("h2", text: "Music")
     end
 
-    it "shows the deck count in a topic heading" do
+    it "shows the deck count in a section heading" do
       login_as(default_user)
-      deck_in_topic("Mandarin")
+      create(:deck)
 
       get(decks_path)
 
-      expect(rendered).to have_css(".topic-meta", text: "1 deck")
+      expect(rendered).to have_css(".section-meta", text: "1 deck")
     end
 
     it "shows 'No cards yet' for empty deck" do
@@ -205,38 +197,6 @@ RSpec.describe DecksController do
       expect(rendered).to have_no_css(".rail-card--featured")
     end
 
-    def mixed_types
-      create(:reading_deck, user: default_user)
-      create(:deck, user: default_user)
-    end
-
-    it "renders type tabs when a section mixes deck types" do
-      login_as(default_user)
-      mixed_types
-
-      get(decks_path)
-
-      expect(rendered).to have_css(".rail-tab", text: "Reading")
-    end
-
-    it "counts each type in its tab" do
-      login_as(default_user)
-      mixed_types
-
-      get(decks_path)
-
-      expect(rendered).to have_css(".rail-tab", text: /All\s*2/)
-    end
-
-    it "marks the All tab active on render" do
-      login_as(default_user)
-      mixed_types
-
-      get(decks_path)
-
-      expect(rendered).to have_css(".rail-tab--active", text: "All")
-    end
-
     it "omits the tab bar when a section has one deck type" do
       login_as(default_user)
       create(:deck, user: default_user)
@@ -255,23 +215,13 @@ RSpec.describe DecksController do
       expect(rendered).to have_css(".rail-card[data-filter-value='Basic']")
     end
 
-    it "keys the filter controller by topic for remembered tabs" do
+    it "keys the filter controller by section for remembered tabs" do
       login_as(default_user)
-      deck = deck_in_topic("Mandarin")
+      create(:deck)
 
       get(decks_path)
 
-      expect(rendered)
-        .to have_css("[data-filter-key-value='topic-#{deck.topic.id}']")
-    end
-
-    it "keys the topicless section as 'other'" do
-      login_as(default_user)
-      create(:deck, user: default_user)
-
-      get(decks_path)
-
-      expect(rendered).to have_css("[data-filter-key-value='other']")
+      expect(rendered).to have_css("[data-filter-key-value='Basic']")
     end
 
     it "renders the scroll arrows hidden for the controller to reveal" do
@@ -284,10 +234,10 @@ RSpec.describe DecksController do
         .to have_css(".rail-arrow[hidden]", count: 2, visible: :hidden)
     end
 
-    it "features a deck in each topic" do
+    it "features a deck in each section" do
       login_as(default_user)
-      deck_in_topic("Mandarin")
-      deck_in_topic("Music")
+      create(:reading_deck)
+      create(:deck)
 
       get(decks_path)
 

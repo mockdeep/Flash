@@ -175,29 +175,6 @@ RSpec.describe Deck do
     end
   end
 
-  describe ".topic_ordered" do
-    it "sorts decks by topic name before deck name" do
-      alpha = create(:deck, name: "Alpha", topic: create(:topic, name: "Zulu"))
-      zebra = create(:deck, name: "Zebra", topic: create(:topic, name: "Kilo"))
-
-      expect(described_class.topic_ordered).to eq([zebra, alpha])
-    end
-
-    it "puts decks without a topic last" do
-      alpha = create(:deck, name: "Alpha")
-      zebra = create(:deck, name: "Zebra", topic: create(:topic))
-
-      expect(described_class.topic_ordered).to eq([zebra, alpha])
-    end
-
-    it "sorts flat and language decks together by name" do
-      zebra = create(:deck, name: "Zebra")
-      alpha = create(:reading_deck, name: "Alpha")
-
-      expect(described_class.topic_ordered).to eq([alpha, zebra])
-    end
-  end
-
   describe ".goal_unmet_today" do
     def unmet_decks = described_class.goal_unmet_today
 
