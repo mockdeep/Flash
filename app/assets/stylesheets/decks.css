@@ -55,50 +55,6 @@
   color: var(--color-text-muted);
 }
 
-.rail-tabs {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-  border-bottom: 3px solid var(--color-border);
-}
-
-.rail-tab {
-  padding: 0.4rem 1rem;
-  margin-bottom: -3px;
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  background: transparent;
-  border: 3px solid transparent;
-  border-bottom: none;
-}
-
-.rail-tab:hover {
-  color: var(--color-primary);
-}
-
-.rail-tab--active {
-  color: var(--color-text);
-  background: var(--color-background-elevated);
-  border-color: var(--color-border);
-  border-bottom: 3px solid var(--color-background-elevated);
-}
-
-.rail-tab-count {
-  margin-left: 0.35rem;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--color-text-muted);
-}
-
-.rail-tab--active .rail-tab-count {
-  color: var(--color-primary);
-}
-
 .rail-wrap {
   position: relative;
 }
