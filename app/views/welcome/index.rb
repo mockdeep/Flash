@@ -38,7 +38,7 @@ module Views
             feature_card(
               number: "02",
               title: "Custom Decks",
-              description: "Create unlimited flashcard decks or import from CSV. Organize by topic, category, or subject.",
+              description: "Create unlimited flashcard decks or import from CSV. Decks group themselves by language.",
             )
 
             feature_card(

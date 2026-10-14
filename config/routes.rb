@@ -18,7 +18,6 @@ Rails.application.routes.draw do
     resource :replacement, only: [:new, :create], controller: "replacements"
     resource :share, only: [:create, :destroy], controller: "shares"
     resource :study, only: [:show, :update]
-    resource :topic_assignment, only: [:create, :destroy], controller: "topic_assignments"
     resources :cards, only: [:update, :destroy]
   end
 
