@@ -41,7 +41,11 @@ RSpec.describe WordList do
 
   describe "LANGUAGES" do
     it "keys each language by its shortest available code" do
-      expect(described_class::LANGUAGES["zh"]).to eq("Chinese")
+      expect(described_class::LANGUAGES["pt"]).to eq("Portuguese")
+    end
+
+    it "names zh Mandarin" do
+      expect(described_class::LANGUAGES["zh"]).to eq("Mandarin")
     end
 
     it "includes languages that only have a three-letter code" do

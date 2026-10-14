@@ -8,6 +8,8 @@ class WordList < ApplicationRecord
   # content, local use); collective families ("Bantu languages") are filtered
   # by name below.
   SPECIAL_CODES = ["und", "zxx", "qaa-qtz"].freeze
+  # ISO names zh "Chinese", but what the app studies under it is Mandarin.
+  RENAMED = { "zh" => "Mandarin" }.freeze
 
   # Every individual ISO 639-2 language, code => display name, keyed by the
   # shortest available code (BCP 47 convention: "zh", not "zho") so stored
@@ -21,7 +23,8 @@ class WordList < ApplicationRecord
       next if SPECIAL_CODES.include?(entry.alpha3) ||
         name.match?(/languages/i)
 
-      [entry.alpha2.presence || entry.alpha3, name]
+      code = entry.alpha2.presence || entry.alpha3
+      [code, RENAMED.fetch(code, name)]
     end
   LANGUAGES = language_pairs.sort_by(&:last).to_h.freeze
 

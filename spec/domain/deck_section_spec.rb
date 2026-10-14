@@ -7,14 +7,14 @@ RSpec.describe DeckSection do
     it "names a language section after the language" do
       create(:reading_deck, language: "zh")
 
-      expect(section_names).to eq(["Chinese"])
+      expect(section_names).to eq(["Mandarin"])
     end
 
     it "sorts language sections by name" do
       create(:reading_deck, language: "zh")
       create(:reading_deck, language: "pt")
 
-      expect(section_names).to eq(["Chinese", "Portuguese"])
+      expect(section_names).to eq(["Mandarin", "Portuguese"])
     end
 
     it "puts Basic and then Music after the languages" do
@@ -22,7 +22,7 @@ RSpec.describe DeckSection do
       create(:deck)
       create(:reading_deck)
 
-      expect(section_names).to eq(["Chinese", "Basic", "Music"])
+      expect(section_names).to eq(["Mandarin", "Basic", "Music"])
     end
 
     it "leaves out a family the user has no decks in" do

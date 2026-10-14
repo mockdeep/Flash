@@ -35,6 +35,12 @@ RSpec.describe SnippetsController do
 
       expect(rendered).to have_link("← Back to 春节")
     end
+
+    it "names the language to paste in" do
+      get(new_source_snippet_path(admin_source))
+
+      expect(rendered).to have_text("Paste a Mandarin snippet")
+    end
   end
 
   describe "#create" do
