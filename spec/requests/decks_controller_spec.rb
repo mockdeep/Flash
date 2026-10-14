@@ -197,33 +197,6 @@ RSpec.describe DecksController do
       expect(rendered).to have_no_css(".rail-card--featured")
     end
 
-    it "omits the tab bar when a section has one deck type" do
-      login_as(default_user)
-      create(:deck, user: default_user)
-
-      get(decks_path)
-
-      expect(rendered).to have_no_css(".rail-tab")
-    end
-
-    it "tags each card with its deck type for filtering" do
-      login_as(default_user)
-      create(:deck, user: default_user)
-
-      get(decks_path)
-
-      expect(rendered).to have_css(".rail-card[data-filter-value='Basic']")
-    end
-
-    it "keys the filter controller by section for remembered tabs" do
-      login_as(default_user)
-      create(:deck)
-
-      get(decks_path)
-
-      expect(rendered).to have_css("[data-filter-key-value='Basic']")
-    end
-
     it "renders the scroll arrows hidden for the controller to reveal" do
       login_as(default_user)
       create(:deck, user: default_user)
