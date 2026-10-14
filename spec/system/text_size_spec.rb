@@ -23,7 +23,7 @@ RSpec.describe "study text size" do
 
     pick_size("l")
 
-    expect(page).to have_css(".study-frame[data-size='l']")
+    expect(page).to have_css(".study-page[data-size='l']")
   end
 
   it "increments the size when the ] hotkey is pressed" do
@@ -31,7 +31,27 @@ RSpec.describe "study text size" do
 
     find("body").send_keys("]")
 
-    expect(page).to have_css(".study-frame[data-size='l']")
+    expect(page).to have_css(".study-page[data-size='l']")
+  end
+
+  def visit_read_tab
+    word_list = create(:word_list, user: default_user)
+    deck = create(:reading_deck, user: default_user, word_list:)
+    create(:language_card, deck:)
+    snippet = create(:snippet, source: create(:source, word_list:))
+    tokens = [{ "text" => "我", "sense_id" => create(:sense).id }]
+    create(:snippet_sentence, snippet:, body: "我", tokens:)
+    sign_in(default_user)
+    visit(deck_study_path(deck))
+    choose("Read", allow_label_click: true)
+  end
+
+  it "changes the size with the ] hotkey on the Read tab" do
+    visit_read_tab
+
+    find("body").send_keys("]")
+
+    expect(page).to have_css(".study-page[data-size='l']")
   end
 
   it "persists the selected size across page reloads" do
@@ -41,6 +61,6 @@ RSpec.describe "study text size" do
 
     visit(deck_study_path(deck))
 
-    expect(page).to have_css(".study-frame[data-size='xl']")
+    expect(page).to have_css(".study-page[data-size='xl']")
   end
 end

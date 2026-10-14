@@ -263,7 +263,7 @@ end
 
 ### Keyboard Hotkeys
 
-The app uses a **Stimulus hotkeys controller** (`app/javascript/controllers/hotkeys_controller.ts`) for keyboard shortcuts. It listens for `keydown` events at the document level and clicks the matching target element. It skips a target behind an open dialog or inside a `display: none` ancestor (such as the study frame while the Read tab is showing); a target that is hidden itself still works, which the study page's space-claiming span relies on.
+The app uses a **Stimulus hotkeys controller** (`app/javascript/controllers/hotkeys_controller.ts`) for keyboard shortcuts. It listens for `keydown` events at the document level and clicks the matching target element. It skips a target behind an open dialog or inside a `display: none` ancestor (such as the study frame while the Read tab is showing); a target that is hidden itself still works, which the study page's space-claiming span relies on. Keys typed into a text field are ignored (except `Ctrl` combos), but a focused radio or checkbox doesn't block hotkeys. The `[` / `]` text-size spans sit on the study page outside the frame, so they work on the Read tab.
 
 **Adding a hotkey to any element:**
 ```ruby
@@ -513,7 +513,7 @@ app/
 │   │   ├── update.rb         # Text-deck answer result (renders CardReading + StudyExample)
 │   │   ├── music_show.rb     # Mic-driven music study prompt
 │   │   ├── music_update.rb   # Music answer result
-│   │   └── study_frame_data.rb # Shared study-frame data helper (wires the text-size controller)
+│   │   └── study_page_data.rb # Study-page data helper: text-size / font / wake-lock controllers around the frame and the Read tab
 │   ├── snippets/
 │   │   └── new.rb            # Heading (optional) / body, under a source
 │   ├── source_readers/

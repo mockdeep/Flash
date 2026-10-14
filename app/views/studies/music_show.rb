@@ -3,7 +3,7 @@
 module Views
   module Studies
     class MusicShow < Views::Base
-      include StudyFrameData
+      include StudyPageData
 
       attr_accessor :deck, :study, :demo
 

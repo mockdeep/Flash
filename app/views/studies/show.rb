@@ -3,7 +3,7 @@
 module Views
   module Studies
     class Show < Views::Base
-      include StudyFrameData
+      include StudyPageData
 
       attr_accessor :deck, :study, :completed, :study_goal, :demo
 
@@ -17,7 +17,10 @@ module Views
       end
 
       def view_template
-        div(class: "content-container") do
+        div(
+          class: "content-container study-page",
+          data: study_page_data_with_hanzi,
+        ) do
           if demo
             render(Components::DemoBanner.new)
           else
@@ -30,11 +33,7 @@ module Views
 
           render(Components::StudyTabs.new) if reading?
 
-          turbo_frame_tag(
-            "study",
-            class: "study-frame",
-            data: study_frame_data_with_hanzi,
-          ) do
+          turbo_frame_tag("study", class: "study-frame") do
             if deck.cards_count.zero?
               div(class: "accent-box") do
                 div(class: "accent-box__icon") { "📚" }
@@ -73,6 +72,7 @@ module Views
           end
 
           render(Components::SnippetReading.new(snippets:, deck:)) if reading?
+          render_text_size_hotkeys
         end
       end
 

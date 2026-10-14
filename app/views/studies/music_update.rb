@@ -3,7 +3,7 @@
 module Views
   module Studies
     class MusicUpdate < Views::Base
-      include StudyFrameData
+      include StudyPageData
 
       LEVEL_BODY = "You've mastered all the cards at this level."
 
@@ -17,12 +17,9 @@ module Views
       end
 
       def view_template
-        div(class: "content-container") do
-          turbo_frame_tag(
-            "study",
-            class: "study-frame",
-            data: study_frame_data,
-          ) { render_frame }
+        div(class: "content-container study-page", data: study_page_data) do
+          turbo_frame_tag("study", class: "study-frame") { render_frame }
+          render_text_size_hotkeys
         end
       end
 
