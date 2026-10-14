@@ -26,25 +26,6 @@ RSpec.describe "organizing decks into topics" do
     expect(page).to have_text("Topic: Mandarin")
   end
 
-  it "groups decks under their topic on the index" do
-    mandarin_deck
-    sign_in(default_user)
-
-    visit(decks_path)
-
-    expect(page).to have_css("h2", text: "Mandarin")
-  end
-
-  it "lists un-topiced decks under Other Decks on the index" do
-    mandarin_deck
-    deck_named("US Capitals")
-    sign_in(default_user)
-
-    visit(decks_path)
-
-    expect(page).to have_css("h2", text: "Other Decks")
-  end
-
   it "removes a deck from its topic" do
     visit_deck(mandarin_deck)
     click_on("Remove from topic")

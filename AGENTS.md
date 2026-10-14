@@ -226,7 +226,7 @@ end
 **Core Models:**
 - `User` - Authentication. Has `username` (unique, `/\A[a-zA-Z0-9_.]+\z/` — letters, digits, `_`, `.`), `role` (`"user"` / `"admin"` / `"guest"`), `study_goal`, `time_zone`. `has_many :word_lists`, `has_many :sources` (through word_lists), `has_many :decks` (**direct** — every deck carries `user_id`), `has_many :topics`, `has_one :subscription`.
 - `WordList` - A selection of language study content, reusable across decks. `belongs_to :user`, `has_many :items`, `has_many :decks`, `has_one :source` (and its `snippets`). `name` unique per user. Requires a `language` code. Not STI: Basic and Music left this layer for flat cards, so every word list is language content, and the compendium distinguishes kinds (HSK level, chapter, curated) by column rather than by class.
-- `Topic` - User-created container grouping **decks** (e.g. "Mandarin", "Music") so related decks collect together on the decks index. `name` unique per user; destroying a topic nullifies its decks. Assigned per deck from the deck show page (type-or-pick datalist input → `TopicAssignmentsController`, `find_or_create_by` name).
+- `Topic` - User-created container grouping **decks** (e.g. "Mandarin", "Music"); no longer shown on the decks index, which groups decks by `DeckSection`. `name` unique per user; destroying a topic nullifies its decks. Assigned per deck from the deck show page (type-or-pick datalist input → `TopicAssignmentsController`, `find_or_create_by` name).
 - `Item` - One neutral term. Has `side` (`"Front"` / `"Back"`), `text`, and (Front-side) `category`, `reading`, `example`, `paired_example`. Belongs to a word list; unique on `[word_list_id, side, text]`. Front↔back meaning is expressed through `Pairing`; distractor candidates through `ItemDistractor`. `#glosses` returns the paired Back texts in authored order.
 - `Pairing` - Join between a Front `item` and a Back `paired_item` (one row per gloss).
 - `ItemDistractor` - Join marking a Back item as a preset distractor for a Front `item`. The language-side counterpart of `CardDistractor`.
@@ -408,6 +408,7 @@ app/
 │   ├── text_csv_instructions.rb  # CSV format help block for text decks
 │   └── word_states.rb            # An answered card's words as they now stand, for the Read tab (`word_states_controller.ts`)
 ├── domain/
+│   ├── deck_section.rb           # A decks-page section: one per language A–Z, then Basic, then Music; `first_unmet` drives Next Deck
 │   ├── language.rb               # What processing a snippet needs per language: sentence ends, word characters, the segmenter's form and its check, readings or none, skip reasons, whether words are spaced, prompts (`Language::MANDARIN`, `Language::PORTUGUESE`)
 │   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
 │   └── music_study.rb            # MusicStudy < Study; windows cards into note sequences
@@ -473,7 +474,6 @@ app/
 │   ├── source_reader.rb    # A user let read a source whatever its license
 │   └── snippet_sentence.rb # Sentence + its tokens, each pointing at a sense
 ├── nulls/
-│   ├── null_topic.rb         # Null-object Topic over a user's un-topiced decks ("Other Decks")
 │   └── null_user.rb          # Null-object User for logged-out / guest requests
 ├── views/                    # Phlex views (inherit from Views::Base)
 │   ├── base.rb               # Base view class (wraps the application layout)
@@ -493,7 +493,7 @@ app/
 │   │   ├── index.rb          # Public deck grid (mic badge for music decks, 📖 for decks with shareable texts)
 │   │   └── show.rb           # Deck preview + texts + copy action (mic badge in header)
 │   ├── decks/
-│   │   ├── index.rb          # Decks grouped into topic sections + "Other Decks"; each features its first unmet-goal deck, else its most recently studied
+│   │   ├── index.rb          # Decks grouped into `DeckSection`s (each language, Basic, Music); each features its first unmet-goal deck, else its most recently studied
 │   │   ├── new.rb            # Three-way deck-type radio + language select
 │   │   ├── show.rb           # Share-link, topic assignment, replace link, cards table
 │   │   └── replacements/
@@ -849,7 +849,7 @@ The study engine (`app/domain/study.rb`) manages card selection and answer proce
 ### Milestone: Next Deck
 
 When a deck reaches its goal for the day, the milestone's main button moves on to another deck:
-- **Next Deck** links to `User#next_unmet_deck` — the first deck in decks-page order (`Deck.topic_ordered`: topics A–Z, then no topic, each by name) that `Deck.goal_unmet_today` returns. That query left-joins `Deck#todays_study_day` (a `has_one` scoped to `Date.current`): a deck with no row today counts as unmet, and otherwise its count is compared against the goal by a SQL copy of `StudyDay#study_goal` (keep the two in sync). Decks in no-goal mode and music decks never count as unmet.
+- **Next Deck** links to `User#next_unmet_deck` — the first deck in decks-page order (`DeckSection.for`: language sections A–Z by display name, then Basic, then Music, each by deck name) that `Deck.goal_unmet_today` returns, taking each section's `first_unmet` in turn. That query left-joins `Deck#todays_study_day` (a `has_one` scoped to `Date.current`): a deck with no row today counts as unmet, and otherwise its count is compared against the goal by a SQL copy of `StudyDay#study_goal` (keep the two in sync). Decks in no-goal mode and music decks never count as unmet.
 - **Reset All Goals** shows instead when every deck has met its goal. It POSTs to `StudyGoalResetsController#create`, which starts a new batch on all the user's decks (`StudyDay#keep_going!`, as Keep Going does) and redirects to the first deck in that order.
 - Hidden in demo mode.
 
@@ -981,7 +981,7 @@ Things to keep in mind for future development:
 5. **Study Statistics** - More detailed progress tracking and visualizations
 6. **Accessibility** - Continue improving screen reader support
 7. **Internationalization** - Multi-language support for UI (not just study content)
-8. **Topic pages** - The decks index groups by topic; a topic show page with per-deck-type tabs is the planned next step, then Card STI renames to match the deck names (see NOTES.md)
+8. **Language skill tabs** - The decks index groups by language; once writing decks exist, a language section will tab its decks by skill (Reading / Writing)
 
 ## Resources
 

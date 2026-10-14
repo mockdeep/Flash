@@ -168,9 +168,9 @@ RSpec.describe User do
       deck
     end
 
-    it "returns the first deck in topic order that is under its goal" do
+    it "returns the first deck in decks-page order that is under its goal" do
       create(:deck, name: "Alpha")
-      deck = create(:deck, name: "Zebra", topic: create(:topic))
+      deck = create(:reading_deck, name: "Zebra")
 
       expect(default_user.next_unmet_deck).to eq(deck)
     end

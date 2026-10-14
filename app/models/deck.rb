@@ -5,7 +5,6 @@ class Deck < ApplicationRecord
   DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
   GOAL_MODES = ["none", "session", "target"].freeze
   NAME_SOURCE = Arel.sql("COALESCE(decks.name, word_lists.name)")
-  TOPIC_NAME = Arel.sql("topics.name NULLS LAST")
   # Mirrors StudyDay#study_goal.
   GOAL_UNMET = <<~SQL.squish
     study_days.completed_count <
@@ -113,9 +112,6 @@ class Deck < ApplicationRecord
   validate(:one_deck_per_word_list, unless: :flat_cards?)
 
   scope :ordered, -> { left_joins(:word_list).order(NAME_SOURCE) }
-  # The decks page's order: topic sections A-Z, then decks with no topic.
-  scope :topic_ordered,
-        -> { left_joins(:topic, :word_list).order(TOPIC_NAME, NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
   scope :recently_studied,
         -> { where.not(last_studied_at: nil).reorder(last_studied_at: :desc) }
