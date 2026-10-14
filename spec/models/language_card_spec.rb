@@ -133,11 +133,38 @@ RSpec.describe LanguageCard do
     end
 
     it "builds on a score the sense already carries" do
-      card = create(:language_card, correct_streak: 3)
+      deck = create(:reading_deck, level: 4)
+      card = create(:language_card, deck:, correct_streak: 3)
 
       card.record_correct!
 
       expect(counters).to eq([[1, 4, 1]])
+    end
+
+    it "stops a sense's streak at the deck's level" do
+      card = create(:language_card, back: "he; him")
+      sense = sense_of(card, "he")
+      create(:skill_score, user: card.deck.user, sense:, correct_streak: 1)
+
+      card.record_correct!
+
+      expect(SkillScore.pluck(:correct_streak)).to eq([1, 1])
+    end
+
+    it "leaves a streak already past the deck's level" do
+      card = create(:language_card, correct_streak: 3)
+
+      card.record_correct!
+
+      expect(SkillScore.sole.correct_streak).to eq(3)
+    end
+
+    it "still counts the answer on a sense at the deck's level" do
+      card = create(:language_card, correct_streak: 1, view_count: 1)
+
+      card.record_correct!
+
+      expect(counters).to eq([[1, 1, 2]])
     end
 
     it "advances its own streak" do

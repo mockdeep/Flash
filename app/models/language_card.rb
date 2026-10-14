@@ -7,7 +7,10 @@
 class LanguageCard
   CORRECT = <<~SQL.squish
     correct_count = skill_scores.correct_count + 1,
-    correct_streak = skill_scores.correct_streak + 1,
+    correct_streak = GREATEST(
+      skill_scores.correct_streak,
+      LEAST(skill_scores.correct_streak + 1, :level)
+    ),
     view_count = skill_scores.view_count + 1,
     updated_at = excluded.updated_at
   SQL
@@ -45,9 +48,12 @@ class LanguageCard
   # Entries sharing a back display once.
   def distractors = deck.backs_of(decoy_entry_ids).uniq
 
-  # Credit fans out to every member sense, so the streak moves in lockstep.
+  # Credit fans out to every member sense, each climbing by one but not past
+  # the deck's level, so overlapping lists can't stack a sense's streak. A
+  # streak already past the level, earned in a deck at a higher one, stays.
   def record_correct!
-    score(CORRECT, correct_count: 1, correct_streak: 1)
+    correct = SkillScore.sanitize_sql_array([CORRECT, { level: deck.level }])
+    score(correct, correct_count: 1, correct_streak: 1)
     @correct_streak += 1
   end
 
