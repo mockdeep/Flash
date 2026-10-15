@@ -626,3 +626,10 @@
   }
 
 }
+
+.rail-title .translation {
+  contain: inline-size;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+}

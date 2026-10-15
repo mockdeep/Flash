@@ -27,6 +27,7 @@ module Views
           h1(class: "catalog-show-title") do
             plain(deck.name)
             music_badge if deck.music?
+            translation(deck.name_translation)
           end
           render_meta
         end

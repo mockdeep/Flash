@@ -51,6 +51,19 @@ RSpec.describe Components::SnippetReading, type: :view do
     expect(page).to have_css("h2", text: "春节")
   end
 
+  it "translates the source's title" do
+    page = render_for(source: create(:source, title_translation: "Spring"))
+
+    expect(page).to have_css("h2 .translation", text: "Spring")
+  end
+
+  it "translates a snippet's heading" do
+    snippet = build(:snippet, heading: "第一", heading_translation: "First")
+    page = render_for(snippet)
+
+    expect(page).to have_css("h3 .translation", text: "First")
+  end
+
   it "shows each snippet's heading in order" do
     page = render_for(*["第一", "第二"].map { build(:snippet, heading: it) })
 

@@ -29,7 +29,7 @@ module Views
             link_to("All Decks", decks_path)
           end
 
-          h1 { deck.name }
+          h1 { with_translation(deck.name, deck.name_translation) }
 
           render(Components::StudyTabs.new) if reading?
 

@@ -19,8 +19,7 @@ module Views
 
       def view_template
         link_to("← Back to Sources", sources_path, class: "back-link")
-        h1 { source.title }
-        render_details
+        render_header
 
         div(class: "table__actions") do
           render_add_button
@@ -32,7 +31,8 @@ module Views
 
       private
 
-      def render_details
+      def render_header
+        h1 { with_translation(source.title, source.title_translation) }
         p { source.author } if source.author.present?
         p { render(Components::SourceCredit.new(source:)) }
       end
@@ -62,7 +62,9 @@ module Views
           Components::Table.new(headings: HEADINGS, rows: source.snippets)
 
         render(snippets_table) do |table, snippet|
-          table.cell { snippet.heading }
+          table.cell do
+            with_translation(snippet.heading, snippet.heading_translation)
+          end
           table.cell { STATUSES[snippet.status] }
         end
       end

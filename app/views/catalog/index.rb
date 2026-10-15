@@ -74,6 +74,7 @@ module Views
           plain(deck.name)
           music_badge if deck.music?
           texts_badge if deck.shares_texts?
+          translation(deck.name_translation)
         end
       end
 

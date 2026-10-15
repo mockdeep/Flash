@@ -167,3 +167,12 @@ progress::-moz-progress-bar {
   margin-left: 0.4rem;
   font-size: 0.875rem;
 }
+
+.translation {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
