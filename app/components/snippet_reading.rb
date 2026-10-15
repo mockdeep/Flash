@@ -27,7 +27,7 @@ module Components
     private
 
     def render_source(source)
-      h2 { source.title }
+      h2 { with_translation(source.title, source.title_translation) }
       author = source.author
       p(class: "reading-snippets__author") { author } if author.present?
       p(class: "reading-snippets__credit") do
@@ -37,7 +37,9 @@ module Components
 
     def render_snippet(snippet)
       section(class: "reading-snippet") do
-        h3 { snippet.heading } if snippet.heading.present?
+        if snippet.heading.present?
+          h3 { with_translation(snippet.heading, snippet.heading_translation) }
+        end
         snippet.paragraphs.each { |paragraph| render_paragraph(paragraph) }
       end
     end

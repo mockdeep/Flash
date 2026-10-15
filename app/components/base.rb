@@ -48,6 +48,17 @@ module Components
       ) { "📖" }
     end
 
+    # Each page's CSS lays a translation out: its own line where there is
+    # room, cut short where there isn't, with the full text kept for hovering.
+    def translation(text)
+      span(class: "translation", title: text) { text } if text.present?
+    end
+
+    def with_translation(text, translated)
+      plain(text)
+      translation(translated)
+    end
+
     def catalog_badge
       span(
         class: "badge",

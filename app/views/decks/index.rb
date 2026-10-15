@@ -152,12 +152,11 @@ module Views
         end
       end
 
-      # Language decks title with the word_list's base name (a reverse deck
-      # drops its "(reversed)" suffix on the shared rail card).
       def render_rail_title(deck)
         h3(class: "rail-title") do
-          link_to(deck.word_list&.name || deck.name, deck_study_path(deck))
+          link_to(deck.name, deck_study_path(deck))
           catalog_badge if deck.publicly_visible?
+          translation(deck.name_translation)
         end
       end
 

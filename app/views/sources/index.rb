@@ -26,11 +26,16 @@ module Views
         sources_table = Components::Table.new(headings: HEADINGS, rows: sources)
 
         render(sources_table) do |table, source|
-          table.cell { link_to(source.title, source_path(source)) }
+          table.cell { render_title(source) }
           table.cell { source.author }
           table.cell { Show::STATUSES[source.status] }
           table.cell { render_study_button(source) if source.studyable? }
         end
+      end
+
+      def render_title(source)
+        link_to(source.title, source_path(source))
+        translation(source.title_translation)
       end
 
       def render_study_button(source)

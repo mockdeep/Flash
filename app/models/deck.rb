@@ -118,6 +118,8 @@ class Deck < ApplicationRecord
 
   def music? = false
 
+  def name_translation = source&.title_translation
+
   def cards_count = self[:cards_count] || progress.total
   def done_count = self[:done_count] || progress.done
   def remaining_count = cards_count - done_count

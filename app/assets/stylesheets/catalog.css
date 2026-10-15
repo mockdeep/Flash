@@ -222,3 +222,11 @@
     flex-direction: column;
   }
 }
+
+.catalog-card-title .translation {
+  contain: inline-size;
+  overflow: hidden;
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

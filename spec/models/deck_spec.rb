@@ -385,6 +385,21 @@ RSpec.describe Deck do
     end
   end
 
+  describe "#name_translation" do
+    it "is the translation of its source's title" do
+      deck = create(:reading_deck)
+      create(:source, word_list: deck.word_list, title_translation: "Spring")
+
+      expect(deck.name_translation).to eq("Spring")
+    end
+
+    it "is nil on a deck with no source" do
+      deck = create(:deck)
+
+      expect(deck.name_translation).to be_nil
+    end
+  end
+
   describe "#finished_snippets" do
     it "leaves out a snippet not yet finished" do
       deck = create(:reading_deck)

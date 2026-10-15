@@ -19,6 +19,16 @@ RSpec.describe DecksController do
       expect(rendered).to have_text("My Test Deck")
     end
 
+    it "translates a rail card's title" do
+      login_as(default_user)
+      deck = create(:reading_deck, user: default_user)
+      create(:source, word_list: deck.word_list, title_translation: "Spring")
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".rail-title .translation", text: "Spring")
+    end
+
     it "titles a rail card for a deck without a word_list" do
       login_as(default_user)
       create(:deck, user: default_user, name: "Flat Deck", word_list: nil)

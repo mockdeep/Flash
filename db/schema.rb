@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_041432) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_15_040539) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -145,6 +145,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_041432) do
     t.datetime "updated_at", null: false
     t.bigint "source_id", null: false
     t.string "heading"
+    t.string "heading_translation"
     t.index ["source_id"], name: "index_snippets_on_source_id"
   end
 
@@ -325,6 +326,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_041432) do
     t.string "license", default: "all_rights_reserved", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "title_translation"
     t.index ["word_list_id"], name: "index_sources_on_word_list_id", unique: true
   end
 
