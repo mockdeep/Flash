@@ -53,6 +53,10 @@ text, so run it in the background and report when it finishes. Lines starting
    The report gives sentence ids, token indexes and sense ids (`#123`), which
    every edit takes.
 2. Work through it in this order:
+   - **Translations** of the source's title and the snippet's heading, which
+     show under them wherever the deck or text is named: suggest English for
+     any marked `missing`, short enough for a deck box ("Spring Festival").
+     They don't block finishing.
    - **Unresolved** words, with the reason each was left: decide the right
      sense, or whether the sentence was cut wrongly.
    - **Skipped** words, which get no card: in Portuguese, people's names
@@ -115,6 +119,13 @@ Snippets::Review.repoint(sentence, 3, Sense.find(456))       # an existing sense
 Snippets::Review.add_sense(sentence, 3, reading: "huā", gloss: "to spend")
 Snippets::Review.add_sense(sentence, 5, reading: nil, gloss: "we were speaking") # Portuguese
 Snippets::Review.resegment(sentence, "花了 is 花 + 了")        # re-cut; changed tokens re-resolved
+```
+
+Translations, by the ids the report gives:
+
+```ruby
+Source.find(3).update!(title_translation: "Spring Festival")
+Snippet.find(6).update!(heading_translation: "Customs")
 ```
 
 Sense edits (`Compendium::Edit`), on any sense:
