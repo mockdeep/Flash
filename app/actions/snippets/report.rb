@@ -1,16 +1,17 @@
 # frozen_string_literal: true
 
 module Snippets
-  # A snippet as a review sees it, as plain text: a summary line, the words
-  # left unresolved and the senses created, then every sentence token by
-  # token, with the sentence ids, token indexes and sense ids that
-  # Snippets::Review takes.
+  # A snippet as a review sees it, as plain text: a summary line, the title
+  # and heading translations, the words left unresolved and the senses
+  # created, then every sentence token by token, with the sentence ids, token
+  # indexes and sense ids that Snippets::Review takes.
   module Report
     def self.call(snippet)
       tokens = snippet.sentences.flat_map(&:tokens)
 
       [
         heading(snippet, tokens),
+        *section("Translations", translations(snippet)),
         *section("Unresolved", unresolved(snippet)),
         *section("Created", created(tokens)),
         *section("Skipped", skipped(snippet)),
@@ -35,6 +36,22 @@ module Snippets
 
       "#{name} (list #{snippet.word_list.name}): " +
         [snippet.status, *tally].join(", ")
+    end
+
+    # Titles aren't split into words, so a learner reads them through these.
+    # A missing one is flagged here rather than blocking Finish.
+    def self.translations(snippet)
+      source = snippet.source
+      title = "source #{source.id} title #{source.title}"
+      lines = [translation_line(title, source.title_translation)]
+      return lines if snippet.heading.blank?
+
+      heading = "snippet #{snippet.id} heading #{snippet.heading}"
+      [*lines, translation_line(heading, snippet.heading_translation)]
+    end
+
+    def self.translation_line(label, translation)
+      "  #{label}: #{translation.presence || "missing"}"
     end
 
     def self.section(title, lines)

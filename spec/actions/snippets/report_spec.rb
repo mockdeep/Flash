@@ -23,6 +23,27 @@ RSpec.describe Snippets::Report do
         .to match(/\ASnippet \d+ "Love" \(list .+\): in_progress, 1 matched$/)
     end
 
+    it "shows the source title's translation" do
+      source = create(:source, title: "春节", title_translation: "Spring")
+      snippet = create(:snippet, source:)
+
+      expect(described_class.call(snippet))
+        .to include("Translations:\n  source #{source.id} title 春节: Spring")
+    end
+
+    it "flags a missing heading translation" do
+      snippet = create(:snippet, heading: "习俗")
+
+      expect(described_class.call(snippet))
+        .to include("  snippet #{snippet.id} heading 习俗: missing")
+    end
+
+    it "leaves out the heading line when there is no heading" do
+      snippet = create(:snippet, heading: nil)
+
+      expect(described_class.call(snippet)).not_to include("heading")
+    end
+
     it "lists the unresolved words with their reasons" do
       token = { "text" => "爱", "outcome" => "unresolved", "note" => "?" }
 
