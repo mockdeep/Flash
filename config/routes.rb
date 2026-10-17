@@ -9,8 +9,9 @@ Rails.application.routes.draw do
   resource :account, only: [:new, :create, :show, :update, :destroy]
   resources :catalog, only: [:index, :show] do
     post :copy, on: :member
+    post :try, on: :member
   end
-  resource :demo, only: [:show, :create], controller: "demo"
+  get "demo", to: redirect("/catalog")
   resources :decks, only: [:new, :create, :index, :show, :destroy] do
     resources :lookups, only: [:create]
     resource :milestone, only: [:update]

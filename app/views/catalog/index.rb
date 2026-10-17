@@ -27,9 +27,16 @@ module Views
       def render_header
         div(class: "catalog-header") do
           h1(class: "catalog-title") { "Deck Catalog" }
-          p(class: "catalog-subtitle") do
-            "Browse public decks and add them to your collection."
-          end
+          p(class: "catalog-subtitle") { subtitle }
+        end
+      end
+
+      def subtitle
+        if member?
+          "Browse public decks and add them to your collection."
+        else
+          "Try any deck without an account. Demos include the first " \
+            "#{Deck::GUEST_CARD_LIMIT} cards — no sign-up required."
         end
       end
 
@@ -94,8 +101,21 @@ module Views
             catalog_path(deck),
             class: button_class(:secondary, :compact),
           )
+          render_try_button(deck) unless member?
         end
       end
+
+      def render_try_button(deck)
+        form_with(url: try_catalog_path(deck), method: :post) do |form|
+          timezone_field(form)
+          form.button(
+            "Try This Deck",
+            class: button_class(:primary, :compact),
+          )
+        end
+      end
+
+      def member? = current_user.logged_in? && !current_user.guest?
     end
   end
 end

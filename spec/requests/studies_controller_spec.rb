@@ -535,7 +535,7 @@ RSpec.describe StudiesController do
     def start_demo
       deck = create(:deck, user: create(:user), visibility: "public")
       create(:basic_card, deck:, front: "Q", back: "A")
-      post(demo_path, params: { deck_id: deck.id, time_zone: "UTC" })
+      post(try_catalog_path(deck), params: { time_zone: "UTC" })
     end
 
     def submit_demo_answer(deck: Deck.last)
@@ -982,7 +982,7 @@ RSpec.describe StudiesController do
     it "shows the demo banner in demo mode" do
       deck = create(:music_deck, user: create(:user), visibility: "public")
       create(:music_card, deck:, back: "C4")
-      post(demo_path, params: { deck_id: deck.id, time_zone: "UTC" })
+      post(try_catalog_path(deck), params: { time_zone: "UTC" })
       follow_redirect!
 
       expect(rendered).to have_css(".demo-banner")

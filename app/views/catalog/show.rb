@@ -53,12 +53,29 @@ module Views
       end
 
       def render_action
+        if member?
+          div(class: "catalog-show-actions") { render_copy_button }
+        else
+          render_demo_actions
+        end
+      end
+
+      def render_demo_actions
         div(class: "catalog-show-actions") do
-          if current_user.logged_in?
-            render_copy_button
-          else
-            render_login_link
-          end
+          render_try_button
+          render_login_link
+        end
+        p(class: "catalog-show-note") do
+          "Demos include the first #{Deck::GUEST_CARD_LIMIT} cards."
+        end
+      end
+
+      def member? = current_user.logged_in? && !current_user.guest?
+
+      def render_try_button
+        form_with(url: try_catalog_path(deck), method: :post) do |form|
+          timezone_field(form)
+          form.button("Try This Deck", class: button_class(:primary))
         end
       end
 

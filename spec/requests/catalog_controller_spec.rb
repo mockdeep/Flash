@@ -7,6 +7,12 @@ RSpec.describe CatalogController do
   end
 
   describe "#index" do
+    it "is where the old demo page now leads" do
+      get("/demo")
+
+      expect(response).to redirect_to("/catalog")
+    end
+
     it "renders without authentication" do
       get(catalog_index_path)
 
@@ -95,6 +101,46 @@ RSpec.describe CatalogController do
       get(catalog_index_path)
 
       expect(rendered).to have_no_css("[title='Comes with texts to read']")
+    end
+
+    it "shows a try button for unauthenticated visitors" do
+      public_deck
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_button("Try This Deck")
+    end
+
+    it "tells unauthenticated visitors how many cards a demo has" do
+      get(catalog_index_path)
+
+      expect(rendered).to have_text("Demos include the first 100 cards")
+    end
+
+    it "shows a try button for guests" do
+      deck = public_deck
+      post(try_catalog_path(deck))
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_button("Try This Deck")
+    end
+
+    it "does not show a try button for authenticated users" do
+      public_deck
+      login_as(default_user)
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_no_button("Try This Deck")
+    end
+
+    it "invites authenticated users to add decks" do
+      login_as(default_user)
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_text("add them to your collection")
     end
   end
 
@@ -218,6 +264,31 @@ RSpec.describe CatalogController do
       expect(rendered).to have_text("Log in to Add Deck")
     end
 
+    it "shows a try button for unauthenticated visitors" do
+      deck = public_deck
+
+      get(catalog_path(deck))
+
+      expect(rendered).to have_button("Try This Deck")
+    end
+
+    it "tells unauthenticated visitors how many cards a demo has" do
+      deck = public_deck
+
+      get(catalog_path(deck))
+
+      expect(rendered).to have_text("Demos include the first 100 cards.")
+    end
+
+    it "shows a try button for guests" do
+      deck = public_deck
+      post(try_catalog_path(deck))
+
+      get(catalog_path(deck))
+
+      expect(rendered).to have_button("Try This Deck")
+    end
+
     it "shows copy button for authenticated users" do
       deck = public_deck
       login_as(default_user)
@@ -225,6 +296,15 @@ RSpec.describe CatalogController do
       get(catalog_path(deck))
 
       expect(rendered).to have_text("Add to My Decks")
+    end
+
+    it "does not show a try button for authenticated users" do
+      deck = public_deck
+      login_as(default_user)
+
+      get(catalog_path(deck))
+
+      expect(rendered).to have_no_button("Try This Deck")
     end
 
     it "returns not found for private decks" do
@@ -281,6 +361,81 @@ RSpec.describe CatalogController do
       post(copy_catalog_path(deck))
 
       expect(rendered).to have_text("Name has already been taken")
+    end
+  end
+
+  describe "#try" do
+    def deck_with_card
+      deck = public_deck
+      create(:basic_card, deck:, front: "Q", back: "A")
+      deck
+    end
+
+    def try_deck(deck: deck_with_card, time_zone: "UTC")
+      post(try_catalog_path(deck), params: { time_zone: })
+    end
+
+    it "redirects to the study page" do
+      try_deck
+
+      expect(response).to redirect_to(deck_study_path(Deck.last))
+    end
+
+    it "shows the demo banner" do
+      try_deck
+
+      follow_redirect!
+      expect(rendered).to have_css(".demo-banner")
+    end
+
+    it "creates a guest user" do
+      deck = deck_with_card
+
+      expect { try_deck(deck:) }.to change(User, :count).by(1)
+    end
+
+    it "assigns the guest role to the new user" do
+      try_deck
+
+      expect(User.last.role).to eq("guest")
+    end
+
+    it "stores the submitted time zone on the guest" do
+      try_deck(time_zone: "America/New_York")
+
+      expect(User.last.time_zone).to eq("America/New_York")
+    end
+
+    it "starts a fresh guest when a guest tries another deck" do
+      try_deck
+      first_guest = User.last
+
+      try_deck
+      expect(User.last).not_to eq(first_guest)
+    end
+
+    it "cleans up the guest when a real user logs in" do
+      try_deck
+      guest = User.last
+
+      login_as(default_user)
+      expect(User.exists?(guest.id)).to be(false)
+    end
+
+    it "handles an already-deleted guest gracefully" do
+      try_deck
+      User.last.destroy!
+
+      login_as(default_user)
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "returns not found for private decks" do
+      deck = create(:deck, user: create(:user), visibility: "private")
+
+      post(try_catalog_path(deck))
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 end
