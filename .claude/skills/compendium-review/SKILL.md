@@ -73,8 +73,9 @@ text, so run it in the background and report when it finishes. Lines starting
      sentence: 健康 "healthy" is wrong in 人体健康 "human health".
    - **Portuguese**, beyond the above:
      - A word keeps the form the text gives it: *falávamos* is its own entry,
-       not *falar*. The headword is the word in lower case, but names and
-       Roman numerals keep their capitals.
+       not *falar*. The headword is the word in lower case, but names, titles
+       before them and Roman numerals keep their capitals. A title (*D.*,
+       *Sr.*, *Dr.*) is its own word with a card, apart from the skipped name.
      - The gloss renders that form, tense and number included ("we were
        speaking", "houses"), with a subject only when the form fixes one:
        *falava* is "was speaking". No dictionary form, grammar labels or

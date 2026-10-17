@@ -43,7 +43,7 @@ class Language
   # initial (J. R. Ward), and past an ending followed by a lower-case word:
   # the speech tag set off by a dash after a line of dialogue, or a
   # trailing-off ellipsis. A word studies under its own form, lower-cased
-  # unless it is a name.
+  # unless it is a name or a title before one.
   PORTUGUESE = new(
     code: "pt",
     sentence: /
