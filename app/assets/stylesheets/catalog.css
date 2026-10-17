@@ -38,20 +38,6 @@
   line-height: 1.6;
 }
 
-/* Catalog Grid */
-.catalog-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 2rem;
-}
-
-.catalog-card {
-  padding: 1.75rem;
-  overflow: hidden;
-  box-shadow: var(--shadow-small);
-  transition: all var(--transition);
-}
-
 .badge {
   display: inline-block;
   margin-left: 0.5rem;
@@ -60,51 +46,27 @@
   cursor: help;
 }
 
-.catalog-card:hover {
-  transform: translate(-2px, -2px);
-  border-color: var(--color-border-medium);
-  box-shadow: var(--shadow-hover);
-}
-
-.catalog-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 2px solid var(--color-background-subtle);
-}
-
-.catalog-card-title {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 400;
-  color: var(--color-text);
-  margin: 0;
-  flex: 1;
-  line-height: 1.3;
-  word-break: break-word;
-}
-
-.catalog-card-meta {
-  margin-bottom: 1.5rem;
-}
-
-.catalog-card-owner {
-  font-family: var(--font-body);
-  font-size: 14px;
+.catalog-rail-owner {
+  overflow: hidden;
+  font-size: 13px;
   color: var(--color-text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.catalog-card-actions {
-  display: grid;
-  grid-auto-columns: 1fr;
-  grid-auto-flow: column;
-  gap: 0.75rem;
+.catalog-rail-count {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
-.catalog-card-actions form .button,
+.catalog-rail-try {
+  margin-top: 0.75rem;
+}
+
+.catalog-rail-try .button,
 .catalog-show-actions form .button {
   width: 100%;
 }
@@ -209,15 +171,6 @@
     width: 120px;
   }
 
-  .catalog-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
-  .catalog-card {
-    padding: 1.5rem;
-  }
-
   .catalog-show-container {
     padding: 1.5rem 1rem 3rem;
   }
@@ -233,12 +186,4 @@
   .catalog-show-actions {
     flex-direction: column;
   }
-}
-
-.catalog-card-title .translation {
-  contain: inline-size;
-  overflow: hidden;
-  font-size: 14px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }

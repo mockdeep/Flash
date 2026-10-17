@@ -52,7 +52,7 @@ class User < ApplicationRecord
   end
 
   def next_unmet_deck
-    DeckSection.for(self).lazy.filter_map(&:first_unmet).first
+    DeckSection.for(decks).lazy.filter_map(&:first_unmet).first
   end
 
   def reading_deck_over(word_list)
