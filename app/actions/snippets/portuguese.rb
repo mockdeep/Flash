@@ -47,6 +47,23 @@ module Snippets
         and any Portuguese.
     TEXT
 
+    ARTICLES = <<~TEXT
+      Article rules: a noun is studied with its definite article, so a
+      learner sees its gender.
+      - Give a noun `article`: o, a, os or as, whichever fits this form's
+        gender and number (casa "a", casas "as", lápis "o" or "os" as the
+        sentence uses it). A word used as a noun here takes one too (o
+        pobre). Where the gender follows the person meant (estudante,
+        artista), take it from the sentence.
+      - Give a name the article Portuguese uses with it (o Brasil, a França,
+        o Rio de Janeiro), and none when it takes none (Lisboa, Portugal,
+        Deus, março).
+      - Give no article to any other word, nor to a phrase that is not a
+        noun as a whole (fora de casa, no outro dia). A phrase that is one
+        takes one (a missa do galo).
+      - The gloss leaves out "the": the article carries it (a casa "house").
+    TEXT
+
     SEGMENT_INSTRUCTIONS = <<~TEXT
       You segment Portuguese sentences into words for a vocabulary builder.
       For each sentence, return its words in order. Every word of the
@@ -95,8 +112,9 @@ module Snippets
         rendering of this sentence. In "sentou-se no banco" the banco is a
         "bench", so a sense "bank" does not fit.
       - "new": no listed sense covers this occurrence. Return a gloss under
-        the gloss rules below, and no reading. When two occurrences are the
-        same word in the same new meaning, give them the identical gloss.
+        the gloss rules below, an article under the article rules below, and
+        no reading. When two occurrences are the same word in the same new
+        meaning, give them the identical gloss and article.
       - "missegmented": the token breaks the segmentation rules below: two
         words joined, a piece cut from a longer word or fixed phrase, or a
         whole the rules split. Say in note how it should have been split or
@@ -112,8 +130,8 @@ module Snippets
 
       Every token gets a sense: there is no skipping, even for a lone
       article, a typo or a stray letter. Return only the fields a decision
-      uses: sense_id for "existing"; gloss for "new"; note for
-      "missegmented".
+      uses: sense_id for "existing"; gloss, and article for a noun, for
+      "new"; note for "missegmented".
     TEXT
 
     JUDGE_INSTRUCTIONS = <<~TEXT
@@ -125,8 +143,8 @@ module Snippets
       under and the senses the compendium already holds (`senses`).
       `occurrences` are the proposals: each is one occurrence of a `word`
       (listed under `wid`) in a sentence (`sid`), shown between 【 and 】
-      among its neighbours in `marked`, with the proposed headword and
-      gloss. Nothing enters the compendium unless you accept it, and a wrong
+      among its neighbours in `marked`, with the proposed headword, article
+      and gloss. Nothing enters the compendium unless you accept it, and a wrong
       entry reaches every learner, so reject whenever you have a concrete
       objection:
 
@@ -137,6 +155,9 @@ module Snippets
         what the form adds (a past tense glossed as present, a plural as
         singular)
       - the headword is not the word in lower case, or lower-cases a name
+      - the article breaks the article rules below: a noun without one, one
+        that does not fit this form, or one on a word or name that takes
+        none
       - another occurrence proposes the same word in the same meaning under a
         different gloss: accept the better wording and reject the other
       - the "word" is not a word, but a fragment of bad segmentation, or a
@@ -184,8 +205,10 @@ module Snippets
 
     PROMPTS = Prompts.new(
       segment: [SEGMENT_INSTRUCTIONS, SEGMENTATION].join("\n").freeze,
-      propose: [PROPOSE_INSTRUCTIONS, GLOSSES, SEGMENTATION].join("\n").freeze,
-      judge: [JUDGE_INSTRUCTIONS, GLOSSES, SEGMENTATION].join("\n").freeze,
+      propose: [PROPOSE_INSTRUCTIONS, GLOSSES, ARTICLES, SEGMENTATION]
+        .join("\n").freeze,
+      judge: [JUDGE_INSTRUCTIONS, GLOSSES, ARTICLES, SEGMENTATION]
+        .join("\n").freeze,
       categorize: CATEGORIZE,
       categories: CATEGORIES,
     )

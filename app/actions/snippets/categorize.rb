@@ -53,7 +53,7 @@ module Snippets
 
       {
         id:,
-        headword: entry.headword,
+        headword: entry.term,
         reading: entry.reading,
         gloss: sense.gloss,
       }

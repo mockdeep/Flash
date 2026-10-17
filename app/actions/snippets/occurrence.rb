@@ -95,8 +95,9 @@ module Snippets
         id: sense.id,
         headword: entry.headword,
         reading: entry.reading,
+        article: entry.article,
         gloss: sense.gloss,
-      }
+      }.compact
     end
   end
 end

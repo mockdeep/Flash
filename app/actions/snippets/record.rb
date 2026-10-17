@@ -24,6 +24,7 @@ module Snippets
         proposal.language.code,
         proposal.headword,
         proposal.sense_reading,
+        article: proposal.sense_article,
       )
       sense = entry.senses.find_or_create_by!(gloss: proposal.gloss)
       outcome = sense.previously_new_record? ? "created" : "matched"

@@ -79,6 +79,20 @@ RSpec.describe Snippets::Proposal do
         .to eq("a new sense needs a reading and a gloss")
     end
 
+    it "names the articles allowed on a new sense with another" do
+      new_sense =
+        proposal("new", occurrence: portuguese, gloss: "house", article: "la")
+
+      expect(new_sense.problem).to eq("the article must be one of o, a, os, as")
+    end
+
+    it "takes a new sense with an allowed article" do
+      new_sense =
+        proposal("new", occurrence: portuguese, gloss: "house", article: "a")
+
+      expect(new_sense.problem).to be_nil
+    end
+
     it "takes a gloss alone in a language without readings" do
       expect(proposal("new", occurrence: portuguese, gloss: "house").problem)
         .to be_nil
@@ -97,10 +111,30 @@ RSpec.describe Snippets::Proposal do
     end
   end
 
+  describe "#sense_article" do
+    it "is the proposed article" do
+      new_sense = proposal("new", occurrence: portuguese, article: "a")
+
+      expect(new_sense.sense_article).to eq("a")
+    end
+
+    it "is nil in a language without articles" do
+      expect(proposal("new", article: "a").sense_article).to be_nil
+    end
+  end
+
   describe "#proposed" do
     it "is the headword, reading and gloss put before the judge" do
       expect(proposal("new", reading: "ài", gloss: "to love").proposed)
         .to eq(headword: "爱", reading: "ài", gloss: "to love")
+    end
+
+    it "puts a noun's article before the judge" do
+      new_sense =
+        proposal("new", occurrence: portuguese, gloss: "house", article: "a")
+
+      expect(new_sense.proposed)
+        .to eq(headword: "casa", article: "a", gloss: "house")
     end
 
     it "puts no reading before the judge in a language without readings" do
