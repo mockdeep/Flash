@@ -348,6 +348,42 @@ RSpec.describe DecksController do
       expect(rendered).to have_text("Study Deck")
     end
 
+    it "shows the deck's round" do
+      deck = create(:deck, round: 2)
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_css(".catalog-show-meta", text: "Round 2")
+    end
+
+    it "shows the language of a language deck" do
+      deck = create(:reading_deck, user: default_user)
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_css(".catalog-show-meta", text: "Mandarin")
+    end
+
+    it "marks a private deck as private" do
+      deck = create(:deck, user: default_user)
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_css(".catalog-show-meta", text: "Private")
+    end
+
+    it "marks a public deck as in the catalog" do
+      deck = create(:deck, user: default_user, visibility: "public")
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_css(".catalog-show-meta", text: "In catalog")
+    end
+
     def deck_with_card
       create(:language_card, deck: create(:reading_deck)).deck
     end
@@ -387,6 +423,15 @@ RSpec.describe DecksController do
       get(deck_path(deck))
 
       expect(rendered).to have_text("Revoke Link")
+    end
+
+    it "hides the share button when the deck is shared" do
+      deck = create(:deck, user: default_user).tap(&:generate_share_token!)
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_no_button("Share Link")
     end
 
     it "shows the share URL when the deck is shared" do
