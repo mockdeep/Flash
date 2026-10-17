@@ -5,7 +5,9 @@
 # a sense, and what to ask a model about it. The segmenter gives each word
 # the form it studies under as `form`, which `form_fits` checks against the
 # word; `piece` cuts a sentence the segmenter fails on twice. A language
-# without `readings` takes new senses with a gloss alone. `skips` are the
+# without `readings` takes new senses with a gloss alone, and a noun in a
+# language with `articles` takes the definite article that fits its form.
+# `skips` are the
 # reasons the segmenter may give for a word to get no card. A language
 # written with `spaces` between its words breaks lines at them.
 Language = Data.define(
@@ -16,6 +18,7 @@ Language = Data.define(
   :form,
   :form_fits,
   :readings,
+  :articles,
   :skips,
   :spaces,
   :prompts,
@@ -31,6 +34,7 @@ class Language
     form: "simplified",
     form_fits: ->(text, form) { form.length == text.length },
     readings: true,
+    articles: [],
     skips: [],
     spaces: false,
     prompts: Snippets::Mandarin::PROMPTS,
@@ -55,6 +59,7 @@ class Language
     form: "headword",
     form_fits: ->(text, form) { form.casecmp?(text) },
     readings: false,
+    articles: ["o", "a", "os", "as"],
     skips: ["foreign", "name"],
     spaces: true,
     prompts: Snippets::Portuguese::PROMPTS,

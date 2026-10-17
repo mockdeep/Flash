@@ -175,6 +175,13 @@ RSpec.describe Snippets::Occurrence do
       expect(occurrence.word_prompt(0)).to include(headword: "爱")
     end
 
+    it "lists a noun's sense with its article" do
+      entry = create(:entry, headword: "爱", reading: "ài", article: "o")
+      create(:sense, entry:, gloss: "love")
+
+      expect(occurrence.word_prompt(0)[:senses].sole).to include(article: "o")
+    end
+
     it "lists each sense with its headword and reading" do
       entry = create(:entry, headword: "爱", reading: "ài")
       sense = create(:sense, entry:, gloss: "to love")

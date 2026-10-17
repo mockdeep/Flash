@@ -16,6 +16,13 @@ RSpec.describe Snippets::Record do
     Snippets::Proposal.from(occurrence(word, simplified), row.stringify_keys)
   end
 
+  def casa
+    snippet = create(:snippet, word_list: create(:word_list, language: "pt"))
+    tokens = [{ "text" => "casa" }]
+    sentence = build(:snippet_sentence, snippet:, tokens:)
+    Snippets::Occurrence.new(sentence:, index: 0)
+  end
+
   describe ".call" do
     it "marks a missegmented token with its note" do
       expect(described_class.call(proposal("missegmented")))
@@ -40,6 +47,13 @@ RSpec.describe Snippets::Record do
 
       expect(Entry.last)
         .to have_attributes(language: "zh", headword: "爱", reading: "ài")
+    end
+
+    it "files a new noun under its article" do
+      row = { "decision" => "new", "gloss" => "house", "article" => "a" }
+      described_class.call(Snippets::Proposal.from(casa, row))
+
+      expect(Entry.last.term).to eq("a casa")
     end
 
     it "creates the new sense under its gloss" do

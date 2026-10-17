@@ -24,6 +24,7 @@ module Snippets
               sense_id: { type: "integer" },
               reading: { type: "string" },
               gloss: { type: "string" },
+              article: { type: "string" },
               note: { type: "string" },
             },
           },

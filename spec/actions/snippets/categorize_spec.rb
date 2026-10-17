@@ -41,6 +41,16 @@ RSpec.describe Snippets::Categorize do
       expect(llm.calls.sole.prompt).to eq(prompt.to_json)
     end
 
+    it "asks about a noun with its article" do
+      llm.answer(categories("noun"))
+      filed = membership
+      filed.sense.entry.update!(article: "o")
+
+      categorize([filed])
+
+      expect(llm.calls.sole.prompt).to include('"headword":"o 爱"')
+    end
+
     it "files each membership under its answer" do
       filed = [membership, membership(headword: "花", gloss: "flower")]
       llm.answer(categories("verb", "noun"))
