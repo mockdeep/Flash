@@ -69,6 +69,27 @@ RSpec.describe Snippets::Segment do
       expect(portuguese_tokens("falava")).to eq([{ "text" => "falava" }])
     end
 
+    it "studies an abbreviation under the word it stands for" do
+      llm.answer(portuguese_answer(["D.", "Dona"], "Inácia"))
+
+      expect(portuguese_tokens("D. Inácia").first)
+        .to eq("text" => "D.", "headword" => "Dona")
+    end
+
+    it "asks again when a headword is not the abbreviation written out" do
+      llm.answer(portuguese_answer(["Sr.", "Doutor"]))
+      llm.answer(portuguese_answer(["Sr.", "Senhor"]))
+
+      expect(portuguese_tokens("Sr.").sole["headword"]).to eq("Senhor")
+    end
+
+    it "writes out only a word that ends in a full stop" do
+      llm.answer(portuguese_answer(["Sr", "Senhor"]))
+      llm.answer(portuguese_answer("Sr"))
+
+      expect(portuguese_tokens("Sr")).to eq([{ "text" => "Sr" }])
+    end
+
     it "keeps why a word was skipped" do
       title = "Gone with the Wind"
       llm.answer(skipped_answer(title))

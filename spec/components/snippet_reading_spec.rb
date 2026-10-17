@@ -213,6 +213,28 @@ RSpec.describe Components::SnippetReading, type: :view do
     expect(page).to have_css(".reading-snippet__lookup-label", text: "a casa")
   end
 
+  def abbreviated_snippet
+    source = create(:source, word_list: create(:word_list, language: "pt"))
+    entry = create(:entry, language: "pt", headword: "Dona", reading: nil)
+    sense = create(:sense, entry:, gloss: "Ms.")
+    snippet = create(:snippet, source:, body: "D.")
+    tokens = [{ "text" => "D.", "sense_id" => sense.id }]
+    create(:snippet_sentence, snippet:, tokens:)
+    render_for(snippet, source:)
+  end
+
+  it "keeps an abbreviation as written in the text" do
+    page = abbreviated_snippet
+
+    expect(page).to have_css(".reading-snippet__word", text: "D.")
+  end
+
+  it "shows an abbreviation written out over the gloss" do
+    page = abbreviated_snippet
+
+    expect(page).to have_css(".reading-snippet__lookup-label", text: "Dona")
+  end
+
   def skipped_snippet(skip)
     source = create(:source, word_list: create(:word_list, language: "pt"))
     snippet = create(:snippet, source:, body: "Inácia.")
