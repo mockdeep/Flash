@@ -51,6 +51,15 @@ RSpec.describe Snippets::Report do
         .to match(/Unresolved:\n  sentence \d+ token 0 爱: \?/)
     end
 
+    it "shows a noun with its article" do
+      entry = create(
+        :entry, language: "pt", headword: "casa", reading: nil, article: "a"
+      )
+      sense = create(:sense, entry:, gloss: "house")
+
+      expect(report(resolved(sense))).to include("##{sense.id} a casa: house")
+    end
+
     it "lists the senses the snippet created" do
       sense = love
 

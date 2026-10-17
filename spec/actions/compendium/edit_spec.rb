@@ -12,6 +12,16 @@ RSpec.describe Compendium::Edit do
       described_class.add(language: "zh", headword: "爱", reading: "ài", gloss:)
     end
 
+    def add_house
+      described_class.add(
+        language: "pt",
+        headword: "casa",
+        reading: nil,
+        gloss: "house",
+        article: "a",
+      )
+    end
+
     it "creates the sense under the headword and reading" do
       expect(add.entry).to have_attributes(headword: "爱", reading: "ài")
     end
@@ -20,6 +30,10 @@ RSpec.describe Compendium::Edit do
       entry = love_entry
 
       expect(add.entry).to eq(entry)
+    end
+
+    it "files the sense under the article given" do
+      expect(add_house.entry.term).to eq("a casa")
     end
 
     it "reuses a sense the entry already holds under the gloss" do
@@ -43,6 +57,21 @@ RSpec.describe Compendium::Edit do
       described_class.revise(sense, reading: "ǎi")
 
       expect(sense.reload.entry).to eq(other)
+    end
+
+    it "moves the sense to the entry for a new article" do
+      entry = create(:entry, language: "pt", headword: "capital", reading: nil)
+      sense = create(:sense, entry:, gloss: "capital city")
+      described_class.revise(sense, article: "a")
+
+      expect(sense.reload.entry.term).to eq("a capital")
+    end
+
+    it "keeps the reading when only the article changes" do
+      sense = create(:sense, entry: love_entry)
+      described_class.revise(sense, article: "o")
+
+      expect(sense.reload.entry.reading).to eq("ài")
     end
 
     it "removes an entry the move leaves without senses" do

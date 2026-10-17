@@ -34,9 +34,9 @@ class LanguageCard
   end
 
   delegate :id, :reading, :back, :category, :sense_ids, to: :entry
-  delegate :view_count, to: :entry
+  delegate :view_count, :headword, to: :entry
 
-  def front = entry.headword
+  def front = entry.term
 
   def done? = correct_streak >= deck.level
 

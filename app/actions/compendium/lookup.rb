@@ -24,7 +24,7 @@ module Compendium
     def self.entry_lines(entry)
       senses = entry.senses.order(:id).map { |sense| "  #{sense_line(sense)}" }
 
-      ["#{entry.headword} #{entry.reading} (entry ##{entry.id})", *senses]
+      ["#{entry.term} #{entry.reading} (entry ##{entry.id})", *senses]
     end
 
     def self.sense_line(sense)

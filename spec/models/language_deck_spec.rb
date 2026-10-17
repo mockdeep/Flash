@@ -206,6 +206,14 @@ RSpec.describe LanguageDeck do
       expect(card.deck.homograph?(card)).to be(true)
     end
 
+    it "matches the headword whatever the article" do
+      card = create(:language_card, front: "capital", reading: "a")
+      create(:language_card, deck: card.deck, front: "capital", reading: "b")
+      Entry.find(card.id).update!(article: "a")
+
+      expect(card.deck.homograph?(card.deck.card(card.id))).to be(true)
+    end
+
     it "is false when the headword is alone in the list" do
       card = create(:language_card, front: "过", reading: "guò")
 

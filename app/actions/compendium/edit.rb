@@ -8,25 +8,27 @@ module Compendium
   module Edit
     class Refused < StandardError; end
 
-    # A sense under a headword, made unless the entry for that reading
-    # already holds the gloss.
-    def self.add(language:, headword:, reading:, gloss:)
-      Snippets::Record.entry_for(language, headword, reading).senses
+    # A sense under a headword, made unless the entry for that reading and
+    # article already holds the gloss.
+    def self.add(language:, headword:, reading:, gloss:, article: nil)
+      Snippets::Record.entry_for(language, headword, reading, article:).senses
         .find_or_create_by!(gloss:)
     end
 
-    # A reading belongs to the entry, so a new one moves the sense to the
-    # entry for that reading; an entry left without senses goes.
-    def self.revise(sense, gloss: nil, reading: nil)
+    # A reading or article belongs to the entry, so a new one moves the
+    # sense to the entry that has it; an entry left without senses goes.
+    def self.revise(sense, gloss: nil, reading: nil, article: nil)
       old_entry = sense.entry
-      entry = reading ? reread(old_entry, reading) : old_entry
+      moves = { reading:, article: }.compact
+      entry = moves.any? ? moved(old_entry, **moves) : old_entry
       sense.update!(entry:, gloss: gloss || sense.gloss)
       old_entry.destroy! if old_entry.senses.none?
       sense
     end
 
-    def self.reread(entry, reading)
-      Snippets::Record.entry_for(entry.language, entry.headword, reading)
+    def self.moved(entry, reading: entry.reading, article: entry.article)
+      Snippets::Record
+        .entry_for(entry.language, entry.headword, reading, article:)
     end
 
     # Deletes a sense nothing uses: no token, no list and no learner.

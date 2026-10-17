@@ -4,8 +4,9 @@ module Components
   # The Read tab: a deck's source, then its snippets word by word, laid out
   # as written, with gaps between words up to level 2. Each word is grey
   # until studied, green once done at the deck's level, and has its reading
-  # over it while its streak is zero. Clicking a word shows its reading and
-  # gloss in a popover, and resets its streak so study brings it back.
+  # over it while its streak is zero. Clicking a word shows its reading (or
+  # a noun's article) and gloss in a popover, and resets its streak so study
+  # brings it back.
   class SnippetReading < Components::Base
     GAPS_LEVEL = 2
 
@@ -77,11 +78,17 @@ module Components
 
     def render_lookup(id, sense)
       div(id:, popover: true, class: "reading-snippet__lookup") do
-        if language.readings
-          div(class: "reading-snippet__lookup-reading") { sense.entry.reading }
-        end
+        label = lookup_label(sense.entry)
+        div(class: "reading-snippet__lookup-label") { label } if label
         plain(sense.gloss)
       end
+    end
+
+    # Over the gloss: the word's reading, or a noun with its article.
+    def lookup_label(entry)
+      return entry.reading if language.readings
+
+      entry.term if entry.article
     end
 
     def word_attributes(id, sense)

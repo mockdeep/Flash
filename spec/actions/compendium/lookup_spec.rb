@@ -19,6 +19,15 @@ RSpec.describe Compendium::Lookup do
       expect(lookup("casa", Language::PORTUGUESE)).to start_with("casa ")
     end
 
+    it "shows a noun with its article" do
+      entry = create(
+        :entry, language: "pt", headword: "casa", reading: nil, article: "a"
+      )
+      create(:sense, entry:, gloss: "house")
+
+      expect(lookup("casa", Language::PORTUGUESE)).to start_with("a casa ")
+    end
+
     it "keeps to the language asked about" do
       entry = create(:entry, language: "pt", headword: "flor", reading: nil)
       create(:sense, entry:, gloss: "flower")

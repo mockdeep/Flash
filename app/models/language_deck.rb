@@ -70,7 +70,7 @@ class LanguageDeck < Deck
   end
 
   def homograph?(card)
-    twins = entries.where(entries: { headword: card.front })
+    twins = entries.where(entries: { headword: card.headword })
       .where.not(entries: { id: card.id })
     rows(twins).exists?
   end

@@ -34,8 +34,8 @@ module Snippets
     # Seed readings follow the HSK syllabus's spelling (curly apostrophes,
     # hyphenated idioms), so an entry matches on the letters alone rather
     # than gaining a twin that differs only in punctuation.
-    def self.entry_for(language, headword, reading)
-      twins = Entry.where(language:, headword:)
+    def self.entry_for(language, headword, reading, article: nil)
+      twins = Entry.where(language:, headword:, article:)
       twins.find { |entry| letters(entry.reading) == letters(reading) } ||
         twins.create!(reading:)
     end
