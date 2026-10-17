@@ -22,8 +22,11 @@ module Snippets
          each glossed on its own, already say what it means (a casa velha →
          a, casa, velha). When unsure, keep whole what a standard dictionary
          lists as one entry.
-      5. A name of several words is one word (São Paulo, Rio de Janeiro).
-      6. Digits are one token; punctuation is never part of a word.
+      5. A name of several words is one word (São Paulo, Rio de Janeiro),
+         but a title before a name is a word of its own, studied with its
+         capital as written (D., Sr., Sra., Dr., Padre, Capitão).
+      6. Digits are one token; punctuation is never part of a word, except
+         the full stop of an abbreviation (Sr., D., Dr.).
     TEXT
 
     GLOSSES = <<~TEXT
@@ -57,7 +60,7 @@ module Snippets
         artista), take it from the sentence.
       - Give a name the article Portuguese uses with it (o Brasil, a França,
         o Rio de Janeiro), and none when it takes none (Lisboa, Portugal,
-        Deus, março).
+        Deus, março). A title before a name (D., Sr., Dr.) takes none.
       - Give no article to any other word, nor to a phrase that is not a
         noun as a whole (fora de casa, no outro dia). A phrase that is one
         takes one (a missa do galo).
@@ -74,15 +77,18 @@ module Snippets
 
       Return each word as `text`, exactly as written, and `headword`, the
       form it is studied under: the same word in lower case, unless it is a
-      name or a Roman numeral (século XIX), which keeps its capitals. A word
+      name, a title before one (D., Sr.) or a Roman numeral (século XIX),
+      which keeps its capitals. A word
       capitalised only because it starts a sentence is lower-cased ("Ela" →
       "ela"). The headword differs from the text in letter case alone.
 
       Some words get no card; mark each, kept whole as one word:
       - `skip: "name"`: the name of a person or character, in any language
-        ("Friedrich Nietzsche", "Machado de Assis", "Capitão Gancho").
+        ("Friedrich Nietzsche", "Machado de Assis", "Brás Cubas").
       - `skip: "foreign"`: a title or other name left in another language
         ("Gone with the Wind", "Notre-Dame de Paris").
+      A title before a name gets a card: "D. Inácia" is "D." and "Inácia"
+      (`skip: "name"`).
       A place name, or a title given in Portuguese, is a word like any other
       ("Rio de Janeiro", "Alemanha", "O Senhor dos Anéis"), and so is a
       foreign word the sentence uses as Portuguese ("o show", "um blog").
@@ -155,6 +161,7 @@ module Snippets
         what the form adds (a past tense glossed as present, a plural as
         singular)
       - the headword is not the word in lower case, or lower-cases a name
+        or a title before one
       - the article breaks the article rules below: a noun without one, one
         that does not fit this form, or one on a word or name that takes
         none
