@@ -51,6 +51,7 @@ class Deck < ApplicationRecord
 
   belongs_to :word_list
   belongs_to :user
+  belongs_to :source_deck, class_name: "Deck"
   has_many :cards, dependent: :delete_all
   has_one :source, through: :word_list
   has_many :snippets, through: :source

@@ -62,6 +62,20 @@
   white-space: nowrap;
 }
 
+.catalog-rail-owned,
+.catalog-rail-owned:visited {
+  margin-top: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-success-dark);
+  text-decoration: none;
+}
+
+.catalog-rail-owned:hover {
+  text-decoration: underline;
+}
+
 .catalog-rail-try {
   margin-top: 0.75rem;
 }

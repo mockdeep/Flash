@@ -63,7 +63,11 @@ module Views
           div(class: "rail-type") { deck.type_label }
           render_rail_title(deck)
           render_rail_meta(deck)
-          render_try_button(deck) unless member?
+          if member?
+            render_owned_link(deck)
+          else
+            render_try_button(deck)
+          end
         end
       end
 
@@ -86,6 +90,17 @@ module Views
             pluralize(deck.cards_count, "card")
           end
         end
+      end
+
+      def render_owned_link(deck)
+        own_deck = current_user.deck_for(deck)
+        return unless own_deck
+
+        link_to(
+          "✓ In your decks",
+          deck_study_path(own_deck),
+          class: "catalog-rail-owned",
+        )
       end
 
       def render_try_button(deck)

@@ -218,6 +218,39 @@ RSpec.describe User do
     end
   end
 
+  describe "#deck_for" do
+    it "returns the deck itself when the user owns it" do
+      deck = create(:deck)
+
+      expect(deck.user.deck_for(deck)).to eq(deck)
+    end
+
+    it "returns the user's copy of a flat deck" do
+      source = create(:deck, user: create(:user))
+      copy = create(:deck, source_deck: source)
+
+      expect(copy.user.deck_for(source)).to eq(copy)
+    end
+
+    it "ignores another user's copy of a flat deck" do
+      source = create(:deck, user: create(:user))
+      create(:deck, source_deck: source)
+
+      expect(create(:user).deck_for(source)).to be_nil
+    end
+
+    it "returns the user's deck over a language deck's word_list" do
+      source = create(:reading_deck, user: create(:user))
+      own_deck = create(:reading_deck, word_list: source.word_list)
+
+      expect(own_deck.user.deck_for(source)).to eq(own_deck)
+    end
+
+    it "returns nil when the user has no matching deck" do
+      expect(create(:user).deck_for(create(:reading_deck))).to be_nil
+    end
+  end
+
   describe "#supporter?" do
     it "returns false when the user has no subscription" do
       user = create(:user)

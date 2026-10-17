@@ -54,7 +54,7 @@ module Views
 
       def render_action
         if member?
-          div(class: "catalog-show-actions") { render_copy_button }
+          div(class: "catalog-show-actions") { render_member_action }
         else
           render_demo_actions
         end
@@ -77,6 +77,19 @@ module Views
           timezone_field(form)
           form.button("Try This Deck", class: button_class(:primary))
         end
+      end
+
+      def render_member_action
+        own_deck = current_user.deck_for(deck)
+        own_deck ? render_study_link(own_deck) : render_copy_button
+      end
+
+      def render_study_link(own_deck)
+        link_to(
+          "Study (in your decks)",
+          deck_study_path(own_deck),
+          class: button_class(:primary),
+        )
       end
 
       def render_copy_button

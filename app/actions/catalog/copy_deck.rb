@@ -31,7 +31,9 @@ module Catalog
         study_goal: user.study_goal,
         distractor_pool: source.distractor_pool,
       }
-      return source.class.new(name: source.name, **attrs) if source.flat_cards?
+      if source.flat_cards?
+        return source.class.new(name: source.name, source_deck: source, **attrs)
+      end
 
       source.class.new(**attrs, word_list: source.word_list)
     end
