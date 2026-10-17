@@ -424,14 +424,13 @@ app/
 │   ├── application_controller.rb
 │   ├── accounts_controller.rb         # Account create / show / update / destroy
 │   ├── cards_controller.rb            # Single-card edit / destroy (turbo streams; via ProjectsCards)
-│   ├── catalog_controller.rb          # Public catalog browse / preview / copy
+│   ├── catalog_controller.rb          # Public catalog browse / preview / copy / try (the demo)
 │   ├── catalog_listings_controller.rb # Publish / unpublish a deck to the catalog
 │   ├── concerns/
 │   │   ├── demo_session.rb            # Demo guest-session helpers
 │   │   └── projects_cards.rb          # save_card/destroy_card → Decks::FlatCards (flat decks only)
 │   ├── decks_controller.rb            # `#create` dispatches CreateMusic vs CreateBasic on :deck_type
 │   ├── lookups_controller.rb          # Read-tab word lookup: resets the sense's streak
-│   ├── demo_controller.rb             # Starts a guest demo study session
 │   ├── milestones_controller.rb       # Updates a deck's study goal
 │   ├── pages_controller.rb            # pricing / privacy / terms
 │   ├── replacements_controller.rb     # Re-import a deck's cards (Decks::Replace)
@@ -488,16 +487,14 @@ app/
 │   ├── cards/
 │   │   └── edit_form.rb      # In-dialog card edit form (front / back / reading / category / example)
 │   ├── catalog/
-│   │   ├── index.rb          # Public deck grid (mic badge for music decks, 📖 for decks with shareable texts)
-│   │   └── show.rb           # Deck preview + texts + copy action (mic badge in header)
+│   │   ├── index.rb          # Public deck grid (mic badge for music decks, 📖 for decks with shareable texts); Try This Deck for visitors and guests
+│   │   └── show.rb           # Deck preview + texts + copy action, or try + log in for visitors and guests (mic badge in header)
 │   ├── decks/
 │   │   ├── index.rb          # Decks grouped into `DeckSection`s (each language, Basic, Music); each features its first unmet-goal deck, else its most recently studied
 │   │   ├── new.rb            # Three-way deck-type radio + language select
 │   │   ├── show.rb           # Share-link, replace link, cards table
 │   │   └── replacements/
 │   │       └── new.rb        # Re-import (replace) a deck's cards form
-│   ├── demo/
-│   │   └── show.rb
 │   ├── pages/
 │   │   ├── pricing.rb
 │   │   ├── privacy.rb
@@ -766,6 +763,7 @@ Users can browse and copy public decks at `/catalog`:
 - **Preview**: `/catalog/:id` — card preview (first 5 cards), deck info, and the source the deck's words came from (`Components::DeckTexts`, also on the share-link preview, once a snippet is finished: the source's title, author and license, or "Not included — words only" when its license keeps it from sharing) (no auth required)
 - **Texts badge**: a deck whose list has a finished snippet and a shareable source (`Deck#shares_texts?`) gets a 📖 on its catalog grid card
 - **Copy**: `POST /catalog/:id/copy` — adds the deck to the current user's account (auth required). A **Basic or Music** deck is duplicated, cards and all. A **language** deck is added *by reference*: the new deck points at the source's `word_list`, and only its cards (the progress anchors) are new — the words themselves are canonical and shared. A `Deck` validation blocks a second deck over the same word_list for one user, so adding twice errors instead of silently duplicating.
+- **Try (the demo)**: `POST /catalog/:id/try` → `CatalogController#try` — logged-out visitors and guests get "Try This Deck" on the grid and the preview. It always starts a fresh guest user (`Demo::CreateGuestUser`, capped at `Deck::GUEST_CARD_LIMIT` cards) over the deck and goes to its study page; a guest who tries another deck leaves the old one to the hourly cleanup. `/demo` redirects here.
 - Deck visibility is controlled by `deck.visibility` (`"public"` / `"private"`)
 - **Admins** publish/unpublish a deck to the catalog from the deck-show page (`Components::CatalogToggleButton` → `CatalogListingsController#create`/`#destroy`, which flips `visibility`). Non-admins have no visibility UI.
 
@@ -775,7 +773,7 @@ Private decks can be shared with a friend via a revocable token. The `decks.shar
 - **Generate / revoke**: owner POSTs to `/decks/:deck_id/share` (sets a fresh `urlsafe_base64(16)` token) or DELETEs to revoke. Both handled by `SharesController#create` / `#destroy`; backed by `Deck#generate_share_token!` / `#revoke_share_token!` / `#shared?` on the model.
 - **Public preview**: `GET /shared/:token` → `SharesController#show` renders `Views::Shares::Show` with no auth (`skip_before_action :authenticate_user, only: [:show]`). Attributes the deck to its owner ("shared by [username]"). Returns 404 if the token doesn't match a current deck (revocation just nullifies the column).
 - **Add to my decks**: `POST /shared/:token/copy` → `SharesController#copy` reuses `Catalog::CopyDeck` to fork the deck into `current_user`'s account.
-- **Try without an account**: `POST /shared/:token/try` → `SharesController#try` spins up a guest user (`Demo::CreateGuestUser`) over the shared deck and redirects into a study session (no auth, like the demo).
+- **Try without an account**: `POST /shared/:token/try` → `SharesController#try` spins up a guest user (`Demo::CreateGuestUser`) over the shared deck and redirects into a study session (no auth, like the catalog's Try).
 - **Share UI on deck show page** uses a Stimulus `clipboard` controller for copy-to-clipboard on the share-link input.
 - Sharing is orthogonal to `visibility` — a `"private"` deck can have a token without being listed in the catalog.
 

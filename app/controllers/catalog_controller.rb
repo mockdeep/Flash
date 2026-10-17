@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 class CatalogController < ApplicationController
-  skip_before_action(:authenticate_user, only: [:index, :show])
+  include DemoSession
+
+  skip_before_action(:authenticate_user, only: [:index, :show, :try])
 
   def index
     decks = Deck.publicly_visible.ordered
@@ -15,6 +17,15 @@ class CatalogController < ApplicationController
   def copy
     result = Catalog::CopyDeck.call(user: current_user, deck: public_deck)
     result.success? ? deck_copied : deck_copy_failed(result.record)
+  end
+
+  def try
+    result = Demo::CreateGuestUser.call(
+      deck: public_deck,
+      time_zone: params[:time_zone],
+    )
+    save_demo_session(result)
+    redirect_to(deck_study_path(result.deck))
   end
 
   private
