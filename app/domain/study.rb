@@ -2,8 +2,8 @@
 
 class Study
   ACTIVE_CARD_THRESHOLD = 20
-  FUZZY_FIND_LEVEL = 3
-  READING_LEVEL = 2
+  FUZZY_FIND_ROUND = 3
+  READING_ROUND = 2
   Result =
     Data.define(
       :card,
@@ -13,13 +13,13 @@ class Study
       :selected_answer,
       :possible_answers,
       :card_completed,
-      :level_completed,
+      :round_completed,
       :reading_passed,
     ) do
       def initialize(reading_passed: false, **rest) = super
       def correct? = correct
       def card_completed? = card_completed
-      def level_completed? = level_completed
+      def round_completed? = round_completed
       def reading_passed? = reading_passed
     end
 
@@ -55,7 +55,7 @@ class Study
   def reading_confirmed? = reading_confirmed
 
   def active_card_threshold
-    (2**(deck.level - 1)) * ACTIVE_CARD_THRESHOLD
+    (2**(deck.round - 1)) * ACTIVE_CARD_THRESHOLD
   end
 
   # Unseen cards come first, in the pool's order; the rest at random.
@@ -117,7 +117,7 @@ class Study
       selected_answer: answer,
       possible_answers: [*possible_answers, card.reading].uniq,
       card_completed: false,
-      level_completed: false,
+      round_completed: false,
       reading_passed: correct,
     )
   end
@@ -128,8 +128,8 @@ class Study
     if card.back == answer
       card.record_correct!
       card_completed = card.done?
-      level_completed = card_completed && deck.all_done?
-      deck.update!(level: deck.level + 1) if level_completed
+      round_completed = card_completed && deck.all_done?
+      deck.update!(round: deck.round + 1) if round_completed
       Result.new(
         card:,
         correct: true,
@@ -138,7 +138,7 @@ class Study
         selected_answer: answer,
         possible_answers: result_answers,
         card_completed:,
-        level_completed:,
+        round_completed:,
       )
     else
       card.record_miss!(answer)
@@ -150,18 +150,18 @@ class Study
         selected_answer: answer,
         possible_answers: result_answers,
         card_completed: false,
-        level_completed: false,
+        round_completed: false,
       )
     end
   end
 
   private
 
-  def fuzzy_find? = deck.level >= FUZZY_FIND_LEVEL
+  def fuzzy_find? = deck.round >= FUZZY_FIND_ROUND
 
   def reading_stage?
     !reading_confirmed &&
-      deck.level >= READING_LEVEL &&
+      deck.round >= READING_ROUND &&
       next_card&.reading.present?
   end
 

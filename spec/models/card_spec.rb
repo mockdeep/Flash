@@ -10,7 +10,7 @@ RSpec.describe Card do
   it { is_expected.to validate_presence_of(:view_count) }
 
   describe ".done" do
-    it "returns cards with correct_streak at or above the given level" do
+    it "returns cards with correct_streak at or above the given round" do
       deck = create(:deck)
       done_card = create(:basic_card, :done, deck:)
       create(:basic_card, deck:)
@@ -18,8 +18,8 @@ RSpec.describe Card do
       expect(deck.cards.done(1)).to eq([done_card])
     end
 
-    it "respects a custom level argument" do
-      deck = create(:deck, level: 3)
+    it "respects a custom round argument" do
+      deck = create(:deck, round: 3)
       done_card = create(:basic_card, deck:, correct_streak: 3)
       create(:basic_card, deck:, correct_streak: 2)
 
@@ -28,7 +28,7 @@ RSpec.describe Card do
   end
 
   describe ".not_done" do
-    it "returns cards with correct_streak below the given level" do
+    it "returns cards with correct_streak below the given round" do
       deck = create(:deck)
       not_done_card = create(:basic_card, deck:)
       create(:basic_card, :done, deck:)
@@ -36,8 +36,8 @@ RSpec.describe Card do
       expect(deck.cards.not_done(1)).to eq([not_done_card])
     end
 
-    it "respects a custom level argument" do
-      deck = create(:deck, level: 3)
+    it "respects a custom round argument" do
+      deck = create(:deck, round: 3)
       not_done_card = create(:basic_card, deck:, correct_streak: 2)
       create(:basic_card, deck:, correct_streak: 3)
 
@@ -66,15 +66,15 @@ RSpec.describe Card do
   end
 
   describe "#done?" do
-    it "returns true when correct_streak meets deck level" do
-      deck = create(:deck, level: 2)
+    it "returns true when correct_streak meets deck round" do
+      deck = create(:deck, round: 2)
       card = create(:basic_card, deck:, correct_streak: 2)
 
       expect(card.done?).to be(true)
     end
 
-    it "returns false when correct_streak is below deck level" do
-      deck = create(:deck, level: 2)
+    it "returns false when correct_streak is below deck round" do
+      deck = create(:deck, round: 2)
       card = create(:basic_card, deck:, correct_streak: 1)
 
       expect(card.done?).to be(false)

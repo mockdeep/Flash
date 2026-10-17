@@ -5,7 +5,7 @@ module Views
     class MusicUpdate < Views::Base
       include StudyPageData
 
-      LEVEL_BODY = "You've mastered all the cards at this level."
+      ROUND_BODY = "You've mastered all the cards in this round."
 
       attr_accessor :deck, :result, :demo
 
@@ -25,39 +25,39 @@ module Views
 
       private
 
-      def render_level_progress
+      def render_round_progress
         div(class: "session-progress") do
-          render(Components::LevelProgress.new(deck:))
+          render(Components::RoundProgress.new(deck:))
         end
       end
 
       def render_frame
-        if result.level_completed?
-          render_level_complete
+        if result.round_completed?
+          render_round_complete
         else
-          render_level_progress
+          render_round_progress
           render_card_result
         end
       end
 
-      def render_level_complete
-        render_level_box(deck.level - 1)
-        render_level_actions
+      def render_round_complete
+        render_round_box(deck.round - 1)
+        render_round_actions
       end
 
-      def render_level_box(completed_level)
+      def render_round_box(completed_round)
         div(class: "accent-box") do
           div(class: "accent-box__icon") { "🎉" }
           div(class: "accent-box__content") do
             h2(class: "accent-box__heading") do
-              "Level #{completed_level} Complete!"
+              "Round #{completed_round} Complete!"
             end
-            p(class: "accent-box__text") { LEVEL_BODY }
+            p(class: "accent-box__text") { ROUND_BODY }
           end
         end
       end
 
-      def render_level_actions
+      def render_round_actions
         div(class: "session-milestone-actions") do
           render_continue_link
           render_decks_link
@@ -66,7 +66,7 @@ module Views
 
       def render_continue_link
         link_to(
-          "Continue to Level #{deck.level}",
+          "Continue to Round #{deck.round}",
           deck_study_path(deck),
           class: "session-milestone-primary",
         )

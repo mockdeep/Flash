@@ -12,7 +12,7 @@ RSpec.describe MilestonesController do
   end
 
   def target_params
-    target = { goal_mode: "target", target_level: 1, target_date: Date.current }
+    target = { goal_mode: "target", target_round: 1, target_date: Date.current }
     { deck: target }
   end
 
@@ -39,7 +39,7 @@ RSpec.describe MilestonesController do
       deck = target_deck
 
       expect { update_milestone(deck, **target_params) }
-        .to change_record(deck, :target_level).to(1)
+        .to change_record(deck, :target_round).to(1)
     end
 
     it "saves today's goal from a new target" do

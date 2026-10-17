@@ -36,12 +36,12 @@ RSpec.describe StudiesController do
       expect(rendered).to have_text("completed")
     end
 
-    it "shows filled segments for completed levels" do
-      deck = create(:deck, level: 3)
+    it "shows filled segments for completed rounds" do
+      deck = create(:deck, round: 3)
       create(:basic_card, deck:)
       get(deck_study_path(deck))
 
-      expect(rendered).to have_css(".level-fill--done", count: 2)
+      expect(rendered).to have_css(".round-fill--done", count: 2)
     end
 
     it "shows a homograph's reading under the prompt" do
@@ -173,7 +173,7 @@ RSpec.describe StudiesController do
       expect(rendered).to have_text("0 / 50 completed")
     end
 
-    context "when the deck has a level target" do
+    context "when the deck has a round target" do
       def target_deck
         deck = create(:deck, :with_target)
         create_list(:basic_card, 2, deck:)
@@ -195,7 +195,7 @@ RSpec.describe StudiesController do
       it "says when the target date was missed" do
         get(deck_study_path(missed_deck))
 
-        expect(rendered).to have_text("You didn't finish level 1 by")
+        expect(rendered).to have_text("You didn't finish round 1 by")
       end
 
       it "prompts for a new date once the target date has passed" do
@@ -206,17 +206,17 @@ RSpec.describe StudiesController do
 
       def reached_deck
         deck = target_deck
-        deck.update!(level: 2)
+        deck.update!(round: 2)
         deck
       end
 
-      it "congratulates the learner once the target level is finished" do
+      it "congratulates the learner once the target round is finished" do
         get(deck_study_path(reached_deck))
 
-        expect(rendered).to have_text("You finished level 1!")
+        expect(rendered).to have_text("You finished round 1!")
       end
 
-      it "offers to set the next target once the level is finished" do
+      it "offers to set the next target once the round is finished" do
         get(deck_study_path(reached_deck))
 
         expect(rendered).to have_button("Set next target")
@@ -268,7 +268,7 @@ RSpec.describe StudiesController do
       end
     end
 
-    context "when the deck has no level target" do
+    context "when the deck has no round target" do
       it "picks the daily goal mode" do
         get(deck_study_path(create(:basic_card).deck))
 
@@ -381,14 +381,14 @@ RSpec.describe StudiesController do
         expect(rendered).to have_link("Done for Now")
       end
 
-      it "does not mention tomorrow's goal without a level target" do
+      it "does not mention tomorrow's goal without a round target" do
         get(deck_study_path(complete_milestone_goal))
 
         expect(rendered).to have_no_text("Your daily goal is now")
       end
     end
 
-    context "when returning after reaching a level target's milestone" do
+    context "when returning after reaching a round target's milestone" do
       def met_target_deck
         deck = create(:deck, :with_target, target_date: 2.days.from_now.to_date)
         create_list(:basic_card, 4, deck:)
@@ -696,34 +696,34 @@ RSpec.describe StudiesController do
         .to change_record(card.deck, :last_studied_at).from(nil)
     end
 
-    it "shows level complete screen when last card is answered" do
+    it "shows round complete screen when last card is answered" do
       card = create(:basic_card, back: "Paris", correct_streak: 0)
       submit_answer(card:, answer: "Paris")
 
-      expect(rendered).to have_css("h2", text: "Level 1 Complete!")
+      expect(rendered).to have_css("h2", text: "Round 1 Complete!")
     end
 
-    it "shows the earned segment on the level complete screen" do
+    it "shows the earned segment on the round complete screen" do
       card = create(:basic_card, back: "Paris", correct_streak: 0)
       submit_answer(card:, answer: "Paris")
 
-      expect(rendered).to have_css(".level-fill--done", count: 1)
+      expect(rendered).to have_css(".round-fill--done", count: 1)
     end
 
-    it "continues to the next level with a whole page" do
+    it "continues to the next round with a whole page" do
       card = create(:basic_card, back: "Paris", correct_streak: 0)
       submit_answer(card:, answer: "Paris")
 
       link = "a[data-turbo-frame='_top']"
-      expect(rendered).to have_css(link, text: "Continue to Level 2")
+      expect(rendered).to have_css(link, text: "Continue to Round 2")
     end
 
-    it "advances deck level when last card is completed" do
+    it "advances deck round when last card is completed" do
       deck = create(:deck)
       card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
 
       expect { submit_answer(card:, answer: "Paris") }
-        .to change_record(deck, :level).from(1).to(2)
+        .to change_record(deck, :round).from(1).to(2)
     end
 
     context "when answer is correct" do
@@ -757,7 +757,7 @@ RSpec.describe StudiesController do
         expect(rendered).to have_css(".answer-faded", text: "London")
       end
 
-      it "does not show streak pips at level 1" do
+      it "does not show streak pips at round 1" do
         card = create(:basic_card, back: "Paris", correct_streak: 0)
         create(:basic_card, deck: card.deck)
         submit_answer(card:, answer: "Paris")
@@ -765,8 +765,8 @@ RSpec.describe StudiesController do
         expect(rendered).to have_no_css(".answer-streak")
       end
 
-      it "shows streak progress at level 2" do
-        deck = create(:deck, level: 2)
+      it "shows streak progress at round 2" do
+        deck = create(:deck, round: 2)
         card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
         create(:basic_card, deck:)
         submit_answer(card:, answer: "Paris")
@@ -775,7 +775,7 @@ RSpec.describe StudiesController do
       end
 
       it "fills one pip per correct answer in a row" do
-        deck = create(:deck, level: 2)
+        deck = create(:deck, round: 2)
         card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
         create(:basic_card, deck:)
         submit_answer(card:, answer: "Paris")
@@ -784,7 +784,7 @@ RSpec.describe StudiesController do
       end
 
       it "shows all pips filled when the card clears" do
-        deck = create(:deck, level: 2)
+        deck = create(:deck, round: 2)
         card = create(:basic_card, deck:, back: "Paris", correct_streak: 1)
         create(:basic_card, deck:, correct_streak: 0)
         submit_answer(card:, answer: "Paris")
@@ -824,7 +824,7 @@ RSpec.describe StudiesController do
       end
 
       it "does not show streak pips" do
-        deck = create(:deck, level: 2)
+        deck = create(:deck, round: 2)
         card = create(:basic_card, deck:, back: "Paris")
         submit_answer(card:, answer: "London")
 
@@ -884,13 +884,13 @@ RSpec.describe StudiesController do
       expect(rendered).to have_no_css(".session-progress-bar")
     end
 
-    it "shows the deck's level" do
+    it "shows the deck's round" do
       deck = music_deck
       create(:music_card, deck:, back: "C4")
 
       get(deck_study_path(deck))
 
-      expect(rendered).to have_css(".level-segments")
+      expect(rendered).to have_css(".round-segments")
     end
 
     it "wires the wake-lock controller on the study frame" do
@@ -903,7 +903,7 @@ RSpec.describe StudiesController do
     end
 
     it "exposes the joined card window to Stimulus on #show" do
-      deck = music_deck(level: 3)
+      deck = music_deck(round: 3)
       seed_notes(deck, ["C4", "E4", "G4"])
       get(deck_study_path(deck))
 
@@ -952,22 +952,22 @@ RSpec.describe StudiesController do
       expect(rendered).to have_css("[data-controller='music-study']")
     end
 
-    it "shows the level-complete UI when the last card is answered" do
+    it "shows the round-complete UI when the last card is answered" do
       deck = music_deck
       create(:music_card, deck:, back: "C4")
 
       submit_music_window(deck, answer: "C4")
 
-      expect(rendered).to have_css("h2", text: "Level 1 Complete!")
+      expect(rendered).to have_css("h2", text: "Round 1 Complete!")
     end
 
-    it "links to the next level from the level-complete UI" do
+    it "links to the next round from the round-complete UI" do
       deck = music_deck
       create(:music_card, deck:, back: "C4")
 
       submit_music_window(deck, answer: "C4")
 
-      expect(rendered).to have_link("Continue to Level 2")
+      expect(rendered).to have_link("Continue to Round 2")
     end
 
     it "marks the outcome as incorrect after a wrong answer" do
@@ -999,7 +999,7 @@ RSpec.describe StudiesController do
 
   describe "reading stage" do
     def reading_card(**attrs)
-      deck = create(:deck, level: 2)
+      deck = create(:deck, round: 2)
       create(:basic_card, deck:, reading: "liǎng", **attrs)
     end
 
@@ -1013,7 +1013,7 @@ RSpec.describe StudiesController do
       patch(deck_study_path(card.deck), params: { answer: answer_params })
     end
 
-    it "asks for the reading first at level 2" do
+    it "asks for the reading first at round 2" do
       card = reading_card
       get(deck_study_path(card.deck))
 
@@ -1027,9 +1027,9 @@ RSpec.describe StudiesController do
       expect(rendered).to have_css(".answer-button", text: "liǎng")
     end
 
-    it "asks for the reading by typing at the fuzzy find level" do
+    it "asks for the reading by typing at the fuzzy find round" do
       card = reading_card
-      card.deck.update!(level: Study::FUZZY_FIND_LEVEL)
+      card.deck.update!(round: Study::FUZZY_FIND_ROUND)
       get(deck_study_path(card.deck))
 
       expect(rendered).to have_text("Type the reading")
@@ -1037,7 +1037,7 @@ RSpec.describe StudiesController do
 
     it "submits the typed reading as the reading stage" do
       card = reading_card
-      card.deck.update!(level: Study::FUZZY_FIND_LEVEL)
+      card.deck.update!(round: Study::FUZZY_FIND_ROUND)
       get(deck_study_path(card.deck))
 
       expect(rendered)

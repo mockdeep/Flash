@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module Components
-  # A note under the study progress bar when a level target needs the
-  # learner's attention: its date passed, or its level was finished. Its
+  # A note under the study progress bar when a round target needs the
+  # learner's attention: its date passed, or its round was finished. Its
   # buttons open the goal dialog, so it renders inside SessionProgress.
   class TargetPrompt < Components::Base
     def initialize(deck:)
@@ -34,11 +34,11 @@ module Components
 
     def missed_text
       date = @deck.target_date.strftime("%b %-d")
-      "You didn't finish level #{@deck.target_level} by #{date}, so " \
+      "You didn't finish round #{@deck.target_round} by #{date}, so " \
         "today's goal covers everything left."
     end
 
-    def reached_text = "You finished level #{@deck.target_level}! 🎉"
+    def reached_text = "You finished round #{@deck.target_round}! 🎉"
 
     def dialog_button(text)
       button(

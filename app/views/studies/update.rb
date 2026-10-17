@@ -19,8 +19,8 @@ module Views
       def view_template
         div(class: "content-container study-page", data: study_page_data) do
           turbo_frame_tag("study", class: "study-frame") do
-            if result.level_completed?
-              render_level_complete
+            if result.round_completed?
+              render_round_complete
               next
             end
 
@@ -39,24 +39,24 @@ module Views
 
       private
 
-      def render_level_complete
-        completed_level = deck.level - 1
+      def render_round_complete
+        completed_round = deck.round - 1
         div(class: "accent-box") do
           div(class: "accent-box__icon") { "🎉" }
           div(class: "accent-box__content") do
             h2(class: "accent-box__heading") do
-              "Level #{completed_level} Complete!"
+              "Round #{completed_round} Complete!"
             end
-            render(Components::LevelProgress.new(deck:))
+            render(Components::RoundProgress.new(deck:))
             p(class: "accent-box__text") do
-              "You've mastered all the cards at this level."
+              "You've mastered all the cards in this round."
             end
           end
         end
         div(class: "session-milestone-actions") do
-          # The whole page, so the Read tab picks up the new level.
+          # The whole page, so the Read tab picks up the new round.
           link_to(
-            "Continue to Level #{deck.level}",
+            "Continue to Round #{deck.round}",
             deck_study_path(deck),
             class: "session-milestone-primary",
             data: { turbo_frame: "_top" },
@@ -152,18 +152,18 @@ module Views
       def editable? = !demo && deck.flat_cards?
 
       def show_streak_pips?(answer)
-        answer == result.correct_answer && result.correct? && deck.level > 1
+        answer == result.correct_answer && result.correct? && deck.round > 1
       end
 
       def render_streak_pips
-        filled = [result.card.correct_streak, deck.level].min
+        filled = [result.card.correct_streak, deck.round].min
         span(class: "answer-streak") do
           span(class: "answer-streak__pips", aria: { hidden: "true" }) do
-            deck.level.times do |i|
+            deck.round.times do |i|
               span(class: ["streak-pip", ("streak-pip--filled" if i < filled)])
             end
           end
-          span(class: "answer-streak__count") { "#{filled}/#{deck.level}" }
+          span(class: "answer-streak__count") { "#{filled}/#{deck.round}" }
         end
       end
 

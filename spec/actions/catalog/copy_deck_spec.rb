@@ -146,13 +146,13 @@ RSpec.describe Catalog::CopyDeck do
       expect(result.record.cards.first.view_count).to eq(0)
     end
 
-    it "resets level to 1" do
+    it "resets round to 1" do
       source = build_public_deck
-      source.update!(level: 3)
+      source.update!(round: 3)
       create(:basic_card, deck: source, front: "Q", back: "A")
       result = described_class.call(user: create(:user), deck: source)
 
-      expect(result.record.level).to eq(1)
+      expect(result.record.round).to eq(1)
     end
 
     it "returns failure when user already has deck with that name" do

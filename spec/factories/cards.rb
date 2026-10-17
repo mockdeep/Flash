@@ -18,7 +18,7 @@ FactoryBot.define do
     end
 
     trait(:done) do
-      correct_streak { deck.level }
+      correct_streak { deck.round }
     end
 
     factory(:music_card, class: "MusicCard") do

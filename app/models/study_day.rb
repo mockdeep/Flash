@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # The cards a deck completed in the current batch on one day in its owner's
-# time zone. A deck with a level target saves the day's goal here when the
+# time zone. A deck with a round target saves the day's goal here when the
 # row is made. Recalculating works the goal out again and starts a new
 # batch, counting again from zero. Keeping going also starts a new batch, but
 # one sized to lower tomorrow's goal by one card.

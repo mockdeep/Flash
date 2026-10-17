@@ -2,14 +2,14 @@
 
 module Components
   # The Read tab: a deck's source, then its snippets word by word, laid out
-  # as written, with gaps between words up to level 2. Each word is grey
-  # until studied, green once done at the deck's level, and has its reading
+  # as written, with gaps between words up to round 2. Each word is grey
+  # until studied, green once done at the deck's round, and has its reading
   # over it while its streak is zero. Clicking a word shows its reading (or
   # a noun's article) and gloss in a popover, and resets its streak so study
   # brings it back. A word the segmenter skipped has no card, so its popover
   # says why and clicking it records nothing.
   class SnippetReading < Components::Base
-    GAPS_LEVEL = 2
+    GAPS_ROUND = 2
 
     attr_accessor :snippets, :deck
 
@@ -91,7 +91,7 @@ module Components
     end
 
     def word_state(sense)
-      state = scores.fetch(sense.id) { SkillScore.new }.state(deck.level)
+      state = scores.fetch(sense.id) { SkillScore.new }.state(deck.round)
       "reading-snippet__word--#{state}" if state
     end
 
@@ -126,6 +126,6 @@ module Components
     end
 
     def language = deck.source.language
-    def gaps? = deck.level <= GAPS_LEVEL
+    def gaps? = deck.round <= GAPS_ROUND
   end
 end
