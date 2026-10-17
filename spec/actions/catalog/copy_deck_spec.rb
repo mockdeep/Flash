@@ -27,6 +27,13 @@ RSpec.describe Catalog::CopyDeck do
         .to change { user.decks.count }.by(1)
     end
 
+    it "points the copy back at its source deck" do
+      source = build_public_deck
+      result = described_class.call(user: create(:user), deck: source)
+
+      expect(result.record.source_deck).to eq(source)
+    end
+
     it "copies the deck name" do
       source = build_public_deck(name: "My Deck")
       result = described_class.call(user: create(:user), deck: source)

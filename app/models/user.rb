@@ -60,6 +60,18 @@ class User < ApplicationRecord
       .find_or_create_by!(type: "ReadingDeck", word_list:)
   end
 
+  # This user's deck for a catalog or shared deck: the deck itself, a copy of
+  # a Basic or Music deck, or any deck over a language deck's word_list.
+  def deck_for(deck)
+    matches =
+      if deck.flat_cards?
+        decks.where(source_deck: deck)
+      else
+        decks.where(word_list: deck.word_list, type: deck.type)
+      end
+    decks.where(id: deck.id).or(matches).first
+  end
+
   def supporter?
     subscription&.active? || false
   end

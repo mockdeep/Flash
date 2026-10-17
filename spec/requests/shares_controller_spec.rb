@@ -139,6 +139,26 @@ RSpec.describe SharesController do
       expect(rendered).to have_text("Add to My Decks")
     end
 
+    it "links to study a deck already in the user's decks" do
+      deck = shared_deck
+      copy = create(:deck, user: default_user, source_deck: deck)
+      login_as(default_user)
+
+      get(shared_deck_path(deck.share_token))
+
+      expect(rendered).to have_link("Study", href: deck_study_path(copy))
+    end
+
+    it "hides the copy button for a deck already in the user's decks" do
+      deck = shared_deck
+      create(:deck, user: default_user, source_deck: deck)
+      login_as(default_user)
+
+      get(shared_deck_path(deck.share_token))
+
+      expect(rendered).to have_no_button("Add to My Decks")
+    end
+
     it "returns not found for an unknown token" do
       get(shared_deck_path("does-not-exist"))
 

@@ -50,11 +50,24 @@ module Views
       def render_action
         div(class: "catalog-show-actions") do
           if current_user.logged_in?
-            render_copy_button
+            render_member_action
           else
             render_try_button
           end
         end
+      end
+
+      def render_member_action
+        own_deck = current_user.deck_for(deck)
+        own_deck ? render_study_link(own_deck) : render_copy_button
+      end
+
+      def render_study_link(own_deck)
+        link_to(
+          "Study (in your decks)",
+          deck_study_path(own_deck),
+          class: button_class(:primary),
+        )
       end
 
       def render_copy_button

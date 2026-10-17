@@ -153,6 +153,25 @@ RSpec.describe CatalogController do
       expect(rendered).to have_no_button("Try This Deck")
     end
 
+    it "links a deck already in the user's decks to its study page" do
+      deck = public_deck
+      copy = create(:deck, user: default_user, source_deck: deck)
+      login_as(default_user)
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_link("In your", href: deck_study_path(copy))
+    end
+
+    it "does not mark decks the user has not added" do
+      public_deck
+      login_as(default_user)
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_no_link("In your decks")
+    end
+
     it "invites authenticated users to add decks" do
       login_as(default_user)
 
@@ -314,6 +333,26 @@ RSpec.describe CatalogController do
       get(catalog_path(deck))
 
       expect(rendered).to have_text("Add to My Decks")
+    end
+
+    it "links to study a deck already in the user's decks" do
+      deck = public_deck
+      copy = create(:deck, user: default_user, source_deck: deck)
+      login_as(default_user)
+
+      get(catalog_path(deck))
+
+      expect(rendered).to have_link("Study", href: deck_study_path(copy))
+    end
+
+    it "hides the copy button for a deck already in the user's decks" do
+      deck = public_deck
+      create(:deck, user: default_user, source_deck: deck)
+      login_as(default_user)
+
+      get(catalog_path(deck))
+
+      expect(rendered).to have_no_button("Add to My Decks")
     end
 
     it "does not show a try button for authenticated users" do
