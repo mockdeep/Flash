@@ -17,11 +17,12 @@ module Snippets
     end
 
     # A sense under the token's headword, made unless the entry for that
-    # reading already holds the gloss.
-    def self.add_sense(sentence, index, reading:, gloss:)
+    # reading and article already holds the gloss.
+    def self.add_sense(sentence, index, reading:, gloss:, article: nil)
       headword = Occurrence.new(sentence:, index:).headword
       language = sentence.language.code
-      sense = Compendium::Edit.add(headword:, reading:, gloss:, language:)
+      sense =
+        Compendium::Edit.add(headword:, reading:, gloss:, language:, article:)
       repoint(sentence, index, sense)
       sense
     end

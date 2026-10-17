@@ -112,7 +112,7 @@ module Snippets
     def self.describe(sense)
       entry = sense.entry
 
-      word = [entry.headword, entry.reading].compact_blank.join(" ")
+      word = [entry.term, entry.reading].compact_blank.join(" ")
 
       "##{sense.id} #{word}: #{sense.gloss}"
     end

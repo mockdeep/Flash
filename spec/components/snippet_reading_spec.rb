@@ -26,9 +26,10 @@ RSpec.describe Components::SnippetReading, type: :view do
     snippet
   end
 
-  def portuguese_snippet(level: 1)
+  def portuguese_snippet(level: 1, article: nil)
     source = create(:source, word_list: create(:word_list, language: "pt"))
-    entry = create(:entry, language: "pt", headword: "casa", reading: nil)
+    entry =
+      create(:entry, language: "pt", headword: "casa", reading: nil, article:)
     sense = create(:sense, entry:, gloss: "house")
     snippet = create(:snippet, source:, body: "A casa.")
     tokens = [{ "text" => "A" }, { "text" => "casa", "sense_id" => sense.id }]
@@ -203,7 +204,13 @@ RSpec.describe Components::SnippetReading, type: :view do
   it "shows only the gloss in a language without readings" do
     page = portuguese_snippet
 
-    expect(page).to have_no_css(".reading-snippet__lookup-reading")
+    expect(page).to have_no_css(".reading-snippet__lookup-label")
+  end
+
+  it "shows a noun with its article over the gloss" do
+    page = portuguese_snippet(article: "a")
+
+    expect(page).to have_css(".reading-snippet__lookup-label", text: "a casa")
   end
 
   it "shows each word's reading and gloss in its popover" do

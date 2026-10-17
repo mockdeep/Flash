@@ -52,6 +52,14 @@ RSpec.describe Snippets::Review do
       expect(Sense.last.entry.headword).to eq("爱")
     end
 
+    it "files the sense under the article given" do
+      sentence = sentence_with(unresolved("casa"))
+      described_class
+        .add_sense(sentence, 0, reading: nil, gloss: "house", article: "a")
+
+      expect(Sense.last.entry.term).to eq("a casa")
+    end
+
     it "points the token at the sense" do
       sentence = sentence_with(unresolved)
       sense = add(sentence)

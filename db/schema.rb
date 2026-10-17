@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_15_040539) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_013120) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -73,7 +73,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_040539) do
     t.string "language", null: false
     t.string "reading"
     t.datetime "updated_at", null: false
-    t.index ["language", "headword", "reading"], name: "index_entries_on_language_and_headword_and_reading", unique: true, nulls_not_distinct: true
+    t.string "article"
+    t.index ["language", "headword", "reading", "article"], name: "index_entries_on_language_and_headword_and_reading_and_article", unique: true, nulls_not_distinct: true
   end
 
   create_table "sense_distractors", force: :cascade do |t|

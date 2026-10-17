@@ -28,9 +28,28 @@ RSpec.describe Entry do
       .not_to be_valid
   end
 
+  it "lets the same headword carry another article" do
+    create(:entry, language: "pt", headword: "capital", article: "o")
+
+    expect(build(:entry, language: "pt", headword: "capital", article: "a"))
+      .to be_valid
+  end
+
   it "lets the same headword carry another reading" do
     create(:entry, headword: "过", reading: "guò")
 
     expect(build(:entry, headword: "过", reading: "guo")).to be_valid
+  end
+
+  describe "#term" do
+    it "puts a noun's article before its headword" do
+      entry = build(:entry, headword: "casa", article: "a")
+
+      expect(entry.term).to eq("a casa")
+    end
+
+    it "is the headword alone without an article" do
+      expect(build(:entry, headword: "爱").term).to eq("爱")
+    end
   end
 end
