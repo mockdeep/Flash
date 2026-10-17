@@ -6,7 +6,8 @@ module Components
   # until studied, green once done at the deck's level, and has its reading
   # over it while its streak is zero. Clicking a word shows its reading (or
   # a noun's article) and gloss in a popover, and resets its streak so study
-  # brings it back.
+  # brings it back. A word the segmenter skipped has no card, so its popover
+  # says why and clicking it records nothing.
   class SnippetReading < Components::Base
     GAPS_LEVEL = 2
 
@@ -50,12 +51,13 @@ module Components
     def render_paragraph(paragraph)
       lookups = []
       p { paragraph.tokens.each { |token| render_token(token, lookups) } }
-      lookups.each { |id, sense| render_lookup(id, sense) }
+      lookups.each { render(it) }
     end
 
     def render_token(token, lookups)
       sense = senses[token["sense_id"]]
-      return plain(token["text"]) unless sense
+      skip = token["skip"]
+      return plain(token["text"]) unless sense || skip
 
       # While gapped, the CSS keeps a word on one line, which also stops
       # Chrome breaking between words written without spaces, so mark the
@@ -64,7 +66,7 @@ module Components
       wbr unless language.spaces
       id = "lookup-#{lookup_count}"
       render_word(token["text"], sense, id)
-      lookups << [id, sense]
+      lookups << ReadingLookup.new(id:, sense:, skip:, language:)
     end
 
     def render_word(text, sense, id)
@@ -76,28 +78,16 @@ module Components
       end
     end
 
-    def render_lookup(id, sense)
-      div(id:, popover: true, class: "reading-snippet__lookup") do
-        label = lookup_label(sense.entry)
-        div(class: "reading-snippet__lookup-label") { label } if label
-        plain(sense.gloss)
-      end
-    end
-
-    # Over the gloss: the word's reading, or a noun with its article.
-    def lookup_label(entry)
-      return entry.reading if language.readings
-
-      entry.term if entry.article
-    end
-
+    # A skipped word has no card, so it has no state and records no lookup.
     def word_attributes(id, sense)
-      {
-        type: "button",
+      attributes =
+        { type: "button", class: "reading-snippet__word", popovertarget: id }
+      return attributes unless sense
+
+      attributes.merge(
         class: ["reading-snippet__word", word_state(sense)],
-        popovertarget: id,
         data: { action: "lookup#record", lookup_sense_id_param: sense.id },
-      }
+      )
     end
 
     def word_state(sense)

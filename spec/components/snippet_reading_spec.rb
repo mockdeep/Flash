@@ -213,6 +213,44 @@ RSpec.describe Components::SnippetReading, type: :view do
     expect(page).to have_css(".reading-snippet__lookup-label", text: "a casa")
   end
 
+  def skipped_snippet(skip)
+    source = create(:source, word_list: create(:word_list, language: "pt"))
+    snippet = create(:snippet, source:, body: "Inácia.")
+    create(:snippet_sentence, snippet:, tokens: [{ "text" => "Inácia", skip: }])
+    render_for(snippet, source:)
+  end
+
+  it "says a skipped name is a name" do
+    page = skipped_snippet("name")
+
+    expect(page).to have_css("[popover]", exact_text: "name")
+  end
+
+  it "says a skipped foreign title is one" do
+    page = skipped_snippet("foreign")
+
+    expect(page).to have_css("[popover]", text: "title in another language")
+  end
+
+  it "opens a skipped word's popover from the word" do
+    page = skipped_snippet("name")
+
+    target = page.find("button")[:popovertarget]
+    expect(target).to eq(page.find("[popover]")[:id])
+  end
+
+  it "gives a skipped word no state" do
+    page = skipped_snippet("name")
+
+    expect(page.find("button")[:class]).to eq("reading-snippet__word")
+  end
+
+  it "records no lookup for a skipped word" do
+    page = skipped_snippet("name")
+
+    expect(page).to have_no_css("button[data-action]")
+  end
+
   it "shows each word's reading and gloss in its popover" do
     page = render_for(snippet_with("爱。", [word("爱", "ài", gloss: "love")]))
 
