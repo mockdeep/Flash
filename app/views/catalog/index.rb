@@ -3,21 +3,21 @@
 module Views
   module Catalog
     class Index < Views::Base
-      attr_accessor :decks
+      attr_accessor :deck_sections
 
-      def initialize(decks:)
+      def initialize(deck_sections:)
         super()
-        self.decks = decks
+        self.deck_sections = deck_sections
       end
 
       def view_template
         div(class: "catalog-container") do
           render_header
 
-          if decks.empty?
+          if deck_sections.empty?
             render_empty_state
           else
-            render_decks_grid
+            render_deck_sections
           end
         end
       end
@@ -50,68 +50,49 @@ module Views
         end
       end
 
-      def render_decks_grid
-        div(class: "catalog-grid") do
-          decks.each do |deck|
-            render_deck_card(deck)
+      def render_deck_sections
+        deck_sections.each do |deck_section|
+          render(Components::DeckRail.new(deck_section:)) do
+            deck_section.decks.ordered.each { |deck| render_rail_card(deck) }
           end
         end
       end
 
-      def render_deck_card(deck)
-        div(class: "card card--striped catalog-card") do
-          render_card_header(deck)
-          render_card_meta(deck)
-          render_card_actions(deck)
+      def render_rail_card(deck)
+        div(class: "rail-card") do
+          div(class: "rail-type") { deck.type_label }
+          render_rail_title(deck)
+          render_rail_meta(deck)
+          render_try_button(deck) unless member?
         end
       end
 
-      def render_card_header(deck)
-        div(class: "catalog-card-header") do
-          render_card_title(deck)
-          div(class: "card-count") do
-            span(class: "count-number") { deck.cards_count }
-            span(class: "count-label") { "cards" }
-          end
-        end
-      end
-
-      def render_card_title(deck)
-        h3(class: "catalog-card-title") do
-          plain(deck.name)
+      def render_rail_title(deck)
+        h3(class: "rail-title") do
+          link_to(deck.name, catalog_path(deck))
           music_badge if deck.music?
           texts_badge if deck.shares_texts?
           translation(deck.name_translation)
         end
       end
 
-      def render_card_meta(deck)
-        div(class: "catalog-card-meta") do
-          span(class: "catalog-card-owner") do
+      def render_rail_meta(deck)
+        div(class: "rail-meta") do
+          span(class: "catalog-rail-owner") do
             plain("by #{deck.user.username}")
             supporter_badge if deck.user.supporter?
+          end
+          span(class: "catalog-rail-count") do
+            pluralize(deck.cards_count, "card")
           end
         end
       end
 
-      def render_card_actions(deck)
-        div(class: "catalog-card-actions") do
-          link_to(
-            "Preview",
-            catalog_path(deck),
-            class: button_class(:secondary, :compact),
-          )
-          render_try_button(deck) unless member?
-        end
-      end
-
       def render_try_button(deck)
-        form_with(url: try_catalog_path(deck), method: :post) do |form|
+        url = try_catalog_path(deck)
+        form_with(url:, class: "catalog-rail-try") do |form|
           timezone_field(form)
-          form.button(
-            "Try This Deck",
-            class: button_class(:primary, :compact),
-          )
+          form.button("Try This Deck", class: button_class(:primary, :compact))
         end
       end
 

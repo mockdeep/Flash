@@ -37,53 +37,9 @@ module Views
       end
 
       def render_deck_sections
-        DeckSection.for(current_user).each do |section|
-          render_section(section)
-        end
-      end
-
-      def render_section(deck_section)
-        section_decks = deck_section.decks.ordered.with_progress
-        section(
-          class: "deck-section",
-          data: {
-            controller: "rail",
-            action: "resize@window->rail#syncArrows",
-          },
-        ) do
-          render_section_heading(deck_section.name, section_decks)
-          render_rail_wrap(section_decks)
-        end
-      end
-
-      def render_rail_wrap(section_decks)
-        div(class: "rail-wrap") do
-          render_rail_arrow(-1, "‹", "Scroll left")
-          render_rail(section_decks)
-          render_rail_arrow(1, "›", "Scroll right")
-        end
-      end
-
-      def render_rail_arrow(direction, glyph, label)
-        side = direction.negative? ? "left" : "right"
-        button(
-          type: "button",
-          class: "rail-arrow rail-arrow--#{side}",
-          aria: { label: },
-          data: {
-            action: "rail#scroll",
-            rail_dir_param: direction,
-            rail_target: "#{side}Arrow",
-          },
-          hidden: true,
-        ) { glyph }
-      end
-
-      def render_section_heading(title, section_decks)
-        h2(class: "decks-section-title") do
-          plain(title)
-          span(class: "section-meta") do
-            pluralize(section_decks.size, "deck")
+        DeckSection.for(current_user.decks).each do |deck_section|
+          render(Components::DeckRail.new(deck_section:)) do
+            render_rail(deck_section.decks.ordered.with_progress)
           end
         end
       end
@@ -92,17 +48,12 @@ module Views
       # natural slot stays put so the list order never shifts underneath the
       # reader.
       def render_rail(section_decks)
-        div(
-          class: "rail",
-          data: { rail_target: "rail", action: "scroll->rail#syncArrows" },
-        ) do
-          render_featured(section_decks)
+        render_featured(section_decks)
 
-          deck_sets(section_decks).each_with_index do |set_decks, set_index|
-            set_decks.each_with_index do |deck, deck_index|
-              set_start = set_index.positive? && deck_index.zero?
-              render_rail_card(deck, set_start:)
-            end
+        deck_sets(section_decks).each_with_index do |set_decks, set_index|
+          set_decks.each_with_index do |deck, deck_index|
+            set_start = set_index.positive? && deck_index.zero?
+            render_rail_card(deck, set_start:)
           end
         end
       end

@@ -27,6 +27,24 @@ RSpec.describe CatalogController do
       expect(rendered).to have_text("Public Deck")
     end
 
+    it "groups public decks into sections" do
+      public_deck
+      owner = create(:user)
+      create(:music_deck, user: owner, visibility: "public")
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_css(".decks-section-title", count: 2)
+    end
+
+    it "links a deck's name to its preview" do
+      deck = public_deck(name: "Public Deck")
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_link("Public Deck", href: catalog_path(deck))
+    end
+
     it "does not show private decks" do
       owner = create(:user)
       create(:deck, user: owner, name: "Secret", visibility: "private")

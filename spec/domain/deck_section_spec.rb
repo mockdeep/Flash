@@ -2,7 +2,7 @@
 
 RSpec.describe DeckSection do
   describe ".for" do
-    def section_names = described_class.for(default_user).map(&:name)
+    def section_names = described_class.for(default_user.decks).map(&:name)
 
     it "names a language section after the language" do
       create(:reading_deck, language: "zh")
@@ -31,7 +31,7 @@ RSpec.describe DeckSection do
       expect(section_names).to eq(["Basic"])
     end
 
-    it "leaves out other users' decks" do
+    it "leaves out decks it isn't given" do
       create(:deck, user: create(:user))
 
       expect(section_names).to be_empty
@@ -41,7 +41,7 @@ RSpec.describe DeckSection do
       deck = create(:reading_deck, language: "pt")
       create(:reading_deck, language: "zh")
 
-      section = described_class.for(default_user).last
+      section = described_class.for(default_user.decks).last
       expect(section.decks).to eq([deck])
     end
   end
@@ -51,7 +51,7 @@ RSpec.describe DeckSection do
       create(:deck, name: "Zebra")
       deck = create(:deck, name: "Alpha")
 
-      section = described_class.for(default_user).first
+      section = described_class.for(default_user.decks).first
       expect(section.first_unmet).to eq(deck)
     end
   end

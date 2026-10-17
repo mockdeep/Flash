@@ -197,7 +197,7 @@ end
 - `auth.css` - Authentication pages (sign in / account)
 - `button.css` - `.button` base and variants (`button_class` modifiers: compact / primary / ghost / secondary / danger / disabled)
 - `card.css` - Generic `.card` container pattern
-- `catalog.css` - Public deck catalog + preview (`.catalog-show-*` reused by the share-link preview at `/shared/:token`)
+- `catalog.css` - Public deck catalog (rail-card extras: owner, card count, Try) + preview (`.catalog-show-*` reused by the share-link preview at `/shared/:token`)
 - `custom.css` - Scratch space for ad-hoc overrides
 - `decks.css` - Deck listing, deck form, and deck-show page (incl. `.deck-share-*` block)
 - `demo-banner.css` - Demo-mode banner
@@ -383,6 +383,7 @@ app/
 │   ├── card_preview.rb           # 5-card preview block (shared by catalog and share preview)
 │   ├── card_reading.rb           # Pronunciation/pinyin gloss (rendered inside CardFront on reveal)
 │   ├── catalog_toggle_button.rb  # Publish / unpublish a deck to the public catalog
+│   ├── deck_rail.rb              # A `DeckSection` as a heading over a sideways-scrolling rail (`rail` controller); the block fills it with cards (decks page + catalog)
 │   ├── deck_texts.rb             # "Source" block under the card preview (catalog + share preview): title / author / license, marked not included when unshareable
 │   ├── demo_banner.rb            # Demo-mode banner
 │   ├── error_explanation.rb      # Styled validation-error box
@@ -408,7 +409,7 @@ app/
 │   ├── text_csv_instructions.rb  # CSV format help block for text decks
 │   └── word_states.rb            # An answered card's words as they now stand, for the Read tab (`word_states_controller.ts`)
 ├── domain/
-│   ├── deck_section.rb           # A decks-page section: one per language A–Z, then Basic, then Music; `first_unmet` drives Next Deck
+│   ├── deck_section.rb           # A section of a set of decks (a user's, or the catalog's): one per language A–Z, then Basic, then Music; `first_unmet` drives Next Deck
 │   ├── language.rb               # What processing a snippet needs per language: sentence ends, word characters, the segmenter's form and its check, readings or none, articles or none, skip reasons, whether words are spaced, prompts (`Language::MANDARIN`, `Language::PORTUGUESE`)
 │   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
 │   └── music_study.rb            # MusicStudy < Study; windows cards into note sequences
@@ -487,10 +488,10 @@ app/
 │   ├── cards/
 │   │   └── edit_form.rb      # In-dialog card edit form (front / back / reading / category / example)
 │   ├── catalog/
-│   │   ├── index.rb          # Public deck grid (mic badge for music decks, 📖 for decks with shareable texts); Try This Deck for visitors and guests
+│   │   ├── index.rb          # Public decks in `DeckSection` rails, each name linking to its preview (mic badge for music decks, 📖 for decks with shareable texts); Try This Deck for visitors and guests
 │   │   └── show.rb           # Deck preview + texts + copy action, or try + log in for visitors and guests (mic badge in header)
 │   ├── decks/
-│   │   ├── index.rb          # Decks grouped into `DeckSection`s (each language, Basic, Music); each features its first unmet-goal deck, else its most recently studied
+│   │   ├── index.rb          # Decks in `DeckSection` rails (each language, Basic, Music); each features its first unmet-goal deck, else its most recently studied
 │   │   ├── new.rb            # Three-way deck-type radio + language select
 │   │   ├── show.rb           # Share-link, replace link, cards table
 │   │   └── replacements/
@@ -759,11 +760,11 @@ end
 ### Deck Catalog
 
 Users can browse and copy public decks at `/catalog`:
-- **Browse**: `/catalog` — grid of all public decks (no auth required)
+- **Browse**: `/catalog` — all public decks, grouped like the decks page into `DeckSection` rails (`Components::DeckRail`): each language A–Z, then Basic, then Music (no auth required)
 - **Preview**: `/catalog/:id` — card preview (first 5 cards), deck info, and the source the deck's words came from (`Components::DeckTexts`, also on the share-link preview, once a snippet is finished: the source's title, author and license, or "Not included — words only" when its license keeps it from sharing) (no auth required)
-- **Texts badge**: a deck whose list has a finished snippet and a shareable source (`Deck#shares_texts?`) gets a 📖 on its catalog grid card
+- **Texts badge**: a deck whose list has a finished snippet and a shareable source (`Deck#shares_texts?`) gets a 📖 on its catalog card
 - **Copy**: `POST /catalog/:id/copy` — adds the deck to the current user's account (auth required). A **Basic or Music** deck is duplicated, cards and all. A **language** deck is added *by reference*: the new deck points at the source's `word_list`, and only its cards (the progress anchors) are new — the words themselves are canonical and shared. A `Deck` validation blocks a second deck over the same word_list for one user, so adding twice errors instead of silently duplicating.
-- **Try (the demo)**: `POST /catalog/:id/try` → `CatalogController#try` — logged-out visitors and guests get "Try This Deck" on the grid and the preview. It always starts a fresh guest user (`Demo::CreateGuestUser`, capped at `Deck::GUEST_CARD_LIMIT` cards) over the deck and goes to its study page; a guest who tries another deck leaves the old one to the hourly cleanup. `/demo` redirects here.
+- **Try (the demo)**: `POST /catalog/:id/try` → `CatalogController#try` — logged-out visitors and guests get "Try This Deck" on the catalog cards and the preview. It always starts a fresh guest user (`Demo::CreateGuestUser`, capped at `Deck::GUEST_CARD_LIMIT` cards) over the deck and goes to its study page; a guest who tries another deck leaves the old one to the hourly cleanup. `/demo` redirects here.
 - Deck visibility is controlled by `deck.visibility` (`"public"` / `"private"`)
 - **Admins** publish/unpublish a deck to the catalog from the deck-show page (`Components::CatalogToggleButton` → `CatalogListingsController#create`/`#destroy`, which flips `visibility`). Non-admins have no visibility UI.
 
