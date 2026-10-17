@@ -199,7 +199,7 @@ end
 - `card.css` - Generic `.card` container pattern
 - `catalog.css` - Public deck catalog (rail-card extras: owner, card count, Try) + preview (`.catalog-show-*` reused by the share-link preview at `/shared/:token`)
 - `custom.css` - Scratch space for ad-hoc overrides
-- `decks.css` - Deck listing, deck form, and deck-show page (incl. `.deck-share-*` block)
+- `decks.css` - Deck listing, deck form, and deck-show page (`.deck-show-*` action row, scrolling cards box and delete box; `.deck-share-url` link row). The deck-show header and meta line reuse `catalog.css`'s `.catalog-show-*` classes
 - `demo-banner.css` - Demo-mode banner
 - `dialog.css` - Modal dialog component styles (`.dialog`, `.dialog__header`, etc.)
 - `edit-card.css` - Edit card trigger button and form layout within the dialog (also the study-goal dialog's three goal-mode forms, toggled with `:has()`)
@@ -493,7 +493,7 @@ app/
 │   ├── decks/
 │   │   ├── index.rb          # Decks in `DeckSection` rails (each language, Basic, Music); each features its first unmet-goal deck, else its most recently studied
 │   │   ├── new.rb            # Three-way deck-type radio + language select
-│   │   ├── show.rb           # Share-link, replace link, cards table
+│   │   ├── show.rb           # Header + meta (cards / round / language / catalog), Study + share / catalog / replace actions, scrolling cards table, delete box
 │   │   └── replacements/
 │   │       └── new.rb        # Re-import (replace) a deck's cards form
 │   ├── pages/
