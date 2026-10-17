@@ -6,7 +6,7 @@ RSpec.describe "studying a deck" do
   end
 
   def visit_fuzzy_deck(*card_attrs)
-    deck = create(:deck, user: default_user, level: Study::FUZZY_FIND_LEVEL)
+    deck = create(:deck, user: default_user, round: Study::FUZZY_FIND_ROUND)
     card_attrs = [{}] if card_attrs.empty?
     card_attrs.each { |attrs| create(:basic_card, deck:, **attrs) }
     sign_in(default_user)
@@ -21,7 +21,7 @@ RSpec.describe "studying a deck" do
   end
 
   def reach_milestone
-    deck = create(:deck, user: default_user, study_goal: 1, level: 1)
+    deck = create(:deck, user: default_user, study_goal: 1, round: 1)
     create_list(:basic_card, 2, deck:, back: "Paris", correct_streak: 0)
     sign_in(default_user)
     visit(deck_study_path(deck))
@@ -74,7 +74,7 @@ RSpec.describe "studying a deck" do
 
   context "with example sentences on a card" do
     def visit_card_with_example
-      default_deck.update!(level: 2)
+      default_deck.update!(round: 2)
       create(
         :basic_card,
         deck: default_deck,
@@ -130,7 +130,7 @@ RSpec.describe "studying a deck" do
   end
 
   it "does not render an example toggle when the card has no example" do
-    default_deck.update!(level: 2)
+    default_deck.update!(round: 2)
     create(:basic_card, deck: default_deck, back: "Paris")
     answer_first_card("Paris")
 
@@ -143,7 +143,7 @@ RSpec.describe "studying a deck" do
     click_on(answer)
   end
 
-  context "when the deck is at the fuzzy find level" do
+  context "when the deck is at the fuzzy find round" do
     it "hides the multiple choice keyboard hint" do
       visit_fuzzy_deck
 
@@ -183,9 +183,9 @@ RSpec.describe "studying a deck" do
     end
   end
 
-  context "when a card has a reading at the fuzzy find level" do
+  context "when a card has a reading at the fuzzy find round" do
     def visit_fuzzy_reading_deck
-      deck = create(:deck, user: default_user, level: Study::FUZZY_FIND_LEVEL)
+      deck = create(:deck, user: default_user, round: Study::FUZZY_FIND_ROUND)
       create(:basic_card, deck:, front: "两", back: "two", reading: "liǎng")
       create(:basic_card, :done, deck:, back: "three", reading: "sān")
       sign_in(default_user)
@@ -213,9 +213,9 @@ RSpec.describe "studying a deck" do
     end
   end
 
-  context "when the deck is at the reading level" do
+  context "when the deck is at the reading round" do
     def visit_reading_deck
-      deck = create(:deck, user: default_user, level: Study::READING_LEVEL)
+      deck = create(:deck, user: default_user, round: Study::READING_ROUND)
       create(:basic_card, deck:, front: "两", back: "two", reading: "liǎng")
       create(:basic_card, :done, deck:, back: "three", reading: "sān")
       sign_in(default_user)

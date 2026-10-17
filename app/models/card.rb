@@ -22,13 +22,13 @@ class Card < ApplicationRecord
 
   validates :deck_id, presence: true
 
-  scope :done, ->(level) { where(correct_streak: level..) }
-  scope :not_done, ->(level) { where(correct_streak: ...level) }
+  scope :done, ->(round) { where(correct_streak: round..) }
+  scope :not_done, ->(round) { where(correct_streak: ...round) }
   scope :ordered, -> { order(:id) }
 
   def self.backs = pluck(:back)
 
-  def done? = correct_streak >= deck.level
+  def done? = correct_streak >= deck.round
 
   # A miss resets the streak; when the chosen answer is given it's also
   # remembered as a distractor for future option lists (the reading stage

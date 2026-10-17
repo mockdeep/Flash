@@ -147,7 +147,7 @@ module Views
           div(class: "featured-label") { featured_label } if featured_label
           div(class: "rail-type") { deck.type_label }
           render_rail_title(deck)
-          render(Components::LevelProgress.new(deck:))
+          render(Components::RoundProgress.new(deck:))
           render_rail_meta(deck, deck.remaining_count)
         end
       end

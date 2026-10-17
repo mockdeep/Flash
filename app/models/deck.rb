@@ -8,7 +8,7 @@ class Deck < ApplicationRecord
   # Mirrors StudyDay#study_goal.
   GOAL_UNMET = <<~SQL.squish
     study_days.completed_count <
-      CASE WHEN decks.goal_mode = 'target' AND decks.level <= decks.target_level
+      CASE WHEN decks.goal_mode = 'target' AND decks.round <= decks.target_round
         THEN study_days.goal
         ELSE decks.study_goal
       END
@@ -41,11 +41,11 @@ class Deck < ApplicationRecord
     END AS cards_count,
     CASE WHEN decks.word_list_id IS NULL THEN
       (SELECT COUNT(*) FROM cards
-        WHERE cards.deck_id = decks.id AND cards.correct_streak >= decks.level)
+        WHERE cards.deck_id = decks.id AND cards.correct_streak >= decks.round)
     ELSE
       (SELECT COUNT(*) FROM (#{LANGUAGE_ENTRIES}) entries
         WHERE (users.role <> 'guest' OR entries.list_row <= :card_limit)
-          AND entries.correct_streak >= decks.level)
+          AND entries.correct_streak >= decks.round)
     END AS done_count
   SQL
 
@@ -78,7 +78,7 @@ class Deck < ApplicationRecord
   # reader to go through the word_list.
   def language = nil
 
-  attribute(:level, :integer, default: 1)
+  attribute(:round, :integer, default: 1)
   attribute(:visibility, :string, default: "private")
 
   before_validation(:clear_target, unless: :target_mode?)
@@ -88,16 +88,16 @@ class Deck < ApplicationRecord
   validates :study_goal,
             numericality: { greater_than_or_equal_to: 1, only_integer: true }
   validates :goal_mode, inclusion: { in: GOAL_MODES }
-  validates :target_level, :target_date, presence: true, if: :target_mode?
-  # Checked only when set, so a deck that levels up past its target or
+  validates :target_round, :target_date, presence: true, if: :target_mode?
+  # Checked only when set, so a deck that moves on past its target or
   # outlives its date can still be saved.
-  validates :target_level,
+  validates :target_round,
             numericality: {
-              greater_than_or_equal_to: :level,
+              greater_than_or_equal_to: :round,
               only_integer: true,
             },
             allow_nil: true,
-            if: :will_save_change_to_target_level?
+            if: :will_save_change_to_target_round?
   validates :target_date,
             comparison: { greater_than_or_equal_to: -> { Date.current } },
             allow_nil: true,
@@ -149,23 +149,23 @@ class Deck < ApplicationRecord
 
   def shares_texts? = finished_snippets.any? && source.shareable?
 
-  def study_pool(limit:) = cards.not_done(level).ordered.limit(limit).to_a
+  def study_pool(limit:) = cards.not_done(round).ordered.limit(limit).to_a
 
   def all_done? = progress.done == progress.total
 
-  def not_done_count(at_level) = cards.not_done(at_level).count
+  def not_done_count(at_round) = cards.not_done(at_round).count
 
   def target_mode? = goal_mode == "target"
 
   def no_goal? = goal_mode == "none"
 
-  def target_active? = target_mode? && level <= target_level
+  def target_active? = target_mode? && round <= target_round
 
   def target_missed? = target_active? && target_date < Date.current
 
-  def target_reached? = target_mode? && level > target_level
+  def target_reached? = target_mode? && round > target_round
 
-  # Card completions left to finish the target level, spread over the days
+  # Card completions left to finish the target round, spread over the days
   # left including today. A passed date puts everything left on today.
   def target_goal
     return unless target_active?
@@ -229,26 +229,26 @@ class Deck < ApplicationRecord
 
   private
 
-  # Total and done cards come from one query, kept per level: a study page
-  # asks for them several times, and a level-up mid-request counts afresh.
+  # Total and done cards come from one query, kept per round: a study page
+  # asks for them several times, and a new round mid-request counts afresh.
   def progress
     @progress ||= {}
-    @progress[level] ||= Progress.new(*count_progress)
+    @progress[round] ||= Progress.new(*count_progress)
   end
 
   def count_progress = cards.pick(*progress_counts)
 
   def progress_counts
-    done = ["COUNT(*) FILTER (WHERE correct_streak >= ?)", level]
+    done = ["COUNT(*) FILTER (WHERE correct_streak >= ?)", round]
     [Arel.sql("COUNT(*)"), Arel.sql(self.class.sanitize_sql_array(done))]
   end
 
   def clear_target
-    self.target_level = nil
+    self.target_round = nil
     self.target_date = nil
   end
 
-  def target_work_left = (level..target_level).sum { |at| not_done_count(at) }
+  def target_work_left = (round..target_round).sum { |at| not_done_count(at) }
 
   def days_after_today = (Date.tomorrow..target_date).count
 

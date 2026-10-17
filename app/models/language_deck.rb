@@ -36,12 +36,12 @@ class LanguageDeck < Deck
   def card(id) = LanguageCard.new(self, entries.find(id))
 
   def study_pool(limit:)
-    pool = entries.having("#{STREAK} < ?", level).order(LIST_ORDER)
+    pool = entries.having("#{STREAK} < ?", round).order(LIST_ORDER)
     cards_from(pool.limit(limit))
   end
 
-  def not_done_count(at_level)
-    rows(entries.having("#{STREAK} < ?", at_level)).count
+  def not_done_count(at_round)
+    rows(entries.having("#{STREAK} < ?", at_round)).count
   end
 
   def backs(except: nil, category: nil)

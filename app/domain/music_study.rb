@@ -32,7 +32,7 @@ class MusicStudy < Study
       record_correct(cards, answer)
     else
       cards.each(&:record_view!)
-      build_result(cards, answer, correct: false, level_completed: false)
+      build_result(cards, answer, correct: false, round_completed: false)
     end
   end
 
@@ -47,30 +47,30 @@ class MusicStudy < Study
   end
 
   def pick_anchor
-    studied_cards.not_done(deck.level).order(:correct_streak, :id).first ||
+    studied_cards.not_done(deck.round).order(:correct_streak, :id).first ||
       studied_cards.ordered.first
   end
 
   def record_correct(cards, answer)
     cards.each(&:record_correct!)
-    level_completed = deck.all_done?
-    deck.update!(level: deck.level + 1) if level_completed
-    build_result(cards, answer, correct: true, level_completed:)
+    round_completed = deck.all_done?
+    deck.update!(round: deck.round + 1) if round_completed
+    build_result(cards, answer, correct: true, round_completed:)
   end
 
   def ordered_window(anchor)
     cards = studied_cards.ordered.to_a
-    max_start = [cards.length - deck.level, 0].max
+    max_start = [cards.length - deck.round, 0].max
     start_idx = [cards.index(anchor), max_start].min
-    cards[start_idx, deck.level]
+    cards[start_idx, deck.round]
   end
 
   def unordered_window(anchor)
-    others = studied_cards.where.not(id: anchor.id).to_a.sample(deck.level - 1)
+    others = studied_cards.where.not(id: anchor.id).to_a.sample(deck.round - 1)
     [anchor, *others]
   end
 
-  def build_result(cards, answer, correct:, level_completed:)
+  def build_result(cards, answer, correct:, round_completed:)
     Result.new(
       card: cards.first,
       correct:,
@@ -79,7 +79,7 @@ class MusicStudy < Study
       selected_answer: answer,
       possible_answers: [],
       card_completed: cards.first.done?,
-      level_completed:,
+      round_completed:,
     )
   end
 end

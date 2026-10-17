@@ -11,7 +11,7 @@ module Components
 
     def view_template
       div(class: "session-progress", data: { controller: "dialog" }) do
-        render(Components::LevelProgress.new(deck: @deck))
+        render(Components::RoundProgress.new(deck: @deck))
         @deck.no_goal? ? render_count : render_session_bar
         render(Components::TargetPrompt.new(deck: @deck))
       end

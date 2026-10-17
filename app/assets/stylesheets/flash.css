@@ -1180,19 +1180,19 @@ body {
     0 2px 8px var(--color-shadow-warm);
 }
 
-.level-track {
+.round-track {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.level-segments {
+.round-segments {
   display: flex;
   flex: 1;
   gap: 3px;
 }
 
-.level-segment {
+.round-segment {
   position: relative;
   flex: 1;
   height: 9px;
@@ -1201,7 +1201,7 @@ body {
   border: 2px solid var(--color-border-medium);
 }
 
-.level-fill {
+.round-fill {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -1209,16 +1209,16 @@ body {
   background: var(--color-accent);
 }
 
-.level-fill--done {
+.round-fill--done {
   width: 100%;
   background: var(--color-success-border);
 }
 
-.level-track--complete .level-segment {
+.round-track--complete .round-segment {
   border-color: var(--color-success-dark);
 }
 
-.level-tag {
+.round-tag {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
@@ -1228,11 +1228,11 @@ body {
   white-space: nowrap;
 }
 
-.level-tag--complete {
+.round-tag--complete {
   color: var(--color-success-dark);
 }
 
-.accent-box .level-track {
+.accent-box .round-track {
   max-width: 280px;
   margin: 0.5rem auto;
 }
@@ -1306,7 +1306,7 @@ body {
     display: contents;
   }
 
-  .session-progress .level-track,
+  .session-progress .round-track,
   .session-progress .accent-box {
     grid-column: 1 / -1;
   }

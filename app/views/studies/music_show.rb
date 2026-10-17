@@ -26,9 +26,9 @@ module Views
 
       private
 
-      def render_level_progress
+      def render_round_progress
         div(class: "session-progress") do
-          render(Components::LevelProgress.new(deck:))
+          render(Components::RoundProgress.new(deck:))
         end
       end
 
@@ -46,7 +46,7 @@ module Views
         if deck.cards_count.zero?
           render_empty
         else
-          render_level_progress
+          render_round_progress
           render(Components::MusicCardBody.new(deck:, cards: study.next_window))
         end
       end

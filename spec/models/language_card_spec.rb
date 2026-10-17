@@ -65,13 +65,13 @@ RSpec.describe LanguageCard do
   end
 
   describe "#done?" do
-    it "is true once the weakest sense reaches the level" do
+    it "is true once the weakest sense reaches the round" do
       card = create(:language_card, :done)
 
       expect(card.done?).to be(true)
     end
 
-    it "is false while any member sense sits below the level" do
+    it "is false while any member sense sits below the round" do
       card = create(:language_card, back: "he; him")
       create(:skill_score, sense: sense_of(card, "he"), correct_streak: 1)
 
@@ -140,7 +140,7 @@ RSpec.describe LanguageCard do
     end
 
     it "builds on a score the sense already carries" do
-      deck = create(:reading_deck, level: 4)
+      deck = create(:reading_deck, round: 4)
       card = create(:language_card, deck:, correct_streak: 3)
 
       card.record_correct!
@@ -148,7 +148,7 @@ RSpec.describe LanguageCard do
       expect(counters).to eq([[1, 4, 1]])
     end
 
-    it "stops a sense's streak at the deck's level" do
+    it "stops a sense's streak at the deck's round" do
       card = create(:language_card, back: "he; him")
       sense = sense_of(card, "he")
       create(:skill_score, user: card.deck.user, sense:, correct_streak: 1)
@@ -158,7 +158,7 @@ RSpec.describe LanguageCard do
       expect(SkillScore.pluck(:correct_streak)).to eq([1, 1])
     end
 
-    it "leaves a streak already past the deck's level" do
+    it "leaves a streak already past the deck's round" do
       card = create(:language_card, correct_streak: 3)
 
       card.record_correct!
@@ -166,7 +166,7 @@ RSpec.describe LanguageCard do
       expect(SkillScore.sole.correct_streak).to eq(3)
     end
 
-    it "still counts the answer on a sense at the deck's level" do
+    it "still counts the answer on a sense at the deck's round" do
       card = create(:language_card, correct_streak: 1, view_count: 1)
 
       card.record_correct!

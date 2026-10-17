@@ -65,8 +65,8 @@ RSpec.describe SkillScore do
   end
 
   describe "#state" do
-    def state(level: 1, **counters)
-      described_class.new(**counters).state(level)
+    def state(round: 1, **counters)
+      described_class.new(**counters).state(round)
     end
 
     it "is new before any view" do
@@ -77,12 +77,12 @@ RSpec.describe SkillScore do
       expect(state(view_count: 1)).to eq("missed")
     end
 
-    it "is done once the streak reaches the level" do
-      expect(state(level: 2, view_count: 2, correct_streak: 2)).to eq("done")
+    it "is done once the streak reaches the round" do
+      expect(state(round: 2, view_count: 2, correct_streak: 2)).to eq("done")
     end
 
-    it "is nothing while the streak is short of the level" do
-      expect(state(level: 2, view_count: 1, correct_streak: 1)).to be_nil
+    it "is nothing while the streak is short of the round" do
+      expect(state(round: 2, view_count: 1, correct_streak: 1)).to be_nil
     end
   end
 end

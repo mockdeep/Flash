@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Components
-  # The study-goal dialog's "Target date" fields: which level to finish by
+  # The study-goal dialog's "Target date" fields: which round to finish by
   # when, and today's goal worked out from a saved target.
   class TargetGoalFields < Components::Base
     def initialize(form:, deck:, study_goal:)
@@ -12,19 +12,19 @@ module Components
     end
 
     def view_template
-      target_level_field
+      target_round_field
       target_date_field
       todays_goal if @deck.target_active?
     end
 
     private
 
-    def target_level_field
+    def target_round_field
       div(class: "form-field") do
-        @form.label(:target_level, "Finish level", class: "form-label")
+        @form.label(:target_round, "Finish round", class: "form-label")
         @form.number_field(
-          :target_level,
-          min: @deck.level,
+          :target_round,
+          min: @deck.round,
           required: true,
           class: "form-input",
         )

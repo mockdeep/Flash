@@ -62,9 +62,9 @@ RSpec.describe StudyDay do
       expect(study_day.study_goal).to eq(5)
     end
 
-    it "ignores the saved goal once the target level is finished" do
+    it "ignores the saved goal once the target round is finished" do
       deck = create(:deck, :with_target, study_goal: 30)
-      deck.update!(level: 2)
+      deck.update!(round: 2)
       study_day = described_class.new(deck:, goal: 5)
 
       expect(study_day.study_goal).to eq(30)

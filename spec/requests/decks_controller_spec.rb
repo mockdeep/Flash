@@ -236,14 +236,14 @@ RSpec.describe DecksController do
       expect(rendered).to have_css(".rail-card--featured", count: 2)
     end
 
-    it "shows filled segments for completed levels" do
-      deck = create(:deck, user: default_user, level: 3, goal_mode: "none")
+    it "shows filled segments for completed rounds" do
+      deck = create(:deck, user: default_user, round: 3, goal_mode: "none")
       create(:basic_card, deck:)
       login_as(default_user)
 
       get(decks_path)
 
-      expect(rendered).to have_css(".level-fill--done", count: 2)
+      expect(rendered).to have_css(".round-fill--done", count: 2)
     end
 
     def seed_half_done_deck
@@ -252,23 +252,23 @@ RSpec.describe DecksController do
       create(:basic_card, deck:)
     end
 
-    it "partially fills the current level's segment" do
+    it "partially fills the current round's segment" do
       seed_half_done_deck
       login_as(default_user)
 
       get(decks_path)
 
-      expect(rendered).to have_css(".level-fill[style='width: 50%']")
+      expect(rendered).to have_css(".round-fill[style='width: 50%']")
     end
 
-    it "marks decks past the final level as complete" do
-      deck = create(:deck, user: default_user, level: 4)
+    it "marks decks past the final round as complete" do
+      deck = create(:deck, user: default_user, round: 4)
       create(:basic_card, deck:)
       login_as(default_user)
 
       get(decks_path)
 
-      expect(rendered).to have_css(".level-tag--complete", text: "Complete ✓")
+      expect(rendered).to have_css(".round-tag--complete", text: "Complete ✓")
     end
 
     it "shows a catalog badge for a public deck" do

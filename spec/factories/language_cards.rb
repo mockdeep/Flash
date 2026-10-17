@@ -114,7 +114,7 @@ FactoryBot.define do
     view_count { 0 }
 
     trait(:done) do
-      correct_streak { deck.level }
+      correct_streak { deck.round }
     end
   end
 end

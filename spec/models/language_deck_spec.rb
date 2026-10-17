@@ -48,8 +48,8 @@ RSpec.describe LanguageDeck do
   end
 
   describe "#study_pool" do
-    it "takes the entries below the level, in list order" do
-      deck = create(:reading_deck, level: 1)
+    it "takes the entries below the round, in list order" do
+      deck = create(:reading_deck, round: 1)
       create(:language_card, :done, deck:, back: "one")
       backs = ["two", "three", "four"]
       backs.each { |back| create(:language_card, deck:, back:) }
@@ -58,7 +58,7 @@ RSpec.describe LanguageDeck do
     end
 
     it "studies an entry at its weakest sense" do
-      deck = create(:reading_deck, level: 1)
+      deck = create(:reading_deck, round: 1)
       card = create(:language_card, deck:, back: "he; him")
       create(:skill_score, sense: sense_of(card, "he"), correct_streak: 1)
 
@@ -66,14 +66,14 @@ RSpec.describe LanguageDeck do
     end
 
     it "counts an entry's views from its scores" do
-      deck = create(:reading_deck, level: 1)
+      deck = create(:reading_deck, round: 1)
       create(:language_card, deck:, view_count: 2)
 
       expect(deck.study_pool(limit: 5).map(&:view_count)).to eq([2])
     end
 
     it "counts an entry without scores as unseen" do
-      deck = create(:reading_deck, level: 1)
+      deck = create(:reading_deck, round: 1)
       create(:language_card, deck:)
 
       expect(deck.study_pool(limit: 5).map(&:view_count)).to eq([0])
@@ -85,15 +85,15 @@ RSpec.describe LanguageDeck do
   end
 
   describe "#all_done?" do
-    it "is true when every entry's weakest sense has reached the level" do
-      deck = create(:reading_deck, level: 1)
+    it "is true when every entry's weakest sense has reached the round" do
+      deck = create(:reading_deck, round: 1)
       create(:language_card, :done, deck:)
 
       expect(deck.all_done?).to be(true)
     end
 
-    it "is false while an entry sits below the level" do
-      deck = create(:reading_deck, level: 1)
+    it "is false while an entry sits below the round" do
+      deck = create(:reading_deck, round: 1)
       create(:language_card, :done, deck:)
       create(:language_card, deck:)
 
@@ -102,8 +102,8 @@ RSpec.describe LanguageDeck do
   end
 
   describe "#not_done_count" do
-    it "counts the entries whose weakest sense is below the given level" do
-      deck = create(:reading_deck, level: 1)
+    it "counts the entries whose weakest sense is below the given round" do
+      deck = create(:reading_deck, round: 1)
       create(:language_card, deck:, correct_streak: 1)
       create(:language_card, deck:, correct_streak: 2)
 
@@ -178,8 +178,8 @@ RSpec.describe LanguageDeck do
   end
 
   describe "#done_count" do
-    it "counts the entries whose weakest sense has reached the level" do
-      deck = create(:reading_deck, level: 1)
+    it "counts the entries whose weakest sense has reached the round" do
+      deck = create(:reading_deck, round: 1)
       create(:language_card, :done, deck:)
       create(:language_card, deck:)
 

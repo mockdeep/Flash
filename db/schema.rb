@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_013120) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -47,13 +47,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_013120) do
     t.string "distractor_pool", null: false
     t.string "goal_mode", default: "session", null: false
     t.datetime "last_studied_at"
-    t.integer "level", null: false
+    t.integer "round", null: false
     t.string "name"
     t.boolean "ordered", default: false, null: false
     t.string "share_token"
     t.integer "study_goal", null: false
     t.date "target_date"
-    t.integer "target_level"
+    t.integer "target_round"
     t.string "type", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
