@@ -66,7 +66,8 @@ module Components
       wbr unless language.spaces
       id = "lookup-#{lookup_count}"
       render_word(token["text"], sense, id)
-      lookups << ReadingLookup.new(id:, sense:, skip:, language:)
+      lookups <<
+        ReadingLookup.new(id:, text: token["text"], sense:, skip:, language:)
     end
 
     def render_word(text, sense, id)

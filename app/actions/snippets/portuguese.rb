@@ -2,8 +2,8 @@
 
 module Snippets
   # The prompts for processing Portuguese snippets. A word studies under the
-  # form it has in the text, with no reading, and its gloss renders that
-  # form.
+  # form it has in the text (an abbreviation written out), with no reading,
+  # and its gloss renders that form.
   module Portuguese
     SEGMENTATION = <<~TEXT
       Segmentation rules. A word is what a learner would look up as one
@@ -24,7 +24,8 @@ module Snippets
          lists as one entry.
       5. A name of several words is one word (São Paulo, Rio de Janeiro),
          but a title before a name is a word of its own, studied with its
-         capital as written (D., Sr., Sra., Dr., Padre, Capitão).
+         capital (Padre, Capitão, and abbreviations such as D., Sr., Sra.
+         and Dr., which are studied written out).
       6. Digits are one token; punctuation is never part of a word, except
          the full stop of an abbreviation (Sr., D., Dr.).
     TEXT
@@ -80,7 +81,10 @@ module Snippets
       name, a title before one (D., Sr.) or a Roman numeral (século XIX),
       which keeps its capitals. A word
       capitalised only because it starts a sentence is lower-cased ("Ela" →
-      "ela"). The headword differs from the text in letter case alone.
+      "ela"). An abbreviation's headword is the word it stands for here,
+      written out with its capital: D. is "Dona" before a woman's name and
+      "Dom" before a man's, Sr. is "Senhor", Dr. is "Doutor" or "Doutora".
+      Otherwise the headword differs from the text in letter case alone.
 
       Some words get no card; mark each, kept whole as one word:
       - `skip: "name"`: the name of a person or character, in any language
@@ -161,7 +165,8 @@ module Snippets
         what the form adds (a past tense glossed as present, a plural as
         singular)
       - the headword is not the word in lower case, or lower-cases a name
-        or a title before one
+        or a title before one, or does not write out the word an
+        abbreviation stands for here (D. before a woman's name is "Dona")
       - the article breaks the article rules below: a noun without one, one
         that does not fit this form, or one on a word or name that takes
         none

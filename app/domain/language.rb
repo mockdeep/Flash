@@ -39,11 +39,19 @@ class Language
     spaces: false,
     prompts: Snippets::Mandarin::PROMPTS,
   )
+  # An abbreviation (Sr., Pe.) studies under the word it stands for, which
+  # keeps its letters in order from the first.
+  ABBREVIATION =
+    lambda do |text, form|
+      letters = text.delete_suffix(".").chars.map { Regexp.escape(it) }
+      text.end_with?(".") && form.match?(/\A#{letters.join("[^.]*")}[^.]*\z/i)
+    end
   # A sentence runs on past a full stop after a title (Sr., Dra.) or an
   # initial (J. R. Ward), and past an ending followed by a lower-case word:
   # the speech tag set off by a dash after a line of dialogue, or a
   # trailing-off ellipsis. A word studies under its own form, lower-cased
-  # unless it is a name or a title before one.
+  # unless it is a name or a title before one, and an abbreviation under
+  # the word written out.
   PORTUGUESE = new(
     code: "pt",
     sentence: /
@@ -57,7 +65,9 @@ class Language
     word_char: /\p{L}/,
     piece: /[\p{L}\p{M}\p{N}'’-]+|\S/,
     form: "headword",
-    form_fits: ->(text, form) { form.casecmp?(text) },
+    form_fits: lambda { |text, form|
+      form.casecmp?(text) || ABBREVIATION.call(text, form)
+    },
     readings: false,
     articles: ["o", "a", "os", "as"],
     skips: ["foreign", "name"],
