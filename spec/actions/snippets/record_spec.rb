@@ -83,6 +83,13 @@ RSpec.describe Snippets::Record do
       expect { described_class.call(twin) }.to change(Entry, :count).by(1)
     end
 
+    it "keeps a common word apart from a name read the same" do
+      create(:entry, headword: "明", reading: "Míng")
+      bright = proposal("new", word: "明", reading: "míng", gloss: "bright")
+
+      expect { described_class.call(bright) }.to change(Entry, :count).by(1)
+    end
+
     it "reuses a sense the entry already holds under that gloss" do
       entry = create(:entry, headword: "爱", reading: "ài")
       sense = create(:sense, entry:, gloss: "to love")
