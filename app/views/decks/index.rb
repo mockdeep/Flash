@@ -116,12 +116,18 @@ module Views
       end
 
       def render_remaining(deck, remaining)
-        if deck.cards_count.zero?
+        total = deck.cards_count
+        if total.zero?
           span(class: "rail-remaining rail-remaining--empty") { "No cards yet" }
         elsif remaining.zero?
-          span(class: "rail-remaining rail-remaining--done") { "Done ✓" }
+          span(class: "rail-remaining rail-remaining--done") do
+            "All #{total} done ✓"
+          end
         else
-          span(class: "rail-remaining") { "#{remaining} left" }
+          span(class: "rail-remaining") do
+            plain(remaining)
+            span(class: "rail-remaining__total") { " of #{total} left" }
+          end
         end
       end
     end
