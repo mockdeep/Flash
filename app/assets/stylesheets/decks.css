@@ -216,6 +216,11 @@
   white-space: nowrap;
 }
 
+.rail-remaining__total {
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
 .rail-remaining--done {
   color: var(--color-success-dark);
 }

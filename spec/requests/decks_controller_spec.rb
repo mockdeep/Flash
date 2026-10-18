@@ -99,7 +99,7 @@ RSpec.describe DecksController do
 
       get(decks_path)
 
-      expect(rendered).to have_text("1 left")
+      expect(rendered).to have_text("1 of 1 left")
     end
 
     it "labels each deck with its type" do
@@ -127,7 +127,7 @@ RSpec.describe DecksController do
 
       get(decks_path)
 
-      expect(rendered).to have_text("Done ✓")
+      expect(rendered).to have_text("All 1 done ✓")
     end
 
     def studied_deck(name, at)
