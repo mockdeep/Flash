@@ -34,13 +34,14 @@ module Snippets
 
     # Seed readings follow the HSK syllabus's spelling (curly apostrophes,
     # hyphenated idioms), so an entry matches on the letters alone rather
-    # than gaining a twin that differs only in punctuation.
+    # than gaining a twin that differs only in punctuation. Case counts: a
+    # capitalized reading is a name, never the common word read the same.
     def self.entry_for(language, headword, reading, article: nil)
       twins = Entry.where(language:, headword:, article:)
       twins.find { |entry| letters(entry.reading) == letters(reading) } ||
         twins.create!(reading:)
     end
 
-    def self.letters(reading) = reading.to_s.downcase.gsub(/[^[:alpha:]]/, "")
+    def self.letters(reading) = reading.to_s.gsub(/[^[:alpha:]]/, "")
   end
 end
