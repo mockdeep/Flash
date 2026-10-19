@@ -7,7 +7,9 @@ module Components
         p(class: "demo-banner__text") do
           plain("You're trying a demo. ")
           link_to("Sign up free", new_account_path, class: "demo-banner__link")
-          plain(" to save your progress.")
+          plain(" to save your progress, or see ")
+          link_to("how it works", guide_path, class: "demo-banner__link")
+          plain(".")
         end
       end
     end
