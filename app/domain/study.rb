@@ -203,7 +203,7 @@ class Study
   end
 
   def multiple_choice_answers
-    distractors = next_card.distractors.sample(4)
+    distractors = unlike_answer(next_card.distractors).sample(4)
     if deck.generates_distractors?
       distractors += category_distractors(distractors)
     end
@@ -216,16 +216,24 @@ class Study
     slots = 4 - chosen.length
     return [] unless slots.positive?
 
-    excluded = chosen + [next_card.back]
-    same = pick(sibling_backs(next_card.category), excluded, slots)
+    same = pick(sibling_backs(next_card.category), chosen, slots)
     return same if same.length == slots
 
-    same + pick(sibling_backs, excluded + same, slots - same.length)
+    same + pick(sibling_backs, chosen + same, slots - same.length)
   end
 
   def pick(backs, excluded, count)
-    (backs - excluded).uniq.sample(count)
+    unlike_answer(backs - excluded).uniq.sample(count)
   end
+
+  # A decoy sharing a gloss with the answer ("absurd" against "absurd;
+  # dissipated") would be a second right answer.
+  def unlike_answer(backs)
+    answer = glosses(next_card.back)
+    backs.reject { |back| glosses(back).intersect?(answer) }
+  end
+
+  def glosses(back) = back.split(Card::SEPARATOR)
 
   def sibling_backs(category = nil)
     deck.backs(except: next_card, category:)

@@ -322,6 +322,26 @@ RSpec.describe Study do
       end
     end
 
+    it "leaves out remembered distractors sharing a gloss with the answer" do
+      deck = create(:deck)
+      back = "absurd; dissipated"
+      create(:basic_card, deck:, back:, distractors: ["absurd"])
+
+      answers = described_class.new(deck:).possible_answers
+
+      expect(answers).not_to include("absurd")
+    end
+
+    it "leaves out sibling backs sharing a gloss with the answer" do
+      deck = create(:deck)
+      create(:basic_card, deck:, back: "absurd")
+      create(:basic_card, deck:, back: "dissipated; absurd")
+
+      answers = described_class.new(deck:).possible_answers
+
+      expect(answers).to eq(["absurd"])
+    end
+
     it "samples at most 4 wrong answers from the card's distractors" do
       deck = create(:deck)
       create(:basic_card, deck:, distractors: ["A", "B", "C", "D", "E"])
