@@ -388,7 +388,7 @@ app/
 │   ├── guide_rounds.rb           # Guide #rounds section: one card (花) through rounds 1–3
 │   ├── card_reading.rb           # Pronunciation/pinyin gloss (rendered inside CardFront on reveal)
 │   ├── catalog_toggle_button.rb  # Publish / unpublish a deck to the public catalog
-│   ├── deck_rail.rb              # A `DeckSection` as a heading over a sideways-scrolling rail (`rail` controller); the block fills it with cards (decks page + catalog)
+│   ├── deck_rail.rb              # A `DeckSection` as a heading (linking to its `#anchor`, e.g. `/catalog#mandarin`) over a sideways-scrolling rail (`rail` controller); the block fills it with cards (decks page + catalog)
 │   ├── deck_texts.rb             # "Source" block under the card preview (catalog + share preview): title / author / license, marked not included when unshareable
 │   ├── demo_banner.rb            # Demo-mode banner
 │   ├── error_explanation.rb      # Styled validation-error box

@@ -5,9 +5,9 @@ module Components
   # the `rail` controller shows while there is more to scroll to. The block
   # fills the rail with cards.
   class DeckRail < Components::Base
-    SECTION_DATA = {
-      controller: "rail",
-      action: "resize@window->rail#syncArrows",
+    SECTION_ATTRIBUTES = {
+      class: "deck-section",
+      data: { controller: "rail", action: "resize@window->rail#syncArrows" },
     }.freeze
 
     attr_accessor :deck_section
@@ -18,7 +18,7 @@ module Components
     end
 
     def view_template(&)
-      section(class: "deck-section", data: SECTION_DATA) do
+      section(id: deck_section.anchor, **SECTION_ATTRIBUTES) do
         render_heading
         div(class: "rail-wrap") do
           render_arrow(-1, "‹", "Scroll left")
@@ -32,7 +32,9 @@ module Components
 
     def render_heading
       h2(class: "decks-section-title") do
-        plain(deck_section.name)
+        a(href: "##{deck_section.anchor}", class: "decks-section-link") do
+          deck_section.name
+        end
         span(class: "section-meta") do
           pluralize(deck_section.decks.size, "deck")
         end
