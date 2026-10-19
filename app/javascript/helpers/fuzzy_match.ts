@@ -21,12 +21,14 @@ function normalize(text: string): string {
   let result = text.
     normalize("NFD").
     replace(/\p{Diacritic}/gu, "").
+    replace(/['’]/gu, "").
+    replace(/\p{P}/gu, " ").
     toLowerCase();
   for (const [from, to] of ATOMIC_LATIN_SUBSTITUTIONS) {
     result = result.split(from).join(to);
   }
 
-  return result;
+  return result.trim();
 }
 
 function findPrefixWord(
@@ -80,7 +82,7 @@ function collectMatches(answers: string[], queryWords: string[]): Match[] {
 }
 
 export function matchAnswers(answers: string[], rawQuery: string): string[] {
-  const query = normalize(rawQuery.trim());
+  const query = normalize(rawQuery);
   if (query.length === 0) { return []; }
   const queryWords = query.split(/\s+/u);
   const matches = collectMatches(answers, queryWords);

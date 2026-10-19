@@ -96,6 +96,40 @@ describe("normalization", () => {
   });
 });
 
+describe("punctuation", () => {
+  it("matches hyphenated answers when typing spaces", () => {
+    const answers = ["good-looking"];
+
+    expect(matchAnswers(answers, "good look")).toStrictEqual(answers);
+  });
+
+  it("matches words inside parentheses without typing them", () => {
+    expect(matchAnswers(["(to) eat"], "to eat")).toStrictEqual(["(to) eat"]);
+  });
+
+  it("matches words after parentheses", () => {
+    expect(matchAnswers(["(to) eat"], "eat")).toStrictEqual(["(to) eat"]);
+  });
+
+  it("matches when typing the punctuation", () => {
+    const answers = ["good-looking"];
+
+    expect(matchAnswers(answers, "good-looking")).toStrictEqual(answers);
+  });
+
+  it.each(["dont", "don't", "don’t"])("matches don't typing %s", (query) => {
+    expect(matchAnswers(["don't"], query)).toStrictEqual(["don't"]);
+  });
+
+  it("matches curly apostrophes when typing none", () => {
+    expect(matchAnswers(["don’t"], "dont")).toStrictEqual(["don’t"]);
+  });
+
+  it("matches nothing when the query is only punctuation", () => {
+    expect(matchAnswers(["good-looking"], "-")).toStrictEqual([]);
+  });
+});
+
 describe("atomic Latin substitution", () => {
   it.each([
     ["Straße", "strasse"],
