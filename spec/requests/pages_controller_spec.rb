@@ -3,6 +3,14 @@
 require "rails_helper"
 
 RSpec.describe PagesController do
+  describe "#guide" do
+    it "renders the guide for visitors" do
+      get(guide_path)
+
+      expect(rendered).to have_text("How Flash Works")
+    end
+  end
+
   describe "#pricing" do
     it "renders the pricing page" do
       get(pricing_path)

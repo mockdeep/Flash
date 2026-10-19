@@ -176,3 +176,54 @@ progress::-moz-progress-bar {
   line-height: 1.4;
   color: var(--color-text-muted);
 }
+
+.guide {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--spacing-lg) var(--spacing-md);
+}
+
+.guide ul {
+  padding-left: 1.25rem;
+}
+
+.guide__lead {
+  font-size: 20px;
+}
+
+.guide__section {
+  margin-top: var(--spacing-xl);
+}
+
+.guide__examples {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--spacing-lg);
+  margin-block: var(--spacing-md);
+}
+
+.guide__example {
+  margin: 0 0 var(--spacing-md);
+}
+
+.guide__example figcaption {
+  margin-top: var(--spacing-sm);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: center;
+}
+
+.guide dt {
+  margin-top: var(--spacing-sm);
+  font-weight: 700;
+}
+
+.guide dd {
+  margin-left: var(--spacing-md);
+}
+
+.guide__example .reading-snippet p {
+  font-size: 28px;
+  text-align: center;
+}

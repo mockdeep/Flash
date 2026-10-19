@@ -104,6 +104,7 @@ module Views
                   ul(class: "footer-links") do
                     li { link_to("Home", root_path) }
                     li { link_to("Catalog", catalog_index_path) }
+                    li { link_to("How It Works", guide_path) }
                     li { link_to("Pricing", pricing_path) }
                     if current_user.logged_in? && !current_user.guest?
                       li { link_to("My Decks", decks_path) }

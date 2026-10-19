@@ -34,6 +34,7 @@ Rails.application.routes.draw do
     resources :readers, only: [:index, :create, :destroy], controller: "source_readers"
   end
 
+  get "guide", to: "pages#guide"
   get "pricing", to: "pages#pricing"
   get "privacy", to: "pages#privacy"
   get "terms", to: "pages#terms"

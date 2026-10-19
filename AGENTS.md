@@ -193,7 +193,7 @@ end
 
 **CSS Organization** (all included via the layout):
 - `accent-box.css` - `.accent-box` callouts (round-complete, milestones, empty states)
-- `application.css` - Base styles, resets, common patterns, global `a:visited`
+- `application.css` - Base styles, resets, common patterns, global `a:visited`, and the `/guide` page (`.guide*`)
 - `auth.css` - Authentication pages (sign in / account)
 - `button.css` - `.button` base and variants (`button_class` modifiers: compact / primary / ghost / secondary / danger / disabled)
 - `card.css` - Generic `.card` container pattern
@@ -381,6 +381,11 @@ app/
 │   ├── card_front.rb             # Study card-front box + kebab menu; renders the reading gloss inside it
 │   ├── card_menu.rb              # Card-front kebab menu (study text sizes, edit/delete actions)
 │   ├── card_preview.rb           # 5-card preview block (shared by catalog and share preview)
+│   ├── guide_card.rb             # Still, unclickable study card for the guide page (front, choices or typed answer)
+│   ├── guide_example.rb          # Captioned figure around a guide picture
+│   ├── guide_goals.rb            # Guide #goals section: the three goal modes, milestone buttons
+│   ├── guide_reading.rb          # Guide #reading section: sample Read-tab words in each state
+│   ├── guide_rounds.rb           # Guide #rounds section: one card (花) through rounds 1–3
 │   ├── card_reading.rb           # Pronunciation/pinyin gloss (rendered inside CardFront on reveal)
 │   ├── catalog_toggle_button.rb  # Publish / unpublish a deck to the public catalog
 │   ├── deck_rail.rb              # A `DeckSection` as a heading over a sideways-scrolling rail (`rail` controller); the block fills it with cards (decks page + catalog)
@@ -433,7 +438,7 @@ app/
 │   ├── decks_controller.rb            # `#create` dispatches CreateMusic vs CreateBasic on :deck_type
 │   ├── lookups_controller.rb          # Read-tab word lookup: resets the sense's streak
 │   ├── milestones_controller.rb       # Updates a deck's study goal
-│   ├── pages_controller.rb            # pricing / privacy / terms
+│   ├── pages_controller.rb            # guide / pricing / privacy / terms
 │   ├── replacements_controller.rb     # Re-import a deck's cards (Decks::Replace)
 │   ├── sessions_controller.rb         # Login / logout
 │   ├── shares_controller.rb           # Owner toggle (via :deck_id) + public preview/copy/try (via :token)
@@ -497,6 +502,7 @@ app/
 │   │   └── replacements/
 │   │       └── new.rb        # Re-import (replace) a deck's cards form
 │   ├── pages/
+│   │   ├── guide.rb          # Public "How Flash Works": rounds (one card through rounds 1–3), goals, the Read tab; sections #rounds / #goals / #reading
 │   │   ├── pricing.rb
 │   │   ├── privacy.rb
 │   │   └── terms.rb
