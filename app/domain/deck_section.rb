@@ -29,6 +29,8 @@ class DeckSection
     end
   end
 
+  def anchor = name.parameterize
+
   # The first deck in page order still short of today's goal.
   def first_unmet = decks.goal_unmet_today.ordered.first
 end

@@ -10,6 +10,14 @@ RSpec.describe Components::DeckRail, type: :view do
     expect(render_for(Deck.none)).to have_css("h2", text: "Basic")
   end
 
+  it "gives the section an anchor" do
+    expect(render_for(Deck.none)).to have_css("section#basic")
+  end
+
+  it "links the heading to its anchor" do
+    expect(render_for(Deck.none)).to have_link("Basic", href: "#basic")
+  end
+
   it "counts the section's decks" do
     create(:deck)
 
