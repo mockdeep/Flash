@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_210000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_20_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -116,7 +116,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_210000) do
     t.bigint "entry_id", null: false
     t.string "gloss", null: false
     t.datetime "updated_at", null: false
-    t.index ["entry_id", "gloss"], name: "index_senses_on_entry_id_and_gloss", unique: true
+    t.string "traditional"
+    t.index ["entry_id", "gloss", "traditional"], name: "index_senses_on_entry_id_and_gloss_and_traditional", unique: true, nulls_not_distinct: true
   end
 
   create_table "skill_scores", force: :cascade do |t|

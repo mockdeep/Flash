@@ -7,7 +7,7 @@ RSpec.describe Compendium::Export do
     snapshot = export
 
     expect(snapshot.path("senses").readlines.first)
-      .to eq("created_at,entry_id,gloss,id,updated_at\n")
+      .to eq("created_at,entry_id,gloss,id,traditional,updated_at\n")
   end
 
   it "writes rows in id order" do

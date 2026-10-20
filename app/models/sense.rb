@@ -2,6 +2,8 @@
 
 # One meaning of an entry, and the unit a learner studies: distractors key
 # to it, and progress will. Word_lists select senses through memberships.
+# A Mandarin sense also carries its traditional form, so one meaning written
+# two ways in traditional is two senses.
 class Sense < ApplicationRecord
   belongs_to :entry
   has_many :sense_memberships, dependent: :destroy
@@ -10,5 +12,7 @@ class Sense < ApplicationRecord
   has_many :sense_distractors, dependent: :delete_all
   has_many :skill_scores, dependent: :delete_all
 
-  validates :gloss, presence: true, uniqueness: { scope: :entry_id }
+  validates :gloss,
+            presence: true,
+            uniqueness: { scope: [:entry_id, :traditional] }
 end
