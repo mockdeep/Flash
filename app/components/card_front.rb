@@ -2,12 +2,12 @@
 
 module Components
   class CardFront < Components::Base
-    def initialize(text:, id: nil, reading: nil, font_menu: false, card_id: nil)
+    def initialize(text:, deck:, id: nil, reading: nil, card_id: nil)
       super()
       @text = text
+      @deck = deck
       @id = id
       @reading = reading
-      @font_menu = font_menu
       @card_id = card_id
     end
 
@@ -15,7 +15,7 @@ module Components
       div(class: "card-front-wrapper", data: wrapper_data) do
         h2(class: "card-front", id: @id) { @text }
         render_reading
-        render(Components::CardMenu.new(font_menu: @font_menu))
+        render(Components::CardMenu.new(deck: @deck))
       end
     end
 

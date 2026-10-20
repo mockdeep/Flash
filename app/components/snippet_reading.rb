@@ -4,7 +4,8 @@ module Components
   # The Read tab: a deck's source, then its snippets word by word, laid out
   # as written, with gaps between words up to round 2. Each word is grey
   # until studied, green once done at the deck's round, and has its reading
-  # over it while its streak is zero. Clicking a word shows its reading (or
+  # over it while its streak is zero. Mandarin is written in the deck's
+  # script. Clicking a word shows its reading (or
   # a noun's article) and gloss in a popover, and resets its streak so study
   # brings it back. A word the segmenter skipped has no card, so its popover
   # says why and clicking it records nothing.
@@ -65,9 +66,16 @@ module Components
       # the line it closes.
       wbr unless language.spaces
       id = "lookup-#{lookup_count}"
-      render_word(token["text"], sense, id)
-      lookups <<
-        ReadingLookup.new(id:, text: token["text"], sense:, skip:, language:)
+      text = written(token, sense)
+      render_word(text, sense, id)
+      lookups << ReadingLookup.new(id:, text:, sense:, skip:, language:)
+    end
+
+    # A Mandarin word is written in the deck's script, whatever the text's.
+    def written(token, sense)
+      return token["text"] unless sense && language.traditional
+
+      (sense.traditional if deck.traditional?) || sense.entry.headword
     end
 
     def render_word(text, sense, id)

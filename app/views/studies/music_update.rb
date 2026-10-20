@@ -93,7 +93,7 @@ module Views
       end
 
       def render_card_front
-        args = { text: result.question, id: "card-question" }
+        args = { text: result.question, deck:, id: "card-question" }
         render(Components::CardFront.new(**args))
       end
 
