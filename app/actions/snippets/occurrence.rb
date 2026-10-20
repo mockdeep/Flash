@@ -44,8 +44,11 @@ module Snippets
     def spelling = [word, headword]
 
     # The form the token studies under, which the segmenter gave where it
-    # differs from the text.
-    def headword = sentence.tokens[index]["headword"] || word
+    # differs from the text. Finish strips that, so a finished token takes
+    # its sense's.
+    def headword
+      token["headword"] || token_sense&.entry&.headword || word
+    end
 
     # The form a deck studied in traditional shows, which the segmenter gave
     # where it differs from the text; none in a language without one.
@@ -80,6 +83,10 @@ module Snippets
     end
 
     private
+
+    def token = sentence.tokens[index]
+
+    def token_sense = token["sense_id"]&.then { Sense.find_by(id: it) }
 
     def words = sentence.tokens.pluck("text")
 

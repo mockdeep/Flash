@@ -52,6 +52,13 @@ RSpec.describe Snippets::Review do
       expect(Sense.last.entry.headword).to eq("爱")
     end
 
+    it "creates the sense under a finished token's headword" do
+      sense = create(:sense, entry: create(:entry, headword: "爱"))
+      add(sentence_with({ "text" => "愛", "sense_id" => sense.id }))
+
+      expect(Sense.last.entry.headword).to eq("爱")
+    end
+
     it "files the sense under the article given" do
       sentence = sentence_with(unresolved("casa"))
       described_class
