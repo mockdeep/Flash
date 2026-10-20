@@ -6,7 +6,7 @@ class Snippet < ApplicationRecord
   # Every sentence costs LLM calls when the snippet is processed, so a
   # pasted novel must not get through; a long work goes in chapter by
   # chapter.
-  MAX_BODY = 20_000
+  MAX_BODY = 80_000
   # One line of the body as written, with the sentences it splits into.
   Paragraph =
     Data.define(:text, :sentences) do

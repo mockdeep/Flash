@@ -4,19 +4,33 @@ module Snippets
   # A snippet as a review sees it, as plain text: a summary line, the title
   # and heading translations, the words left unresolved and the senses
   # created, then every sentence token by token, with the sentence ids, token
-  # indexes and sense ids that Snippets::Review takes.
+  # indexes and sense ids that Snippets::Review takes. Sentences are numbered
+  # from 1, and `from:` / `to:` keep to those numbers so a long snippet can be
+  # reviewed a stretch at a time; the summary and created senses still cover
+  # the whole snippet.
   module Report
-    def self.call(snippet)
-      tokens = snippet.sentences.flat_map(&:tokens)
+    def self.call(snippet, from: 1, to: nil)
+      all = snippet.sentences.to_a
+      numbered =
+        all.each.with_index(1).select { |_, number| (from..to).cover?(number) }
+      lines =
+        numbered.flat_map do |sentence, number|
+          sentence_lines(sentence, "#{number}/#{all.size}")
+        end
+
+      [*summary(snippet, all, numbered.map(&:first)), *lines].join("\n")
+    end
+
+    def self.summary(snippet, all, sentences)
+      tokens = all.flat_map(&:tokens)
 
       [
         heading(snippet, tokens),
         *section("Translations", translations(snippet)),
-        *section("Unresolved", unresolved(snippet)),
+        *section("Unresolved", unresolved(sentences)),
         *section("Created", created(tokens)),
-        *section("Skipped", skipped(snippet)),
-        *snippet.sentences.flat_map { |sentence| sentence_lines(sentence) },
-      ].join("\n")
+        *section("Skipped", skipped(sentences)),
+      ]
     end
 
     # Senses no list holds and no token points at, such as those a sentence
@@ -58,8 +72,8 @@ module Snippets
       lines.empty? ? [] : ["#{title}:", *lines]
     end
 
-    def self.unresolved(snippet)
-      snippet.sentences.flat_map do |sentence|
+    def self.unresolved(sentences)
+      sentences.flat_map do |sentence|
         sentence.tokens.each_with_index.filter_map do |token, index|
           next unless token["outcome"] == "unresolved"
 
@@ -69,8 +83,8 @@ module Snippets
       end
     end
 
-    def self.skipped(snippet)
-      snippet.sentences.flat_map do |sentence|
+    def self.skipped(sentences)
+      sentences.flat_map do |sentence|
         sentence.tokens.each_with_index.filter_map do |token, index|
           next unless token["skip"]
 
@@ -87,7 +101,7 @@ module Snippets
       senses.map { |sense| "  #{describe(sense)}" }
     end
 
-    def self.sentence_lines(sentence)
+    def self.sentence_lines(sentence, place)
       senses = Sense.where(id: sentence.tokens.pluck("sense_id")).index_by(&:id)
       lines =
         sentence.tokens.each_with_index.map do |token, index|
@@ -95,7 +109,7 @@ module Snippets
           "  #{index} #{token_line(sentence, token, sense)}"
         end
 
-      ["Sentence #{sentence.id}: #{sentence.body}", *lines]
+      ["Sentence #{sentence.id} (#{place}): #{sentence.body}", *lines]
     end
 
     def self.token_line(sentence, token, sense)
