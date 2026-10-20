@@ -139,6 +139,24 @@ RSpec.describe Snippets::Process do
       expect(first_prompt["sentences"].pluck("text")).to eq(["我"])
     end
 
+    it "segments only the sentences given" do
+      silent_pipeline
+      create(:snippet_sentence, body: "我")
+      sentence = create(:snippet_sentence, body: "你")
+      described_class.call(sentences: SnippetSentence.where(id: sentence))
+
+      expect(first_prompt.pluck("sentence")).to eq(["你"])
+    end
+
+    it "resolves only the sentences given" do
+      silent_pipeline
+      segmented_sentence("我")
+      sentence = segmented_sentence("你")
+      described_class.call(sentences: SnippetSentence.where(id: sentence))
+
+      expect(first_prompt["sentences"].pluck("text")).to eq(["你"])
+    end
+
     it "reports each batch it finishes" do
       fake_pipeline
       snippet = create(:snippet, source: create(:source, title: "T"))

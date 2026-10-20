@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
 namespace(:snippets) do
-  desc("Process every snippet not yet processed, through the Claude CLI")
+  desc("Process every unprocessed snippet (or ID=… alone) through Claude")
   task(process: :environment) do
-    Snippets::Process.call { |line| puts(line) }
+    id = ENV.fetch("ID", nil)
+    sentences = id ? Snippet.find(id).sentences : SnippetSentence.all
+
+    Snippets::Process.call(sentences:) { |line| puts(line) }
     puts("Nothing left to process")
   end
 
-  desc(
-    "Report a snippet for review (ID=…), or every unfinished snippet; " \
-    "FROM=… / TO=… show only those sentences",
-  )
+  desc("Report a snippet (ID=…, FROM=…, TO=…) or every unfinished one")
   task(review: :environment) do
     id = ENV.fetch("ID", nil)
     from = Integer(ENV.fetch("FROM", 1))
