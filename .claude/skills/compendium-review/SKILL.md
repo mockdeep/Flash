@@ -43,7 +43,10 @@ what the user agrees to. AGENTS.md ("Snippet Processing", "Compendium Review",
 ## Processing
 
 `bin/rails snippets:process` segments and resolves every unprocessed sentence
-through the Claude CLI, printing a line per batch. It takes a while on a long
+through the Claude CLI, printing a line per batch. `ID=<id>` keeps it to one
+snippet: for a book added whole, process the next snippet only once the last
+is finished and pushed, since a processed snippet blocks pushing until it is
+finished. It takes a while on a long
 text, so run it in the background and report when it finishes. Lines starting
 "Re-segmented" name a sentence sent back to the segmenter and why.
 

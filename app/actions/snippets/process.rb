@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 module Snippets
-  # Works through every snippet that is not yet processed, a batch of
+  # Works through every snippet that is not yet processed (or only the
+  # `sentences:` given, such as one snippet's), a batch of
   # sentences at a time, saving each batch as it goes so a run that dies
   # picks up where it stopped: segment every sentence, then resolve them in
   # order, so later batches see the senses earlier ones created. Yields a
@@ -12,14 +13,14 @@ module Snippets
     SEGMENT_BATCH = 10
     RESOLVE_BATCH = 2
 
-    def self.call(&)
-      segment(&)
-      resolve(&)
+    def self.call(sentences: SnippetSentence.all, &)
+      segment(sentences, &)
+      resolve(sentences, &)
     end
 
-    def self.segment
+    def self.segment(sentences)
       loop do
-        batch = SnippetSentence.unsegmented
+        batch = sentences.unsegmented
           .order(:snippet_id, :position).limit(SEGMENT_BATCH).to_a
         break if batch.empty?
 
@@ -30,10 +31,10 @@ module Snippets
       end
     end
 
-    def self.resolve(&)
-      sentences = SnippetSentence.segmented.order(:snippet_id, :position)
+    def self.resolve(sentences, &)
+      awaiting = sentences.segmented.order(:snippet_id, :position)
         .select(&:awaiting_senses?)
-      runs = by_language(sentences)
+      runs = by_language(awaiting)
       runs.flat_map { it.each_slice(RESOLVE_BATCH).to_a }.each do |batch|
         complaints = Resolve.call(batch)
         report(batch, complaints, &) if block_given?
