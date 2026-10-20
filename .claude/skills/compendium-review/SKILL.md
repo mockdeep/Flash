@@ -59,10 +59,13 @@ text, so run it in the background and report when it finishes. Lines starting
      They don't block finishing.
    - **Unresolved** words, with the reason each was left: decide the right
      sense, or whether the sentence was cut wrongly.
-   - **Skipped** words, which get no card: in Portuguese, people's names
-     (`name`) and titles or other names left in another language (`foreign`).
-     Check each reason holds. Give a wrongly skipped one a
-     sense with `add_sense` or `repoint`, which takes the skip off.
+   - **Skipped** words, which get no card: in Portuguese, names English
+     leaves as they are, people's or places' (`name`), and titles or other
+     names left in another language (`foreign`). Check each reason holds.
+     Give a wrongly skipped one a sense with `add_sense` or `repoint`, which
+     takes the skip off. A name English calls something else (Lisboa
+     "Lisbon", Deus "God") gets a card; one that slipped through with a
+     gloss that only repeats it should be skipped instead.
    - **Created** senses: check each new reading and gloss against a reference
      and the policy, and for Mandarin the traditional form in brackets (发
      "hair" is 髮, not 發). Look for twins of an existing sense
