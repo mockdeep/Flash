@@ -58,8 +58,8 @@ module Views
               render(
                 Components::CardFront.new(
                   text: card.front,
+                  deck:,
                   reading: study.prompt_reading,
-                  font_menu: deck.mandarin?,
                   card_id: card.id,
                 ),
               )

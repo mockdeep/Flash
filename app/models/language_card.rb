@@ -39,7 +39,7 @@ class LanguageCard
 
   def id = entry.card_id
 
-  def front = entry.term
+  def front = entry.term(form)
 
   def done? = correct_streak >= deck.round
 

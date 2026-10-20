@@ -18,9 +18,9 @@ module Components
       "random" => "Random",
     }.freeze
 
-    def initialize(font_menu: false)
+    def initialize(deck:)
       super()
-      @font_menu = font_menu
+      @deck = deck
     end
 
     def view_template
@@ -51,8 +51,13 @@ module Components
       ) do
         p(class: "card-front__menu-label") { "Text size" }
         SIZES.each { |code, label| render_size_option(code, label) }
-        render_font_section if @font_menu
+        render_hanzi_sections if @deck.mandarin?
       end
+    end
+
+    def render_hanzi_sections
+      render_font_section
+      render(ScriptOptions.new(deck: @deck))
     end
 
     def render_font_section

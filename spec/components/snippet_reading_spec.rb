@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe Components::SnippetReading, type: :view do
-  def render_for(*snippets, round: 1, source: create(:source))
-    deck = create(:reading_deck, round:, word_list: source.word_list)
+  def render_for(*snippets, source: create(:source), **deck_attributes)
+    word_list = source.word_list
+    deck = create(:reading_deck, word_list:, **deck_attributes)
     Capybara.string(view.render(described_class.new(snippets:, deck:)))
   end
 
@@ -35,6 +36,13 @@ RSpec.describe Components::SnippetReading, type: :view do
     tokens = [{ "text" => "A" }, { "text" => "casa", "sense_id" => sense.id }]
     create(:snippet_sentence, snippet:, tokens:)
     render_for(snippet, round:, source:)
+  end
+
+  def body_snippet(script:, traditional: "體")
+    entry = create(:entry, headword: "体", reading: "tǐ")
+    sense = create(:sense, entry:, gloss: "body", traditional:)
+    tokens = [{ "text" => "體", "sense_id" => sense.id }]
+    render_text(snippet_with("體", tokens), script:)
   end
 
   def love_snippet
@@ -299,5 +307,29 @@ RSpec.describe Components::SnippetReading, type: :view do
 
     url = "/decks/#{Deck.sole.id}/lookups"
     expect(page).to have_css("[data-lookup-url-value='#{url}']")
+  end
+
+  it "writes a word in simplified on a simplified deck" do
+    page = body_snippet(script: "simplified")
+
+    expect(page).to have_css(".reading-snippet__word", text: "体")
+  end
+
+  it "writes a word in traditional on a traditional deck" do
+    page = body_snippet(script: "traditional")
+
+    expect(page).to have_css(".reading-snippet__word", text: "體")
+  end
+
+  it "writes a word with no traditional form as its headword" do
+    page = body_snippet(script: "traditional", traditional: nil)
+
+    expect(page).to have_css(".reading-snippet__word", text: "体")
+  end
+
+  it "keeps a word's text in a language without traditional forms" do
+    page = portuguese_snippet
+
+    expect(page).to have_css(".reading-snippet__word", text: "casa")
   end
 end

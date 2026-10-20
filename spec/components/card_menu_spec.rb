@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
-RSpec.describe Components::CardMenu do
-  def render_menu(...)
-    described_class.new(...).call
+RSpec.describe Components::CardMenu, type: :view do
+  def render_menu(deck: create(:deck))
+    view.render(described_class.new(deck:))
   end
+
+  def mandarin_menu = render_menu(deck: create(:reading_deck))
 
   it "renders the toggle wired to the disclosure controller" do
     expect(render_menu).to include(%(data-action="click->disclosure#toggle"))
@@ -21,12 +23,20 @@ RSpec.describe Components::CardMenu do
     expect(render_menu).to include("click->disclosure#close")
   end
 
-  it "omits the font section by default" do
+  it "omits the font section outside Mandarin" do
     expect(render_menu).not_to include("data-font")
   end
 
-  it "renders a font option for each font when enabled" do
-    html = render_menu(font_menu: true)
+  it "omits the characters section outside Mandarin" do
+    expect(render_menu).not_to include("Characters")
+  end
+
+  it "shows the characters section on a Mandarin deck" do
+    expect(mandarin_menu).to include("Characters")
+  end
+
+  it "renders a font option for each font on a Mandarin deck" do
+    html = mandarin_menu
 
     described_class::FONTS.each_key do |code|
       expect(html).to include(%(data-font="#{code}"))
@@ -34,15 +44,15 @@ RSpec.describe Components::CardMenu do
   end
 
   it "labels the font section" do
-    expect(render_menu(font_menu: true)).to include("Font")
+    expect(mandarin_menu).to include("Font")
   end
 
   it "previews font options with a hanzi letter" do
-    expect(render_menu(font_menu: true)).to include("汉")
+    expect(mandarin_menu).to include("汉")
   end
 
   it "wires font options to the font controller and menu close" do
-    expect(render_menu(font_menu: true))
+    expect(mandarin_menu)
       .to include(%(data-action="click->font#setFont click->disclosure#close"))
   end
 end

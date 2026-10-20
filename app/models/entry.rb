@@ -13,5 +13,5 @@ class Entry < ApplicationRecord
   validates :headword, uniqueness: { scope: [:language, :reading, :article] }
 
   # The headword as studied: a noun with its article, "a casa".
-  def term = [article, headword].compact_blank.join(" ")
+  def term(written = headword) = [article, written].compact_blank.join(" ")
 end

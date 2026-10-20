@@ -23,6 +23,13 @@ RSpec.describe LanguageCard do
     expect(card).to have_attributes(front: "明白", reading: "míngbai")
   end
 
+  it "shows the traditional form on a deck studied in traditional" do
+    deck = create(:reading_deck, script: "traditional")
+    card = create(:language_card, deck:, front: "干", traditional: "乾")
+
+    expect(card.front).to eq("乾")
+  end
+
   it "puts a noun's article on the front" do
     card = create(:language_card, front: "casa")
     Entry.sole.update!(article: "a")

@@ -79,8 +79,8 @@ module Views
             args = {
               text: result.question,
               id: "card-question",
+              deck:,
               reading: card.reading.to_s,
-              font_menu: deck.mandarin?,
               card_id: card.id,
             }
             render(Components::CardFront.new(**args))
