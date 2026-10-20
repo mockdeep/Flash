@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
-# One entry as a language deck studies it: the list's glosses for the entry
-# rejoined as the back, and the owner's skill scores on those senses as the
-# streak. Not a row - built from the deck's enumeration - which is what lets
-# a deck be a single row over a shared word_list.
+# One entry as a language deck studies it (in traditional, one spelling of
+# it): the list's glosses for the entry rejoined as the back, and the
+# owner's skill scores on those senses as the streak. Not a row - built
+# from the deck's enumeration - which is what lets a deck be a single row
+# over a shared word_list.
 class LanguageCard
   CORRECT = <<~SQL.squish
     correct_count = skill_scores.correct_count + 1,
@@ -33,8 +34,10 @@ class LanguageCard
     @correct_streak = entry.correct_streak
   end
 
-  delegate :id, :reading, :back, :category, :sense_ids, to: :entry
-  delegate :view_count, :headword, to: :entry
+  delegate :reading, :back, :category, :sense_ids, to: :entry
+  delegate :view_count, :form, to: :entry
+
+  def id = entry.card_id
 
   def front = entry.term
 
@@ -45,8 +48,8 @@ class LanguageCard
   def example_front = example&.sentence
   def example_back = example&.translation
 
-  # Entries sharing a back display once.
-  def distractors = deck.backs_of(decoy_entry_ids).uniq
+  # Cards sharing a back display once.
+  def distractors = deck.backs_of(decoy_sense_ids).uniq
 
   # Credit fans out to every member sense, each climbing by one but not past
   # the deck's round, so overlapping lists can't stack a sense's streak. A
@@ -117,9 +120,9 @@ class LanguageCard
     end
   end
 
-  def decoy_entry_ids
+  def decoy_sense_ids
     SenseDistractor.where(user_id: deck.user_id, sense_id: sense_ids)
-      .joins(:distractor_sense).distinct.pluck("senses.entry_id")
+      .distinct.pluck(:distractor_sense_id)
   end
 
   # The earliest sentence any member sense holds; a sense shared between

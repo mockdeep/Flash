@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_20_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -60,6 +60,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_000000) do
     t.string "visibility", default: "private", null: false
     t.bigint "word_list_id"
     t.bigint "source_deck_id"
+    t.string "script", null: false
     t.index ["share_token"], name: "index_decks_on_share_token", unique: true
     t.index ["source_deck_id"], name: "index_decks_on_source_deck_id"
     t.index ["type"], name: "index_decks_on_type"

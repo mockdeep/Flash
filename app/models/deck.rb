@@ -81,6 +81,7 @@ class Deck < ApplicationRecord
 
   attribute(:round, :integer, default: 1)
   attribute(:visibility, :string, default: "private")
+  attribute(:script, :string, default: "simplified")
 
   before_validation(:clear_target, unless: :target_mode?)
 

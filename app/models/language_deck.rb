@@ -2,15 +2,20 @@
 
 # Shared behavior for decks over a word_list: one class per language skill
 # (Reading, Writing; someday Listening, Speaking). Never instantiated
-# directly. Its cards are not rows: each is one entry the list selects,
-# read from the compendium and scored by the owner's skill_scores, so the
-# study seam is answered by one grouped query over the list's memberships.
+# directly. Its cards are not rows: each is one entry the list selects (in
+# traditional, one spelling of it), read from the compendium and scored by
+# the owner's skill_scores, so the study seam is answered by one grouped
+# query over the list's memberships.
 class LanguageDeck < Deck
+  SCRIPTS = ["simplified", "traditional"].freeze
   ENTRY_COLUMNS = <<~SQL.squish
     entries.*,
     STRING_AGG(senses.gloss, '; ' ORDER BY sense_memberships.position)
       AS back,
     ARRAY_AGG(senses.id ORDER BY sense_memberships.position) AS sense_ids,
+    ARRAY_TO_STRING(
+      ARRAY_AGG(senses.id ORDER BY sense_memberships.position), '-'
+    ) AS card_id,
     (ARRAY_AGG(sense_memberships.category
       ORDER BY sense_memberships.position))[1] AS category,
     MIN(COALESCE(skill_scores.correct_streak, 0)) AS correct_streak,
@@ -20,6 +25,8 @@ class LanguageDeck < Deck
     LEFT JOIN skill_scores ON skill_scores.sense_id = senses.id
       AND skill_scores.user_id = :user_id AND skill_scores.skill = :skill
   SQL
+  SIMPLIFIED_FORM = Arel.sql("entries.headword")
+  TRADITIONAL_FORM = Arel.sql("COALESCE(senses.traditional, entries.headword)")
   LIST_ORDER = Arel.sql("MIN(sense_memberships.position)")
   STREAK = "MIN(COALESCE(skill_scores.correct_streak, 0))"
 
@@ -29,11 +36,18 @@ class LanguageDeck < Deck
 
   delegate :name, :language, to: :word_list
 
+  validates :script, inclusion: { in: SCRIPTS }
+
   def mandarin? = language == "zh"
+
+  def traditional? = script == "traditional"
 
   def generates_distractors? = true
 
-  def card(id) = LanguageCard.new(self, entries.find(id))
+  # A card's id is its senses' ids joined, so it finds the card holding them.
+  def card(id)
+    LanguageCard.new(self, holding(Sense.where(id: id.to_s.split("-"))).take!)
+  end
 
   def study_pool(limit:)
     pool = entries.having("#{STREAK} < ?", round).order(LIST_ORDER)
@@ -45,10 +59,9 @@ class LanguageDeck < Deck
   end
 
   def backs(except: nil, category: nil)
-    scope = entries
-    scope = scope.where.not(entries: { id: except.id }) if except
-    scope = scope.where(entries: { id: entry_ids_filed(category) }) if category
-    rows(scope).pluck(:back)
+    scope = category ? holding(senses_filed(category)) : rows(entries)
+    scope = scope.where.not(card_id: except.id) if except
+    scope.pluck(:back)
   end
 
   def cards_in_order(limit: nil)
@@ -56,8 +69,7 @@ class LanguageDeck < Deck
   end
 
   def reading_pairs(except:)
-    siblings = entries.where.not(entries: { id: except.id })
-    rows(siblings).pluck(:headword, :reading)
+    rows(entries).where.not(card_id: except.id).pluck(:form, :reading)
   end
 
   def readings?
@@ -65,63 +77,69 @@ class LanguageDeck < Deck
   end
 
   def hanzi_chars
-    @hanzi_chars ||=
-      rows(entries).pluck(:headword).join.scan(/\p{Han}/).uniq.join
+    @hanzi_chars ||= rows(entries).pluck(:form).join.scan(/\p{Han}/).uniq.join
   end
 
   def homograph?(card)
-    twins = entries.where(entries: { headword: card.headword })
-      .where.not(entries: { id: card.id })
-    rows(twins).exists?
+    twins = entries.where(shown_form.eq(card.form))
+    rows(twins).where.not(card_id: card.id).exists?
   end
 
-  # Backs of the given entries as this list shows them now; an entry the
-  # list no longer holds is absent.
-  def backs_of(entry_ids)
-    rows(entries.where(entries: { id: entry_ids })).pluck(:back)
+  # Backs of the cards holding the given senses as this list shows them now;
+  # a sense the list no longer holds is absent.
+  def backs_of(sense_ids)
+    holding(Sense.where(id: sense_ids)).pluck(:back)
   end
 
-  # The member senses of every entry whose back reads exactly as the text;
+  # The member senses of every card whose back reads exactly as the text;
   # a chosen option arrives as text, so this is how a miss finds its senses.
   def sense_ids_shown_as(text)
-    candidates = entries.where(entries: { id: entry_ids_glossed_within(text) })
-    rows(candidates).where(back: text).pluck(:sense_ids).flatten
+    candidates = holding(senses_glossed_within(text))
+    candidates.where(back: text).pluck(:sense_ids).flatten
   end
 
   private
 
-  # A guest's deck covers only the first entries in list order.
+  # A guest's deck covers only the first cards in list order.
   def entries
     scope = list_entries
     return scope unless card_limit
 
-    capped = rows(scope.order(LIST_ORDER).limit(card_limit)).select(:id)
-    scope.where(entries: { id: capped })
+    capped = rows(scope.order(LIST_ORDER).limit(card_limit)).select(:id, :form)
+    card_key = Arel::Nodes::Grouping.new([Entry.arel_table[:id], shown_form])
+    scope.where(Arel::Nodes::In.new(card_key, capped.arel))
   end
 
   def list_entries
     Entry.joins(senses: :sense_memberships)
       .joins(self.class.sanitize_sql_array([SCORES_JOIN, { user_id:, skill: }]))
       .where(sense_memberships: { word_list_id: })
-      .group("entries.id")
-      .select(ENTRY_COLUMNS)
+      .group("entries.id", shown_form)
+      .select(ENTRY_COLUMNS, shown_form.as("form"))
   end
 
+  # In traditional, an entry whose meanings are spelled apart (gan "dry" and
+  # gan "to concern") makes a card per spelling.
+  def shown_form = traditional? ? TRADITIONAL_FORM : SIMPLIFIED_FORM
+
   def rows(scope) = Entry.from(scope, :entries)
+
+  # The cards holding any of the senses; grouping only their entries spares
+  # grouping the whole list.
+  def holding(senses)
+    scope = entries.where(entries: { id: senses.select(:entry_id) })
+    rows(scope).where("entries.sense_ids && ARRAY(?)", senses.select(:id))
+  end
 
   def count_progress = rows(entries).pick(*progress_counts)
 
   def cards_from(scope) = scope.map { |entry| LanguageCard.new(self, entry) }
 
-  def entry_ids_filed(category)
-    word_list.sense_memberships.where(category:)
-      .joins(:sense).select("senses.entry_id")
+  def senses_filed(category)
+    word_list.senses.where(sense_memberships: { category: })
   end
 
-  # Only an entry with a gloss inside the text can show as it, so this
-  # spares grouping the whole list to match one back.
-  def entry_ids_glossed_within(text)
-    word_list.sense_memberships.joins(:sense)
-      .where("position(senses.gloss IN ?) > 0", text).select("senses.entry_id")
+  def senses_glossed_within(text)
+    word_list.senses.where("position(senses.gloss IN ?) > 0", text)
   end
 end

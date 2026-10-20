@@ -11,10 +11,10 @@ RSpec.describe LanguageCard do
     SkillScore.pluck(:correct_count, :correct_streak, :view_count)
   end
 
-  it "is keyed by the entry" do
-    card = create(:language_card)
+  it "is keyed by its senses" do
+    card = create(:language_card, back: "he; him")
 
-    expect(card.id).to eq(Entry.sole.id)
+    expect(card.id).to eq(Sense.order(:id).ids.join("-"))
   end
 
   it "reads the front and reading from the entry" do
@@ -95,7 +95,7 @@ RSpec.describe LanguageCard do
         :sense_distractor,
         user: card.deck.user,
         sense: sense_of(card, card.back),
-        distractor_sense: Sense.find_by!(entry_id: decoy.id),
+        distractor_sense: Sense.find(decoy.sense_ids.first),
       )
     end
 
@@ -112,7 +112,7 @@ RSpec.describe LanguageCard do
       expect(card.distractors).to eq([])
     end
 
-    it "shows entries sharing a back once" do
+    it "shows cards sharing a back once" do
       card = create(:language_card, front: "x", back: "ex")
       remember(card, front: "い", back: "i")
       remember(card, front: "イ", back: "i")
