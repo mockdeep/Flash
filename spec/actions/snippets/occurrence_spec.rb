@@ -93,6 +93,21 @@ RSpec.describe Snippets::Occurrence do
 
       expect(described_class.new(sentence:, index: 0).headword).to eq("爱")
     end
+
+    it "is its sense's headword once Finish has stripped the segmenter's" do
+      sense = create(:sense, entry: create(:entry, headword: "爱"))
+      tokens = [{ "text" => "愛", "sense_id" => sense.id }]
+      sentence = build(:snippet_sentence, body: "愛", tokens:)
+
+      expect(described_class.new(sentence:, index: 0).headword).to eq("爱")
+    end
+
+    it "is the word when its sense is gone" do
+      tokens = [{ "text" => "愛", "sense_id" => 0 }]
+      sentence = build(:snippet_sentence, body: "愛", tokens:)
+
+      expect(described_class.new(sentence:, index: 0).headword).to eq("愛")
+    end
   end
 
   describe "#traditional" do
