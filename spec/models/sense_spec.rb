@@ -17,4 +17,22 @@ RSpec.describe Sense do
 
     expect(build(:sense, entry: sense.entry, gloss: "flower")).not_to be_valid
   end
+
+  it "allows a gloss again under another traditional form" do
+    sense = create(:sense, gloss: "imagination", traditional: "想像")
+    other = build(
+      :sense, entry: sense.entry, gloss: "imagination", traditional: "想象"
+    )
+
+    expect(other).to be_valid
+  end
+
+  it "is unique on gloss within an entry and traditional form" do
+    sense = create(:sense, gloss: "imagination", traditional: "想像")
+    other = build(
+      :sense, entry: sense.entry, gloss: "imagination", traditional: "想像"
+    )
+
+    expect(other).not_to be_valid
+  end
 end
