@@ -64,7 +64,8 @@ text, so run it in the background and report when it finishes. Lines starting
      Check each reason holds. Give a wrongly skipped one a
      sense with `add_sense` or `repoint`, which takes the skip off.
    - **Created** senses: check each new reading and gloss against a reference
-     and the policy. Look for twins of an existing sense
+     and the policy, and for Mandarin the traditional form in brackets (发
+     "hair" is 髮, not 發). Look for twins of an existing sense
      (`compendium:lookup Q=<headword>`).
    - **Matched** words: scan for wrong picks, especially function words
      (在, 的, 了, 就, 才…) and seed senses whose gloss merges two meanings
@@ -135,6 +136,7 @@ Sense edits (`Compendium::Edit`), on any sense:
 Compendium::Edit.add(language: "zh", headword: "花", reading: "huā", gloss: "to spend")
 Compendium::Edit.add(language: "pt", headword: "casas", reading: nil, gloss: "houses")
 Compendium::Edit.revise(Sense.find(456), gloss: "flower")     # or reading: "…"
+Compendium::Edit.revise(Sense.find(456), traditional: "乾")    # a Mandarin sense's traditional form
 Compendium::Edit.remove(Sense.find(789))                      # refused if in use
 Compendium::Edit.attach(Sense.find(456), WordList.find(3), category: "verb")
 Compendium::Edit.detach(Sense.find(456), WordList.find(3))
@@ -143,6 +145,11 @@ Compendium::Edit.detach(Sense.find(456), WordList.find(3))
 - A token's index counts every token, punctuation included, from 0.
 - `add`, `add_sense` and `revise(reading:)` match an entry on the reading's
   letters, so 'kě’ài' and "kě'ài" are the same entry.
+- A Mandarin sense made with `add` has no traditional form: give it one with
+  `revise(sense, traditional:)`. `add_sense` takes the token's.
+- Each traditional spelling of a meaning is a sense of its own (想像 and 想象
+  "imagination"); don't merge senses that differ only in traditional form.
+  Finish puts a traditional text's spellings on its senses.
 - `remove` refuses while a token, list or learner uses the sense; read the
   refusal back to the user rather than working around it.
 - Never clear out a language's entries wholesale: the compendium holds seed

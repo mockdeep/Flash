@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 module Snippets
-  # Closes a reviewed snippet: every Chinese word must have a sense. Strips
-  # the pipeline's working keys from its tokens, so the snippet reads
+  # Closes a reviewed snippet: every Chinese word must have a sense. Puts a
+  # traditional text's spellings on its senses (Spell), strips the
+  # pipeline's working keys from its tokens, so the snippet reads
   # finished and can be pushed, adds its senses to its word_list, and files
   # the list's new memberships by category. Safe to run again: a finished
   # snippet only gets whatever filing a failed run left undone.
@@ -14,6 +15,7 @@ module Snippets
     def self.call(snippet)
       unsensed!(snippet)
       snippet.transaction do
+        Spell.call(snippet)
         snippet.sentences.each { |sentence| strip(sentence) }
         Attach.call(snippet)
       end

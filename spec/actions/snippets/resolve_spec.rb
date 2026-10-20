@@ -132,7 +132,10 @@ RSpec.describe Snippets::Resolve do
       end
 
       def resegmented(*words)
-        words = words.map { |word| { text: word, simplified: word } }
+        words =
+          words.map do |word|
+            { text: word, simplified: word, traditional: word }
+          end
         { sentences: [{ id: 0, words: }] }
       end
 

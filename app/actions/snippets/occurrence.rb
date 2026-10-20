@@ -47,6 +47,12 @@ module Snippets
     # differs from the text.
     def headword = sentence.tokens[index]["headword"] || word
 
+    # The form a deck studied in traditional shows, which the segmenter gave
+    # where it differs from the text; none in a language without one.
+    def traditional
+      sentence.tokens[index]["traditional"] || word if language.traditional
+    end
+
     # Read afresh on every call: a sense created for an earlier token is there
     # for the next rung to pick.
     def senses
