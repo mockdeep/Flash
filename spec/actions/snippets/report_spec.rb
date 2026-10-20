@@ -13,6 +13,14 @@ RSpec.describe Snippets::Report do
     described_class.call(snippet)
   end
 
+  def snippet_of(*sentence_tokens)
+    snippet = create(:snippet)
+    sentence_tokens.each_with_index do |tokens, position|
+      create(:snippet_sentence, snippet:, position:, tokens:)
+    end
+    snippet
+  end
+
   def resolved(sense, outcome = "matched")
     { "text" => "爱", "outcome" => outcome, "sense_id" => sense.id }
   end
@@ -117,6 +125,37 @@ RSpec.describe Snippets::Report do
 
     it "shows a word not yet resolved" do
       expect(report({ "text" => "爱" })).to end_with("  0 爱: not resolved yet")
+    end
+
+    it "numbers each sentence out of the snippet's" do
+      snippet = snippet_of([], [])
+      sentence = snippet.sentences.last
+
+      expect(described_class.call(snippet))
+        .to include("Sentence #{sentence.id} (2/2): 我爱你。")
+    end
+
+    it "shows only the sentences from `from:` to `to:`" do
+      snippet = snippet_of([], [], [], [])
+
+      expect(described_class.call(snippet, from: 2, to: 3).scan(%r{\(\d/4\)}))
+        .to eq(["(2/4)", "(3/4)"])
+    end
+
+    it "lists only the window's unresolved words" do
+      token = { "text" => "爱", "outcome" => "unresolved", "note" => "?" }
+      snippet = snippet_of([token], [])
+
+      expect(described_class.call(snippet, from: 2))
+        .not_to include("Unresolved")
+    end
+
+    it "lists the senses created anywhere in the snippet" do
+      sense = love
+      snippet = snippet_of([resolved(sense, "created")], [])
+
+      expect(described_class.call(snippet, from: 2))
+        .to include("Created:\n  ##{sense.id}")
     end
   end
 

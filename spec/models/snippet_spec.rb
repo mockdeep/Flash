@@ -8,7 +8,7 @@ RSpec.describe Snippet do
 
   it { is_expected.to validate_presence_of(:source) }
   it { is_expected.to validate_presence_of(:body) }
-  it { is_expected.to validate_length_of(:body).is_at_most(20_000) }
+  it { is_expected.to validate_length_of(:body).is_at_most(80_000) }
 
   it "orders its sentences by position" do
     snippet = create(:snippet)

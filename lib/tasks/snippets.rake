@@ -7,9 +7,14 @@ namespace(:snippets) do
     puts("Nothing left to process")
   end
 
-  desc("Report a snippet for review (ID=…), or every unfinished snippet")
+  desc(
+    "Report a snippet for review (ID=…), or every unfinished snippet; " \
+    "FROM=… / TO=… show only those sentences",
+  )
   task(review: :environment) do
     id = ENV.fetch("ID", nil)
+    from = Integer(ENV.fetch("FROM", 1))
+    to = ENV.fetch("TO", nil)&.then { Integer(it) }
     snippets =
       if id
         [Snippet.find(id)]
@@ -17,7 +22,9 @@ namespace(:snippets) do
         Snippet.order(:id).reject { |snippet| snippet.status == :finished }
       end
 
-    snippets.each { |snippet| puts(Snippets::Report.call(snippet), "") }
+    snippets.each do |snippet|
+      puts(Snippets::Report.call(snippet, from:, to:), "")
+    end
     puts(Snippets::Report.unused)
   end
 end

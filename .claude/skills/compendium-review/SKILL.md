@@ -52,6 +52,12 @@ text, so run it in the background and report when it finishes. Lines starting
 1. `bin/rails snippets:review ID=<id>` (no `ID`: every unfinished snippet).
    The report gives sentence ids, token indexes and sense ids (`#123`), which
    every edit takes.
+   - **A long snippet goes a stretch at a time**: about 100 sentences a
+     session, with `FROM=1 TO=100`, then `FROM=101 TO=200` and so on. Each
+     sentence is numbered out of the snippet's ("101/412"); at the end of a
+     session, tell the user where to pick up. Unresolved and skipped words
+     keep to the stretch; created senses cover the whole snippet, so check
+     them in the first stretch only.
 2. Work through it in this order:
    - **Translations** of the source's title and the snippet's heading, which
      show under them wherever the deck or text is named: suggest English for
