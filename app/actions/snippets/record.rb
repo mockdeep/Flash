@@ -18,7 +18,8 @@ module Snippets
     end
 
     # A sense the judge passed as new can still be one the entry already
-    # holds under that gloss, in which case the token matched it after all.
+    # holds under that gloss, in which case the token matched it after all,
+    # whatever its traditional form: Finish settles spelling.
     def self.record_new(proposal)
       entry = entry_for(
         proposal.language.code,
@@ -26,7 +27,8 @@ module Snippets
         proposal.sense_reading,
         article: proposal.sense_article,
       )
-      sense = entry.senses.find_or_create_by!(gloss: proposal.gloss)
+      sense = entry.senses.create_with(traditional: proposal.traditional)
+        .find_or_create_by!(gloss: proposal.gloss)
       outcome = sense.previously_new_record? ? "created" : "matched"
 
       { "outcome" => outcome, "sense_id" => sense.id }

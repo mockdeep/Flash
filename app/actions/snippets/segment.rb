@@ -3,13 +3,13 @@
 module Snippets
   # Segments a batch of sentences into words, each with the form it studies
   # under (a simplified form, or a lower-cased one), kept on the token as
-  # `headword` only where it differs. The model sees the sentence, so it can
-  # pick by meaning where a traditional character simplifies more than one
-  # way. The answer is checked mechanically: the words must rejoin to the
-  # sentence's word characters, and each form must fit its word as the
-  # language says. A sentence that fails is asked again on its own, and one
-  # that fails twice falls back to the language's pieces (characters for
-  # Mandarin).
+  # `headword` only where it differs, and in Mandarin its traditional form,
+  # kept as `traditional` the same way. The model sees the sentence, so it
+  # can pick by meaning where a character converts more than one way. The
+  # answer is checked mechanically: the words must rejoin to the sentence's
+  # word characters, and each form must fit its word as the language says.
+  # A sentence that fails is asked again on its own, and one that fails
+  # twice falls back to the language's pieces (characters for Mandarin).
   module Segment
     WORD = {
       type: "object",
@@ -59,12 +59,16 @@ module Snippets
       words.map { |word| token(word, language) }
     end
 
-    # The headword is kept only where it differs from the text.
+    # The headword and traditional form are kept only where they differ
+    # from the text.
     def self.token(word, language)
-      text, headword, skip = word.values_at("text", language.form, "skip")
-      headword = nil if headword == text
+      text, headword, traditional, skip =
+        word.values_at("text", language.form, "traditional", "skip")
+      forms =
+        { "headword" => headword, "traditional" => traditional }
+          .reject { |_, form| form == text }
 
-      { "text" => text, "headword" => headword, "skip" => skip }.compact
+      { "text" => text, **forms, "skip" => skip }.compact
     end
 
     def self.ask(sentences, feedback)
@@ -82,12 +86,12 @@ module Snippets
     # Each word comes with the form it studies under, named as the language
     # names it.
     def self.schema(language)
-      form = language.form
-      properties = { form.to_sym => { type: "string" } }
+      forms = forms(language)
+      properties = forms.to_h { [it.to_sym, { type: "string" }] }
       if language.skips.any?
         properties[:skip] = { type: "string", enum: language.skips }
       end
-      word = WORD.deep_merge(required: ["text", form], properties:)
+      word = WORD.deep_merge(required: ["text", *forms], properties:)
       words = { words: { items: word } }
 
       SCHEMA.deep_merge(
@@ -112,8 +116,14 @@ module Snippets
       language = sentence.language
       words if sentence.partitioned_by?(words.pluck("text")) &&
         words.all? do |word|
-          language.form_fits.call(word["text"], word[language.form])
+          forms(language).all? do |form|
+            language.form_fits.call(word["text"], word[form].to_s)
+          end
         end
+    end
+
+    def self.forms(language)
+      [language.form, ("traditional" if language.traditional)].compact
     end
   end
 end

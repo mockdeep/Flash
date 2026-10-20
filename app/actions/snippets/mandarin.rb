@@ -25,6 +25,13 @@ module Snippets
       着, but stays 著 for "to write"; 乾 is 干 for "dry", but stays 乾 in
       乾坤.
 
+      Return `traditional` too: the same word in traditional characters as
+      Taiwan writes it, character for character; it is identical to `text`
+      for a word already in traditional characters or with no Chinese in
+      it. Where a simplified character stands for more than one traditional
+      one, choose by its meaning here: 发 is 髮 for "hair", but 發 for "to
+      send"; 干 is 乾 for "dry", but 幹 for "to do".
+
       A sentence may carry `feedback`: what a reviewer found wrong with an
       earlier segmentation of it, and `previous`: that segmentation's words.
       Segment it again so that every complaint is fixed, and keep every

@@ -38,7 +38,10 @@ RSpec.describe Snippets::Process do
   def segmented(prompt)
     sentences =
       prompt.map do |row|
-        words = row["sentence"].chars.map { { text: it, simplified: it } }
+        words =
+          row["sentence"].chars.map do |char|
+            { text: char, simplified: char, traditional: char }
+          end
         { id: row["id"], words: }
       end
     { sentences: }

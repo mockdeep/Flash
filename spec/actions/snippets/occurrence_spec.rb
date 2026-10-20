@@ -95,6 +95,27 @@ RSpec.describe Snippets::Occurrence do
     end
   end
 
+  describe "#traditional" do
+    it "is the word when it is already traditional" do
+      expect(occurrence.traditional).to eq("爱")
+    end
+
+    it "is the traditional form the segmenter gave" do
+      tokens = [{ "text" => "发", "traditional" => "髮" }]
+      sentence = build(:snippet_sentence, body: "发", tokens:)
+
+      expect(described_class.new(sentence:, index: 0).traditional).to eq("髮")
+    end
+
+    it "is nil in a language without one" do
+      snippet = create(:snippet, word_list: create(:word_list, language: "pt"))
+      tokens = [{ "text" => "casa" }]
+      sentence = build(:snippet_sentence, snippet:, body: "casa", tokens:)
+
+      expect(described_class.new(sentence:, index: 0).traditional).to be_nil
+    end
+  end
+
   describe "#spelling" do
     it "pairs the word with its headword" do
       expect(occurrence.spelling).to eq(["爱", "爱"])

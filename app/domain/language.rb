@@ -7,7 +7,9 @@
 # word; `piece` cuts a sentence the segmenter fails on twice. A language
 # without `readings` takes new senses with a gloss alone, and a noun in a
 # language with `articles` takes the definite article that fits its form.
-# `skips` are the
+# A language with `traditional` forms gets each word's traditional form
+# from the segmenter too, which `form_fits` checks the same way. `skips`
+# are the
 # reasons the segmenter may give for a word to get no card. A language
 # written with `spaces` between its words breaks lines at them.
 Language = Data.define(
@@ -19,6 +21,7 @@ Language = Data.define(
   :form_fits,
   :readings,
   :articles,
+  :traditional,
   :skips,
   :spaces,
   :prompts,
@@ -35,6 +38,7 @@ class Language
     form_fits: ->(text, form) { form.length == text.length },
     readings: true,
     articles: [],
+    traditional: true,
     skips: [],
     spaces: false,
     prompts: Snippets::Mandarin::PROMPTS,
@@ -70,6 +74,7 @@ class Language
     },
     readings: false,
     articles: ["o", "a", "os", "as"],
+    traditional: false,
     skips: ["foreign", "name"],
     spaces: true,
     prompts: Snippets::Portuguese::PROMPTS,

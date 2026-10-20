@@ -60,6 +60,20 @@ RSpec.describe Snippets::Review do
       expect(Sense.last.entry.term).to eq("a casa")
     end
 
+    it "gives a new sense the token's traditional form" do
+      add(sentence_with(unresolved("愛", headword: "爱")))
+
+      expect(Sense.last.traditional).to eq("愛")
+    end
+
+    it "keeps the traditional form of a sense the entry already holds" do
+      entry = create(:entry, headword: "爱", reading: "ài")
+      sense = create(:sense, entry:, gloss: "to love", traditional: "愛")
+      add(sentence_with(unresolved("爱", traditional: "㤅")))
+
+      expect(sense.reload.traditional).to eq("愛")
+    end
+
     it "points the token at the sense" do
       sentence = sentence_with(unresolved)
       sense = add(sentence)
@@ -70,7 +84,10 @@ RSpec.describe Snippets::Review do
 
   describe ".resegment" do
     def segmented_as(*words)
-      words = words.map { |word| { text: word, simplified: word } }
+      words =
+        words.map do |word|
+          { text: word, simplified: word, traditional: word }
+        end
       { sentences: [{ id: 0, words: }] }
     end
 

@@ -33,9 +33,10 @@ module Compendium
 
       [
         "##{sense.id} #{sense.gloss}",
+        sense.traditional&.then { "traditional: #{it}" },
         "lists: #{lists.join(", ").presence || "none"}",
         "snippet sentences: #{sentences}",
-      ].join("; ")
+      ].compact.join("; ")
     end
 
     def self.membership(membership)

@@ -17,11 +17,17 @@ module Compendium
 
     # A reading or article belongs to the entry, so a new one moves the
     # sense to the entry that has it; an entry left without senses goes.
-    def self.revise(sense, gloss: nil, reading: nil, article: nil)
+    def self.revise(
+      sense, gloss: nil, reading: nil, article: nil, traditional: nil
+    )
       old_entry = sense.entry
       moves = { reading:, article: }.compact
       entry = moves.any? ? moved(old_entry, **moves) : old_entry
-      sense.update!(entry:, gloss: gloss || sense.gloss)
+      sense.update!(
+        entry:,
+        gloss: gloss || sense.gloss,
+        traditional: traditional || sense.traditional,
+      )
       old_entry.destroy! if old_entry.senses.none?
       sense
     end

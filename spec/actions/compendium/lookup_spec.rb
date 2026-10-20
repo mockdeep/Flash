@@ -44,6 +44,13 @@ RSpec.describe Compendium::Lookup do
       )
     end
 
+    it "shows a sense's traditional form" do
+      sense = flower(gloss: "flower")
+      sense.update!(traditional: "花")
+
+      expect(lookup("花")).to include("flower; traditional: 花; lists")
+    end
+
     it "finds senses by their gloss" do
       sense = flower
 

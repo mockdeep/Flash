@@ -74,6 +74,21 @@ RSpec.describe Snippets::Report do
         .to include("  0 爱 → ##{sense.id} 爱 ài: to love [matched]\n  1 。")
     end
 
+    it "shows a traditional form that differs from the headword" do
+      sense = love
+      sense.update!(traditional: "愛")
+
+      expect(report(resolved(sense)))
+        .to include("  0 爱 → ##{sense.id} 爱 (愛) ài: to love [matched]")
+    end
+
+    it "leaves out a traditional form that matches the headword" do
+      sense = love
+      sense.update!(traditional: "爱")
+
+      expect(report(resolved(sense))).to include("##{sense.id} 爱 ài: to love")
+    end
+
     it "shows a finished token without an outcome" do
       sense = love
 

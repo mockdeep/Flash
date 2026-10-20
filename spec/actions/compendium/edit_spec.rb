@@ -44,6 +44,20 @@ RSpec.describe Compendium::Edit do
   end
 
   describe ".revise" do
+    it "changes the traditional form" do
+      sense = create(:sense, traditional: "幹")
+      described_class.revise(sense, traditional: "乾")
+
+      expect(sense.reload.traditional).to eq("乾")
+    end
+
+    it "keeps the traditional form when only the gloss changes" do
+      sense = create(:sense, traditional: "乾")
+      described_class.revise(sense, gloss: "dry")
+
+      expect(sense.reload.traditional).to eq("乾")
+    end
+
     it "changes the gloss" do
       sense = create(:sense, gloss: "to spend / flower")
 

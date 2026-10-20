@@ -62,6 +62,20 @@ RSpec.describe Snippets::Record do
       expect(Sense.last.gloss).to eq("to love")
     end
 
+    it "gives a new sense the word's traditional form" do
+      described_class.call(proposal("new", word: "愛", simplified: "爱"))
+
+      expect(Sense.last.traditional).to eq("愛")
+    end
+
+    it "keeps the traditional form of a sense the entry already holds" do
+      entry = create(:entry, headword: "爱", reading: "ài")
+      sense = create(:sense, entry:, gloss: "to love", traditional: "愛")
+      described_class.call(proposal("new", word: "爱"))
+
+      expect(sense.reload.traditional).to eq("愛")
+    end
+
     it "files a traditional word under its simplified headword" do
       described_class.call(proposal("new", word: "愛", simplified: "爱"))
 

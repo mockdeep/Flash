@@ -109,10 +109,14 @@ module Snippets
       text
     end
 
+    # A traditional form that differs from the headword follows it.
     def self.describe(sense)
       entry = sense.entry
+      traditional = sense.traditional
+      traditional = nil if traditional == entry.headword
+      spelled = traditional&.then { "(#{it})" }
 
-      word = [entry.term, entry.reading].compact_blank.join(" ")
+      word = [entry.term, spelled, entry.reading].compact_blank.join(" ")
 
       "##{sense.id} #{word}: #{sense.gloss}"
     end

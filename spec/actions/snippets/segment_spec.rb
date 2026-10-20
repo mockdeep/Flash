@@ -3,9 +3,13 @@
 require "rails_helper"
 
 RSpec.describe Snippets::Segment do
-  # Each word is a text, or a [text, simplified] pair for a traditional one.
+  # Each word is a text, or a [text, simplified] pair for a traditional one,
+  # or a [text, simplified, traditional] triple for a simplified one.
   def answer(*words)
-    words = words.map { |text, simplified = text| { text:, simplified: } }
+    words =
+      words.map do |text, simplified = text, traditional = text|
+        { text:, simplified:, traditional: }
+      end
 
     { sentences: [{ id: 0, words: }] }
   end
@@ -140,6 +144,26 @@ RSpec.describe Snippets::Segment do
       llm.answer(answer("我"))
 
       expect(segmented_tokens("我").sole).to eq("text" => "我")
+    end
+
+    it "keeps the traditional form of a simplified word" do
+      llm.answer(answer(["发", "发", "髮"]))
+
+      expect(segmented_tokens("发").sole)
+        .to eq("text" => "发", "traditional" => "髮")
+    end
+
+    it "asks again when a traditional form is not as long as its word" do
+      llm.answer(answer(["头发", "头发", "頭"]), answer(["头发", "头发", "頭髮"]))
+
+      expect(segmented_tokens("头发").sole["traditional"]).to eq("頭髮")
+    end
+
+    it "asks for no traditional form in Portuguese" do
+      llm.answer(portuguese_answer("saiu"))
+      portuguese_tokens("saiu")
+
+      expect(llm.calls.sole.schema.to_json).not_to include("traditional")
     end
 
     it "asks again when a simplified form is not as long as its word" do
