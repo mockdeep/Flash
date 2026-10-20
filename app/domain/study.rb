@@ -203,34 +203,39 @@ class Study
   end
 
   def multiple_choice_answers
-    distractors = unlike_answer(next_card.distractors).sample(4)
+    answer = next_card.back
+    distractors = pick(next_card.distractors, [answer], 4)
     if deck.generates_distractors?
-      distractors += category_distractors(distractors)
+      distractors += category_distractors([answer, *distractors])
     end
-    [*distractors, next_card.back].shuffle
+    [*distractors, answer].shuffle
   end
 
   # Each sibling lookup reads the whole list, so it runs only while slots
-  # remain open.
-  def category_distractors(chosen)
-    slots = 4 - chosen.length
+  # remain open. `shown` holds the answer and the decoys picked so far.
+  def category_distractors(shown)
+    slots = 5 - shown.length
     return [] unless slots.positive?
 
-    same = pick(sibling_backs(next_card.category), chosen, slots)
+    same = pick(sibling_backs(next_card.category), shown, slots)
     return same if same.length == slots
 
-    same + pick(sibling_backs, chosen + same, slots - same.length)
+    same + pick(sibling_backs, shown + same, slots - same.length)
   end
 
-  def pick(backs, excluded, count)
-    unlike_answer(backs - excluded).uniq.sample(count)
-  end
+  # Up to `count` backs, in random order, sharing no gloss with one another
+  # or with those already shown: a decoy sharing one with the answer
+  # ("absurd" against "absurd; dissipated") would be a second right answer,
+  # and two sharing one ("to the" and "to the; at the") would blur together.
+  def pick(backs, shown, count)
+    taken = shown.flat_map { glosses(it) }
+    backs.shuffle.each_with_object([]) do |back, kept|
+      break kept if kept.length == count
+      next if glosses(back).intersect?(taken)
 
-  # A decoy sharing a gloss with the answer ("absurd" against "absurd;
-  # dissipated") would be a second right answer.
-  def unlike_answer(backs)
-    answer = glosses(next_card.back)
-    backs.reject { |back| glosses(back).intersect?(answer) }
+      kept << back
+      taken.concat(glosses(back))
+    end
   end
 
   def glosses(back) = back.split(Card::SEPARATOR)

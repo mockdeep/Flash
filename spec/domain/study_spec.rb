@@ -342,6 +342,59 @@ RSpec.describe Study do
       expect(answers).to eq(["absurd"])
     end
 
+    it "shows sibling backs with the same glosses in another order once" do
+      deck = create(:deck)
+      create(:basic_card, deck:, back: "absurd")
+      create(:basic_card, deck:, back: "at the; to the")
+      create(:basic_card, deck:, back: "to the; at the")
+
+      expect(described_class.new(deck:).possible_answers.length).to eq(2)
+    end
+
+    it "shows reordered remembered distractors once" do
+      deck = create(:deck)
+      distractors = ["at the; to the", "to the; at the"]
+      create(:basic_card, deck:, back: "absurd", distractors:)
+
+      answers = described_class.new(deck:).possible_answers
+
+      expect(answers.length).to eq(2)
+    end
+
+    it "leaves out a sibling back reordering a remembered distractor" do
+      deck = create(:deck)
+      distractors = ["at the; to the"]
+      create(:basic_card, deck:, back: "absurd", distractors:)
+      create(:basic_card, deck:, back: "to the; at the")
+
+      expect(described_class.new(deck:).possible_answers.length).to eq(2)
+    end
+
+    it "shows sibling backs sharing a gloss with one another once" do
+      deck = create(:deck)
+      create(:basic_card, deck:, back: "absurd")
+      create(:basic_card, deck:, back: "to the")
+      create(:basic_card, deck:, back: "to the; at the")
+
+      expect(described_class.new(deck:).possible_answers.length).to eq(2)
+    end
+
+    it "leaves out a sibling back sharing a gloss with a remembered one" do
+      deck = create(:deck)
+      create(:basic_card, deck:, back: "absurd", distractors: ["to the"])
+      create(:basic_card, deck:, back: "to the; at the")
+
+      expect(described_class.new(deck:).possible_answers.length).to eq(2)
+    end
+
+    it "shows remembered distractors sharing a gloss with one another once" do
+      deck = create(:deck)
+      distractors = ["to the", "to the; at the"]
+      create(:basic_card, deck:, back: "absurd", distractors:)
+
+      expect(described_class.new(deck:).possible_answers.length).to eq(2)
+    end
+
     it "samples at most 4 wrong answers from the card's distractors" do
       deck = create(:deck)
       create(:basic_card, deck:, distractors: ["A", "B", "C", "D", "E"])
