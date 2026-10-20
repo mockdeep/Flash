@@ -23,6 +23,18 @@ RSpec.describe LanguageDeck do
     end
   end
 
+  describe "#script" do
+    it "starts in simplified" do
+      expect(create(:reading_deck).script).to eq("simplified")
+    end
+
+    it "rejects a script it can't study in" do
+      deck = build(:reading_deck, script: "pinyin")
+
+      expect(deck).not_to be_valid
+    end
+  end
+
   describe "#generates_distractors?" do
     it "is true whatever the pool column says" do
       deck = create(:reading_deck, distractor_pool: "preset")
@@ -32,17 +44,17 @@ RSpec.describe LanguageDeck do
   end
 
   describe "#card" do
-    it "builds the card for an entry the list selects" do
+    it "builds the card holding the given senses" do
       card = create(:language_card, front: "花", back: "flower")
 
       expect(card.deck.card(card.id))
         .to have_attributes(front: "花", back: "flower")
     end
 
-    it "raises for an entry outside the list" do
+    it "raises for a sense outside the list" do
       deck = create(:reading_deck)
 
-      expect { deck.card(create(:entry).id) }
+      expect { deck.card(create(:sense).id.to_s) }
         .to raise_error(ActiveRecord::RecordNotFound)
     end
   end
@@ -209,7 +221,7 @@ RSpec.describe LanguageDeck do
     it "matches the headword whatever the article" do
       card = create(:language_card, front: "capital", reading: "a")
       create(:language_card, deck: card.deck, front: "capital", reading: "b")
-      Entry.find(card.id).update!(article: "a")
+      Entry.find_by!(reading: "a").update!(article: "a")
 
       expect(card.deck.homograph?(card.deck.card(card.id))).to be(true)
     end
@@ -222,16 +234,16 @@ RSpec.describe LanguageDeck do
   end
 
   describe "#backs_of" do
-    it "rejoins the given entries' glosses as the list shows them" do
+    it "rejoins the glosses of the cards holding the senses" do
       card = create(:language_card, back: "he; him")
 
-      expect(card.deck.backs_of([card.id])).to eq(["he; him"])
+      expect(card.deck.backs_of(card.sense_ids.take(1))).to eq(["he; him"])
     end
 
-    it "leaves out an entry the list does not hold" do
+    it "leaves out a sense the list does not hold" do
       card = create(:language_card, back: "he")
 
-      expect(card.deck.backs_of([create(:entry).id])).to eq([])
+      expect(card.deck.backs_of([create(:sense).id])).to eq([])
     end
   end
 
@@ -271,6 +283,68 @@ RSpec.describe LanguageDeck do
       create(:language_card, deck:, reading: "")
 
       expect(deck.readings?).to be(false)
+    end
+  end
+
+  describe "in traditional" do
+    def split_gan(script:)
+      deck = create(:reading_deck, script:)
+      word = { deck:, front: "干", reading: "gān" }
+      create(:language_card, **word, back: "dry", traditional: "乾")
+      create(:language_card, **word, back: "to concern", traditional: "干")
+      deck
+    end
+
+    it "makes a card per spelling of an entry" do
+      deck = split_gan(script: "traditional")
+
+      expect(deck.cards_in_order.map(&:back)).to eq(["dry", "to concern"])
+    end
+
+    it "keeps an entry's spellings on one card in simplified" do
+      deck = split_gan(script: "simplified")
+
+      expect(deck.cards_in_order.map(&:back)).to eq(["dry; to concern"])
+    end
+
+    it "finds a spelling's card by its senses" do
+      deck = split_gan(script: "traditional")
+      card = deck.cards_in_order.last
+
+      expect(deck.card(card.id).back).to eq("to concern")
+    end
+
+    it "spells a sense with no traditional form as its headword" do
+      deck = create(:reading_deck, script: "traditional")
+      create(:language_card, deck:, front: "花")
+
+      expect(deck.hanzi_chars).to eq("花")
+    end
+
+    it "reads its characters from the traditional forms" do
+      deck = split_gan(script: "traditional")
+
+      expect(deck.hanzi_chars).to eq("乾干")
+    end
+
+    it "finds homographs by the traditional form" do
+      deck = split_gan(script: "traditional")
+      card = create(:language_card, deck:, front: "乾", reading: "qián")
+
+      expect(deck.homograph?(card)).to be(true)
+    end
+
+    def traditional_guest_deck_over(source)
+      guest = create(:user, :guest)
+      word_list = source.word_list
+      create(:reading_deck, word_list:, user: guest, script: "traditional")
+    end
+
+    it "caps a guest's deck by card" do
+      stub_const("Deck::GUEST_CARD_LIMIT", 1)
+      source = split_gan(script: "traditional")
+
+      expect(traditional_guest_deck_over(source).cards_count).to eq(1)
     end
   end
 end

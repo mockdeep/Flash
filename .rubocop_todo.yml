@@ -201,6 +201,12 @@ RSpec/NoBeforeHook:
   Exclude:
     - 'spec/requests/studies_controller_spec.rb'
 
+# Offense count: 1
+# Configuration parameters: Database, Include.
+Rails/BulkChangeTable:
+  Exclude:
+    - 'db/migrate/20261020100000_add_script_to_decks.rb'
+
 # Offense count: 2
 Rails/Env:
   Exclude:

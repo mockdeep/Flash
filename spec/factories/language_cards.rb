@@ -11,6 +11,7 @@ module FactoryLanguageCards
     :front,
     :back,
     :reading,
+    :traditional,
     :category,
     :example_front,
     :example_back,
@@ -26,7 +27,7 @@ module FactoryLanguageCards
     senses = glosses(word.back).map { |gloss| select(list, entry, gloss, word) }
     score(word, senses)
     word.distractors.each { |text| remember(word, senses, text) }
-    word.deck.card(entry.id)
+    word.deck.card(senses.map(&:id).join("-"))
   end
 
   def self.entry_for(list, word)
@@ -36,7 +37,8 @@ module FactoryLanguageCards
   end
 
   def self.select(list, entry, gloss, word)
-    sense = Sense.find_or_create_by!(entry:, gloss:)
+    sense = Sense.create_with(traditional: word.traditional)
+      .find_or_create_by!(entry:, gloss:)
     list.sense_memberships.create!(
       sense:, position: next_position(list), category: word.category,
     )
@@ -105,6 +107,7 @@ FactoryBot.define do
     sequence(:front, 100) { |n| "Word #{n}" }
     sequence(:back, 100) { |n| "Gloss #{n}" }
     reading { nil }
+    traditional { nil }
     category { "General" }
     example_front { nil }
     example_back { nil }
