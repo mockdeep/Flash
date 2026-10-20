@@ -45,8 +45,8 @@ module Snippets
         me").
       - Gloss a function word by the English word doing the same job here:
         que may be "that", "which" or "than"; se may be "if" or "oneself".
-      - A name is glossed by its usual English name (Lisboa "Lisbon"), or as
-        written when it has none, with no note on what it is.
+      - A name is glossed by its usual English name (Lisboa "Lisbon"), with
+        no note on what it is.
       - Leave out the dictionary form, grammar labels, explanations of use
         and any Portuguese.
     TEXT
@@ -60,8 +60,8 @@ module Snippets
         pobre). Where the gender follows the person meant (estudante,
         artista), take it from the sentence.
       - Give a name the article Portuguese uses with it (o Brasil, a França,
-        o Rio de Janeiro), and none when it takes none (Lisboa, Portugal,
-        Deus, março). A title before a name (D., Sr., Dr.) takes none.
+        o Natal), and none when it takes none (Lisboa, Deus, março). A title
+        before a name (D., Sr., Dr.) takes none.
       - Give no article to any other word, nor to a phrase that is not a
         noun as a whole (fora de casa, no outro dia). A phrase that is one
         takes one (a missa do galo).
@@ -87,15 +87,19 @@ module Snippets
       Otherwise the headword differs from the text in letter case alone.
 
       Some words get no card; mark each, kept whole as one word:
-      - `skip: "name"`: the name of a person or character, in any language
-        ("Friedrich Nietzsche", "Machado de Assis", "Brás Cubas").
+      - `skip: "name"`: a name English leaves as it is: a person or
+        character in any language ("Friedrich Nietzsche", "Machado de
+        Assis", "Brás Cubas"), and a place, newspaper or anything else
+        English calls by the same name ("Mangaratiba", "Rio de Janeiro",
+        "Jornal do Comércio").
       - `skip: "foreign"`: a title or other name left in another language
         ("Gone with the Wind", "Notre-Dame de Paris").
       A title before a name gets a card: "D. Inácia" is "D." and "Inácia"
       (`skip: "name"`).
-      A place name, or a title given in Portuguese, is a word like any other
-      ("Rio de Janeiro", "Alemanha", "O Senhor dos Anéis"), and so is a
-      foreign word the sentence uses as Portuguese ("o show", "um blog").
+      A name English calls something else is a word like any other
+      ("Alemanha" Germany, "Lisboa" Lisbon, "O Senhor dos Anéis" The Lord of
+      the Rings), and so is a foreign word the sentence uses as Portuguese
+      ("o show", "um blog").
 
       A sentence may carry `feedback`: what a reviewer found wrong with an
       earlier segmentation of it, and `previous`: that segmentation's words.
