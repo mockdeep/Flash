@@ -43,6 +43,16 @@ RSpec.describe Snippets::SplitSentences do
         .to eq(["O Sr. Almeida saiu."])
     end
 
+    it "does not split after a saint's title" do
+      expect(split_portuguese("No cemitério de St. Louis, em Nova Orleans."))
+        .to eq(["No cemitério de St. Louis, em Nova Orleans."])
+    end
+
+    it "does not split after a word that only starts like a title" do
+      expect(split_portuguese("Saiu cedo. Stella ficou."))
+        .to eq(["Saiu cedo.", "Stella ficou."])
+    end
+
     it "does not split after an initial" do
       expect(split_portuguese("Leu J. R. Ward ontem."))
         .to eq(["Leu J. R. Ward ontem."])
