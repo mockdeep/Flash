@@ -30,6 +30,18 @@ RSpec.describe Sources::Create do
         .to eq(["List language is not supported"])
     end
 
+    it "saves its title and author as front matter" do
+      expect(create_source.record.front_matter.pluck(:role, :body, :position))
+        .to eq([["title", "孔乙己", 0], ["author", "鲁迅", 1]])
+    end
+
+    it "saves no author line without an author" do
+      source = described_class
+        .call(user: default_user, title: "孔乙己", language: "zh").record
+
+      expect(source.front_matter.pluck(:role)).to eq(["title"])
+    end
+
     it "returns a success result" do
       expect(create_source).to be_success
     end

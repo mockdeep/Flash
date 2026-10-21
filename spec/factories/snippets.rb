@@ -22,7 +22,17 @@ FactoryBot.define do
 
   factory(:snippet_sentence) do
     snippet
+    source { snippet&.source || association(:source) }
     sequence(:position, 100)
     body { "我爱你。" }
+  end
+
+  # A source's title (or, given the role, its author), in no snippet.
+  factory(:front_matter, class: "SnippetSentence") do
+    source
+    snippet { nil }
+    role { "title" }
+    sequence(:position)
+    body { "春节" }
   end
 end

@@ -16,10 +16,13 @@ module Compendium
     end
 
     # A snippet nobody has started travels as it is; one partway through
-    # processing or review would carry unreviewed senses with it.
+    # processing or review would carry unreviewed senses with it, and so
+    # would a source's front matter.
     def self.none_in_progress!
-      titles = Snippet.all
-        .select { |snippet| snippet.status == :in_progress }.map(&:title)
+      snippets = Snippet.all.select { it.status == :in_progress }
+      front_matter = SnippetSentence.where(snippet_id: nil)
+        .select { it.status == :in_progress }
+      titles = [*snippets, *front_matter.map(&:source)].map(&:title).uniq
       return if titles.empty?
 
       raise(Refused, "Snippets in progress: #{titles.join(", ")}")

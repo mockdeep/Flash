@@ -24,11 +24,25 @@ RSpec.describe Snippets::Create do
       expect(create_snippet.record).to be_persisted
     end
 
-    it "saves the body's sentences in order" do
+    it "saves the heading and the body's sentences in order" do
       snippet = create_snippet.record
 
-      expect(snippet.sentences.pluck(:position, :body))
-        .to eq([[0, "我爱你。"], [1, "你呢？"]])
+      expect(snippet.sentences.pluck(:position, :role, :body)).to eq(
+        [[0, "heading", "习俗"], [1, "body", "我爱你。"], [2, "body", "你呢？"]],
+      )
+    end
+
+    it "saves no heading sentence without a heading" do
+      snippet = described_class.call(source: create(:source), body: "我。").record
+
+      expect(snippet.sentences.pluck(:role)).to eq(["body"])
+    end
+
+    it "gives the sentences the snippet's source" do
+      source = create(:source)
+
+      expect(create_snippet(source:).record.sentences.map(&:source).uniq)
+        .to eq([source])
     end
 
     it "returns a success result" do

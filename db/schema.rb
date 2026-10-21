@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -135,13 +135,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_100000) do
   end
 
   create_table "snippet_sentences", force: :cascade do |t|
-    t.bigint "snippet_id", null: false
+    t.bigint "snippet_id"
     t.integer "position", null: false
     t.text "body", null: false
     t.jsonb "tokens", default: [], null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["snippet_id", "position"], name: "index_snippet_sentences_on_snippet_id_and_position", unique: true
+    t.string "role", default: "body", null: false
+    t.bigint "source_id", null: false
+    t.index ["source_id", "position"], name: "index_snippet_sentences_on_source_id_and_position", unique: true, where: "(snippet_id IS NULL)"
+    t.index ["source_id"], name: "index_snippet_sentences_on_source_id"
+    t.check_constraint "(snippet_id IS NULL) = (role::text = ANY (ARRAY['title'::character varying, 'author'::character varying]::text[]))", name: "snippet_sentences_front_matter"
+    t.unique_constraint ["snippet_id", "position"], deferrable: :deferred, name: "snippet_sentences_snippet_id_position"
   end
 
   create_table "snippets", force: :cascade do |t|
@@ -397,6 +402,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_100000) do
   add_foreign_key "skill_scores", "senses", on_delete: :cascade
   add_foreign_key "skill_scores", "users", on_delete: :cascade
   add_foreign_key "snippet_sentences", "snippets", on_delete: :cascade
+  add_foreign_key "snippet_sentences", "sources", on_delete: :cascade
   add_foreign_key "snippets", "sources", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

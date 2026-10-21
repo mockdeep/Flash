@@ -37,6 +37,13 @@ RSpec.describe Compendium::Push do
     expect { push }.to raise_error(Compendium::Refused, /Snippets in progress/)
   end
 
+  it "refuses while a source's front matter is in progress" do
+    source = create(:source, title: "春节")
+    create(:front_matter, source:, tokens: [{ "text" => "春节" }])
+
+    expect { push }.to raise_error(Compendium::Refused, /in progress: 春节/)
+  end
+
   it "carries a snippet nobody has started" do
     create(:snippet_sentence, tokens: [])
 

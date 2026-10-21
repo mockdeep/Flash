@@ -48,10 +48,24 @@ class Snippet < ApplicationRecord
     statuses.first || :new
   end
 
+  # Its sentences after its source's front matter: what processing,
+  # reviewing and finishing a snippet work through, so the source's title
+  # and author are done along with whichever snippet comes first.
+  def sentences_with_front_matter
+    SnippetSentence.where(snippet: self)
+      .or(SnippetSentence.where(source_id:, snippet_id: nil))
+      .order(Arel.sql("snippet_id NULLS FIRST"), :position)
+  end
+
+  # The heading with its sentence, once it has one.
+  def heading_paragraph
+    Paragraph.new(text: heading, sentences: sentences.select(&:heading?))
+  end
+
   # The body's lines, which splitting drops, each with its sentences. No
   # sentence spans a line, so each line holds as many as it splits into.
   def paragraphs
-    remaining = sentences.to_a
+    remaining = sentences.reject(&:heading?)
     body.split(/\s*\n\s*/).map(&:strip).compact_blank.map do |text|
       count = Snippets::SplitSentences.call(text, language).size
       Paragraph.new(text:, sentences: remaining.shift(count))

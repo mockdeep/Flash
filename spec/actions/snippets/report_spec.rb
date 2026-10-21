@@ -25,7 +25,23 @@ RSpec.describe Snippets::Report do
     { "text" => "爱", "outcome" => outcome, "sense_id" => sense.id }
   end
 
+  def front_matter_report(*tokens)
+    snippet = create(:snippet)
+    create(:front_matter, source: snippet.source, body: "爱", tokens:)
+    described_class.call(snippet)
+  end
+
   describe ".call" do
+    it "shows its source's unfinished front matter by its role" do
+      expect(front_matter_report(resolved(love)))
+        .to match(/^Sentence \d+ \(title\): 爱$/)
+    end
+
+    it "leaves out its source's finished front matter" do
+      expect(front_matter_report({ "text" => "爱", "sense_id" => love.id }))
+        .not_to include("(title)")
+    end
+
     it "sums the snippet up" do
       expect(report(resolved(love), title: "Love"))
         .to match(/\ASnippet \d+ "Love" \(list .+\): in_progress, 1 matched$/)
