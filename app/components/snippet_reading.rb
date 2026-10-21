@@ -23,36 +23,36 @@ module Components
 
     def view_template
       div(class: classes, data:) do
-        render_source(deck.source)
+        render_source
         snippets.each { |snippet| render_snippet(snippet) }
       end
     end
 
     private
 
-    def render_source(source)
-      h2 { with_translation(source.title, source.title_translation) }
-      author = source.author
-      p(class: "reading-snippets__author") { author } if author.present?
-      p(class: "reading-snippets__credit") do
-        render(SourceCredit.new(source:))
+    def render_source
+      source = deck.source
+      render_line(source.title_paragraph, :h2)
+      author = source.author_paragraph
+      if author.text.present?
+        render_line(author, :p, class: "reading-snippets__author")
       end
+      p(class: "reading-snippets__credit") { render(SourceCredit.new(source:)) }
     end
 
     def render_snippet(snippet)
       section(class: "reading-snippet") do
-        if snippet.heading.present?
-          h3 { with_translation(snippet.heading, snippet.heading_translation) }
-        end
-        snippet.paragraphs.each { |paragraph| render_paragraph(paragraph) }
+        heading = snippet.heading_paragraph
+        render_line(heading, :h3) if heading.text.present?
+        snippet.paragraphs.each { |paragraph| render_line(paragraph, :p) }
       end
     end
 
-    # The popovers follow the paragraph rather than sit in it, so its text
-    # stays just the words; each still opens beside its own word.
-    def render_paragraph(paragraph)
+    # The popovers follow the line rather than sit in it, so its text stays
+    # just the words; each still opens beside its own word.
+    def render_line(paragraph, tag, **)
       lookups = []
-      p { paragraph.tokens.each { |token| render_token(token, lookups) } }
+      tag(tag, **) { paragraph.tokens.each { render_token(it, lookups) } }
       lookups.each { render(it) }
     end
 
@@ -123,12 +123,11 @@ module Components
     end
 
     def sense_ids
-      snippets.flat_map(&:sentences).flat_map(&:tokens).pluck("sense_id")
+      sentences = [*deck.source.front_matter, *snippets.flat_map(&:sentences)]
+      sentences.flat_map(&:tokens).pluck("sense_id")
     end
 
-    def data
-      { controller: "miss", miss_url_value: deck_misses_path(deck) }
-    end
+    def data = { controller: "miss", miss_url_value: deck_misses_path(deck) }
 
     def classes
       [

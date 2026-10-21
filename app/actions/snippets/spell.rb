@@ -12,13 +12,13 @@ module Snippets
     def self.call(snippet)
       return unless traditional?(snippet)
 
-      snippet.sentences.each { |sentence| respell(sentence) }
+      snippet.sentences_with_front_matter.each { respell(it) }
     end
 
     # Some word of it simplifies to another form.
     def self.traditional?(snippet)
       snippet.language.traditional &&
-        snippet.sentences.any? do |sentence|
+        snippet.sentences_with_front_matter.any? do |sentence|
           sentence.tokens.any? { |token| token.key?("headword") }
         end
     end

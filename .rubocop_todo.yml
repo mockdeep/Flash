@@ -206,6 +206,7 @@ RSpec/NoBeforeHook:
 Rails/BulkChangeTable:
   Exclude:
     - 'db/migrate/20261020100000_add_script_to_decks.rb'
+    - 'db/migrate/20261021000000_add_role_and_source_to_snippet_sentences.rb'
 
 # Offense count: 2
 Rails/Env:

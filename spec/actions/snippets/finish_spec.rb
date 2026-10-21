@@ -9,6 +9,12 @@ RSpec.describe Snippets::Finish do
     snippet
   end
 
+  def front_matter_snippet(*tokens)
+    snippet = snippet_with
+    create(:front_matter, source: snippet.source, tokens:)
+    snippet
+  end
+
   def resolved(sense, **working)
     { "text" => "爱", "sense_id" => sense.id, **working.stringify_keys }
   end
@@ -49,6 +55,24 @@ RSpec.describe Snippets::Finish do
       file_everything_as_verbs
       sense = create(:sense)
       snippet = snippet_with(resolved(sense, outcome: "matched"))
+      described_class.call(snippet)
+
+      expect(snippet.word_list.senses).to eq([sense])
+    end
+
+    it "finishes its source's front matter" do
+      file_everything_as_verbs
+      token = resolved(create(:sense), outcome: "matched")
+      snippet = front_matter_snippet(token)
+      described_class.call(snippet)
+
+      expect(snippet.source.front_matter.sole.status).to eq(:finished)
+    end
+
+    it "adds its source's front matter senses to its word_list" do
+      file_everything_as_verbs
+      sense = create(:sense)
+      snippet = front_matter_snippet(resolved(sense))
       described_class.call(snippet)
 
       expect(snippet.word_list.senses).to eq([sense])

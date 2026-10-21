@@ -3,18 +3,95 @@
 require "rails_helper"
 
 RSpec.describe SnippetSentence do
+  it { is_expected.to belong_to(:source) }
   it { is_expected.to belong_to(:snippet) }
 
-  it { is_expected.to validate_presence_of(:snippet) }
+  it { is_expected.to validate_presence_of(:source) }
   it { is_expected.to validate_presence_of(:body) }
   it { is_expected.to validate_presence_of(:position) }
 
+  it "takes only the known roles" do
+    expect(build(:snippet_sentence, role: "footnote")).not_to be_valid
+  end
+
+  it "needs a snippet unless it is front matter" do
+    expect(build(:snippet_sentence, snippet: nil)).not_to be_valid
+  end
+
+  it "needs no snippet as front matter" do
+    expect(build(:snippet_sentence, snippet: nil, role: "title")).to be_valid
+  end
+
+  def check_constraints!
+    described_class.connection.execute("SET CONSTRAINTS ALL IMMEDIATE")
+  end
+
   it "keeps positions unique within a snippet" do
     sentence = create(:snippet_sentence)
-    snippet, position = sentence.values_at(:snippet, :position)
+    create(:snippet_sentence, **sentence.slice(:snippet, :position))
 
-    expect { create(:snippet_sentence, snippet:, position:) }
+    expect { check_constraints! }.to raise_error(ActiveRecord::RecordNotUnique)
+  end
+
+  it "lets positions pass each other until the transaction ends" do
+    sentence = create(:snippet_sentence, position: 0)
+    create(:snippet_sentence, snippet: sentence.snippet, position: 1)
+
+    expect { sentence.update!(position: 1) }.not_to raise_error
+  end
+
+  it "keeps front matter positions unique within a source" do
+    attributes = create(:front_matter).slice(:source, :position)
+
+    expect { create(:front_matter, role: "author", **attributes) }
       .to raise_error(ActiveRecord::RecordNotUnique)
+  end
+
+  it "keeps a body sentence in a snippet" do
+    sentence = build(:snippet_sentence, snippet: nil)
+
+    expect { sentence.save!(validate: false) }
+      .to raise_error(ActiveRecord::StatementInvalid, /front_matter/)
+  end
+
+  describe "#title?" do
+    it "is true for the source's title" do
+      expect(build(:snippet_sentence, role: "title")).to be_title
+    end
+
+    it "is false for the source's author" do
+      expect(build(:snippet_sentence, role: "author")).not_to be_title
+    end
+  end
+
+  describe "#author?" do
+    it "is true for the source's author" do
+      expect(build(:snippet_sentence, role: "author")).to be_author
+    end
+
+    it "is false for a heading" do
+      expect(build(:snippet_sentence, role: "heading")).not_to be_author
+    end
+  end
+
+  describe "#heading?" do
+    it "is true for a snippet's heading" do
+      expect(build(:snippet_sentence, role: "heading")).to be_heading
+    end
+
+    it "is false for a body sentence" do
+      expect(build(:snippet_sentence)).not_to be_heading
+    end
+  end
+
+  describe "#front_matter?" do
+    it "is true for the source's author" do
+      expect(build(:snippet_sentence, role: "author")).to be_front_matter
+    end
+
+    it "is false for a heading" do
+      expect(build(:snippet_sentence, role: "heading")).not_to be_front_matter
+    end
   end
 
   describe ".unsegmented" do

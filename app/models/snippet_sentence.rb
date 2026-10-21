@@ -1,17 +1,24 @@
 # frozen_string_literal: true
 
-# One sentence of a snippet. `tokens` holds the pieces it was cut into, in
+# One sentence of a source: a line of a snippet's body, a snippet's heading,
+# or the source's own title or author (its front matter), which belong to no
+# snippet. `tokens` holds the pieces it was cut into, in
 # order, each a hash of "text" as written and, for a word, the "sense_id" it
 # is studied as. Punctuation and other non-words will have no sense_id, nor
 # will a word the segmenter skipped, which keeps why as "skip".
 class SnippetSentence < ApplicationRecord
   TOKEN_KEYS = ["text", "sense_id", "skip"].freeze
+  ROLES = ["title", "author", "heading", "body"].freeze
+  FRONT_MATTER = ["title", "author"].freeze
 
+  belongs_to :source
   belongs_to :snippet
 
-  validates :snippet, :body, :position, presence: true
+  validates :source, :body, :position, presence: true
+  validates :role, inclusion: { in: ROLES }
+  validates :snippet, presence: true, unless: :front_matter?
 
-  delegate :language, to: :snippet
+  delegate :language, to: :source
 
   scope :unsegmented, -> { where("tokens = '[]'::jsonb") }
   scope :segmented, -> { where.not("tokens = '[]'::jsonb") }
@@ -27,6 +34,10 @@ class SnippetSentence < ApplicationRecord
     SQL
   end
 
+  def title? = role == "title"
+  def author? = role == "author"
+  def heading? = role == "heading"
+  def front_matter? = FRONT_MATTER.include?(role)
   def word_chars = language.word_chars(body)
 
   # Whether the words rejoin to exactly this sentence's word characters:

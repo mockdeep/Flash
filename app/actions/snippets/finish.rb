@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 module Snippets
-  # Closes a reviewed snippet: every Chinese word must have a sense. Puts a
+  # Closes a reviewed snippet, with its source's front matter: every Chinese
+  # word must have a sense. Puts a
   # traditional text's spellings on its senses (Spell), strips the
   # pipeline's working keys from its tokens, so the snippet reads
   # finished and can be pushed, adds its senses to its word_list, and files
@@ -16,7 +17,7 @@ module Snippets
       unsensed!(snippet)
       snippet.transaction do
         Spell.call(snippet)
-        snippet.sentences.each { |sentence| strip(sentence) }
+        snippet.sentences_with_front_matter.each { strip(it) }
         Attach.call(snippet)
       end
       categorize(snippet)
@@ -24,7 +25,7 @@ module Snippets
 
     def self.unsensed!(snippet)
       words =
-        snippet.sentences.flat_map do |sentence|
+        snippet.sentences_with_front_matter.flat_map do |sentence|
           sentence.tokens.filter_map do |token|
             next unless sentence.needs_sense?(token) && token["sense_id"].nil?
 

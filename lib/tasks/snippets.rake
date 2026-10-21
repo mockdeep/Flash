@@ -4,7 +4,8 @@ namespace(:snippets) do
   desc("Process every unprocessed snippet (or ID=… alone) through Claude")
   task(process: :environment) do
     id = ENV.fetch("ID", nil)
-    sentences = id ? Snippet.find(id).sentences : SnippetSentence.all
+    sentences =
+      id ? Snippet.find(id).sentences_with_front_matter : SnippetSentence.all
 
     Snippets::Process.call(sentences:) { |line| puts(line) }
     puts("Nothing left to process")

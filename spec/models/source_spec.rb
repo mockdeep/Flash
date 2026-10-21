@@ -99,6 +99,34 @@ RSpec.describe Source do
     it "is finished once every snippet is" do
       expect(source_with([:finished]).status).to eq(:finished)
     end
+
+    it "is in progress while its front matter differs from its snippets" do
+      source = source_with([:finished])
+      create(:front_matter, source:)
+
+      expect(source.status).to eq(:in_progress)
+    end
+  end
+
+  describe "#title_paragraph" do
+    it "is the title with its sentence" do
+      source = create(:source, title: "春节")
+      sentence = create(:front_matter, source:, body: "春节")
+
+      paragraph = source.title_paragraph
+      expect([paragraph.text, paragraph.sentences]).to eq(["春节", [sentence]])
+    end
+  end
+
+  describe "#author_paragraph" do
+    it "is the author with its sentence" do
+      source = create(:source, author: "鲁迅")
+      create(:front_matter, source:)
+      sentence = create(:front_matter, source:, role: "author", body: "鲁迅")
+
+      paragraph = source.author_paragraph
+      expect([paragraph.text, paragraph.sentences]).to eq(["鲁迅", [sentence]])
+    end
   end
 
   describe "#studyable?" do

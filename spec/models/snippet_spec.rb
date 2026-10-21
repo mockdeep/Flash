@@ -106,10 +106,47 @@ RSpec.describe Snippet do
         .to eq(["J.R. Ward", "J. R. Ward"])
     end
 
+    it "leaves out the heading's sentence" do
+      snippet = create(:snippet, heading: "习俗", body: "我爱你。")
+      sentences = sentences_of(snippet, "习俗", "我爱你。")
+      sentences.first.update!(role: "heading")
+
+      expect(snippet.paragraphs.flat_map(&:sentences)).to eq([sentences.last])
+    end
+
     it "keeps each line as written" do
       snippet = create(:snippet, body: "  我爱你。 \n\n你爱我。 他爱她。")
 
       expect(snippet.paragraphs.map(&:text)).to eq(["我爱你。", "你爱我。 他爱她。"])
+    end
+  end
+
+  describe "#sentences_with_front_matter" do
+    it "puts the source's front matter before the snippet's sentences" do
+      snippet = create(:snippet)
+      body = create(:snippet_sentence, snippet:, position: 0)
+      title = create(:front_matter, source: snippet.source)
+
+      expect(snippet.sentences_with_front_matter).to eq([title, body])
+    end
+
+    it "leaves out other snippets' sentences" do
+      snippet = create(:snippet)
+      other = create(:snippet, source: snippet.source)
+      create(:snippet_sentence, snippet: other)
+
+      expect(snippet.sentences_with_front_matter).to be_empty
+    end
+  end
+
+  describe "#heading_paragraph" do
+    it "is the heading with its sentence" do
+      snippet = create(:snippet, heading: "习俗")
+      sentence = create(:snippet_sentence, snippet:, role: "heading")
+      create(:snippet_sentence, snippet:)
+
+      paragraph = snippet.heading_paragraph
+      expect([paragraph.text, paragraph.sentences]).to eq(["习俗", [sentence]])
     end
   end
 end

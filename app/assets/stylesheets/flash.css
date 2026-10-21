@@ -340,7 +340,7 @@ body {
   font-family: 'DM Serif Display', var(--hanzi-font), Georgia, serif;
 }
 
-.study-page[data-font] :is(.answer-text, .study-example__front, .study-example__back, .fuzzy-find__input, .reading-snippet p) {
+.study-page[data-font] :is(.answer-text, .study-example__front, .study-example__back, .fuzzy-find__input, .reading-snippets :is(p, h2, h3)) {
   font-family: Manrope, var(--hanzi-font), system-ui, sans-serif;
 }
 
@@ -866,7 +866,7 @@ body {
   display: none;
 }
 
-:where(.reading-snippets--gaps.reading-snippets--spaced) p {
+:where(.reading-snippets--gaps.reading-snippets--spaced) :is(p, h2, h3) {
   word-spacing: 0.5em;
 }
 
@@ -894,11 +894,11 @@ body {
   margin-inline: 0;
 }
 
-.reading-snippets--readings p {
+.reading-snippets--readings :is(p, h2, h3) {
   line-height: 2.6;
 }
 
-.reading-snippet rt {
+.reading-snippets rt {
   color: var(--color-text-muted);
   font-size: 0.55em;
 }

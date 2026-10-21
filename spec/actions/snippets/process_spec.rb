@@ -166,6 +166,13 @@ RSpec.describe Snippets::Process do
         .to eq(["Segmented 1 sentences of T", "Resolved 1 sentences of T"])
     end
 
+    it "reports front matter under its source's title" do
+      fake_pipeline
+      create(:front_matter, body: "我", source: create(:source, title: "T"))
+
+      expect(reported_lines.first).to eq("Segmented 1 sentences of T")
+    end
+
     it "reports a sentence sent back to the segmenter" do
       missegmenting_pipeline
       create(:snippet_sentence, body: "花了", tokens: [{ "text" => "花了" }])

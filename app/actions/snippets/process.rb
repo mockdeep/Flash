@@ -53,7 +53,7 @@ module Snippets
     end
 
     def self.summary(step, batch)
-      titles = batch.map { |sentence| sentence.snippet.title }.uniq
+      titles = batch.map { (it.snippet || it.source).title }.uniq
 
       "#{step} #{batch.size} sentences of #{titles.join(", ")}"
     end

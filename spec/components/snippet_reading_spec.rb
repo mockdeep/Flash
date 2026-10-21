@@ -60,23 +60,67 @@ RSpec.describe Components::SnippetReading, type: :view do
     expect(page).to have_css("h2", text: "春节")
   end
 
-  it "translates the source's title" do
+  it "leaves out the source title's translation" do
     page = render_for(source: create(:source, title_translation: "Spring"))
 
-    expect(page).to have_css("h2 .translation", text: "Spring")
+    expect(page).to have_no_css("h2 .translation")
   end
 
-  it "translates a snippet's heading" do
+  def front_matter(role, text, reading, **attributes)
+    snippet = snippet_with("爱。", [word("爱", "ài")])
+    source = snippet.source
+    source.update!(attributes)
+    tokens = [word(text, reading)]
+    create(
+      :snippet_sentence, snippet: nil, source:, role:, body: text, tokens:
+    )
+    render_for(snippet, source:)
+  end
+
+  it "marks each word of the source's title apart" do
+    page = front_matter("title", "春节", "chūnjié", title: "春节")
+
+    expect(page).to have_css("h2 .reading-snippet__word", text: "春节")
+  end
+
+  it "marks each word of the source's author apart" do
+    page = front_matter("author", "鲁迅", "Lǔxùn", author: "鲁迅")
+
+    author = ".reading-snippets__author .reading-snippet__word"
+    expect(page).to have_css(author, text: "鲁迅")
+  end
+
+  it "leaves out the heading's translation, its words being looked up" do
     snippet = build(:snippet, heading: "第一", heading_translation: "First")
     page = render_for(snippet)
 
-    expect(page).to have_css("h3 .translation", text: "First")
+    expect(page).to have_no_css("h3 .translation")
   end
 
   it "shows each snippet's heading in order" do
     page = render_for(*["第一", "第二"].map { build(:snippet, heading: it) })
 
     expect(texts_of(page, ".reading-snippet h3")).to eq(["第一", "第二"])
+  end
+
+  def headed_snippet
+    snippet = snippet_with("爱。", [word("爱", "ài")])
+    snippet.update!(heading: "春节", heading_translation: "Spring")
+    tokens = [word("春节", "chūnjié")]
+    create(:snippet_sentence, snippet:, role: "heading", body: "春节", tokens:)
+    snippet
+  end
+
+  it "marks each word of the heading apart" do
+    page = render_text(headed_snippet)
+
+    expect(page).to have_css("h3 .reading-snippet__word", text: "春节")
+  end
+
+  it "keeps the heading's words out of the body" do
+    page = render_text(headed_snippet, round: 3)
+
+    expect(texts_of(page, ".reading-snippet p:not([class])")).to eq(["爱。"])
   end
 
   it "leaves out the heading when there is none" do

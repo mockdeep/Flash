@@ -7,18 +7,23 @@ module Snippets
   # indexes and sense ids that Snippets::Review takes. Sentences are numbered
   # from 1, and `from:` / `to:` keep to those numbers so a long snippet can be
   # reviewed a stretch at a time; the summary and created senses still cover
-  # the whole snippet.
+  # the whole snippet. The source's front matter, while unfinished, comes
+  # first, marked by its role, since it is finished along with the snippet.
   module Report
     def self.call(snippet, from: 1, to: nil)
+      front = snippet.source.front_matter.reject { it.status == :finished }
       all = snippet.sentences.to_a
-      numbered =
-        all.each.with_index(1).select { |_, number| (from..to).cover?(number) }
-      lines =
-        numbered.flat_map do |sentence, number|
-          sentence_lines(sentence, "#{number}/#{all.size}")
-        end
+      placed = [*front.map { [it, it.role] }, *numbered(all, from, to)]
+      lines = placed.flat_map { sentence_lines(*it) }
 
-      [*summary(snippet, all, numbered.map(&:first)), *lines].join("\n")
+      [*summary(snippet, front + all, placed.map(&:first)), *lines].join("\n")
+    end
+
+    # Each sentence in the stretch with its place in the snippet, "12/412".
+    def self.numbered(all, from, to)
+      all.each.with_index(1).filter_map do |sentence, number|
+        [sentence, "#{number}/#{all.size}"] if (from..to).cover?(number)
+      end
     end
 
     def self.summary(snippet, all, sentences)
@@ -52,8 +57,8 @@ module Snippets
         [snippet.status, *tally].join(", ")
     end
 
-    # Titles aren't split into words, so a learner reads them through these.
-    # A missing one is flagged here rather than blocking Finish.
+    # Shown under the titles where their words can't be looked up, such as
+    # deck names. A missing one is flagged here rather than blocking Finish.
     def self.translations(snippet)
       source = snippet.source
       title = "source #{source.id} title #{source.title}"

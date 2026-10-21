@@ -19,6 +19,13 @@ class Source < ApplicationRecord
            dependent: :destroy,
            inverse_of: :source
   has_many :readers, class_name: "SourceReader", dependent: :delete_all
+  # Its title and author as sentences of their own, so their words are
+  # studied too.
+  has_many :front_matter,
+           -> { where(snippet_id: nil).order(:position) },
+           class_name: "SnippetSentence",
+           dependent: :delete_all,
+           inverse_of: :source
 
   validates :word_list, :title, presence: true
   validates :word_list_id, uniqueness: true
@@ -39,9 +46,13 @@ class Source < ApplicationRecord
       readers.any? { |reader| reader.user_id == user.id }
   end
 
-  # New or finished when every snippet is; in progress otherwise.
+  def title_paragraph = front_line(title, &:title?)
+  def author_paragraph = front_line(author, &:author?)
+
+  # New or finished when every snippet and its front matter is; in progress
+  # otherwise.
   def status
-    statuses = snippets.map(&:status).uniq
+    statuses = [*snippets, *front_matter].map(&:status).uniq
     return :in_progress if statuses.many?
 
     statuses.first || :new
@@ -51,6 +62,10 @@ class Source < ApplicationRecord
   def studyable? = snippets.any? { |snippet| snippet.status == :finished }
 
   private
+
+  def front_line(text, &)
+    Snippet::Paragraph.new(text:, sentences: front_matter.select(&))
+  end
 
   def supported_language
     return if word_list.nil? || Language.supported?(word_list.language)
