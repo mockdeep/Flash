@@ -50,7 +50,10 @@ class Language
       letters = text.delete_suffix(".").chars.map { Regexp.escape(it) }
       text.end_with?(".") && form.match?(/\A#{letters.join("[^.]*")}[^.]*\z/i)
     end
-  # A sentence runs on past a full stop after a title (Sr., Dra.) or an
+  # Titles whose full stop doesn't end a sentence: Senhor, Doutora, Padre,
+  # Frei, Santo and the like, and the St. of names left in English.
+  TITLES = "Sr Sra Srta Dr Dra Prof Profa Pe Fr Sto Sta St".split.freeze
+  # A sentence runs on past a full stop after one of the TITLES or an
   # initial (J. R. Ward), and past an ending followed by a lower-case word:
   # the speech tag set off by a dash after a line of dialogue, or a
   # trailing-off ellipsis. A word studies under its own form, lower-cased
@@ -60,7 +63,7 @@ class Language
     code: "pt",
     sentence: /
       (?:
-        \b(?:Sra?|Srta|Dra?|Profa?|[[:upper:]])\. |
+        \b(?:#{TITLES.join("|")}|[[:upper:]])\. |
         [.!?…]+[”»"’)]*(?=\s+[—–]?\s*[[:lower:]]) |
         [^.!?…\n]
       )+
