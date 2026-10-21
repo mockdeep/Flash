@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe LookupsController do
+RSpec.describe MissesController do
   def deck_with_sense
     login_as(default_user)
     deck = create(:reading_deck)
@@ -20,16 +20,16 @@ RSpec.describe LookupsController do
       deck, sense = deck_with_sense
       create(:skill_score, user: deck.user, sense:, correct_streak: 3)
 
-      post(deck_lookups_path(deck), params: { sense_id: sense.id })
+      post(deck_misses_path(deck), params: { sense_id: sense.id })
 
       expect(score_for(deck, sense).correct_streak).to eq(0)
     end
 
-    it "counts the lookup as a view" do
+    it "counts the miss as a view" do
       deck, sense = deck_with_sense
       create(:skill_score, user: deck.user, sense:, view_count: 2)
 
-      post(deck_lookups_path(deck), params: { sense_id: sense.id })
+      post(deck_misses_path(deck), params: { sense_id: sense.id })
 
       expect(score_for(deck, sense).view_count).to eq(3)
     end
@@ -37,7 +37,7 @@ RSpec.describe LookupsController do
     it "creates the score when the user has none on the sense" do
       deck, sense = deck_with_sense
 
-      post(deck_lookups_path(deck), params: { sense_id: sense.id })
+      post(deck_misses_path(deck), params: { sense_id: sense.id })
 
       expect(score_for(deck, sense)).to be_present
     end
@@ -45,7 +45,7 @@ RSpec.describe LookupsController do
     it "responds with no content" do
       deck, sense = deck_with_sense
 
-      post(deck_lookups_path(deck), params: { sense_id: sense.id })
+      post(deck_misses_path(deck), params: { sense_id: sense.id })
 
       expect(response).to have_http_status(:no_content)
     end
@@ -53,7 +53,7 @@ RSpec.describe LookupsController do
     it "is not found for a sense outside the deck's list" do
       deck, = deck_with_sense
 
-      post(deck_lookups_path(deck), params: { sense_id: create(:sense).id })
+      post(deck_misses_path(deck), params: { sense_id: create(:sense).id })
 
       expect(response).to have_http_status(:not_found)
     end
@@ -62,7 +62,7 @@ RSpec.describe LookupsController do
       _, sense = deck_with_sense
       deck = create(:reading_deck, user: create(:user))
 
-      post(deck_lookups_path(deck), params: { sense_id: sense.id })
+      post(deck_misses_path(deck), params: { sense_id: sense.id })
 
       expect(response).to have_http_status(:not_found)
     end

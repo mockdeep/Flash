@@ -6,9 +6,10 @@ module Components
   # until studied, green once done at the deck's round, and has its reading
   # over it while its streak is zero. Mandarin is written in the deck's
   # script. Clicking a word shows its reading (or
-  # a noun's article) and gloss in a popover, and resets its streak so study
-  # brings it back. A word the segmenter skipped has no card, so its popover
-  # says why and clicking it records nothing.
+  # a noun's article) and gloss in a popover. The first click on a new word
+  # records it as seen, and a done word's popover offers to restudy it. A
+  # word the segmenter skipped has no card, so its popover says why and
+  # clicking it records nothing.
   class SnippetReading < Components::Base
     GAPS_ROUND = 2
 
@@ -67,8 +68,9 @@ module Components
       wbr unless language.spaces
       id = "lookup-#{lookup_count}"
       text = written(token, sense)
-      render_word(text, sense, id)
-      lookups << ReadingLookup.new(id:, text:, sense:, skip:, language:)
+      state = word_state(sense)
+      render_word(text, sense, id, state)
+      lookups << ReadingLookup.new(id:, text:, sense:, skip:, state:)
     end
 
     # A Mandarin word is written in the deck's script, whatever the text's.
@@ -78,8 +80,8 @@ module Components
       (sense.traditional if deck.traditional?) || sense.entry.headword
     end
 
-    def render_word(text, sense, id)
-      button(**word_attributes(id, sense)) do
+    def render_word(text, sense, id, state)
+      button(**word_attributes(id, sense, state)) do
         ruby do
           plain(text)
           rt { sense.entry.reading } if language.readings
@@ -87,21 +89,24 @@ module Components
       end
     end
 
-    # A skipped word has no card, so it has no state and records no lookup.
-    def word_attributes(id, sense)
+    # A skipped word has no card, so it has no state and records nothing.
+    def word_attributes(id, sense, state)
       attributes =
         { type: "button", class: "reading-snippet__word", popovertarget: id }
       return attributes unless sense
 
+      sense_id = sense.id
+      state_class = "reading-snippet__word--#{state}" if state
       attributes.merge(
-        class: ["reading-snippet__word", word_state(sense)],
-        data: { action: "lookup#record", lookup_sense_id_param: sense.id },
+        class: ["reading-snippet__word", state_class],
+        data: { sense_id:, action: "miss#view", miss_sense_id_param: sense_id },
       )
     end
 
     def word_state(sense)
-      state = scores.fetch(sense.id) { SkillScore.new }.state(deck.round)
-      "reading-snippet__word--#{state}" if state
+      return unless sense
+
+      scores.fetch(sense.id) { SkillScore.new }.state(deck.round)
     end
 
     def lookup_count
@@ -122,7 +127,7 @@ module Components
     end
 
     def data
-      { controller: "lookup", lookup_url_value: deck_lookups_path(deck) }
+      { controller: "miss", miss_url_value: deck_misses_path(deck) }
     end
 
     def classes

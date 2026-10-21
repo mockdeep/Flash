@@ -6,7 +6,7 @@ const WORD = "reading-snippet__word";
 
 function buildWord(senseId: string, state: string): HTMLButtonElement {
   const word = document.createElement("button");
-  word.setAttribute("data-lookup-sense-id-param", senseId);
+  word.setAttribute("data-sense-id", senseId);
   word.className = `${WORD} ${WORD}--${state}`;
   return word;
 }
@@ -49,5 +49,37 @@ describe("connect", () => {
     const words = await sendStates({8: null});
 
     expect(classesOf(words[0])).toStrictEqual([WORD, `${WORD}--new`]);
+  });
+});
+
+const LOOKUP = "reading-snippet__lookup";
+
+async function sendLookupState(
+  classes: string,
+  state: string,
+): Promise<string[]> {
+  const lookup = document.createElement("div");
+  lookup.setAttribute("data-sense-id", "7");
+  lookup.className = classes;
+  const sender = document.createElement("div");
+  sender.setAttribute("data-controller", "word-states");
+  sender.setAttribute("data-word-states-states-value", `{"7": "${state}"}`);
+  document.body.replaceChildren(lookup, sender);
+  await bootStimulus("word-states", WordStatesController);
+  return [...lookup.classList];
+}
+
+describe("connect marks a word's popover", () => {
+  it("as done when the word is done", async () => {
+    const classes = await sendLookupState(LOOKUP, "done");
+
+    expect(classes).toStrictEqual([LOOKUP, `${LOOKUP}--done`]);
+  });
+
+  it("as not done otherwise", async () => {
+    const done = `${LOOKUP} ${LOOKUP}--done`;
+    const classes = await sendLookupState(done, "missed");
+
+    expect(classes).toStrictEqual([LOOKUP]);
   });
 });
