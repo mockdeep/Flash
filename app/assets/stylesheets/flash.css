@@ -960,6 +960,15 @@ body {
   font-size: 14px;
 }
 
+.reading-snippet__lookup .reading-snippet__restudy {
+  display: none;
+  margin-top: var(--spacing-sm);
+}
+
+.reading-snippet__lookup--done .reading-snippet__restudy {
+  display: flex;
+}
+
 .reading-snippets__author,
 .reading-snippets__credit {
   margin-block: 0 var(--spacing-xs);

@@ -66,8 +66,8 @@ module Components
     def lookup_note
       li do
         <<~TEXT
-          Tap a word to see what it means. That counts as a miss, so the word
-          comes back when you study.
+          Tap a word to see what it means. If it's a green word you've
+          forgotten, press Restudy to bring it back when you study.
         TEXT
       end
     end

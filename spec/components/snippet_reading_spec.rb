@@ -147,10 +147,22 @@ RSpec.describe Components::SnippetReading, type: :view do
     expect(page).to have_css(".reading-snippet__word--done")
   end
 
+  it "marks a done word's popover done" do
+    page = render_scored(round: 2, view_count: 2, correct_streak: 2)
+
+    expect(page).to have_css("[popover].reading-snippet__lookup--done")
+  end
+
+  it "leaves the popover of a word part way there not done" do
+    page = render_scored(round: 2, view_count: 2, correct_streak: 1)
+
+    expect(page).to have_no_css(".reading-snippet__lookup--done")
+  end
+
   it "leaves a word short of the deck's round unmarked" do
     page = render_scored(round: 2, view_count: 1, correct_streak: 1)
 
-    word = page.find("button")
+    word = page.find(".reading-snippet__word")
     expect(word[:class]).to eq("reading-snippet__word")
   end
 
@@ -275,7 +287,13 @@ RSpec.describe Components::SnippetReading, type: :view do
     expect(page.find("button")[:class]).to eq("reading-snippet__word")
   end
 
-  it "records no lookup for a skipped word" do
+  it "offers no restudy for a skipped word" do
+    page = skipped_snippet("name")
+
+    expect(page).to have_no_css(".reading-snippet__restudy")
+  end
+
+  it "records nothing for a skipped word" do
     page = skipped_snippet("name")
 
     expect(page).to have_no_css("button[data-action]")
@@ -290,23 +308,57 @@ RSpec.describe Components::SnippetReading, type: :view do
   it "opens the word's own popover from the word" do
     page = render_for(love_snippet)
 
-    targets = page.all("button").pluck("popovertarget")
+    targets = page.all(".reading-snippet__word").pluck("popovertarget")
     expect(targets).to eq(page.all("[popover]").pluck("id"))
   end
 
-  it "passes the word's sense to the lookup" do
+  it "passes the word's sense to its restudy button" do
     snippet = snippet_with("爱。", [word("爱", "ài")])
     page = render_for(snippet)
 
     sense_id = snippet.sentences.first.tokens.first["sense_id"]
-    expect(page).to have_css("[data-lookup-sense-id-param='#{sense_id}']")
+    restudy = page.find(".reading-snippet__restudy")
+    expect(restudy["data-miss-sense-id-param"]).to eq(sense_id.to_s)
   end
 
-  it "sends lookups to the deck" do
+  it "records a view when the word is clicked" do
+    page = render_for(snippet_with("爱。", [word("爱", "ài")]))
+
+    word = page.find(".reading-snippet__word")
+    expect(word["data-action"]).to eq("miss#view")
+  end
+
+  it "passes the word's sense to its view" do
+    snippet = snippet_with("爱。", [word("爱", "ài")])
+    page = render_for(snippet)
+
+    sense_id = snippet.sentences.first.tokens.first["sense_id"]
+    word = page.find(".reading-snippet__word")
+    expect(word["data-miss-sense-id-param"]).to eq(sense_id.to_s)
+  end
+
+  it "marks the word with its sense" do
+    snippet = snippet_with("爱。", [word("爱", "ài")])
+    page = render_for(snippet)
+
+    sense_id = snippet.sentences.first.tokens.first["sense_id"]
+    word = page.find(".reading-snippet__word")
+    expect(word["data-sense-id"]).to eq(sense_id.to_s)
+  end
+
+  it "marks the popover with its word's sense" do
+    snippet = snippet_with("爱。", [word("爱", "ài")])
+    page = render_for(snippet)
+
+    sense_id = snippet.sentences.first.tokens.first["sense_id"]
+    expect(page).to have_css("[popover][data-sense-id='#{sense_id}']")
+  end
+
+  it "sends misses to the deck" do
     page = render_for(love_snippet)
 
-    url = "/decks/#{Deck.sole.id}/lookups"
-    expect(page).to have_css("[data-lookup-url-value='#{url}']")
+    url = "/decks/#{Deck.sole.id}/misses"
+    expect(page).to have_css("[data-miss-url-value='#{url}']")
   end
 
   it "writes a word in simplified on a simplified deck" do

@@ -13,7 +13,7 @@ Rails.application.routes.draw do
   end
   get "demo", to: redirect("/catalog")
   resources :decks, only: [:new, :create, :index, :show, :destroy] do
-    resources :lookups, only: [:create]
+    resources :misses, only: [:create]
     resource :milestone, only: [:update]
     resource :catalog_listing, only: [:create, :destroy], controller: "catalog_listings"
     resource :replacement, only: [:new, :create], controller: "replacements"
