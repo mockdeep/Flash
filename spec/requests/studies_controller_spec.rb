@@ -44,6 +44,14 @@ RSpec.describe StudiesController do
       expect(rendered).to have_css(".round-fill--done", count: 2)
     end
 
+    it "moves a deck whose cards are all done on to a round with work left" do
+      deck = create(:deck, round: 1)
+      create(:basic_card, deck:, correct_streak: 2)
+      get(deck_study_path(deck))
+
+      expect(deck.reload.round).to eq(3)
+    end
+
     it "shows a homograph's reading under the prompt" do
       deck = create(:reading_deck)
       create(:language_card, deck:, front: "过", reading: "guò")

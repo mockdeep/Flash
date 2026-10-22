@@ -113,6 +113,25 @@ RSpec.describe LanguageDeck do
     end
   end
 
+  describe "#catch_up_round!" do
+    it "moves on to the round after the weakest entry's streak" do
+      deck = create(:reading_deck, round: 1)
+      create(:language_card, deck:, correct_streak: 2)
+      create(:language_card, deck:, correct_streak: 4)
+      deck.catch_up_round!
+
+      expect(deck.reload.round).to eq(3)
+    end
+
+    it "keeps the round while an entry sits below it" do
+      deck = create(:reading_deck, round: 2)
+      create(:language_card, deck:, correct_streak: 1)
+      deck.catch_up_round!
+
+      expect(deck.reload.round).to eq(2)
+    end
+  end
+
   describe "#not_done_count" do
     it "counts the entries whose weakest sense is below the given round" do
       deck = create(:reading_deck, round: 1)

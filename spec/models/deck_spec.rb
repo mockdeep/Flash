@@ -469,6 +469,33 @@ RSpec.describe Deck do
     end
   end
 
+  describe "#catch_up_round!" do
+    it "moves on to the round after the lowest streak when all are done" do
+      deck = create(:deck, round: 1)
+      create(:basic_card, deck:, correct_streak: 2)
+      create(:basic_card, deck:, correct_streak: 3)
+      deck.catch_up_round!
+
+      expect(deck.reload.round).to eq(3)
+    end
+
+    it "keeps the round while a card sits below it" do
+      deck = create(:deck, round: 2)
+      create(:basic_card, deck:, correct_streak: 1)
+      create(:basic_card, deck:, correct_streak: 3)
+      deck.catch_up_round!
+
+      expect(deck.reload.round).to eq(2)
+    end
+
+    it "keeps the round of a deck without cards" do
+      deck = create(:deck, round: 2)
+      deck.catch_up_round!
+
+      expect(deck.reload.round).to eq(2)
+    end
+  end
+
   describe "#not_done_count" do
     it "counts the cards whose streak is below the given round" do
       deck = create(:deck)
