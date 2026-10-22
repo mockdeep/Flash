@@ -155,6 +155,13 @@ class Deck < ApplicationRecord
 
   def all_done? = progress.done == progress.total
 
+  # Progress is shared between a user's decks, so a deck can open with every
+  # card done at its round; it moves on to the first round with work left.
+  def catch_up_round!
+    lowest = lowest_streak
+    update!(round: lowest + 1) if lowest && lowest >= round
+  end
+
   def not_done_count(at_round) = cards.not_done(at_round).count
 
   def target_mode? = goal_mode == "target"
@@ -239,6 +246,8 @@ class Deck < ApplicationRecord
   end
 
   def count_progress = cards.pick(*progress_counts)
+
+  def lowest_streak = cards.minimum(:correct_streak)
 
   def progress_counts
     done = ["COUNT(*) FILTER (WHERE correct_streak >= ?)", round]

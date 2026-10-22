@@ -6,6 +6,7 @@ class StudiesController < ApplicationController
 
   def show
     deck = current_user.decks.find(params.expect(:deck_id))
+    deck.catch_up_round!
     study = Study.for(deck:, exclude_card_id: params[:exclude])
     deck.study_days.today.keep_going! if params[:reset_session]
     render_study(show_view_class(deck), deck:, study:)
