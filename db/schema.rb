@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -61,7 +61,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_000000) do
     t.bigint "word_list_id"
     t.bigint "source_deck_id"
     t.string "script", null: false
+    t.bigint "snippet_id"
     t.index ["share_token"], name: "index_decks_on_share_token", unique: true
+    t.index ["snippet_id"], name: "index_decks_on_snippet_id"
     t.index ["source_deck_id"], name: "index_decks_on_source_deck_id"
     t.index ["type"], name: "index_decks_on_type"
     t.index ["user_id", "name"], name: "index_decks_on_user_id_and_name", unique: true, where: "(name IS NOT NULL)"
@@ -390,6 +392,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_000000) do
   add_foreign_key "cards", "cards", column: "source_card_id", on_delete: :nullify
   add_foreign_key "cards", "decks"
   add_foreign_key "decks", "decks", column: "source_deck_id", on_delete: :nullify
+  add_foreign_key "decks", "snippets"
   add_foreign_key "decks", "users", on_delete: :cascade
   add_foreign_key "decks", "word_lists"
   add_foreign_key "sense_distractors", "senses", column: "distractor_sense_id", on_delete: :cascade
