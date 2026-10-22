@@ -41,8 +41,8 @@ RSpec.describe Deck do
       expect(deck.errors[:word_list]).to be_present
     end
 
-    def deck_sharing(existing, user:)
-      build(:reading_deck, word_list: existing.word_list, user:)
+    def deck_sharing(existing, user:, snippet: existing.snippet)
+      build(:reading_deck, word_list: existing.word_list, user:, snippet:)
     end
 
     # Copies reference the source word_list, so adding the same catalog deck
@@ -55,6 +55,38 @@ RSpec.describe Deck do
 
       expect(deck.errors[:base])
         .to include("This deck is already in your decks")
+    end
+
+    it "allows a deck for each snippet of the word_list" do
+      existing = create(:reading_deck)
+      snippet = create(:snippet, word_list: existing.word_list)
+
+      expect(deck_sharing(existing, user: existing.user, snippet:).valid?)
+        .to be(true)
+    end
+
+    def snippet_deck
+      snippet = create(:snippet)
+      create(:reading_deck, word_list: snippet.word_list, snippet:)
+    end
+
+    it "rejects a second deck for the same snippet" do
+      existing = snippet_deck
+      deck = deck_sharing(existing, user: existing.user)
+
+      deck.valid?
+
+      expect(deck.errors[:base])
+        .to include("This deck is already in your decks")
+    end
+
+    it "rejects a snippet from another word_list" do
+      deck = build(:reading_deck, snippet: create(:snippet))
+
+      deck.valid?
+
+      expect(deck.errors[:snippet])
+        .to include("must be from the deck's word list")
     end
 
     it "allows another user a deck over the same word_list" do
@@ -303,6 +335,21 @@ RSpec.describe Deck do
         .to include("cards_count" => 2, "done_count" => 1)
     end
 
+    # A deck over a snippet that uses only the given card's word.
+    def snippet_deck_using(card)
+      snippet = create(:snippet, word_list: card.deck.word_list)
+      sense_id = Integer(card.id.split("-").first)
+      create(:snippet_sentence, snippet:, tokens: [{ "sense_id" => sense_id }])
+      create(:reading_deck, word_list: snippet.word_list, snippet:)
+    end
+
+    it "counts only the entries a snippet deck's snippet uses" do
+      snippet_deck = snippet_deck_using(language_deck.cards_in_order.last)
+
+      expect(progress_of(snippet_deck))
+        .to include("cards_count" => 1, "done_count" => 1)
+    end
+
     def guest_deck_over(source)
       guest = create(:user, :guest)
       create(:reading_deck, word_list: source.word_list, user: guest)
@@ -407,6 +454,14 @@ RSpec.describe Deck do
       create(:snippet, word_list: deck.word_list)
 
       expect(deck.finished_snippets).to eq([finished])
+    end
+
+    it "is a snippet deck's own snippet" do
+      own = create(:snippet, :finished)
+      create(:snippet, :finished, word_list: own.word_list)
+      deck = create(:reading_deck, word_list: own.word_list, snippet: own)
+
+      expect(deck.finished_snippets).to eq([own])
     end
   end
 

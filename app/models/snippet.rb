@@ -7,6 +7,8 @@ class Snippet < ApplicationRecord
   # pasted novel must not get through; a long work goes in chapter by
   # chapter.
   MAX_BODY = 80_000
+  TOKEN_SENSE_IDS =
+    Arel.sql("CAST(jsonb_array_elements(tokens) ->> 'sense_id' AS bigint)")
   # One line of the body as written, with the sentences it splits into.
   Paragraph =
     Data.define(:text, :sentences) do
@@ -40,6 +42,10 @@ class Snippet < ApplicationRecord
 
   def title = [source.title, heading].compact_blank.join(" · ")
 
+  # What a deck over it is named for: its heading, or its place in its
+  # source.
+  def label = heading.presence || (source.snippets.index(self) + 1)
+
   # New or finished when every sentence is; in progress otherwise.
   def status
     statuses = sentences.map(&:status).uniq
@@ -56,6 +62,9 @@ class Snippet < ApplicationRecord
       .or(SnippetSentence.where(source_id:, snippet_id: nil))
       .order(Arel.sql("snippet_id NULLS FIRST"), :position)
   end
+
+  # The senses a deck over it studies.
+  def studied_sense_ids = sentences_with_front_matter.select(TOKEN_SENSE_IDS)
 
   # The heading with its sentence, once it has one.
   def heading_paragraph

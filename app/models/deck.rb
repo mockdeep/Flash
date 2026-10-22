@@ -16,10 +16,22 @@ class Deck < ApplicationRecord
   GUEST_CARD_LIMIT = 100
   Progress = Data.define(:total, :done)
 
-  # A language deck's cards are the entries its list selects, each scored by
-  # the weakest of the owner's skill_scores on the entry's senses, and a
-  # guest's deck stops at the first GUEST_CARD_LIMIT of them in list order.
-  # Only reading decks exist, so the skill is fixed here until 4.7.
+  # The senses a snippet deck studies: those its snippet's sentences use,
+  # and its source's title and author (`Snippet#studied_sense_ids`).
+  SNIPPET_SENSES = <<~SQL.squish
+    SELECT CAST(token ->> 'sense_id' AS bigint)
+    FROM snippets
+    JOIN snippet_sentences ON snippet_sentences.source_id = snippets.source_id
+      AND (snippet_sentences.snippet_id = snippets.id
+        OR snippet_sentences.snippet_id IS NULL)
+    CROSS JOIN jsonb_array_elements(snippet_sentences.tokens) token
+    WHERE snippets.id = decks.snippet_id
+  SQL
+  # A language deck's cards are the entries its list selects (a snippet
+  # deck's, only those its snippet uses), each scored by the weakest of the
+  # owner's skill_scores on the entry's senses, and a guest's deck stops at
+  # the first GUEST_CARD_LIMIT of them in list order. Only reading decks
+  # exist, so the skill is fixed here until 4.7.
   LANGUAGE_ENTRIES = <<~SQL.squish
     SELECT MIN(COALESCE(skill_scores.correct_streak, 0)) AS correct_streak,
       ROW_NUMBER() OVER (ORDER BY MIN(sense_memberships.position)) AS list_row
@@ -29,6 +41,8 @@ class Deck < ApplicationRecord
       AND skill_scores.user_id = decks.user_id
       AND skill_scores.skill = 'reading'
     WHERE sense_memberships.word_list_id = decks.word_list_id
+      AND (decks.snippet_id IS NULL OR senses.id IN
+        (#{SNIPPET_SENSES}))
     GROUP BY senses.entry_id
   SQL
   PROGRESS_COLUMNS = <<~SQL.squish
@@ -52,6 +66,7 @@ class Deck < ApplicationRecord
   belongs_to :word_list
   belongs_to :user
   belongs_to :source_deck, class_name: "Deck"
+  belongs_to :snippet
   has_many :cards, dependent: :delete_all
   has_one :source, through: :word_list
   has_many :snippets, through: :source
@@ -111,6 +126,7 @@ class Deck < ApplicationRecord
   validates :word_list, presence: true, unless: :flat_cards?
   validates :word_list, absence: true, if: :flat_cards?
   validate(:one_deck_per_word_list, unless: :flat_cards?)
+  validate(:snippet_of_word_list, if: :snippet)
 
   scope :ordered, -> { left_joins(:word_list).order(NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
@@ -120,7 +136,10 @@ class Deck < ApplicationRecord
 
   def music? = false
 
-  def name_translation = source&.title_translation
+  def name_translation
+    [source&.title_translation, snippet&.heading_translation]
+      .compact_blank.join(" · ").presence
+  end
 
   def cards_count = self[:cards_count] || progress.total
   def done_count = self[:done_count] || progress.done
@@ -145,8 +164,9 @@ class Deck < ApplicationRecord
 
   def card(id) = cards.find(id)
 
+  # A snippet deck's text is its own snippet.
   def finished_snippets
-    snippets.select { |snippet| snippet.status == :finished }
+    (snippet ? [snippet] : snippets).select { it.status == :finished }
   end
 
   def shares_texts? = finished_snippets.any? && source.shareable?
@@ -249,6 +269,11 @@ class Deck < ApplicationRecord
 
   def lowest_streak = cards.minimum(:correct_streak)
 
+  # A snippet deck studies only the senses its snippet uses.
+  def studied_senses
+    snippet ? Sense.where(id: snippet.studied_sense_ids) : Sense.all
+  end
+
   def progress_counts
     done = ["COUNT(*) FILTER (WHERE correct_streak >= ?)", round]
     [Arel.sql("COUNT(*)"), Arel.sql(self.class.sanitize_sql_array(done))]
@@ -277,9 +302,16 @@ class Deck < ApplicationRecord
   def one_deck_per_word_list
     return if word_list_id.blank?
 
-    sibling = Deck.where(user_id:, word_list_id:, type:).where.not(id:)
+    sibling =
+      Deck.where(user_id:, word_list_id:, type:, snippet_id:).where.not(id:)
     return unless sibling.exists?
 
     errors.add(:base, "This deck is already in your decks")
+  end
+
+  def snippet_of_word_list
+    return if snippet.word_list == word_list
+
+    errors.add(:snippet, "must be from the deck's word list")
   end
 end
