@@ -2,12 +2,15 @@
 
 module Views
   module Catalog
+    # A public deck's preview, or a listed source's through its preview
+    # deck.
     class Show < Views::Base
-      attr_accessor :deck
+      attr_accessor :deck, :source
 
-      def initialize(deck:)
+      def initialize(deck:, source: nil)
         super()
         self.deck = deck
+        self.source = source
       end
 
       def view_template
@@ -73,7 +76,7 @@ module Views
       def member? = current_user.logged_in? && !current_user.guest?
 
       def render_try_button
-        form_with(url: try_catalog_path(deck), method: :post) do |form|
+        form_with(url: try_path, method: :post) do |form|
           timezone_field(form)
           form.button("Try This Deck", class: button_class(:primary))
         end
@@ -95,10 +98,18 @@ module Views
       def render_copy_button
         button_to(
           "Add to My Decks",
-          copy_catalog_path(deck),
+          copy_path,
           method: :post,
           class: button_class(:primary),
         )
+      end
+
+      def try_path
+        source ? try_catalog_source_path(source) : try_catalog_path(deck)
+      end
+
+      def copy_path
+        source ? copy_catalog_source_path(source) : copy_catalog_path(deck)
       end
 
       def render_login_link

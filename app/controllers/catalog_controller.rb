@@ -6,7 +6,8 @@ class CatalogController < ApplicationController
   skip_before_action(:authenticate_user, only: [:index, :show, :try])
 
   def index
-    deck_sections = DeckSection.for(Deck.publicly_visible)
+    deck_sections =
+      DeckSection.for(Deck.publicly_visible, sources: Source.listed)
     render(Views::Catalog::Index.new(deck_sections:))
   end
 

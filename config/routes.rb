@@ -7,6 +7,10 @@ Rails.application.routes.draw do
   root to: "welcome#index"
 
   resource :account, only: [:new, :create, :show, :update, :destroy]
+  resources :catalog_sources, path: "catalog/sources", only: [:show] do
+    post :copy, on: :member
+    post :try, on: :member
+  end
   resources :catalog, only: [:index, :show] do
     post :copy, on: :member
     post :try, on: :member
@@ -34,6 +38,7 @@ Rails.application.routes.draw do
     resource :deck, only: [:create], controller: "source_decks"
     resources :snippets, only: [:new, :create]
     resources :readers, only: [:index, :create, :destroy], controller: "source_readers"
+    resource :listing, only: [:create, :destroy], controller: "source_listings"
   end
 
   get "guide", to: "pages#guide"

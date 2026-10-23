@@ -84,6 +84,13 @@ RSpec.describe Compendium::Apply do
     expect(apply(snapshot).losses["source_readers"]).to eq(1)
   end
 
+  it "reports the listings deleted sources take" do
+    snapshot = export
+    create(:source_listing)
+
+    expect(apply(snapshot).losses["source_listings"]).to eq(1)
+  end
+
   it "keeps the owner of a list that exists" do
     list = create(:word_list)
     snapshot = export

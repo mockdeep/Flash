@@ -60,6 +60,11 @@ class User < ApplicationRecord
       .find_or_create_by!(type: "ReadingDeck", word_list:, snippet:)
   end
 
+  # This user's deck for a source's first section, made if need be.
+  def deck_starting(source)
+    reading_deck_over(source.word_list, snippet: source.first_section)
+  end
+
   # This user's deck for a catalog or shared deck: the deck itself, a copy of
   # a Basic or Music deck, or any deck over a language deck's word_list.
   def deck_for(deck)

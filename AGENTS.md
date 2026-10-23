@@ -236,6 +236,7 @@ end
 - `Subscription` - Payment/subscription info, belongs to user.
 - `Snippet` - One section of a source, feeding the source's word_list (`belongs_to :source`, required; destroyed with it; `word_list` is the source's). Has an optional `heading` (and its `heading_translation`) and a `body`, kept as written; `#title` joins the source's title and the heading for reports. The heading is also a sentence of its own (role `heading`, first in the snippet), so its words are processed and get cards like the body's; `#heading_paragraph` gives it with that sentence, and `#paragraphs` leaves it out. `#sentences_with_front_matter` is its sentences after its source's front matter: what processing (`snippets:process ID=…`), review, Finish, Spell and Attach work through, so the source's title and author are done along with whichever snippet comes first. The body is capped at `Snippet::MAX_BODY` characters (processing costs LLM calls per sentence). `has_many :sentences`, ordered by `position`. `#status` is `:new` or `:finished` when every sentence is, and `:in_progress` otherwise. Admins add snippets from a source's page (`/sources/:id/snippets/new`, `SnippetsController`, `Snippets::Create`), in production or locally; processing happens locally.
 - `Source` - Where a word_list's snippets come from (an article, a book, a drawer of scraps), one per word_list (`belongs_to :word_list`, unique; `WordList has_one :source`). Holds what its snippets share: `title` (and its optional `title_translation`, which `Deck#name_translation` returns, shown under the deck's name wherever it appears), `author`, `source_url`, and a `license` (a key of `Source::LICENSES`, defaulting to `all_rights_reserved`; `#shareable?` decides who else may read it). `has_many :snippets`, oldest first, `has_many :readers` (`SourceReader`), and `has_many :front_matter`: its title and author as sentences of their own (`SnippetSentence`), made by `Sources::Create`. `#readable_by?(user)`: the list's owner, a reader let in, or anyone when the license is `shareable?`. `#status` is `:new` or `:finished` when every snippet and its front matter is, and `:in_progress` otherwise; `#studyable?` once any snippet is finished. Its list must be in a language snippets can be processed in (`Language`: Mandarin or Portuguese, chosen on the sources form), which `#language` returns. Admins add sources at `/sources` (`SourcesController`, `Sources::Create`, which makes the word_list, named after the source's title).
+- `SourceListing` - A source an admin has listed in the catalog (`source.listing`, `#listed?`, `Source.listed`), unique on `source_id`. Production-only, like `SourceReader`: publishing decides who sees the content rather than being part of it, so it never syncs, and a push that deletes a source reports the listing it takes.
 - `SourceReader` - A user an admin has let read a source whatever its license (`source.readers`), unique on `[source_id, user_id]`. Production-only user data: not in the compendium snapshot, and removed with its source or user.
 - `SnippetSentence` - One sentence of a source (`belongs_to :source`, always): a line of a snippet's body, a snippet's heading, or the source's title or author, its **front matter**, which belong to no snippet. `role` says which (`title` / `author` / `heading` / `body`; `#title?`, `#author?`, `#heading?`, `#front_matter?`), and a check constraint keeps `snippet_id` empty exactly for front matter. Positions run from 0 within a snippet (heading first), unique on `[snippet_id, position]` by a constraint deferred to the end of the transaction, so a push can shift them; front matter is unique on `[source_id, position]`. `tokens` (jsonb) holds the pieces it was cut into, in order: each token's `text` as written (traditional stays traditional) and, for a word, the `sense_id` it is studied as; punctuation and other non-words carry no `sense_id`, nor does a word the segmenter skipped, which keeps why as `skip` (a Portuguese text's names English leaves as they are, people's or places', `"name"`, and other names and titles left in another language, `"foreign"`). `#status` is `:new` with no tokens, `:finished` once every Han token has a `sense_id` and no token carries other keys, and `:in_progress` between.
 **`WordList` languages:** `LANGUAGES` (on `WordList`) maps every individual ISO 639-2 language to its display name, keyed by shortest available code per BCP 47 ("zh", not "zho"; "tlh" works). Nothing in the app creates a word list any more — the deck form has no Language option — so the validation guards what the seed account and catalog copies carry.
@@ -388,7 +389,8 @@ app/
 │   ├── guide_reading.rb          # Guide #reading section: sample Read-tab words in each state
 │   ├── guide_rounds.rb           # Guide #rounds section: one card (花) through rounds 1–3
 │   ├── card_reading.rb           # Pronunciation/pinyin gloss (rendered inside CardFront on reveal)
-│   ├── catalog_toggle_button.rb  # Publish / unpublish a deck to the public catalog
+│   ├── catalog_rail_card.rb      # A catalog rail card: a public deck, or a listed source through its preview deck
+│   ├── catalog_toggle_button.rb  # Add / remove a deck or source to the catalog, given its listing path
 │   ├── deck_rail.rb              # A `DeckSection` as a heading (linking to its `#anchor`, e.g. `/catalog#mandarin`) over a sideways-scrolling rail (`rail` controller); the block fills it with cards (decks page + catalog)
 │   ├── deck_texts.rb             # "Source" block under the card preview (catalog + share preview): title / author / license, marked not included when unshareable
 │   ├── demo_banner.rb            # Demo-mode banner
@@ -435,6 +437,7 @@ app/
 │   ├── cards_controller.rb            # Single-card edit / destroy (turbo streams; via ProjectsCards)
 │   ├── catalog_controller.rb          # Public catalog browse / preview / copy / try (the demo)
 │   ├── catalog_listings_controller.rb # Publish / unpublish a deck to the catalog
+│   ├── catalog_sources_controller.rb  # A listed source's catalog preview / copy / try (first section)
 │   ├── concerns/
 │   │   ├── demo_session.rb            # Demo guest-session helpers
 │   │   └── projects_cards.rb          # save_card/destroy_card → Decks::FlatCards (flat decks only)
@@ -448,6 +451,7 @@ app/
 │   ├── sessions_controller.rb         # Login / logout
 │   ├── shares_controller.rb           # Owner toggle (via :deck_id) + public preview/copy/try (via :token)
 │   ├── snippets_controller.rb         # Snippet new / create under a source (admin)
+│   ├── source_listings_controller.rb  # List / unlist a source in the catalog (admin)
 │   ├── source_readers_controller.rb   # Who may read a source whatever its license: list / grant / revoke (admin)
 │   ├── source_decks_controller.rb     # "Study this list": find-or-create a ReadingDeck over a source's list (admin)
 │   ├── sources_controller.rb          # Source index / show / new / create (admin)
@@ -479,6 +483,7 @@ app/
 │   ├── subscription.rb
 │   ├── snippet.rb          # Source text feeding a word_list
 │   ├── source.rb           # Where a word_list's snippets come from; LICENSES
+│   ├── source_listing.rb   # A source listed in the catalog (production-only)
 │   ├── source_reader.rb    # A user let read a source whatever its license
 │   └── snippet_sentence.rb # Sentence + its tokens, each pointing at a sense
 ├── nulls/
@@ -528,7 +533,7 @@ app/
 │   ├── sources/
 │   │   ├── index.rb          # Admin's sources with their status; "Study this list" once one has a finished snippet
 │   │   ├── new.rb            # Title / language / author / source URL / license
-│   │   └── show.rb           # A source's credit and its snippets with their status; "Add a snippet", "Study this list" and "Share" once a snippet is finished
+│   │   └── show.rb           # A source's credit and its snippets with their status; "Add a snippet", "Study this list", "Share" and the catalog toggle once a snippet is finished
 │   ├── subscriptions/
 │   │   └── show.rb
 │   └── welcome/
@@ -777,6 +782,7 @@ Users can browse and copy public decks at `/catalog`:
 - **Copy**: `POST /catalog/:id/copy` — adds the deck to the current user's account (auth required). A **Basic or Music** deck is duplicated, cards and all. A **language** deck is added *by reference*: the new deck points at the source's `word_list`, and only its cards (the progress anchors) are new — the words themselves are canonical and shared. A `Deck` validation blocks a second deck over the same word_list for one user, so adding twice errors instead of silently duplicating. A Basic or Music copy records the deck it came from in `source_deck_id`.
 - **Already yours**: `User#deck_for(deck)` finds a member's own deck for a catalog or shared deck: the deck itself, a copy (`source_deck_id`), or, for a language deck, any deck over its word_list. The catalog marks such decks "✓ In your decks" (linking to study), and the catalog and share-link previews show "Study (in your decks)" in place of "Add to My Decks".
 - **Try (the demo)**: `POST /catalog/:id/try` → `CatalogController#try` — logged-out visitors and guests get "Try This Deck" on the catalog cards and the preview. It always starts a fresh guest user (`Demo::CreateGuestUser`, capped at `Deck::GUEST_CARD_LIMIT` cards) over the deck and goes to its study page; a guest who tries another deck leaves the old one to the hourly cleanup. `/demo` redirects here.
+- **Listed sources**: a source an admin lists from its page (`Components::CatalogToggleButton` → `SourceListingsController`, once a snippet is finished) shows in its language's rail among the public decks, by name, through `Source#preview_deck` (an unsaved `ReadingDeck` over its whole list, for its cards, count and texts). Its card (`Components::CatalogRailCard`, which renders every catalog card) and preview (`/catalog/sources/:id`, `CatalogSourcesController`, rendering `Views::Catalog::Show` with `source:`) work like a deck's, but **Add** and **Try** start at the source's first section (`User#deck_starting`, `Source#first_section`; `Demo::CreateGuestUser` takes `source:`).
 - Deck visibility is controlled by `deck.visibility` (`"public"` / `"private"`)
 - **Admins** publish/unpublish a deck to the catalog from the deck-show page (`Components::CatalogToggleButton` → `CatalogListingsController#create`/`#destroy`, which flips `visibility`). Non-admins have no visibility UI.
 
@@ -917,7 +923,7 @@ The compendium can be reviewed directly, not only through snippets. Both tools r
 
 The compendium tables (`Compendium::TABLES`: entries, senses, sense_examples, word_lists, sense_memberships, sources, snippets, snippet_sentences) move between a local database and production as a **snapshot**: one CSV per table under `tmp/compendium/`, streamed with `COPY`. Users, decks, cards and learner data never leave production. Production carries no sync code; both tasks run locally and fetch production's `DATABASE_URL` from `heroku` each run.
 - **`rails compendium:pull`**: refuses if the local compendium differs from what the last pull or push left (`FORCE=true` discards it), then exports production, runs `db:reset`, and loads the snapshot with every word list given to the seed admin. A plain `db:reset` never touches production.
-- **`rails compendium:push`**: refuses while any snippet or source's front matter is `:in_progress` (a `:new` one travels untouched), both databases have the same `schema_migrations`, `COMPENDIUM_USERNAME` names a production admin, and production still matches the last pull's checksum. Then it applies the local snapshot to production in one transaction and prints the adds / updates / deletes per table plus the learner data the deletes take (`Apply::LOSSES`: skill_scores, sense_distractors, source_readers). It rolls back unless `DRY_RUN=false`.
+- **`rails compendium:push`**: refuses while any snippet or source's front matter is `:in_progress` (a `:new` one travels untouched), both databases have the same `schema_migrations`, `COMPENDIUM_USERNAME` names a production admin, and production still matches the last pull's checksum. Then it applies the local snapshot to production in one transaction and prints the adds / updates / deletes per table plus the learner data the deletes take (`Apply::LOSSES`: skill_scores, sense_distractors, source_readers, source_listings). It rolls back unless `DRY_RUN=false`.
 - **Owners**: `word_lists.user_id` is never in a snapshot. Apply never changes an existing list's owner, and gives new lists to `COMPENDIUM_USERNAME`.
 - **Checksum**: kept under `compendium_checksum` in `ar_internal_metadata`, updated by every pull and committed push.
 - **Specs** run Export / Load / Apply / Push against the one test database; only the rake glue in `lib/tasks/compendium.rake` is unspecced.

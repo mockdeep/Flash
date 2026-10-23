@@ -233,6 +233,22 @@ RSpec.describe User do
     end
   end
 
+  describe "#deck_starting" do
+    it "makes the user's deck for the source's first section" do
+      snippet = create(:snippet, :finished)
+      user = create(:user)
+
+      expect(user.deck_starting(snippet.source).snippet).to eq(snippet)
+    end
+
+    it "reuses the deck the user already has for it" do
+      snippet = create(:snippet, :finished)
+      deck = default_user.deck_starting(snippet.source)
+
+      expect(default_user.deck_starting(snippet.source)).to eq(deck)
+    end
+  end
+
   describe "#deck_for" do
     it "returns the deck itself when the user owns it" do
       deck = create(:deck)

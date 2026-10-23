@@ -27,6 +27,42 @@ RSpec.describe CatalogController do
       expect(rendered).to have_text("Public Deck")
     end
 
+    def listed_source
+      snippet = create(:snippet, :finished, word_list: create(:word_list))
+      create(:source_listing, source: snippet.source).source
+    end
+
+    it "links a listed source's name to its preview" do
+      source = listed_source
+
+      get(catalog_index_path)
+
+      expect(rendered).to have_link(href: catalog_source_path(source))
+    end
+
+    it "offers a visitor a try of a listed source" do
+      source = listed_source
+
+      get(catalog_index_path)
+
+      expect(rendered)
+        .to have_css("form[action='#{try_catalog_source_path(source)}']")
+    end
+
+    def public_reading_deck(name)
+      create(:reading_deck, user: create(:user), visibility: "public", name:)
+    end
+
+    it "sorts listed sources among a language's public decks by name" do
+      ["Zebra", "Apple"].each { public_reading_deck(it) }
+      listed_source.word_list.update!(name: "Mango")
+
+      get(catalog_index_path)
+
+      expect(rendered.all(".rail-title a").map(&:text))
+        .to eq(["Apple", "Mango", "Zebra"])
+    end
+
     it "groups public decks into sections" do
       public_deck
       owner = create(:user)

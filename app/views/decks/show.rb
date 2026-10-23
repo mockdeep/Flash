@@ -67,10 +67,20 @@ module Views
           render_study_link unless empty?
           div(class: "deck-show-actions__secondary") do
             render_share_button unless deck.shared?
-            render(Components::CatalogToggleButton.new(deck:)) if admin_owner?
+            render_catalog_button if admin_owner?
             render_replace_link if deck.replaceable?
           end
         end
+      end
+
+      def render_catalog_button
+        render(
+          Components::CatalogToggleButton.new(
+            listed: deck.publicly_visible?,
+            path: deck_catalog_listing_path(deck),
+            confirm: t("catalog_listings.destroy.confirm"),
+          ),
+        )
       end
 
       def render_study_link

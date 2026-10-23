@@ -19,6 +19,7 @@ class Source < ApplicationRecord
            dependent: :destroy,
            inverse_of: :source
   has_many :readers, class_name: "SourceReader", dependent: :delete_all
+  has_one :listing, class_name: "SourceListing", dependent: :delete
   # Its title and author as sentences of their own, so their words are
   # studied too.
   has_many :front_matter,
@@ -26,6 +27,8 @@ class Source < ApplicationRecord
            class_name: "SnippetSentence",
            dependent: :delete_all,
            inverse_of: :source
+
+  scope :listed, -> { joins(:listing) }
 
   validates :word_list, :title, presence: true
   validates :word_list_id, uniqueness: true
@@ -35,6 +38,14 @@ class Source < ApplicationRecord
   validate(:supported_language)
 
   def language = Language.for(word_list.language)
+  def listed? = listing.present?
+
+  # Where a learner adding the source starts.
+  def first_section = snippets.studyable.first
+
+  # An unsaved deck over the whole list, which the catalog shows the source
+  # through: its cards, its count and its texts.
+  def preview_deck = ReadingDeck.new(user: word_list.user, word_list:)
   def license_name = LICENSES[license][:name]
   def license_url = LICENSES[license][:url]
   def shareable? = LICENSES[license].fetch(:shareable, false)
