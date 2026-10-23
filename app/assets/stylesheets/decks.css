@@ -160,10 +160,6 @@
   background: var(--stripe-small);
 }
 
-.rail-card--set-start {
-  margin-left: 0.9rem;
-}
-
 .rail-divider {
   flex: 0 0 3px;
   align-self: stretch;

@@ -205,6 +205,24 @@ RSpec.describe Deck do
 
       expect(described_class.ordered).to eq([alpha, zebra])
     end
+
+    # The last section's deck is made first, so deck order can't pass for
+    # source order.
+    def section_decks_over(whole)
+      snippets = create_list(:snippet, 2, word_list: whole.word_list)
+      decks =
+        snippets.reverse.map do |snippet|
+          create(:reading_deck, word_list: whole.word_list, snippet:)
+        end
+      decks.reverse
+    end
+
+    it "puts a source's section decks in source order after the whole" do
+      whole = create(:reading_deck)
+      sections = section_decks_over(whole)
+
+      expect(described_class.ordered).to eq([whole, *sections])
+    end
   end
 
   describe ".goal_unmet_today" do

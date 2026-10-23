@@ -46,6 +46,24 @@ RSpec.describe DeckSection do
     end
   end
 
+  describe "#card_count" do
+    def section_of(decks) = described_class.new(name: "Mandarin", decks:)
+
+    it "counts a source's section decks once" do
+      word_list = create(:word_list)
+      snippets = create_list(:snippet, 2, word_list:)
+      snippets.each { |snippet| create(:reading_deck, word_list:, snippet:) }
+
+      expect(section_of(Deck.all).card_count).to eq(1)
+    end
+
+    it "counts each flat deck" do
+      create_list(:deck, 2)
+
+      expect(section_of(Deck.all).card_count).to eq(2)
+    end
+  end
+
   describe "#first_unmet" do
     it "returns the first deck by name still under today's goal" do
       create(:deck, name: "Zebra")
