@@ -216,6 +216,21 @@ RSpec.describe User do
 
       expect(deck.user.reading_deck_over(deck.word_list)).to eq(deck)
     end
+
+    it "creates a deck for a snippet of the list" do
+      user = create(:user)
+      snippet = create(:snippet)
+
+      expect(user.reading_deck_over(snippet.word_list, snippet:))
+        .to have_attributes(snippet:)
+    end
+
+    it "keeps a snippet's deck apart from the whole list's" do
+      snippet = create(:snippet)
+      deck = create(:reading_deck, word_list: snippet.word_list, snippet:)
+
+      expect(deck.user.reading_deck_over(deck.word_list)).not_to eq(deck)
+    end
   end
 
   describe "#deck_for" do

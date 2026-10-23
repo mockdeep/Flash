@@ -55,9 +55,9 @@ class User < ApplicationRecord
     DeckSection.for(decks).lazy.filter_map(&:first_unmet).first
   end
 
-  def reading_deck_over(word_list)
+  def reading_deck_over(word_list, snippet: nil)
     decks.create_with(distractor_pool: "category", study_goal:)
-      .find_or_create_by!(type: "ReadingDeck", word_list:)
+      .find_or_create_by!(type: "ReadingDeck", word_list:, snippet:)
   end
 
   # This user's deck for a catalog or shared deck: the deck itself, a copy of
