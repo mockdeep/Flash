@@ -2,7 +2,7 @@
 
 module Sources
   # Lets a user read a source whatever its license, and gives them a deck
-  # over its word_list to read it from.
+  # for its first section to read it from.
   module Grant
     def self.call(source:, username:)
       user = User.where.not(role: "guest").find_by(username:)
@@ -11,7 +11,7 @@ module Sources
       reader = source.readers.find_or_initialize_by(user:)
       SourceReader.transaction do
         reader.save!
-        user.reading_deck_over(source.word_list)
+        user.deck_starting(source)
       end
 
       Result.new(success: true, record: reader)
