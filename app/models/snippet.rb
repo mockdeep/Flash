@@ -35,6 +35,11 @@ class Snippet < ApplicationRecord
            dependent: :delete_all,
            inverse_of: :snippet
 
+  # A push refuses a snippet in progress, so in production one with a
+  # segmented sentence is finished. Locally it may still be under review.
+  scope :studyable,
+        -> { where(id: SnippetSentence.segmented.select(:snippet_id)) }
+
   validates :source, :body, presence: true
   validates :body, length: { maximum: MAX_BODY }
 
@@ -44,7 +49,7 @@ class Snippet < ApplicationRecord
 
   # What a deck over it is named for: its heading, or its place in its
   # source.
-  def label = heading.presence || (source.snippets.index(self) + 1)
+  def label = heading.presence || (source.snippet_ids.index(id) + 1)
 
   # New or finished when every sentence is; in progress otherwise.
   def status

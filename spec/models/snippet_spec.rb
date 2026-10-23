@@ -30,6 +30,21 @@ RSpec.describe Snippet do
     expect { snippet.word_list.destroy! }.to delete_record(snippet)
   end
 
+  describe ".studyable" do
+    it "includes a snippet with a segmented sentence" do
+      snippet = create(:snippet, :finished)
+
+      expect(described_class.studyable).to include(snippet)
+    end
+
+    it "leaves out a snippet not yet segmented" do
+      snippet = create(:snippet)
+      create(:snippet_sentence, snippet:)
+
+      expect(described_class.studyable).not_to include(snippet)
+    end
+  end
+
   describe "#status" do
     def snippet_with(*token_lists)
       snippet = create(:snippet)

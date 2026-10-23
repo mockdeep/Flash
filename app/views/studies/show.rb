@@ -21,15 +21,7 @@ module Views
           class: "content-container study-page",
           data: study_page_data_with_hanzi,
         ) do
-          if demo
-            render(Components::DemoBanner.new)
-          else
-            link_to("View Deck", deck_path(deck))
-            plain(" | ")
-            link_to("All Decks", decks_path)
-          end
-
-          h1 { with_translation(deck.name, deck.name_translation) }
+          render_header
 
           render(Components::StudyTabs.new) if reading?
 
@@ -77,6 +69,22 @@ module Views
       end
 
       private
+
+      def render_header
+        if demo
+          render(Components::DemoBanner.new)
+        else
+          link_to("View Deck", deck_path(deck))
+          plain(" | ")
+          link_to("All Decks", decks_path)
+        end
+
+        h1 { with_translation(deck.name, deck.name_translation) }
+
+        return if demo || turbo_frame_request?
+
+        render(Components::SectionPicker.new(deck:))
+      end
 
       def goal_reached? = !deck.no_goal? && completed >= study_goal
 

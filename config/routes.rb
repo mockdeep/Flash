@@ -18,6 +18,7 @@ Rails.application.routes.draw do
     resource :catalog_listing, only: [:create, :destroy], controller: "catalog_listings"
     resource :replacement, only: [:new, :create], controller: "replacements"
     resource :script, only: [:update], controller: "deck_scripts"
+    resource :section, only: [:create], controller: "deck_sections"
     resource :share, only: [:create, :destroy], controller: "shares"
     resource :study, only: [:show, :update]
     resources :cards, only: [:update, :destroy]

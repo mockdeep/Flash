@@ -99,6 +99,27 @@ RSpec.describe StudiesController do
       expect(rendered).to have_css("[data-font-hanzi-value='他']")
     end
 
+    def deck_over_sections
+      first = create(:snippet, :finished)
+      create(:snippet, :finished, word_list: first.word_list)
+      deck = create(:reading_deck, word_list: first.word_list)
+      create(:language_card, deck:)
+      deck
+    end
+
+    it "offers the sections of the deck's source" do
+      get(deck_study_path(deck_over_sections))
+
+      expect(rendered).to have_css(".section-picker")
+    end
+
+    it "leaves the section picker out of turbo frame navigations" do
+      deck = deck_over_sections
+      get(deck_study_path(deck), headers: { "Turbo-Frame" => "study" })
+
+      expect(rendered).to have_no_css(".section-picker")
+    end
+
     it "omits the hanzi payload on turbo frame navigations" do
       deck = create(:reading_deck)
       create(:language_card, deck:, front: "他", back: "he; him")
