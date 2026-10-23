@@ -201,20 +201,23 @@ RSpec.describe User do
       user = create(:user)
       word_list = create(:word_list)
 
-      expect(user.reading_deck_over(word_list))
+      expect(user.reading_deck_over(word_list, snippet: nil))
         .to have_attributes(type: "ReadingDeck", word_list:)
     end
 
     it "starts the deck at the user's study goal" do
       user = create(:user, study_goal: 20)
 
-      expect(user.reading_deck_over(create(:word_list)).study_goal).to eq(20)
+      deck = user.reading_deck_over(create(:word_list), snippet: nil)
+
+      expect(deck.study_goal).to eq(20)
     end
 
     it "reuses the deck the user already has over the list" do
       deck = create(:reading_deck)
 
-      expect(deck.user.reading_deck_over(deck.word_list)).to eq(deck)
+      expect(deck.user.reading_deck_over(deck.word_list, snippet: nil))
+        .to eq(deck)
     end
 
     it "creates a deck for a snippet of the list" do
@@ -223,13 +226,6 @@ RSpec.describe User do
 
       expect(user.reading_deck_over(snippet.word_list, snippet:))
         .to have_attributes(snippet:)
-    end
-
-    it "keeps a snippet's deck apart from the whole list's" do
-      snippet = create(:snippet)
-      deck = create(:reading_deck, word_list: snippet.word_list, snippet:)
-
-      expect(deck.user.reading_deck_over(deck.word_list)).not_to eq(deck)
     end
   end
 

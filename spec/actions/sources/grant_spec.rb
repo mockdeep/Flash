@@ -3,13 +3,16 @@
 require "rails_helper"
 
 RSpec.describe Sources::Grant do
-  def grant(username, source: create(:source))
+  # Grant gives a deck for the source's first section, so it needs one.
+  def studyable_source = create(:snippet, :finished).source
+
+  def grant(username, source: studyable_source)
     described_class.call(source:, username:)
   end
 
   describe ".call" do
     it "lets the user read the source" do
-      source = create(:source)
+      source = studyable_source
       user = create(:user, username: "reader")
 
       described_class.call(source:, username: "reader")
@@ -18,7 +21,7 @@ RSpec.describe Sources::Grant do
     end
 
     it "gives the user a reading deck over the source's list" do
-      source = create(:source)
+      source = studyable_source
       user = create(:user, username: "reader")
 
       described_class.call(source:, username: "reader")
@@ -37,8 +40,8 @@ RSpec.describe Sources::Grant do
     end
 
     it "keeps the deck the user already has over the list" do
-      source = create(:source)
-      deck = create(:reading_deck, word_list: source.word_list)
+      source = studyable_source
+      deck = create(:user).deck_starting(source)
       username = deck.user.username
 
       expect { described_class.call(source:, username:) }
@@ -46,7 +49,7 @@ RSpec.describe Sources::Grant do
     end
 
     it "lets a reader in only once" do
-      reader = create(:source_reader)
+      reader = create(:source_reader, source: studyable_source)
       username = reader.user.username
 
       expect { described_class.call(source: reader.source, username:) }

@@ -126,14 +126,12 @@ class Deck < ApplicationRecord
   validates :word_list, presence: true, unless: :flat_cards?
   validates :word_list, absence: true, if: :flat_cards?
   validate(:one_deck_per_word_list, unless: :flat_cards?)
+  # A source is studied a section at a time.
+  validates :snippet, presence: true, if: -> { word_list&.source }
   validate(:snippet_of_word_list, if: :snippet)
 
-  # A source's section decks follow the source, after any over it whole.
-  scope :ordered,
-        lambda {
-          left_joins(:word_list)
-            .order(NAME_SOURCE, Arel.sql("decks.snippet_id NULLS FIRST"))
-        }
+  # A source's section decks follow the source.
+  scope :ordered, -> { left_joins(:word_list).order(NAME_SOURCE, :snippet_id) }
   scope :publicly_visible, -> { where(visibility: "public") }
   scope :recently_studied,
         -> { where.not(last_studied_at: nil).reorder(last_studied_at: :desc) }

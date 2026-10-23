@@ -102,9 +102,7 @@ RSpec.describe StudiesController do
     def deck_over_sections
       first = create(:snippet, :finished)
       create(:snippet, :finished, word_list: first.word_list)
-      deck = create(:reading_deck, word_list: first.word_list)
-      create(:language_card, deck:)
-      deck
+      create(:reading_deck, word_list: first.word_list, snippet: first)
     end
 
     it "offers the sections of the deck's source" do

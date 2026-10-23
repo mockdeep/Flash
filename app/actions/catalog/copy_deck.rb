@@ -37,11 +37,8 @@ module Catalog
 
     def flat_content(source) = { name: source.name, source_deck: source }
 
-    # A deck over a source's list is studied a section at a time: a copy
-    # starts at the deck's section, or the source's first.
     def list_content(source)
-      section = source.snippet || source.source&.first_section
-      { word_list: source.word_list, snippet: section }
+      { word_list: source.word_list, snippet: source.snippet }
     end
 
     def copy_rows(source, card_limit)

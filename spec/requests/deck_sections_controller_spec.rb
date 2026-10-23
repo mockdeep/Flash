@@ -5,9 +5,12 @@ RSpec.describe DeckSectionsController do
     post(deck_section_path(deck), params: { snippet_id: snippet.id })
   end
 
+  # A user's deck for a source's first section, and its second section.
   def deck_with_section(user: default_user)
-    snippet = create(:snippet, :finished)
-    [create(:reading_deck, word_list: snippet.word_list, user:), snippet]
+    first = create(:snippet, :finished)
+    word_list = first.word_list
+    second = create(:snippet, :finished, word_list:)
+    [create(:reading_deck, word_list:, snippet: first, user:), second]
   end
 
   describe "#create" do

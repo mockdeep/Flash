@@ -14,7 +14,7 @@ module Components
     def view_template
       details(class: "section-picker") do
         summary(class: "section-picker__summary") do
-          @deck.snippet ? "Section: #{@deck.snippet.label}" : "Pick a section"
+          "Section: #{@deck.snippet.label}"
         end
         div(class: "section-picker__options") do
           sections.each { |snippet| render_option(snippet) }
