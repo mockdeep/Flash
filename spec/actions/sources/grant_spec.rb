@@ -27,6 +27,15 @@ RSpec.describe Sources::Grant do
         .to have_attributes(type: "ReadingDeck", word_list: source.word_list)
     end
 
+    it "starts the user's deck at the source's first section" do
+      snippet = create(:snippet, :finished)
+      user = create(:user, username: "reader")
+
+      described_class.call(source: snippet.source, username: "reader")
+
+      expect(user.decks.sole.snippet).to eq(snippet)
+    end
+
     it "keeps the deck the user already has over the list" do
       source = create(:source)
       deck = create(:reading_deck, word_list: source.word_list)

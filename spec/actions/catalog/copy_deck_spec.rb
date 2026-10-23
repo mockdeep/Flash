@@ -79,6 +79,27 @@ RSpec.describe Catalog::CopyDeck do
           .to contain_exactly("明白")
       end
 
+      it "starts a copy of a whole source's deck at its first section" do
+        snippet = create(:snippet, :finished)
+        source = create(:reading_deck, word_list: snippet.word_list)
+        result = described_class.call(user: create(:user), deck: source)
+
+        expect(result.record.snippet).to eq(snippet)
+      end
+
+      def second_section_deck
+        first = create(:snippet, :finished)
+        section = create(:snippet, :finished, word_list: first.word_list)
+        create(:reading_deck, word_list: first.word_list, snippet: section)
+      end
+
+      it "copies a section's deck at its section" do
+        source = second_section_deck
+        result = described_class.call(user: create(:user), deck: source)
+
+        expect(result.record.snippet).to eq(source.snippet)
+      end
+
       it "leaves the copy's progress independent of the source" do
         source = public_language_deck
         result = described_class.call(user: create(:user), deck: source)

@@ -31,11 +31,17 @@ module Catalog
         study_goal: user.study_goal,
         distractor_pool: source.distractor_pool,
       }
-      if source.flat_cards?
-        return source.class.new(name: source.name, source_deck: source, **attrs)
-      end
+      content = source.flat_cards? ? flat_content(source) : list_content(source)
+      source.class.new(**attrs, **content)
+    end
 
-      source.class.new(**attrs, word_list: source.word_list)
+    def flat_content(source) = { name: source.name, source_deck: source }
+
+    # A deck over a source's list is studied a section at a time: a copy
+    # starts at the deck's section, or the source's first.
+    def list_content(source)
+      section = source.snippet || source.source&.first_section
+      { word_list: source.word_list, snippet: section }
     end
 
     def copy_rows(source, card_limit)

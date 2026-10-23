@@ -27,6 +27,15 @@ RSpec.describe SourceDecksController do
         .to have_attributes(type: "ReadingDeck", word_list: source.word_list)
     end
 
+    it "starts the deck at the source's first section" do
+      source = admin_source
+      snippet = create(:snippet, :finished, source:)
+
+      post(source_deck_path(source))
+
+      expect(source.word_list.user.decks.last.snippet).to eq(snippet)
+    end
+
     it "reuses the deck the admin already has over the list" do
       source = admin_source
       word_list = source.word_list
