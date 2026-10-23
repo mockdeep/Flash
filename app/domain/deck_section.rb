@@ -31,6 +31,11 @@ class DeckSection
 
   def anchor = name.parameterize
 
+  # A source's decks share a card, so they count once.
+  def card_count
+    decks.where(word_list_id: nil).count + decks.distinct.count(:word_list_id)
+  end
+
   # The first deck in page order still short of today's goal.
   def first_unmet = decks.goal_unmet_today.ordered.first
 end

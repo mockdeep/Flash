@@ -36,7 +36,7 @@ module Components
           deck_section.name
         end
         span(class: "section-meta") do
-          pluralize(deck_section.decks.size, "deck")
+          pluralize(deck_section.card_count, "deck")
         end
       end
     end

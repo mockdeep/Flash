@@ -236,6 +236,77 @@ RSpec.describe DecksController do
       expect(rendered).to have_css(".rail-card--featured", count: 2)
     end
 
+    # Section decks over one source, "Vampiro": "Um", then "Dois".
+    def section_decks(**)
+      first = create(:snippet, heading: "Um")
+      second = create(:snippet, heading: "Dois", word_list: first.word_list)
+      first.word_list.update!(name: "Vampiro")
+      [first, second].map do |snippet|
+        create(:reading_deck, word_list: snippet.word_list, snippet:, **)
+      end
+    end
+
+    def source_card_link(deck)
+      card = ".rail-card:not(.rail-card--featured)"
+      have_css("#{card} a[href='#{deck_study_path(deck)}']")
+    end
+
+    it "shows a source's section decks as one card" do
+      login_as(default_user)
+      section_decks(goal_mode: "none")
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".rail-card", count: 1)
+    end
+
+    it "names a source's card for the source" do
+      login_as(default_user)
+      section_decks(goal_mode: "none")
+
+      get(decks_path)
+
+      expect(rendered).to have_link("Vampiro", exact_text: true)
+    end
+
+    it "names the section on the featured card" do
+      login_as(default_user)
+      section_decks
+
+      get(decks_path)
+
+      expect(rendered).to featured_title("Vampiro · Um")
+    end
+
+    it "opens the first section short of today's goal" do
+      login_as(default_user)
+      first, second = section_decks(study_goal: 1)
+      first.study_days.create!(studied_on: Date.current, completed_count: 1)
+
+      get(decks_path)
+
+      expect(rendered).to source_card_link(second)
+    end
+
+    it "opens the section last studied once every goal is met" do
+      login_as(default_user)
+      _, second = section_decks(goal_mode: "none")
+      second.update!(last_studied_at: 1.hour.ago)
+
+      get(decks_path)
+
+      expect(rendered).to source_card_link(second)
+    end
+
+    it "opens the first section when none was studied" do
+      login_as(default_user)
+      first, = section_decks(goal_mode: "none")
+
+      get(decks_path)
+
+      expect(rendered).to source_card_link(first)
+    end
+
     it "shows filled segments for completed rounds" do
       deck = create(:deck, user: default_user, round: 3, goal_mode: "none")
       create(:basic_card, deck:)

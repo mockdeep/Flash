@@ -417,7 +417,7 @@ app/
 │   ├── text_csv_instructions.rb  # CSV format help block for text decks
 │   └── word_states.rb            # An answered card's words as they now stand, for the Read tab (`word_states_controller.ts`)
 ├── domain/
-│   ├── deck_section.rb           # A section of a set of decks (a user's, or the catalog's): one per language A–Z, then Basic, then Music; `first_unmet` drives Next Deck
+│   ├── deck_section.rb           # A section of a set of decks (a user's, or the catalog's): one per language A–Z, then Basic, then Music; `first_unmet` drives Next Deck; `card_count` (the heading's count) counts a source's decks once
 │   ├── language.rb               # What processing a snippet needs per language: sentence ends, word characters, the segmenter's form and its check, traditional forms or none, readings or none, articles or none, skip reasons, whether words are spaced, prompts (`Language::MANDARIN`, `Language::PORTUGUESE`)
 │   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
 │   └── music_study.rb            # MusicStudy < Study; windows cards into note sequences
@@ -501,7 +501,7 @@ app/
 │   │   ├── index.rb          # Public decks in `DeckSection` rails, each name linking to its preview (mic badge for music decks, 📖 for decks with shareable texts); Try This Deck for visitors and guests
 │   │   └── show.rb           # Deck preview + texts + copy action, or try + log in for visitors and guests (mic badge in header)
 │   ├── decks/
-│   │   ├── index.rb          # Decks in `DeckSection` rails (each language, Basic, Music); each features its first unmet-goal deck, else its most recently studied
+│   │   ├── index.rb          # Decks in `DeckSection` rails (each language, Basic, Music); each features its first unmet-goal deck, else its most recently studied. A source's decks share one card, named for the source, opening its first unmet-goal section deck, else its last studied, else its first
 │   │   ├── new.rb            # Three-way deck-type radio + language select
 │   │   ├── show.rb           # Header + meta (cards / round / language / catalog), Study + share / catalog / replace actions, scrolling cards table, delete box
 │   │   └── replacements/
@@ -859,7 +859,7 @@ The study engine (`app/domain/study.rb`) manages card selection and answer proce
 ### Milestone: Next Deck
 
 When a deck reaches its goal for the day, the milestone's main button moves on to another deck:
-- **Next Deck** links to `User#next_unmet_deck` — the first deck in decks-page order (`DeckSection.for`: language sections A–Z by display name, then Basic, then Music, each by deck name) that `Deck.goal_unmet_today` returns, taking each section's `first_unmet` in turn. That query left-joins `Deck#todays_study_day` (a `has_one` scoped to `Date.current`): a deck with no row today counts as unmet, and otherwise its count is compared against the goal by a SQL copy of `StudyDay#study_goal` (keep the two in sync). Decks in no-goal mode and music decks never count as unmet.
+- **Next Deck** links to `User#next_unmet_deck` — the first deck in decks-page order (`DeckSection.for`: language sections A–Z by display name, then Basic, then Music, each by deck name, a source's section decks in source order after any deck over it whole) that `Deck.goal_unmet_today` returns, taking each section's `first_unmet` in turn. That query left-joins `Deck#todays_study_day` (a `has_one` scoped to `Date.current`): a deck with no row today counts as unmet, and otherwise its count is compared against the goal by a SQL copy of `StudyDay#study_goal` (keep the two in sync). Decks in no-goal mode and music decks never count as unmet.
 - **Reset All Goals** shows instead when every deck has met its goal. It POSTs to `StudyGoalResetsController#create`, which starts a new batch on all the user's decks (`StudyDay#keep_going!`, as Keep Going does) and redirects to the first deck in that order.
 - Hidden in demo mode.
 

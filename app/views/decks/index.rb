@@ -50,23 +50,22 @@ module Views
       def render_rail(section_decks)
         render_featured(section_decks)
 
-        deck_sets(section_decks).each_with_index do |set_decks, set_index|
-          set_decks.each_with_index do |deck, deck_index|
-            set_start = set_index.positive? && deck_index.zero?
-            render_rail_card(deck, set_start:)
-          end
+        unmet_ids = section_decks.goal_unmet_today.ids
+        section_decks.chunk_while { |a, b| same_list?(a, b) }.each do |decks|
+          render_rail_card(card_deck(decks, unmet_ids))
         end
       end
 
-      # Decks sharing a word_list render as one rail card. Nothing creates a
-      # second deck over a set today, so this groups sets of one - it stays
-      # because sharing by reference will make sets real again.
-      def deck_sets(section_decks)
-        section_decks
-          .sort_by(&:name)
-          .chunk_while do |a, b|
-            a.word_list_id.present? && a.word_list_id == b.word_list_id
-          end
+      def same_list?(deck, other)
+        deck.word_list_id.present? && deck.word_list_id == other.word_list_id
+      end
+
+      # A source's decks (one per section) share a card, which opens the
+      # same deck Next Deck would, else the one last studied.
+      def card_deck(decks, unmet_ids)
+        decks.find { unmet_ids.include?(it.id) } ||
+          decks.select(&:last_studied_at).max_by(&:last_studied_at) ||
+          decks.first
       end
 
       # Same order as DeckSection#first_unmet, so the milestone's Next Deck
@@ -87,27 +86,32 @@ module Views
         div(class: "rail-divider")
       end
 
-      def render_rail_card(deck, featured_label: nil, set_start: false)
-        classes = [
-          "rail-card",
-          ("rail-card--featured" if featured_label),
-          ("rail-card--set-start" if set_start),
-        ].compact.join(" ")
+      def render_rail_card(deck, featured_label: nil)
+        classes = ["rail-card", ("rail-card--featured" if featured_label)]
 
-        div(class: classes) do
+        div(class: classes.compact.join(" ")) do
           div(class: "featured-label") { featured_label } if featured_label
           div(class: "rail-type") { deck.type_label }
-          render_rail_title(deck)
+          render_rail_title(deck, featured: featured_label.present?)
           render(Components::RoundProgress.new(deck:))
           render_rail_meta(deck, deck.remaining_count)
         end
       end
 
-      def render_rail_title(deck)
+      # A source's card is named for the source, whichever section it opens;
+      # the featured card names the section.
+      def render_rail_title(deck, featured:)
+        name, name_translation =
+          if deck.snippet && !featured
+            [deck.word_list.name, deck.source.title_translation]
+          else
+            [deck.name, deck.name_translation]
+          end
+
         h3(class: "rail-title") do
-          link_to(deck.name, deck_study_path(deck))
+          link_to(name, deck_study_path(deck))
           catalog_badge if deck.publicly_visible?
-          translation(deck.name_translation)
+          translation(name_translation)
         end
       end
 

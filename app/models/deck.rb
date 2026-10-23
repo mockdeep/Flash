@@ -128,7 +128,12 @@ class Deck < ApplicationRecord
   validate(:one_deck_per_word_list, unless: :flat_cards?)
   validate(:snippet_of_word_list, if: :snippet)
 
-  scope :ordered, -> { left_joins(:word_list).order(NAME_SOURCE) }
+  # A source's section decks follow the source, after any over it whole.
+  scope :ordered,
+        lambda {
+          left_joins(:word_list)
+            .order(NAME_SOURCE, Arel.sql("decks.snippet_id NULLS FIRST"))
+        }
   scope :publicly_visible, -> { where(visibility: "public") }
   scope :recently_studied,
         -> { where.not(last_studied_at: nil).reorder(last_studied_at: :desc) }
