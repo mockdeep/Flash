@@ -3,10 +3,13 @@
 require "rails_helper"
 
 RSpec.describe SourceReadersController do
+  # An admin's source, with a finished section to start a deck at.
   def admin_source
     admin = create(:user, :admin)
     login_as(admin)
-    create(:source, word_list: create(:word_list, user: admin))
+    source = create(:source, word_list: create(:word_list, user: admin))
+    create(:snippet, :finished, source:)
+    source
   end
 
   def grant(source, username)
@@ -105,7 +108,7 @@ RSpec.describe SourceReadersController do
 
     it "keeps the reader's deck" do
       reader = create(:source_reader, source: admin_source)
-      deck = reader.user.reading_deck_over(reader.source.word_list)
+      deck = reader.user.deck_starting(reader.source)
 
       delete(source_reader_path(reader.source, reader))
 

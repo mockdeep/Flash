@@ -3,7 +3,8 @@
 RSpec.describe Components::SnippetReading, type: :view do
   def render_for(*snippets, source: create(:source), **deck_attributes)
     word_list = source.word_list
-    deck = create(:reading_deck, word_list:, **deck_attributes)
+    snippet = create(:snippet, source:)
+    deck = create(:reading_deck, word_list:, snippet:, **deck_attributes)
     Capybara.string(view.render(described_class.new(snippets:, deck:)))
   end
 

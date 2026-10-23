@@ -80,6 +80,15 @@ RSpec.describe Deck do
         .to include("This deck is already in your decks")
     end
 
+    it "needs a snippet over a source's word_list" do
+      source = create(:source)
+      deck = build(:reading_deck, word_list: source.word_list)
+
+      deck.valid?
+
+      expect(deck.errors[:snippet]).to include("can't be blank")
+    end
+
     it "rejects a snippet from another word_list" do
       deck = build(:reading_deck, snippet: create(:snippet))
 
@@ -208,20 +217,20 @@ RSpec.describe Deck do
 
     # The last section's deck is made first, so deck order can't pass for
     # source order.
-    def section_decks_over(whole)
-      snippets = create_list(:snippet, 2, word_list: whole.word_list)
+    def section_decks
+      word_list = create(:word_list)
+      snippets = create_list(:snippet, 2, word_list:)
       decks =
         snippets.reverse.map do |snippet|
-          create(:reading_deck, word_list: whole.word_list, snippet:)
+          create(:reading_deck, word_list:, snippet:)
         end
       decks.reverse
     end
 
-    it "puts a source's section decks in source order after the whole" do
-      whole = create(:reading_deck)
-      sections = section_decks_over(whole)
+    it "puts a source's section decks in source order" do
+      sections = section_decks
 
-      expect(described_class.ordered).to eq([whole, *sections])
+      expect(described_class.ordered).to eq(sections)
     end
   end
 
