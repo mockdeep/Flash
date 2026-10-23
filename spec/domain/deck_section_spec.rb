@@ -44,6 +44,22 @@ RSpec.describe DeckSection do
       section = described_class.for(default_user.decks).last
       expect(section.decks).to eq([deck])
     end
+
+    def sections_with(sources)
+      described_class.for(Deck.none, sources:)
+    end
+
+    it "makes a section for a language only its sources are in" do
+      create(:source_listing)
+
+      expect(sections_with(Source.listed).map(&:name)).to eq(["Mandarin"])
+    end
+
+    it "holds a language's sources in its section" do
+      source = create(:source_listing).source
+
+      expect(sections_with(Source.listed).first.sources).to eq([source])
+    end
   end
 
   describe "#card_count" do
@@ -55,6 +71,15 @@ RSpec.describe DeckSection do
       snippets.each { |snippet| create(:reading_deck, word_list:, snippet:) }
 
       expect(section_of(Deck.all).card_count).to eq(1)
+    end
+
+    it "counts each source" do
+      create(:source)
+      section = described_class.new(
+        name: "Mandarin", decks: Deck.none, sources: Source.all,
+      )
+
+      expect(section.card_count).to eq(1)
     end
 
     it "counts each flat deck" do

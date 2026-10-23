@@ -53,62 +53,19 @@ module Views
       def render_deck_sections
         deck_sections.each do |deck_section|
           render(Components::DeckRail.new(deck_section:)) do
-            deck_section.decks.ordered.each { |deck| render_rail_card(deck) }
+            rail_entries(deck_section).each do |deck, source|
+              render(Components::CatalogRailCard.new(deck:, source:))
+            end
           end
         end
       end
 
-      def render_rail_card(deck)
-        div(class: "rail-card") do
-          div(class: "rail-type") { deck.type_label }
-          render_rail_title(deck)
-          render_rail_meta(deck)
-          if member?
-            render_owned_link(deck)
-          else
-            render_try_button(deck)
-          end
-        end
-      end
-
-      def render_rail_title(deck)
-        h3(class: "rail-title") do
-          link_to(deck.name, catalog_path(deck))
-          music_badge if deck.music?
-          texts_badge if deck.shares_texts?
-          translation(deck.name_translation)
-        end
-      end
-
-      def render_rail_meta(deck)
-        div(class: "rail-meta") do
-          span(class: "catalog-rail-owner") do
-            plain("by #{deck.user.username}")
-            supporter_badge if deck.user.supporter?
-          end
-          span(class: "catalog-rail-count") do
-            pluralize(deck.cards_count, "card")
-          end
-        end
-      end
-
-      def render_owned_link(deck)
-        own_deck = current_user.deck_for(deck)
-        return unless own_deck
-
-        link_to(
-          "✓ In your decks",
-          deck_study_path(own_deck),
-          class: "catalog-rail-owned",
-        )
-      end
-
-      def render_try_button(deck)
-        url = try_catalog_path(deck)
-        form_with(url:, class: "catalog-rail-try") do |form|
-          timezone_field(form)
-          form.button("Try This Deck", class: button_class(:primary, :compact))
-        end
+      # Public decks and listed sources, by name; a source shows through its
+      # preview deck.
+      def rail_entries(deck_section)
+        decks = deck_section.decks.ordered.map { [it, nil] }
+        sources = deck_section.sources.map { [it.preview_deck, it] }
+        (decks + sources).sort_by { |deck, _| deck.name }
       end
 
       def member? = current_user.logged_in? && !current_user.guest?

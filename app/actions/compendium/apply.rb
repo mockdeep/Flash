@@ -15,6 +15,7 @@ module Compendium
       "sense_distractors" =>
         [["sense_id", "senses"], ["distractor_sense_id", "senses"]],
       "source_readers" => [["source_id", "sources"]],
+      "source_listings" => [["source_id", "sources"]],
     }.freeze
 
     Report =

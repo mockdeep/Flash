@@ -55,6 +55,17 @@ module Views
         )
         share_path = source_readers_path(source)
         link_to("Share", share_path, class: button_class(:ghost))
+        render_catalog_button
+      end
+
+      def render_catalog_button
+        render(
+          Components::CatalogToggleButton.new(
+            listed: source.listed?,
+            path: source_listing_path(source),
+            confirm: t("source_listings.destroy.confirm"),
+          ),
+        )
       end
 
       def render_table

@@ -6,6 +6,10 @@ FactoryBot.define do
     sequence(:title, 100) { |n| "Source #{n}" }
   end
 
+  factory(:source_listing) do
+    source
+  end
+
   factory(:source_reader) do
     source
     user

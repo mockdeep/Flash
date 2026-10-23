@@ -51,6 +51,12 @@ en:
     destroy:
       success: "Deck removed from catalog"
       confirm: "Remove this deck from the catalog?"
+  source_listings:
+    create:
+      success: "Source added to catalog"
+    destroy:
+      success: "Source removed from catalog"
+      confirm: "Remove this source from the catalog?"
   cards:
     destroy:
       success: "Card deleted"

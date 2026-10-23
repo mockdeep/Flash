@@ -171,6 +171,25 @@ RSpec.describe SourcesController do
       expect(rendered).to have_link("Share", href: source_readers_path(source))
     end
 
+    it "offers to add a source with a finished snippet to the catalog" do
+      source = own_source(login_admin)
+      finished_snippet(source)
+
+      get(source_path(source))
+
+      expect(rendered).to have_button("Add to Catalog")
+    end
+
+    it "offers to take a listed source out of the catalog" do
+      source = own_source(login_admin)
+      finished_snippet(source)
+      create(:source_listing, source:)
+
+      get(source_path(source))
+
+      expect(rendered).to have_button("Remove from Catalog")
+    end
+
     it "offers nothing to share before a snippet is finished" do
       source = own_source(login_admin)
       create(:snippet, word_list: source.word_list)

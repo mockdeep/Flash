@@ -129,6 +129,61 @@ RSpec.describe Source do
     end
   end
 
+  describe ".listed" do
+    it "includes a source listed in the catalog" do
+      listing = create(:source_listing)
+
+      expect(described_class.listed).to include(listing.source)
+    end
+
+    it "leaves out a source not listed" do
+      source = create(:source)
+
+      expect(described_class.listed).not_to include(source)
+    end
+  end
+
+  describe "#listed?" do
+    it "is true once listed in the catalog" do
+      expect(create(:source_listing).source.listed?).to be(true)
+    end
+
+    it "is false otherwise" do
+      expect(create(:source).listed?).to be(false)
+    end
+  end
+
+  describe "#first_section" do
+    it "is the first snippet with anything to study" do
+      source = create(:source)
+      create(:snippet, source:)
+      studyable = create(:snippet, :finished, source:)
+
+      expect(source.first_section).to eq(studyable)
+    end
+  end
+
+  describe "#preview_deck" do
+    it "is an unsaved reading deck over the whole list" do
+      source = create(:source)
+
+      expect(source.preview_deck)
+        .to have_attributes(new_record?: true, word_list: source.word_list)
+    end
+
+    it "belongs to the list's owner" do
+      source = create(:source)
+
+      expect(source.preview_deck.user).to eq(source.word_list.user)
+    end
+  end
+
+  it "takes its listing with it" do
+    listing = create(:source_listing)
+
+    expect { listing.source.destroy! }.to delete_record(listing)
+  end
+
   describe "#studyable?" do
     it "is true once a snippet is finished" do
       snippet = create(:snippet, :finished)

@@ -9,6 +9,13 @@ RSpec.describe Demo::CreateGuestUser do
       deck
     end
 
+    it "starts a guest trying a source at its first section" do
+      snippet = create(:snippet, :finished)
+      result = described_class.call(source: snippet.source, time_zone: "UTC")
+
+      expect(result.deck).to have_attributes(user: result.user, snippet:)
+    end
+
     it "creates a persisted guest user" do
       deck = demo_deck_with_cards
       result = described_class.call(deck:, time_zone: "UTC")

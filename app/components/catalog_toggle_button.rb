@@ -1,16 +1,20 @@
 # frozen_string_literal: true
 
 module Components
+  # Adds a deck or a source to the catalog, or takes it out, through its
+  # listing route.
   class CatalogToggleButton < Components::Base
-    attr_accessor :deck
+    attr_accessor :listed, :path, :confirm
 
-    def initialize(deck:)
+    def initialize(listed:, path:, confirm:)
       super()
-      self.deck = deck
+      self.listed = listed
+      self.path = path
+      self.confirm = confirm
     end
 
     def view_template
-      deck.publicly_visible? ? render_remove_button : render_add_button
+      listed ? render_remove_button : render_add_button
     end
 
     private
@@ -18,17 +22,16 @@ module Components
     def render_add_button
       button_to(
         "Add to Catalog",
-        deck_catalog_listing_path(deck),
+        path,
         method: :post,
         class: button_class(:secondary, :compact),
       )
     end
 
     def render_remove_button
-      confirm = t("catalog_listings.destroy.confirm")
       button_to(
         "Remove from Catalog",
-        deck_catalog_listing_path(deck),
+        path,
         method: :delete,
         class: button_class(:ghost, :compact),
         form: { data: { turbo_confirm: confirm } },
