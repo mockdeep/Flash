@@ -62,7 +62,8 @@ module Compendium
         `traditional` change. A new reading or article moves the sense to
         the entry that has it.
       - add: `headword`, `reading` (none in a language without readings),
-        `gloss`, and `article` for a noun that takes one: a new sense.
+        `gloss`, `article` for a noun that takes one, and `traditional` in
+        a language with traditional forms: a new sense.
       - remove: `sense`, once no token or list uses it.
       - attach: `sense`, `list_id` and `category`; detach: `sense` and
         `list_id`.

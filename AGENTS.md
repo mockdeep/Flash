@@ -333,6 +333,7 @@ app/
 │   │   ├── refine.rb             # `rails compendium:refine`: batches longest unreviewed first, writes kept suggestions, marks reviewed
 │   │   ├── refine_prompts.rb     # The refiner's system prompts, plus a language's own rules and categories
 │   │   ├── snapshot.rb           # One CSV per table; checksum / empty?
+│   │   ├── suggestions.rb        # The refiner's suggestion files: apply / dismiss one, list the stale
 │   │   └── staging.rb            # Loads a table's CSV into a temp table for Apply
 │   ├── creem/
 │   │   ├── cancel_subscription.rb
@@ -933,6 +934,7 @@ The compendium can be reviewed directly, not only through snippets. Both tools r
 - **Briefing** (`Compendium::Briefing`): each entry's senses with their lists and categories, examples, and up to `Briefing::USES` sentences that use them (by id, with the sentences either side), plus a cast note (`Compendium::Cast`) for each source those sentences come from, built once a run from the source's finished snippets.
 - **Flag, then confirm**: Sonnet suggests fixes (`Compendium::Flag`): a problem (merged, duplicate, gloss, reading, traditional, category, wrong_pick), a plain-English reason, examples, a confidence and the edits it needs, as data naming a `Compendium::Edit` or `Snippets::Review.repoint` action. Opus keeps or drops each (`Compendium::Confirm`); it cannot amend one. The prompts (`Compendium::RefinePrompts`) add a language's own rules (`Snippets::Prompts#refine`) and categories where it has them.
 - **Output**: kept suggestions go to `tmp/compendium_refine/<language>-<first entry id>.json`, one file per headword, with Opus's reason as `confirmed`. A later review of the same headword replaces its file.
+- **Applying** (`Compendium::Suggestions`, through `bin/rails runner`, walked by the `.claude/skills/compendium-refine` skill): `apply(path, index)` runs a suggestion's edits in one transaction (or `edits:` in their place), naming the senses its own `add` edits make `"new 0"`, `"new 1"`…, giving an added sense its `traditional` form, and finishing a repointed token's snippet again (`Snippets::Finish`) so it can still be pushed. `dismiss(path, index)` drops one unrun. Either takes the suggestion out of its file, and the file goes with its last. A file is stale (`stale(dir)` lists them; `apply` raises `Suggestions::Stale`) once a sense of its entries changed after it was written or one of its entries is gone; applying rewrites the file's time, so its own edits leave the rest fresh.
 - **Stopping**: `LIMIT=…` caps the entries a run reviews; it also ends once every entry has been reviewed this run. Any `Llm::Error` (usually the usage limit) ends it with the batch in hand unmarked, so that batch comes first next time.
 - Marking entries reviewed is a local change, so a pull after a run refuses until it is pushed (or `FORCE=true`).
 
