@@ -62,6 +62,10 @@ module Compendium
       word_list.sense_memberships.find_by!(sense:).destroy!
     end
 
+    def self.recategorize(sense, word_list, category:)
+      word_list.sense_memberships.find_by!(sense:).update!(category:)
+    end
+
     def self.users_of(sense)
       {
         "snippet tokens" => SnippetSentence.pointing_at(sense),
