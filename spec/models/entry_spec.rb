@@ -41,6 +41,44 @@ RSpec.describe Entry do
     expect(build(:entry, headword: "过", reading: "guo")).to be_valid
   end
 
+  describe ".in_review_order" do
+    it "puts the least recently reviewed first" do
+      recent = create(:entry, reviewed_at: 1.day.ago)
+      older = create(:entry, reviewed_at: 2.days.ago)
+
+      expect(described_class.in_review_order).to eq([older, recent])
+    end
+
+    it "puts never-reviewed entries before reviewed ones" do
+      reviewed = create(:entry, reviewed_at: 2.days.ago)
+      unreviewed = create(:entry)
+
+      expect(described_class.in_review_order).to eq([unreviewed, reviewed])
+    end
+
+    it "puts an entry a list holds ahead of an unused one" do
+      unused = create(:entry)
+      listed = create(:sense_membership).sense.entry
+
+      expect(described_class.in_review_order).to eq([listed, unused])
+    end
+
+    it "puts an entry a snippet uses ahead of an unused one" do
+      unused = create(:entry)
+      sense = create(:sense)
+      create(:snippet_sentence, tokens: [{ text: "爱", sense_id: sense.id }])
+
+      expect(described_class.in_review_order).to eq([sense.entry, unused])
+    end
+
+    it "breaks remaining ties by id" do
+      first = create(:entry)
+      second = create(:entry)
+
+      expect(described_class.in_review_order).to eq([first, second])
+    end
+  end
+
   describe "#term" do
     it "puts a noun's article before its headword" do
       entry = build(:entry, headword: "casa", article: "a")
