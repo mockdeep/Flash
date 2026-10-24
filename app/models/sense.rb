@@ -15,4 +15,11 @@ class Sense < ApplicationRecord
   validates :gloss,
             presence: true,
             uniqueness: { scope: [:entry_id, :traditional] }
+
+  # Senses a list holds or a snippet's token points at.
+  def self.used
+    listed = where(id: SenseMembership.select(:sense_id))
+
+    listed.or(where(id: SnippetSentence.select(Snippet::TOKEN_SENSE_IDS)))
+  end
 end

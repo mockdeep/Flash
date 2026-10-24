@@ -12,6 +12,19 @@ class Entry < ApplicationRecord
   validates :headword, presence: true
   validates :headword, uniqueness: { scope: [:language, :reading, :article] }
 
+  # Longest unreviewed first, never-reviewed before all. Among ties, entries
+  # a list or snippet uses go ahead, so the first pass reaches studied words
+  # sooner.
+  def self.in_review_order
+    used = arel_table[:id].in(Sense.used.select(:entry_id).arel)
+
+    order(
+      arel_table[:reviewed_at].asc.nulls_first,
+      Arel::Nodes::Grouping.new(used).desc,
+      :id,
+    )
+  end
+
   # The headword as studied: a noun with its article, "a casa".
   def term(written = headword) = [article, written].compact_blank.join(" ")
 end
