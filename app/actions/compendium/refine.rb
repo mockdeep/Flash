@@ -87,7 +87,7 @@ module Compendium
         language: first.language,
         headword: first.headword,
         entry_ids: entries.map(&:id),
-        reviewed_at: Time.current.iso8601,
+        reviewed_at: Time.current.iso8601(6),
         suggestions: suggestions.map { it.except("headword") },
       }
     end
