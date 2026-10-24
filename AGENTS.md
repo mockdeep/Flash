@@ -320,6 +320,7 @@ app/
 │   ├── compendium.rb             # Lookup / edit / sync namespace: TABLES (parents first), column helpers, Refused
 │   ├── compendium/
 │   │   ├── apply.rb              # Snapshot → database: add / update / delete by id, with a Report
+│   │   ├── briefing.rb           # Prompt for reviewing entries: grouped by headword, each sense's lists and sampled snippet uses
 │   │   ├── edit.rb               # Sense edits: add / revise / remove / attach / detach (Refused)
 │   │   ├── export.rb             # Database → snapshot (COPY TO STDOUT)
 │   │   ├── load.rb               # Snapshot → empty database (Apply, then advance id sequences)
