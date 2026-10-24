@@ -2,27 +2,25 @@
 
 module Compendium
   # The prompt for reviewing a batch of entries, with nothing said twice:
-  # each sentence and word list appears once, and senses point at them.
-  # Entries sharing a headword come together, since a fix often moves a
-  # sense from one to another. A sense shows at most USES of the sentences
-  # that use it, plus how many there are.
+  # each sentence and word list appears once, and senses point at them by
+  # id, the ids a suggested edit names. Entries sharing a headword come
+  # together, since a fix often moves a sense from one to another. A sense
+  # shows at most USES of the sentences that use it, plus how many there
+  # are.
   module Briefing
     USES = 5
 
     def self.call(entries)
       senses = entries.flat_map { it.senses.order(:id) }
       uses = senses.index_with { sample(it) }
-      sentences = uses.values.flatten.uniq
-      lists = holding(senses)
 
       {
-        sentences: numbered(sentences) { |one, sid| sentence_prompt(one, sid) },
-        lists: numbered(lists) { |list, lid| { lid:, name: list.name } },
-        headwords: headword_prompts(entries, uses, sentences, lists),
+        sentences: uses.values.flatten.uniq.map { sentence_prompt(it) },
+        lists: holding(senses).map { { id: it.id, name: it.name } },
+        headwords: headword_prompts(entries, uses),
       }
     end
 
-    def self.numbered(list, &) = list.each_with_index.map(&)
     def self.holding(senses) = senses.flat_map(&:word_lists).uniq
 
     def self.sample(sense)
@@ -32,9 +30,9 @@ module Compendium
         .to_a
     end
 
-    def self.sentence_prompt(sentence, sid)
+    def self.sentence_prompt(sentence)
       {
-        sid:,
+        id: sentence.id,
         source_id: sentence.source_id,
         before: neighbour(sentence, -1),
         text: sentence.body,
@@ -50,34 +48,29 @@ module Compendium
       sentence.snippet.sentences.find_by(position:)&.body
     end
 
-    def self.headword_prompts(entries, uses, sentences, lists)
+    def self.headword_prompts(entries, uses)
       grouped = entries.group_by { [it.language, it.headword] }
 
       grouped.map do |(language, headword), group|
-        prompts = group.map { entry_prompt(it, uses, sentences, lists) }
-
-        { language:, headword:, entries: prompts }
+        { language:, headword:, entries: group.map { entry_prompt(it, uses) } }
       end
     end
 
-    def self.entry_prompt(entry, uses, sentences, lists)
-      senses =
-        entry.senses.order(:id).map do |sense|
-          sense_prompt(sense, uses[sense], sentences, lists)
-        end
+    def self.entry_prompt(entry, uses)
+      senses = entry.senses.order(:id).map { sense_prompt(it, uses[it]) }
 
       { id: entry.id, term: entry.term, reading: entry.reading, senses: }
         .compact
     end
 
-    def self.sense_prompt(sense, sample, sentences, lists)
+    def self.sense_prompt(sense, sample)
       {
         id: sense.id,
         gloss: sense.gloss,
         traditional: sense.traditional,
         examples: sense.sense_examples.order(:id).map { example_prompt(it) },
-        lists: sense.sense_memberships.map { list_use(it, lists) },
-        uses: sample.map { use(sense, it, sentences) },
+        lists: sense.sense_memberships.map { list_use(it) },
+        uses: sample.map { use(sense, it) },
         use_count: SnippetSentence.pointing_at(sense).count,
       }.compact
     end
@@ -86,19 +79,18 @@ module Compendium
       { sentence: example.sentence, translation: example.translation }.compact
     end
 
-    def self.list_use(membership, lists)
-      lid = lists.index(membership.word_list)
-
-      { lid:, category: membership.category }.compact
+    def self.list_use(membership)
+      { list_id: membership.word_list_id, category: membership.category }
+        .compact
     end
 
-    def self.use(sense, sentence, sentences)
+    def self.use(sense, sentence)
       tokens =
         sentence.tokens.each_index.select do |index|
           sentence.tokens[index]["sense_id"] == sense.id
         end
 
-      { sid: sentences.index(sentence), tokens: }
+      { sentence_id: sentence.id, tokens: }
     end
   end
 end

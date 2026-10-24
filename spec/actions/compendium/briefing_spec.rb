@@ -61,14 +61,15 @@ RSpec.describe Compendium::Briefing do
       memberships = create_list(:sense_membership, 2, word_list: list)
 
       expect(briefing(*memberships.map(&:sense)))
-        .to include(lists: [{ lid: 0, name: "HSK 3" }])
+        .to include(lists: [{ id: list.id, name: "HSK 3" }])
     end
 
     it "points a sense at the lists that hold it, with its category" do
       membership = create(:sense_membership, category: "noun")
 
-      expect(sense_of(membership.sense))
-        .to include(lists: [{ lid: 0, category: "noun" }])
+      expect(sense_of(membership.sense)).to include(
+        lists: [{ list_id: membership.word_list_id, category: "noun" }],
+      )
     end
 
     it "gives each sentence once, with its source" do
@@ -77,7 +78,7 @@ RSpec.describe Compendium::Briefing do
       sentence = create(:snippet_sentence, body: "花花", tokens:)
 
       expect(briefing(*senses)[:sentences])
-        .to eq([{ sid: 0, source_id: sentence.source_id, text: "花花" }])
+        .to eq([{ id: sentence.id, source_id: sentence.source_id, text: "花花" }])
     end
 
     it "gives the sentences either side of a use" do
@@ -95,14 +96,15 @@ RSpec.describe Compendium::Briefing do
       create(:front_matter, body: "花", tokens:)
 
       expect(briefing(sense)[:sentences].sole.keys)
-        .to eq([:sid, :source_id, :text])
+        .to eq([:id, :source_id, :text])
     end
 
     it "points a sense at the tokens that use it" do
       sense = create(:sense)
-      use(sense)
+      sentence = use(sense)
 
-      expect(sense_of(sense)).to include(uses: [{ sid: 0, tokens: [0] }])
+      expect(sense_of(sense))
+        .to include(uses: [{ sentence_id: sentence.id, tokens: [0] }])
     end
 
     it "samples a common sense's uses and counts them all" do

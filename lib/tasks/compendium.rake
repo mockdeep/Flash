@@ -36,6 +36,17 @@ module CompendiumTasks
     abort("Push refused: #{e.message}")
   end
 
+  # Runs until every entry is reviewed, LIMIT is reached, or Claude fails,
+  # usually on hitting the usage limit.
+  def refine
+    limit = ENV.fetch("LIMIT", nil)&.then { Integer(it) }
+
+    reviewed = Compendium::Refine.call(limit:) { |line| puts(line) }
+    puts("Reviewed #{reviewed} entries")
+  rescue Llm::Error => e
+    puts("Stopped: #{e.message}")
+  end
+
   def unpushed? = Compendium::Pull.unpushed?(local, DIR, metadata[CHECKSUM])
 
   def export_production(remote)
@@ -109,4 +120,10 @@ namespace(:compendium) do
 
     puts(Compendium::Lookup.call(query, language))
   end
+
+  desc(
+    "Review entries through Claude, longest unreviewed first, writing " \
+    "suggestions to tmp/compendium_refine (LIMIT=… entries)",
+  )
+  task(refine: :environment) { CompendiumTasks.refine }
 end

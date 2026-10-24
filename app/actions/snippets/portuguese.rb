@@ -227,6 +227,7 @@ module Snippets
         .join("\n").freeze,
       categorize: CATEGORIZE,
       categories: CATEGORIES,
+      refine: [GLOSSES, ARTICLES].join("\n").freeze,
     )
   end
 end

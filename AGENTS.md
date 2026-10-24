@@ -321,13 +321,17 @@ app/
 │   ├── compendium/
 │   │   ├── apply.rb              # Snapshot → database: add / update / delete by id, with a Report
 │   │   ├── cast.rb               # A source's narrator and characters with their genders, built finished snippet by snippet (Sonnet)
+│   │   ├── confirm.rb            # Opus keeps or drops each suggestion Flag made
 │   │   ├── briefing.rb           # Prompt for reviewing entries: grouped by headword, each sense's lists and sampled snippet uses
 │   │   ├── edit.rb               # Sense edits: add / revise / remove / attach / detach (Refused)
 │   │   ├── export.rb             # Database → snapshot (COPY TO STDOUT)
+│   │   ├── flag.rb               # Sonnet suggests fixes for a briefed batch of entries
 │   │   ├── load.rb               # Snapshot → empty database (Apply, then advance id sequences)
 │   │   ├── lookup.rb             # `rails compendium:lookup Q=…`: entries for a headword or gloss
 │   │   ├── pull.rb               # `unpushed?` check before a pull resets the database
 │   │   ├── push.rb               # Push guards, then Apply to production
+│   │   ├── refine.rb             # `rails compendium:refine`: batches longest unreviewed first, writes kept suggestions, marks reviewed
+│   │   ├── refine_prompts.rb     # The refiner's system prompts, plus a language's own rules and categories
 │   │   ├── snapshot.rb           # One CSV per table; checksum / empty?
 │   │   └── staging.rb            # Loads a table's CSV into a temp table for Apply
 │   ├── creem/
@@ -602,7 +606,7 @@ lib/
 ├── route_constraints/
 │   └── admin_constraint.rb  # Routes inside `constraints AdminConstraint.new` 404 for non-admins
 └── tasks/
-    ├── compendium.rake      # compendium:pull / compendium:push / compendium:lookup (see Compendium Sync)
+    ├── compendium.rake      # compendium:pull / compendium:push / compendium:lookup / compendium:refine (see Compendium Sync, Compendium Refiner)
     └── snippets.rake        # snippets:process / snippets:review (see Snippet Processing)
 ```
 
@@ -917,9 +921,20 @@ The compendium can be reviewed directly, not only through snippets. Both tools r
   - `revise(sense, gloss:, reading:, article:, traditional:)`: fix a sense's wording or traditional form; a new reading or article moves it to the entry that has it. A Mandarin sense made with `add` has no traditional form until `revise` gives it one.
   - `remove(sense)`: delete a sense, refused (`Edit::Refused`) while any token, list or learner uses it. `revise` and `remove` delete an entry they leave without senses.
   - `attach(sense, word_list, category:)` / `detach(sense, word_list)`: put a sense into a list (after the senses it holds) or take it out.
+  - `recategorize(sense, word_list, category:)`: file a sense under another category in a list.
 - **Articles**: an entry is a headword plus its reading and its `article`. A Portuguese noun carries its definite article ("o", "a", "os", "as", matching its gender and number), so *o capital* and *a capital* are two entries and two cards. `Entry#term` ("a casa") is what the card front, the Read-tab popover, `compendium:lookup` and `snippets:review` show.
 - Splitting a seed sense that merges two meanings (花 "to spend / flower") is `revise` to narrow it, `add` for the other meaning, `attach` where the new sense belongs, and `Snippets::Review.repoint` for tokens; learners keep their progress on the narrowed sense.
 - **Learner data never comes down**, so locally `remove` cannot see progress on a sense and nothing shows what a `revise` changes for learners. The dry-run push is the check: it counts the progress and distractor history any deletes would take.
+
+### Compendium Refiner
+
+`rails compendium:refine` (`Compendium::Refine`) reviews the compendium through Claude, meant to run overnight. It runs locally, on the subscription like snippet processing, and only suggests: nothing changes but `entries.reviewed_at`.
+- **Batches**: the next entries in `Entry.in_review_order` (longest unreviewed first, never-reviewed before all, entries a list or snippet uses ahead), up to `Refine::BATCH`, all of one language, plus every entry sharing their headwords, since a fix often moves a sense between them. Every entry in a batch is marked reviewed once it is done, whether or not anything was suggested, so the run goes round the whole compendium in turn.
+- **Briefing** (`Compendium::Briefing`): each entry's senses with their lists and categories, examples, and up to `Briefing::USES` sentences that use them (by id, with the sentences either side), plus a cast note (`Compendium::Cast`) for each source those sentences come from, built once a run from the source's finished snippets.
+- **Flag, then confirm**: Sonnet suggests fixes (`Compendium::Flag`): a problem (merged, duplicate, gloss, reading, traditional, category, wrong_pick), a plain-English reason, examples, a confidence and the edits it needs, as data naming a `Compendium::Edit` or `Snippets::Review.repoint` action. Opus keeps or drops each (`Compendium::Confirm`); it cannot amend one. The prompts (`Compendium::RefinePrompts`) add a language's own rules (`Snippets::Prompts#refine`) and categories where it has them.
+- **Output**: kept suggestions go to `tmp/compendium_refine/<language>-<first entry id>.json`, one file per headword, with Opus's reason as `confirmed`. A later review of the same headword replaces its file.
+- **Stopping**: `LIMIT=…` caps the entries a run reviews; it also ends once every entry has been reviewed this run. Any `Llm::Error` (usually the usage limit) ends it with the batch in hand unmarked, so that batch comes first next time.
+- Marking entries reviewed is a local change, so a pull after a run refuses until it is pushed (or `FORCE=true`).
 
 ### Compendium Sync
 

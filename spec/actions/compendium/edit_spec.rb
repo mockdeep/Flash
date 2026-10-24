@@ -186,4 +186,16 @@ RSpec.describe Compendium::Edit do
         .to delete_record(membership)
     end
   end
+
+  describe ".recategorize" do
+    it "files the sense under another category in the list" do
+      membership = create(:sense_membership, category: "verb")
+
+      described_class.recategorize(
+        membership.sense, membership.word_list, category: "noun"
+      )
+
+      expect(membership.reload.category).to eq("noun")
+    end
+  end
 end
