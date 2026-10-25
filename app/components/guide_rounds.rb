@@ -21,9 +21,10 @@ module Components
       p do
         <<~TEXT
           A deck is studied in rounds. To finish a round, you get every card
-          right a number of times in a row: once in round 1, twice in round 2,
-          three times in round 3. A wrong answer starts that card's count
-          over. When every card is done, the deck moves to the next round.
+          right a number of times in a row, each on a different day: once in
+          round 1, twice in round 2, three times in round 3. A wrong answer
+          starts that card's count over. When every card is done, the deck
+          moves to the next round.
         TEXT
       end
       p { "Here's one card, 花 (flower), as it changes from round to round." }

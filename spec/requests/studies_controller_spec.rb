@@ -369,6 +369,41 @@ RSpec.describe StudiesController do
       end
     end
 
+    context "when every card left was answered correctly today" do
+      def waiting_deck
+        deck = create(:deck, round: 2, name: "Alpha")
+        create(:basic_card, :correct_today, deck:)
+        deck
+      end
+
+      it "asks to come back tomorrow" do
+        get(deck_study_path(waiting_deck))
+
+        expect(rendered).to have_text("That's all for today")
+      end
+
+      it "links to the next deck under its goal" do
+        deck = waiting_deck
+        next_deck = create(:deck, name: "Zebra")
+        get(deck_study_path(deck))
+
+        expect(rendered)
+          .to have_link("Next Deck", href: deck_study_path(next_deck))
+      end
+
+      it "leaves out Next Deck when no other deck has work today" do
+        get(deck_study_path(waiting_deck))
+
+        expect(rendered).to have_no_link("Next Deck")
+      end
+
+      it "links to all decks" do
+        get(deck_study_path(waiting_deck))
+
+        expect(rendered).to have_link("All Decks", href: decks_path)
+      end
+    end
+
     context "when returning after reaching milestone" do
       it "shows milestone heading" do
         get(deck_study_path(complete_milestone_goal))
@@ -576,6 +611,19 @@ RSpec.describe StudiesController do
         },
       }
       patch(deck_study_path(deck), params:)
+    end
+
+    def wait_for_tomorrow(deck)
+      deck.update!(round: 2)
+      deck.cards.sole.update!(correct_streak: 1, last_correct_at: Time.current)
+    end
+
+    it "offers sign-up once every card left had its turn today" do
+      start_demo
+      wait_for_tomorrow(Deck.last)
+      get(deck_study_path(Deck.last))
+
+      expect(rendered).to have_link("Sign Up Free")
     end
 
     it "shows demo banner on the study page" do

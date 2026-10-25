@@ -25,6 +25,8 @@ class Card < ApplicationRecord
   scope :done, ->(round) { where(correct_streak: round..) }
   scope :not_done, ->(round) { where(correct_streak: ...round) }
   scope :ordered, -> { order(:id) }
+  scope :not_correct_today,
+        -> { where(last_correct_at: [nil, ...Date.current.beginning_of_day]) }
 
   def self.backs = pluck(:back)
 
