@@ -27,8 +27,10 @@ class Lexicon
       Spanish rules: a noun's entry is the noun with the definite article
       that fits its gender and number in `article`: `article` la and
       headword casa. A feminine noun that takes el before a stressed a (el
-      agua) keeps el. A gloss leaves out "the". Many nouns have no article
-      yet; that alone is not a problem to suggest fixing.
+      agua) keeps el. A gloss leaves out "the". A word that is an adjective
+      and also a noun for whoever or whatever has that quality (técnico
+      "technical / technician", enfermo "sick / sick person") stays
+      without an article.
     TEXT
   end
 end
