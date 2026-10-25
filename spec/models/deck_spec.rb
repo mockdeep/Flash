@@ -542,6 +542,14 @@ RSpec.describe Deck do
       expect(deck.study_pool(limit: 5)).to eq([card])
     end
 
+    it "practices only the cards answered correctly today" do
+      deck = create(:deck, round: 2)
+      card = create(:basic_card, :correct_today, deck:)
+      create(:basic_card, deck:)
+
+      expect(deck.study_pool(limit: 5, practice: true)).to eq([card])
+    end
+
     # Late on the 29th in Honolulu, but already the 30th in UTC.
     def honolulu_pool(last_correct_at)
       deck = create(:deck, round: 2)

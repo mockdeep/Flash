@@ -41,6 +41,7 @@ module Views
             render(
               Components::SessionProgress.new(deck:, completed:, study_goal:),
             )
+            render(Components::PracticeLabel.new) if study.practice?
 
             if goal_reached?
               render(Components::SessionMilestone.new(deck:, study_goal:, demo:))

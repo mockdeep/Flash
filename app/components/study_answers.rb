@@ -27,6 +27,8 @@ module Components
 
     def card = study.next_card
 
+    def practice = (true if study.practice?)
+
     def answers
       @answers ||= study.possible_answers
     end
@@ -36,7 +38,8 @@ module Components
     end
 
     def fuzzy_find_answers(stage: nil)
-      FuzzyFindAnswers.new(deck:, card:, answers:, stage:)
+      fields = { "answer[stage]" => stage, "practice" => practice }.compact
+      FuzzyFindAnswers.new(deck:, card:, answers:, fields:)
     end
 
     def render_answers(stage: nil)
@@ -63,7 +66,7 @@ module Components
 
     def answer_params(answer, stage)
       fields = { answer:, card_id: card.id, possible_answers: answers, stage: }
-      { answer: fields.compact }
+      { answer: fields.compact, practice: }.compact
     end
   end
 end

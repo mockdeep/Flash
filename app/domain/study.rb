@@ -15,28 +15,32 @@ class Study
       :card_completed,
       :round_completed,
       :reading_passed,
+      :practice,
     ) do
-      def initialize(reading_passed: false, **rest) = super
+      def initialize(reading_passed: false, practice: false, **rest) = super
       def correct? = correct
       def card_completed? = card_completed
       def round_completed? = round_completed
       def reading_passed? = reading_passed
+      def practice? = practice
     end
 
   attr_accessor :deck, :reading_confirmed
 
-  def self.for(deck:, exclude_card_id: nil, card_id: nil)
+  def self.for(deck:, exclude_card_id: nil, card_id: nil, practice: false)
     klass = deck.music? ? MusicStudy : self
-    klass.new(deck:, exclude_card_id:, card_id:)
+    klass.new(deck:, exclude_card_id:, card_id:, practice:)
   end
 
   # A card_id pins the study to that card's translation question - the render
-  # that follows a passed reading stage.
-  def initialize(deck:, exclude_card_id: nil, card_id: nil)
+  # that follows a passed reading stage. Practice studies the cards answered
+  # correctly today, and a right answer there scores nothing.
+  def initialize(deck:, exclude_card_id: nil, card_id: nil, practice: false)
     self.deck = deck
     self.reading_confirmed = !card_id.nil?
     @exclude_card_id = exclude_card_id
     @card_id = card_id
+    @practice = practice
   end
 
   # Picked on first use: recording an answer never asks, so it skips the
@@ -54,13 +58,15 @@ class Study
 
   def reading_confirmed? = reading_confirmed
 
+  def practice? = @practice
+
   def active_card_threshold
     (2**(deck.round - 1)) * ACTIVE_CARD_THRESHOLD
   end
 
   # Unseen cards come first, in the pool's order; the rest at random.
   def pick_next_card(exclude_card_id:)
-    pool = deck.study_pool(limit: active_card_threshold)
+    pool = deck.study_pool(limit: active_card_threshold, practice: practice?)
     fresh = pool.reject { |card| card.id.to_s == exclude_card_id.to_s }
     fresh.find { |card| card.view_count.zero? } || fresh.sample || pool.sample
   end
@@ -119,6 +125,7 @@ class Study
       card_completed: false,
       round_completed: false,
       reading_passed: correct,
+      practice: practice?,
     )
   end
 
@@ -126,7 +133,7 @@ class Study
     card = deck.card(card_id)
     result_answers = [*possible_answers, card.back].uniq
     if card.back == answer
-      card.record_correct!
+      card.record_correct! unless practice?
       card_completed = card.done?
       round_completed = card_completed && deck.all_done?
       deck.update!(round: deck.round + 1) if round_completed
@@ -139,6 +146,7 @@ class Study
         possible_answers: result_answers,
         card_completed:,
         round_completed:,
+        practice: practice?,
       )
     else
       card.record_miss!(answer)
@@ -151,6 +159,7 @@ class Study
         possible_answers: result_answers,
         card_completed: false,
         round_completed: false,
+        practice: practice?,
       )
     end
   end
