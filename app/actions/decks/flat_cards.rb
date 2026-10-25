@@ -11,6 +11,13 @@ module Decks
 
     # Fields a Replace preserves on a kept card when the CSV omits the column.
     PRESERVED = [:reading, :example_front, :example_back].freeze
+    # A card whose back changes starts over.
+    RESET = {
+      correct_streak: 0,
+      correct_count: 0,
+      view_count: 0,
+      last_correct_at: nil,
+    }.freeze
 
     def build(deck, rows)
       return if rows.empty?
@@ -108,7 +115,7 @@ module Decks
       replace_distractors(card, Array(row[:distractors]))
       return :kept if back_survives
 
-      card.update!(correct_streak: 0, correct_count: 0, view_count: 0)
+      card.update!(RESET)
       :reset
     end
 

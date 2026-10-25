@@ -40,9 +40,27 @@ RSpec.describe SkillScore do
       expect(score.reload)
         .to have_attributes(correct_count: 1, correct_streak: 1, view_count: 1)
     end
+
+    it "notes when it was answered correctly" do
+      score = create(:skill_score)
+
+      freeze_time
+      score.record_correct!
+
+      expect(score.reload.last_correct_at).to eq(Time.current)
+    end
   end
 
   describe "#record_miss!" do
+    it "leaves when it was last answered correctly" do
+      at = 1.hour.ago.floor(6)
+      score = create(:skill_score, last_correct_at: at)
+
+      score.record_miss!
+
+      expect(score.reload.last_correct_at).to eq(at)
+    end
+
     it "resets the streak and counts the view" do
       score = create(:skill_score, correct_count: 2, correct_streak: 2)
 

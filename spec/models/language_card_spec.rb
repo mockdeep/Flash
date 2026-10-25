@@ -188,6 +188,25 @@ RSpec.describe LanguageCard do
 
       expect(card.correct_streak).to eq(1)
     end
+
+    it "notes when each member sense was answered correctly" do
+      card = create(:language_card, back: "he; him")
+
+      freeze_time
+      card.record_correct!
+
+      expect(SkillScore.pluck(:last_correct_at)).to eq([Time.current] * 2)
+    end
+
+    it "updates when a sense was answered correctly" do
+      card = create(:language_card)
+      travel_to(1.day.ago) { card.record_correct! }
+
+      freeze_time
+      card.record_correct!
+
+      expect(SkillScore.sole.last_correct_at).to eq(Time.current)
+    end
   end
 
   describe "#record_miss!" do
