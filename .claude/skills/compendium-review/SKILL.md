@@ -113,7 +113,7 @@ text, so run it in the background and report when it finishes. Lines starting
 ## Reviewing any word
 
 `bin/rails compendium:lookup Q=<headword>` (or `Q=<english>`; it matches headwords
-and searches glosses; add `IN=pt` for Portuguese) shows each sense with its id, the lists that hold it and their category there,
+and searches glosses; add `IN=<code>` for another language, `IN=pt` for Portuguese) shows each sense with its id, the lists that hold it and their category there,
 and how many snippet sentences use it. Fix what is wrong with the edits below.
 
 **Splitting a merged sense** (花 "to spend / flower"): `revise` it down to one

@@ -5,6 +5,11 @@ require "rails_helper"
 RSpec.describe Snippets::Review do
   def sentence_with(*tokens) = create(:snippet_sentence, tokens:)
 
+  def portuguese_sentence_with(*tokens)
+    snippet = create(:snippet, word_list: create(:word_list, language: "pt"))
+    create(:snippet_sentence, snippet:, tokens:)
+  end
+
   def unresolved(text = "爱", **rest)
     { "text" => text, "outcome" => "unresolved", "note" => "wrong tone" }
       .merge(rest.stringify_keys)
@@ -60,7 +65,7 @@ RSpec.describe Snippets::Review do
     end
 
     it "files the sense under the article given" do
-      sentence = sentence_with(unresolved("casa"))
+      sentence = portuguese_sentence_with(unresolved("casa"))
       described_class
         .add_sense(sentence, 0, reading: nil, gloss: "house", article: "a")
 

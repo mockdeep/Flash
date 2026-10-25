@@ -8,6 +8,13 @@ RSpec.describe Snippets::Occurrence do
     build(:snippet_sentence, body:, tokens:)
   end
 
+  def portuguese(word)
+    snippet = create(:snippet, word_list: create(:word_list, language: "pt"))
+    tokens = [{ "text" => word }]
+    sentence = build(:snippet_sentence, snippet:, body: word, tokens:)
+    described_class.new(sentence:, index: 0)
+  end
+
   def occurrence(words: ["我", "爱", "你"], index: 1)
     described_class.new(sentence: sentence(words), index:)
   end
@@ -123,11 +130,7 @@ RSpec.describe Snippets::Occurrence do
     end
 
     it "is nil in a language without one" do
-      snippet = create(:snippet, word_list: create(:word_list, language: "pt"))
-      tokens = [{ "text" => "casa" }]
-      sentence = build(:snippet_sentence, snippet:, body: "casa", tokens:)
-
-      expect(described_class.new(sentence:, index: 0).traditional).to be_nil
+      expect(portuguese("casa").traditional).to be_nil
     end
   end
 
@@ -212,10 +215,11 @@ RSpec.describe Snippets::Occurrence do
     end
 
     it "lists a noun's sense with its article" do
-      entry = create(:entry, headword: "爱", reading: "ài", article: "o")
-      create(:sense, entry:, gloss: "love")
+      entry = create(:entry, language: "pt", headword: "casa", article: "a")
+      create(:sense, entry:, gloss: "house")
 
-      expect(occurrence.word_prompt(0)[:senses].sole).to include(article: "o")
+      expect(portuguese("casa").word_prompt(0)[:senses].sole)
+        .to include(article: "a")
     end
 
     it "lists each sense with its headword and reading" do

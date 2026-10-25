@@ -315,7 +315,7 @@ RSpec.describe LanguageDeck do
     it "matches the headword whatever the article" do
       card = create(:language_card, front: "capital", reading: "a")
       create(:language_card, deck: card.deck, front: "capital", reading: "b")
-      Entry.find_by!(reading: "a").update!(article: "a")
+      Entry.find_by!(reading: "a").update!(language: "pt", article: "a")
 
       expect(card.deck.homograph?(card.deck.card(card.id))).to be(true)
     end

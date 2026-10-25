@@ -33,7 +33,7 @@ module Snippets
 
       # Only a language with articles files a noun under one.
       def sense_article
-        article.presence if language.articles.any?
+        article.presence if language.articles?
       end
 
       # What the judge is shown beside the occurrence.

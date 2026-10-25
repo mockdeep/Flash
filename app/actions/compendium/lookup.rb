@@ -6,17 +6,17 @@ module Compendium
   # snippet sentences point at it. A query is matched against headwords and
   # looked for in glosses, since a Portuguese word reads like English.
   module Lookup
-    def self.call(query, language)
-      entries = matching(query, language)
+    def self.call(query, lexicon)
+      entries = matching(query, lexicon)
       return "Nothing matches #{query}" if entries.empty?
 
       entries.flat_map { |entry| entry_lines(entry) }.join("\n")
     end
 
-    def self.matching(query, language)
+    def self.matching(query, lexicon)
       pattern = "%#{Sense.sanitize_sql_like(query)}%"
       glossed = Sense.where("gloss ILIKE ?", pattern).select(:entry_id)
-      entries = Entry.where(language: language.code).order(:headword, :id)
+      entries = Entry.where(language: lexicon.code).order(:headword, :id)
 
       entries.where(headword: query).or(entries.where(id: glossed))
     end

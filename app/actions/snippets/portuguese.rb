@@ -226,8 +226,6 @@ module Snippets
       judge: [JUDGE_INSTRUCTIONS, GLOSSES, ARTICLES, SEGMENTATION]
         .join("\n").freeze,
       categorize: CATEGORIZE,
-      categories: CATEGORIES,
-      refine: [GLOSSES, ARTICLES].join("\n").freeze,
     )
   end
 end

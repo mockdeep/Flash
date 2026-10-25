@@ -169,8 +169,6 @@ module Snippets
         Policy::SEGMENTATION,
       ].join("\n").freeze,
       categorize: CATEGORIZE,
-      categories: CATEGORIES,
-      refine: [Policy::FUNCTION_WORDS, Policy::READING].join("\n").freeze,
     )
   end
 end

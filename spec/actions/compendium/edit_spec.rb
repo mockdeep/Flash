@@ -82,10 +82,11 @@ RSpec.describe Compendium::Edit do
     end
 
     it "keeps the reading when only the article changes" do
-      sense = create(:sense, entry: love_entry)
-      described_class.revise(sense, article: "o")
+      entry = create(:entry, language: "de", headword: "See", reading: "zeː")
+      sense = create(:sense, entry:)
+      described_class.revise(sense, article: "die")
 
-      expect(sense.reload.entry.reading).to eq("ài")
+      expect(sense.reload.entry.reading).to eq("zeː")
     end
 
     it "removes an entry the move leaves without senses" do

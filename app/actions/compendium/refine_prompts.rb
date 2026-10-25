@@ -3,9 +3,9 @@
 module Compendium
   # The refiner's system prompts. Both steps see the same batch under the
   # same rules, the flagger to find problems and the confirmer to keep only
-  # the suggestions that hold up. A language with rules of its own
-  # (`Language#prompts`) adds them, along with the categories its lists file
-  # words under; any other language is reviewed under the general rules.
+  # the suggestions that hold up. The language's lexicon adds how its
+  # entries are stored (readings, articles), its own rules and the
+  # categories its lists file words under, where it has them.
   module RefinePrompts
     BATCH = <<~TEXT
       The compendium is a dictionary that language learners study as
@@ -49,6 +49,9 @@ module Compendium
       - A suggestion lists every edit it needs, so applying it leaves nothing
         pointing at the wrong sense. A sense to be removed must first lose
         its tokens and lists.
+      - Store a word the way its language stores words: below, or else as
+        the entries beside it are. Leave out a field the language does not
+        use rather than give it an empty value.
       - Explain each suggestion in plain English for a reviewer who may not
         know the language: what is wrong, shown with a sentence where you
         can.
@@ -93,12 +96,25 @@ module Compendium
     def self.confirm(code) = with_language(CONFIRM, code)
 
     def self.with_language(prompt, code)
-      return prompt unless Language.supported?(code)
+      lexicon = Lexicon.for(code)
 
-      prompts = Language.for(code).prompts
-      categories = "Categories: #{prompts.categories.join(", ")}."
+      [prompt, *storage(lexicon), lexicon.refine, categories(lexicon)]
+        .compact.join("\n")
+    end
 
-      [prompt, prompts.refine, categories].join("\n")
+    def self.storage(lexicon)
+      [
+        ("Readings: none; leave `reading` out." unless lexicon.readings),
+        if lexicon.articles?
+          "Articles: #{lexicon.articles.join(", ")}, in `article`, never in " \
+            "the headword."
+        end,
+      ]
+    end
+
+    def self.categories(lexicon)
+      categories = lexicon.categories
+      "Categories: #{categories.join(", ")}." if categories.any?
     end
   end
 end
