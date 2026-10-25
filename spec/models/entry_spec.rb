@@ -98,6 +98,12 @@ RSpec.describe Entry do
       expect(entry.term).to eq("a casa")
     end
 
+    it "joins an article cut short without a space" do
+      entry = build(:entry, headword: "acqua", article: "l'")
+
+      expect(entry.term).to eq("l'acqua")
+    end
+
     it "is the headword alone without an article" do
       expect(build(:entry, headword: "爱").term).to eq("爱")
     end

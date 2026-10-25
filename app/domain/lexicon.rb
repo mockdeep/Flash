@@ -37,26 +37,8 @@ class Lexicon
     readings: false,
     articles: ["der", "die", "das"],
     traditional: false,
-    categories: [
-      "noun-with-article",
-      "conjugated-verb",
-      "infinitive",
-      "imperative-or-participle",
-      "adjective-or-adverb",
-      "pronoun",
-      "preposition",
-      "connector",
-      "expression",
-      "grammar-note",
-    ].freeze,
-    refine: <<~TEXT,
-      German rules: a noun's entry is the noun in the nominative with the
-      article that fits it, so a learner sees its gender: `article` die and
-      headword Arbeit, not der Arbeit (a case form) and not a headword "die
-      Arbeit". A noun used only in the plural takes die. A phrase that is
-      not a noun as a whole (das ist, die ganze Zeit) keeps its words in
-      its headword and takes no article.
-    TEXT
+    categories: German::CATEGORIES,
+    refine: German::RULES,
   )
   # Its lists file words by topic rather than part of speech. Only the A1
   # list's nouns have their articles so far.
@@ -65,34 +47,26 @@ class Lexicon
     readings: false,
     articles: ["el", "la", "los", "las"],
     traditional: false,
-    categories: [
-      "Work & business",
-      "Society & government",
-      "Body & health",
-      "Transport & travel",
-      "Arts & culture",
-      "Education",
-      "Food & drink",
-      "Technology & media",
-      "People & personality",
-      "Home & living",
-      "Nature & environment",
-      "Family & social life",
-      "Emotions & psychology",
-      "Leisure & sport",
-      "Clothing & appearance",
-      "Geography",
-      "General",
-    ].freeze,
-    refine: <<~TEXT,
-      Spanish rules: a noun's entry is the noun with the definite article
-      that fits its gender and number in `article`: `article` la and
-      headword casa. A feminine noun that takes el before a stressed a (el
-      agua) keeps el. A gloss leaves out "the". Many nouns have no article
-      yet; that alone is not a problem to suggest fixing.
-    TEXT
+    categories: Spanish::CATEGORIES,
+    refine: Spanish::RULES,
   )
-  ALL = [MANDARIN, PORTUGUESE, GERMAN, SPANISH].index_by(&:code).freeze
+  # An article cut short before a vowel (l') joins its noun without a
+  # space.
+  ITALIAN = new(
+    code: "it",
+    readings: false,
+    articles: ["il", "lo", "la", "l'", "i", "gli", "le"],
+    traditional: false,
+    categories: Italian::CATEGORIES,
+    refine: Italian::RULES,
+  )
+  ALL = [
+    MANDARIN,
+    PORTUGUESE,
+    GERMAN,
+    SPANISH,
+    ITALIAN,
+  ].index_by(&:code).freeze
 
   def self.for(code)
     ALL.fetch(code) do
