@@ -15,6 +15,7 @@ module StudyCounters
     self.view_count += 1
     self.correct_count += 1
     self.correct_streak += 1
+    self.last_correct_at = Time.current
     save!
   end
 

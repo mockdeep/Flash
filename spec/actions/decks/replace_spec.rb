@@ -14,16 +14,16 @@ RSpec.describe Decks::Replace do
     end
 
     def card_with_progress(deck, front:, back:, **overrides)
-      create(
-        :basic_card,
-        deck:,
-        front:,
-        back:,
+      create(:basic_card, deck:, front:, back:, **progress, **overrides)
+    end
+
+    def progress
+      {
         correct_streak: 2,
         correct_count: 5,
         view_count: 7,
-        **overrides,
-      )
+        last_correct_at: 1.hour.ago,
+      }
     end
 
     def card_fronts(deck)
@@ -113,6 +113,14 @@ RSpec.describe Decks::Replace do
         replace_with(deck, "front,back,category\nQ,New,Math\n")
 
         expect(card.reload.view_count).to eq(0)
+      end
+
+      it "clears when it was last answered correctly" do
+        deck = create(:deck)
+        card = card_with_progress(deck, front: "Q", back: "Old")
+        replace_with(deck, "front,back,category\nQ,New,Math\n")
+
+        expect(card.reload.last_correct_at).to be_nil
       end
 
       it "updates back to the new value" do

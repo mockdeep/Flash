@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_24_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_25_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -37,6 +37,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_24_000000) do
     t.string "type", null: false
     t.datetime "updated_at", null: false
     t.integer "view_count", default: 0, null: false
+    t.datetime "last_correct_at"
     t.index ["deck_id", "front"], name: "index_cards_on_deck_id_and_front", unique: true, where: "(front IS NOT NULL)"
     t.index ["source_card_id"], name: "index_cards_on_source_card_id"
     t.index ["type"], name: "index_cards_on_type"
@@ -133,6 +134,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_24_000000) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.integer "view_count", default: 0, null: false
+    t.datetime "last_correct_at"
     t.index ["sense_id"], name: "index_skill_scores_on_sense_id"
     t.index ["user_id", "sense_id", "skill"], name: "index_skill_scores_on_user_id_and_sense_id_and_skill", unique: true
   end

@@ -13,6 +13,7 @@ class LanguageCard
       LEAST(skill_scores.correct_streak + 1, :round)
     ),
     view_count = skill_scores.view_count + 1,
+    last_correct_at = excluded.last_correct_at,
     updated_at = excluded.updated_at
   SQL
   MISS = <<~SQL.squish
@@ -56,7 +57,12 @@ class LanguageCard
   # streak already past the round, earned in a deck at a higher one, stays.
   def record_correct!
     correct = SkillScore.sanitize_sql_array([CORRECT, { round: deck.round }])
-    score(correct, correct_count: 1, correct_streak: 1)
+    score(
+      correct,
+      correct_count: 1,
+      correct_streak: 1,
+      last_correct_at: Time.current,
+    )
     @correct_streak += 1
   end
 
