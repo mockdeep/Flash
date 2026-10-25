@@ -331,7 +331,7 @@ app/
 │   │   ├── pull.rb               # `unpushed?` check before a pull resets the database
 │   │   ├── push.rb               # Push guards, then Apply to production
 │   │   ├── refine.rb             # `rails compendium:refine`: batches longest unreviewed first, writes kept suggestions, marks reviewed
-│   │   ├── refine_prompts.rb     # The refiner's system prompts, plus a language's own rules and categories
+│   │   ├── refine_prompts.rb     # The refiner's system prompts, plus a language's lexicon: how it stores words, its own rules and categories
 │   │   ├── snapshot.rb           # One CSV per table; checksum / empty?
 │   │   ├── suggestions.rb        # The refiner's suggestion files: apply / dismiss one, list the stale
 │   │   └── staging.rb            # Loads a table's CSV into a temp table for Apply
@@ -355,7 +355,7 @@ app/
 │   │   ├── occurrence.rb         # One word token: its headword, traditional form and the compendium's senses for it
 │   │   ├── portuguese.rb         # Portuguese's prompts (`Snippets::Portuguese::PROMPTS`): words kept in their form, no readings
 │   │   ├── process.rb            # `rails snippets:process`: segments, then resolves, unprocessed sentences in batches
-│   │   ├── prompts.rb            # A language's system prompts per step + categories (`Language#prompts`)
+│   │   ├── prompts.rb            # A language's system prompts per step (`Language#prompts`)
 │   │   ├── proposal.rb           # A proposer's decision for one occurrence (existing / new / missegmented)
 │   │   ├── propose.rb            # Sonnet decides each occurrence
 │   │   ├── record.rb             # Turns a standing proposal into a token outcome; creates entry/sense
@@ -427,7 +427,8 @@ app/
 │   └── word_states.rb            # An answered card's words as they now stand, for the Read tab (`word_states_controller.ts`)
 ├── domain/
 │   ├── deck_section.rb           # A section of a set of decks (a user's, or the catalog's): one per language A–Z, then Basic, then Music; `first_unmet` drives Next Deck; `card_count` (the heading's count) counts a source's decks once
-│   ├── language.rb               # What processing a snippet needs per language: sentence ends, word characters, the segmenter's form and its check, traditional forms or none, readings or none, articles or none, skip reasons, whether words are spaced, prompts (`Language::MANDARIN`, `Language::PORTUGUESE`)
+│   ├── language.rb               # What processing a snippet needs per language: sentence ends, word characters, the segmenter's form and its check, its lexicon, skip reasons, whether words are spaced, prompts (`Language::MANDARIN`, `Language::PORTUGUESE`)
+│   ├── lexicon.rb                # How a language's entries are stored, snippet language or not: readings or none, articles or none, traditional forms or none, list categories, refiner rules (`Lexicon::MANDARIN`, `PORTUGUESE`, `GERMAN`; a plain one for any other)
 │   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
 │   └── music_study.rb            # MusicStudy < Study; windows cards into note sequences
 ├── helpers/
@@ -916,14 +917,14 @@ Snippets are added in the app (see `Snippet`) and processed locally with `rails 
 ### Compendium Review
 
 The compendium can be reviewed directly, not only through snippets. Both tools run locally; the results reach production through `compendium:push`. A Claude Code skill, `.claude/skills/compendium-review/SKILL.md`, walks a session through both kinds of review (a processed snippet, or any word), finishing and pushing; keep it in step with the commands here.
-- **Look up**: `rails compendium:lookup Q=花` lists every Mandarin entry with that headword or a gloss containing the query (`IN=pt` for Portuguese): each sense with its id, its traditional form, the lists that hold it (with the category there) and how many snippet sentences point at it.
+- **Look up**: `rails compendium:lookup Q=花` lists every Mandarin entry with that headword or a gloss containing the query (`IN=<code>` for any other language): each sense with its id, its traditional form, the lists that hold it (with the category there) and how many snippet sentences point at it.
 - **Edit** (`Compendium::Edit`, through `bin/rails runner`):
   - `add(language:, headword:, reading:, gloss:, article: nil)`: a sense, under the entry for that reading and article (the reading matched on its letters, as the pipeline does).
   - `revise(sense, gloss:, reading:, article:, traditional:)`: fix a sense's wording or traditional form; a new reading or article moves it to the entry that has it. A Mandarin sense made with `add` has no traditional form until `revise` gives it one.
   - `remove(sense)`: delete a sense, refused (`Edit::Refused`) while any token, list or learner uses it. `revise` and `remove` delete an entry they leave without senses.
   - `attach(sense, word_list, category:)` / `detach(sense, word_list)`: put a sense into a list (after the senses it holds) or take it out.
   - `recategorize(sense, word_list, category:)`: file a sense under another category in a list.
-- **Articles**: an entry is a headword plus its reading and its `article`. A Portuguese noun carries its definite article ("o", "a", "os", "as", matching its gender and number), so *o capital* and *a capital* are two entries and two cards. `Entry#term` ("a casa") is what the card front, the Read-tab popover, `compendium:lookup` and `snippets:review` show.
+- **Articles**: an entry is a headword plus its reading and its `article`. In a language whose `Lexicon` has articles, a noun carries its definite article in `article`, never in its headword: Portuguese "o", "a", "os", "as" (matching its gender and number), German "der", "die", "das". So *o capital* and *a capital* are two entries and two cards. An `Entry` takes only an article its lexicon lists, and a blank reading or article is stored as none. `Entry#term` ("a casa") is what the card front, the Read-tab popover, `compendium:lookup` and `snippets:review` show.
 - Splitting a seed sense that merges two meanings (花 "to spend / flower") is `revise` to narrow it, `add` for the other meaning, `attach` where the new sense belongs, and `Snippets::Review.repoint` for tokens; learners keep their progress on the narrowed sense.
 - **Learner data never comes down**, so locally `remove` cannot see progress on a sense and nothing shows what a `revise` changes for learners. The dry-run push is the check: it counts the progress and distractor history any deletes would take.
 
@@ -932,7 +933,7 @@ The compendium can be reviewed directly, not only through snippets. Both tools r
 `rails compendium:refine` (`Compendium::Refine`) reviews the compendium through Claude, meant to run overnight. It runs locally, on the subscription like snippet processing, and only suggests: nothing changes but `entries.reviewed_at`.
 - **Batches**: the next entries in `Entry.in_review_order` (longest unreviewed first, never-reviewed before all, entries a list or snippet uses ahead), up to `Refine::BATCH`, all of one language, plus every entry sharing their headwords, since a fix often moves a sense between them. Every entry in a batch is marked reviewed once it is done, whether or not anything was suggested, so the run goes round the whole compendium in turn.
 - **Briefing** (`Compendium::Briefing`): each entry's senses with their lists and categories, examples, and up to `Briefing::USES` sentences that use them (by id, with the sentences either side), plus a cast note (`Compendium::Cast`) for each source those sentences come from, built once a run from the source's finished snippets.
-- **Flag, then confirm**: Sonnet suggests fixes (`Compendium::Flag`): a problem (merged, duplicate, gloss, reading, traditional, category, wrong_pick), a plain-English reason, examples, a confidence and the edits it needs, as data naming a `Compendium::Edit` or `Snippets::Review.repoint` action. Opus keeps or drops each (`Compendium::Confirm`); it cannot amend one. The prompts (`Compendium::RefinePrompts`) add a language's own rules (`Snippets::Prompts#refine`) and categories where it has them.
+- **Flag, then confirm**: Sonnet suggests fixes (`Compendium::Flag`): a problem (merged, duplicate, gloss, reading, traditional, category, wrong_pick), a plain-English reason, examples, a confidence and the edits it needs, as data naming a `Compendium::Edit` or `Snippets::Review.repoint` action. Opus keeps or drops each (`Compendium::Confirm`); it cannot amend one. The prompts (`Compendium::RefinePrompts`) add the language's `Lexicon`: whether it has readings, its articles, its own rules and its categories, where it has them.
 - **Output**: kept suggestions go to `tmp/compendium_refine/<language>-<first entry id>.json`, one file per headword, with Opus's reason as `confirmed`. A later review of the same headword replaces its file.
 - **Applying** (`Compendium::Suggestions`, through `bin/rails runner`, walked by the `.claude/skills/compendium-refine` skill): `apply(path, index)` runs a suggestion's edits in one transaction (or `edits:` in their place), naming the senses its own `add` edits make `"new 0"`, `"new 1"`…, giving an added sense its `traditional` form, and finishing a repointed token's snippet again (`Snippets::Finish`) so it can still be pushed. `dismiss(path, index)` drops one unrun. Either takes the suggestion out of its file, and the file goes with its last. A file is stale (`stale(dir)` lists them; `apply` raises `Suggestions::Stale`) once a sense of its entries changed after it was written or one of its entries is gone; applying rewrites the file's time, so its own edits leave the rest fresh.
 - **Stopping**: `LIMIT=…` caps the entries a run reviews; it also ends once every entry has been reviewed this run. Any `Llm::Error` (usually the usage limit) ends it with the batch in hand unmarked, so that batch comes first next time.

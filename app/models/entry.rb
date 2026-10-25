@@ -1,16 +1,22 @@
 # frozen_string_literal: true
 
-# One word in one language: a headword plus its reading and, for a
-# Portuguese noun, its article, so two readings of the same written form
-# (hai2 / huan2 for the same character) or two genders of one noun
-# (o capital / a capital) are two entries. The compendium's canonical
-# record; word_lists select over it through its senses' memberships.
+# One word in one language: a headword plus its reading and, for a noun in
+# a language whose lexicon has articles, its article, so two readings of
+# the same written form (hai2 / huan2 for the same character) or two
+# genders of one noun (o capital / a capital) are two entries. The
+# compendium's canonical record; word_lists select over it through its
+# senses' memberships.
 class Entry < ApplicationRecord
   has_many :senses, dependent: :restrict_with_exception
 
   validates :language, presence: true, inclusion: { in: WordList::LANGUAGES.keys }
   validates :headword, presence: true
   validates :headword, uniqueness: { scope: [:language, :reading, :article] }
+  validates :article,
+            inclusion: { in: ->(entry) { entry.lexicon.articles } },
+            allow_nil: true
+
+  normalizes :reading, :article, with: ->(value) { value.presence }
 
   # Longest unreviewed first, never-reviewed before all. Among ties, entries
   # a list or snippet uses go ahead, so the first pass reaches studied words
@@ -24,6 +30,8 @@ class Entry < ApplicationRecord
       :id,
     )
   end
+
+  def lexicon = Lexicon.for(language)
 
   # The headword as studied: a noun with its article, "a casa".
   def term(written = headword) = [article, written].compact_blank.join(" ")

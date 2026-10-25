@@ -32,7 +32,7 @@ RSpec.describe LanguageCard do
 
   it "puts a noun's article on the front" do
     card = create(:language_card, front: "casa")
-    Entry.sole.update!(article: "a")
+    Entry.sole.update!(language: "pt", article: "a")
 
     expect(card.deck.card(card.id).front).to eq("a casa")
   end

@@ -15,6 +15,18 @@ RSpec.describe Entry do
     expect(described_class.new).not_to allow_value(nil, "xx").for(:language)
   end
 
+  it "allows an article its language's lexicon has" do
+    expect(build(:entry, language: "de")).to allow_value("die").for(:article)
+  end
+
+  it "rejects an article its language's lexicon lacks" do
+    expect(build(:entry, language: "de")).not_to allow_value("a").for(:article)
+  end
+
+  it "stores a blank reading as none" do
+    expect(build(:entry, reading: "").reading).to be_nil
+  end
+
   it "is unique on headword within a language and reading" do
     create(:entry, headword: "过", reading: "guò")
 

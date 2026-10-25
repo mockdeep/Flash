@@ -4,12 +4,12 @@
 # in: where its sentences end, which characters make a token a word to give
 # a sense, and what to ask a model about it. The segmenter gives each word
 # the form it studies under as `form`, which `form_fits` checks against the
-# word; `piece` cuts a sentence the segmenter fails on twice. A language
-# without `readings` takes new senses with a gloss alone, and a noun in a
-# language with `articles` takes the definite article that fits its form.
-# A language with `traditional` forms gets each word's traditional form
-# from the segmenter too, which `form_fits` checks the same way. `skips`
-# are the
+# word; `piece` cuts a sentence the segmenter fails on twice. How its
+# entries are stored is its `lexicon`'s: a language without `readings`
+# takes new senses with a gloss alone, a noun in a language with
+# `articles` takes the definite article that fits its form, and a language
+# with `traditional` forms gets each word's traditional form from the
+# segmenter too, which `form_fits` checks the same way. `skips` are the
 # reasons the segmenter may give for a word to get no card. A language
 # written with `spaces` between its words breaks lines at them.
 Language = Data.define(
@@ -19,9 +19,7 @@ Language = Data.define(
   :piece,
   :form,
   :form_fits,
-  :readings,
-  :articles,
-  :traditional,
+  :lexicon,
   :skips,
   :spaces,
   :prompts,
@@ -36,9 +34,7 @@ class Language
     piece: /./,
     form: "simplified",
     form_fits: ->(text, form) { form.length == text.length },
-    readings: true,
-    articles: [],
-    traditional: true,
+    lexicon: Lexicon::MANDARIN,
     skips: [],
     spaces: false,
     prompts: Snippets::Mandarin::PROMPTS,
@@ -75,9 +71,7 @@ class Language
     form_fits: lambda { |text, form|
       form.casecmp?(text) || ABBREVIATION.call(text, form)
     },
-    readings: false,
-    articles: ["o", "a", "os", "as"],
-    traditional: false,
+    lexicon: Lexicon::PORTUGUESE,
     skips: ["foreign", "name"],
     spaces: true,
     prompts: Snippets::Portuguese::PROMPTS,
@@ -86,6 +80,8 @@ class Language
 
   def self.for(code) = ALL.fetch(code)
   def self.supported?(code) = ALL.key?(code)
+
+  delegate :readings, :articles, :articles?, :traditional, to: :lexicon
 
   def word?(text) = text.to_s.match?(word_char)
   def word_chars(text) = text.scan(word_char).join

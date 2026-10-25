@@ -30,7 +30,7 @@ module Snippets
 
     def self.call(memberships, language)
       prompt = memberships.each_with_index.map { |one, id| prompt(one, id) }
-      rows = Llm::AskEach.call(memberships, prompt:, **ask(language.prompts))
+      rows = Llm::AskEach.call(memberships, prompt:, **ask(language))
 
       memberships.each_with_index do |membership, id|
         membership.update!(category: rows.dig(id, "category") || UNFILED)
@@ -38,13 +38,13 @@ module Snippets
     end
 
     # Each language files its words under its own categories.
-    def self.ask(prompts)
-      category = { enum: prompts.categories }
+    def self.ask(language)
+      category = { enum: language.lexicon.categories }
       schema = SCHEMA.deep_merge(
         properties: { categories: { items: { properties: { category: } } } },
       )
 
-      { list: "categories", model: Llm::SONNET, system: prompts.categorize, schema: }
+      { list: "categories", model: Llm::SONNET, system: language.prompts.categorize, schema: }
     end
 
     def self.prompt(membership, id)

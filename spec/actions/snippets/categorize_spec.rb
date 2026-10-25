@@ -44,7 +44,7 @@ RSpec.describe Snippets::Categorize do
     it "asks about a noun with its article" do
       llm.answer(categories("noun"))
       filed = membership
-      filed.sense.entry.update!(article: "o")
+      filed.sense.entry.update!(language: "pt", article: "o")
 
       categorize([filed])
 
