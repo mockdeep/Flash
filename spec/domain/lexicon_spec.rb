@@ -9,7 +9,7 @@ RSpec.describe Lexicon do
     end
 
     it "gives any other language a plain one" do
-      expect(described_class.for("es").articles).to be_empty
+      expect(described_class.for("it").articles).to be_empty
     end
   end
 end

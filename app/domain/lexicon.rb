@@ -58,7 +58,41 @@ class Lexicon
       its headword and takes no article.
     TEXT
   )
-  ALL = [MANDARIN, PORTUGUESE, GERMAN].index_by(&:code).freeze
+  # Its lists file words by topic rather than part of speech. Only the A1
+  # list's nouns have their articles so far.
+  SPANISH = new(
+    code: "es",
+    readings: false,
+    articles: ["el", "la", "los", "las"],
+    traditional: false,
+    categories: [
+      "Work & business",
+      "Society & government",
+      "Body & health",
+      "Transport & travel",
+      "Arts & culture",
+      "Education",
+      "Food & drink",
+      "Technology & media",
+      "People & personality",
+      "Home & living",
+      "Nature & environment",
+      "Family & social life",
+      "Emotions & psychology",
+      "Leisure & sport",
+      "Clothing & appearance",
+      "Geography",
+      "General",
+    ].freeze,
+    refine: <<~TEXT,
+      Spanish rules: a noun's entry is the noun with the definite article
+      that fits its gender and number in `article`: `article` la and
+      headword casa. A feminine noun that takes el before a stressed a (el
+      agua) keeps el. A gloss leaves out "the". Many nouns have no article
+      yet; that alone is not a problem to suggest fixing.
+    TEXT
+  )
+  ALL = [MANDARIN, PORTUGUESE, GERMAN, SPANISH].index_by(&:code).freeze
 
   def self.for(code)
     ALL.fetch(code) do
