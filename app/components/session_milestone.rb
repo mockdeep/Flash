@@ -39,17 +39,10 @@ module Components
 
     def next_deck_action
       next_deck = @deck.user.next_unmet_deck
-      next_deck ? next_deck_link(next_deck) : reset_goals_button
-    end
-
-    def next_deck_link(next_deck)
-      link_to(
-        deck_study_path(next_deck),
-        class: "hotkey-button session-milestone-primary",
-        data: { turbo_frame: "_top", hotkeys_target: "click", hotkey: " " },
-      ) do
-        span { "Next Deck" }
-        span(class: "hotkey-hint") { "[space]" }
+      if next_deck
+        render(Components::NextDeckLink.new(deck: next_deck))
+      else
+        reset_goals_button
       end
     end
 

@@ -71,7 +71,8 @@ module Views
       # Same order as DeckSection#first_unmet, so the milestone's Next Deck
       # and the featured deck agree.
       def render_featured(section_decks)
-        unmet = section_decks.goal_unmet_today.first
+        unmet =
+          section_decks.goal_unmet_today.find { !it.waiting_for_tomorrow? }
         return render_featured_card(unmet, "→ Up next") if unmet
 
         recent = section_decks.recently_studied.first

@@ -174,7 +174,14 @@ class Deck < ApplicationRecord
 
   def shares_texts? = finished_snippets.any? && source.shareable?
 
-  def study_pool(limit:) = cards.not_done(round).ordered.limit(limit).to_a
+  # A streak climbs once a day, so a card answered correctly today waits for
+  # tomorrow.
+  def study_pool(limit:)
+    cards.not_done(round).not_correct_today.ordered.limit(limit).to_a
+  end
+
+  # Cards left in the round, but every one answered correctly today.
+  def waiting_for_tomorrow? = !all_done? && study_pool(limit: 1).empty?
 
   def all_done? = progress.done == progress.total
 

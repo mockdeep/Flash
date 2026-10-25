@@ -44,6 +44,8 @@ module Views
 
             if goal_reached?
               render(Components::SessionMilestone.new(deck:, study_goal:, demo:))
+            elsif study.next_card.nil?
+              render(Components::ComeBackTomorrow.new(deck:, demo:))
             else
               card = study.next_card
 

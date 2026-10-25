@@ -105,6 +105,31 @@ RSpec.describe LanguageDeck do
       expect(deck.study_pool(limit: 5).map(&:correct_streak)).to eq([0])
     end
 
+    it "leaves out an entry answered correctly today" do
+      deck = create(:reading_deck, round: 2)
+      create(:language_card, deck:, back: "one").record_correct!
+      create(:language_card, deck:, back: "two")
+
+      expect(deck.study_pool(limit: 5).map(&:back)).to eq(["two"])
+    end
+
+    it "leaves out an entry with any sense answered correctly today" do
+      deck = create(:reading_deck, round: 2)
+      card = create(:language_card, deck:, back: "he; him")
+      sense = sense_of(card, "he")
+      create(:skill_score, sense:, last_correct_at: Time.current)
+
+      expect(deck.study_pool(limit: 5)).to be_empty
+    end
+
+    it "studies an entry answered correctly before today" do
+      deck = create(:reading_deck, round: 2)
+      card = create(:language_card, deck:)
+      travel_to(1.day.ago) { card.record_correct! }
+
+      expect(deck.study_pool(limit: 5).map(&:id)).to eq([card.id])
+    end
+
     it "counts an entry's views from its scores" do
       deck = create(:reading_deck, round: 1)
       create(:language_card, deck:, view_count: 2)

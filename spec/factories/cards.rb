@@ -21,6 +21,11 @@ FactoryBot.define do
       correct_streak { deck.round }
     end
 
+    trait(:correct_today) do
+      correct_streak { 1 }
+      last_correct_at { Time.current }
+    end
+
     factory(:music_card, class: "MusicCard") do
       deck { default_music_deck }
       sequence(:front, 100) { |n| "Music Card #{n}" }

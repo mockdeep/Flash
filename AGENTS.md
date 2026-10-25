@@ -398,6 +398,7 @@ app/
 │   ├── card_reading.rb           # Pronunciation/pinyin gloss (rendered inside CardFront on reveal)
 │   ├── catalog_rail_card.rb      # A catalog rail card: a public deck, or a listed source through its preview deck
 │   ├── catalog_toggle_button.rb  # Add / remove a deck or source to the catalog, given its listing path
+│   ├── come_back_tomorrow.rb     # Study page note when every card left in the round was answered correctly today
 │   ├── deck_rail.rb              # A `DeckSection` as a heading (linking to its `#anchor`, e.g. `/catalog#mandarin`) over a sideways-scrolling rail (`rail` controller); the block fills it with cards (decks page + catalog)
 │   ├── deck_texts.rb             # "Source" block under the card preview (catalog + share preview): title / author / license, marked not included when unshareable
 │   ├── demo_banner.rb            # Demo-mode banner
@@ -406,6 +407,7 @@ app/
 │   ├── goal_form.rb              # One study-goal form per goal mode (no goal / daily goal / target date)
 │   ├── round_progress.rb         # Deck round indicator (ROUNDS = 3)
 │   ├── music_card_body.rb        # Mic-driven music study widget
+│   ├── next_deck_link.rb         # Next Deck button (space hotkey), on the milestone and the come-back-tomorrow note
 │   ├── music_csv_instructions.rb # CSV format help block for music decks
 │   ├── replace_cards_dialog.rb   # Confirm dialog for re-importing a deck's cards
 │   ├── session_milestone.rb      # Study milestone prompt (daily goal reached; Next Deck / Reset All Goals)
@@ -859,6 +861,7 @@ Cards can carry an optional pronunciation/gloss (e.g. Mandarin pinyin) kept sepa
 ### Study Algorithm
 
 The study engine (`app/domain/study.rb`) manages card selection and answer processing:
+- **Once a day**: a card answered correctly today (`last_correct_at` since the start of today in the user's time zone; on a language deck, any of its senses, in any deck) is left out of the study pool until tomorrow (`Card.not_correct_today`, `LanguageDeck::NOT_CORRECT_TODAY`), so a streak climbs at most one step a day. Misses don't clear it. When every card left in the round is waiting (`Deck#waiting_for_tomorrow?`), the study page shows `Components::ComeBackTomorrow` with Next Deck and All Decks (Sign Up Free in demo mode). Music decks build their windows without the pool, so the rule doesn't touch them
 - **Active window**: the not-done cards (at the current round) capped at `2^(round-1) × 20` — the pool of cards in play grows as the deck moves through rounds. Within it, the first card never viewed (`view_count` 0; card order on flat decks, list order on language decks, where it is the entry's lowest `skill_scores.view_count`) comes first; once every card has been seen, it picks at random
 - **Presentation mode**: multiple-choice below round 3, **fuzzy-find** (typed-answer) at round 3+ (`FUZZY_FIND_ROUND`); from round 2 (`READING_ROUND`) up, a card with a `reading` gets a **reading stage** first (see below) — `:reading` (multiple choice) at round 2, `:fuzzy_reading` at 3+. `possible_answers` branches on the mode, and `Components::StudyAnswers` renders it
 - **Multiple choice**: 4 distractors + the answer, shuffled. Distractors come from the card's own preset `distractors` (`card_distractors` rows for flat families, `ItemDistractor`s for language); a `"category"`-pool deck tops up from same-category then any sibling cards via `deck.cards_in_category`. No two options share a gloss: decoys are picked in random order, skipping any that shares one with the answer or a decoy already picked
@@ -877,7 +880,7 @@ The study engine (`app/domain/study.rb`) manages card selection and answer proce
 ### Milestone: Next Deck
 
 When a deck reaches its goal for the day, the milestone's main button moves on to another deck:
-- **Next Deck** links to `User#next_unmet_deck` — the first deck in decks-page order (`DeckSection.for`: language sections A–Z by display name, then Basic, then Music, each by deck name, a source's section decks in source order) that `Deck.goal_unmet_today` returns, taking each section's `first_unmet` in turn. That query left-joins `Deck#todays_study_day` (a `has_one` scoped to `Date.current`): a deck with no row today counts as unmet, and otherwise its count is compared against the goal by a SQL copy of `StudyDay#study_goal` (keep the two in sync). Decks in no-goal mode and music decks never count as unmet.
+- **Next Deck** links to `User#next_unmet_deck` — the first deck in decks-page order (`DeckSection.for`: language sections A–Z by display name, then Basic, then Music, each by deck name, a source's section decks in source order) that `Deck.goal_unmet_today` returns, taking each section's `first_unmet` in turn, which skips decks waiting for tomorrow (see Study Algorithm), as does the decks page's "Up next". That query left-joins `Deck#todays_study_day` (a `has_one` scoped to `Date.current`): a deck with no row today counts as unmet, and otherwise its count is compared against the goal by a SQL copy of `StudyDay#study_goal` (keep the two in sync). Decks in no-goal mode and music decks never count as unmet.
 - **Reset All Goals** shows instead when every deck has met its goal. It POSTs to `StudyGoalResetsController#create`, which starts a new batch on all the user's decks (`StudyDay#keep_going!`, as Keep Going does) and redirects to the first deck in that order.
 - Hidden in demo mode.
 

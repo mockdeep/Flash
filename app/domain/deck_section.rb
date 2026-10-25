@@ -47,6 +47,9 @@ class DeckSection
       decks.distinct.count(:word_list_id) + sources.count
   end
 
-  # The first deck in page order still short of today's goal.
-  def first_unmet = decks.goal_unmet_today.ordered.first
+  # The first deck in page order still short of today's goal, and not
+  # waiting for tomorrow.
+  def first_unmet
+    decks.goal_unmet_today.ordered.find { !it.waiting_for_tomorrow? }
+  end
 end

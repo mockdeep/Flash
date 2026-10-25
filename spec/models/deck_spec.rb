@@ -533,6 +533,52 @@ RSpec.describe Deck do
 
       expect(deck.study_pool(limit: 2)).to eq(cards.first(2))
     end
+
+    it "leaves out cards answered correctly today" do
+      deck = create(:deck, round: 2)
+      create(:basic_card, :correct_today, deck:)
+      card = create(:basic_card, deck:, last_correct_at: 1.day.ago)
+
+      expect(deck.study_pool(limit: 5)).to eq([card])
+    end
+
+    # Late on the 29th in Honolulu, but already the 30th in UTC.
+    def honolulu_pool(last_correct_at)
+      deck = create(:deck, round: 2)
+      create(:basic_card, deck:, correct_streak: 1, last_correct_at:)
+      Time.use_zone("Pacific/Honolulu") do
+        travel_to(Time.utc(2026, 5, 30, 5)) { deck.study_pool(limit: 5) }
+      end
+    end
+
+    it "starts the day in the current time zone" do
+      pool = honolulu_pool(Time.utc(2026, 5, 29, 23))
+
+      expect(pool).to be_empty
+    end
+  end
+
+  describe "#waiting_for_tomorrow?" do
+    it "is true when every card left was answered correctly today" do
+      deck = create(:deck, round: 2)
+      create(:basic_card, :correct_today, deck:)
+
+      expect(deck.waiting_for_tomorrow?).to be(true)
+    end
+
+    it "is false while a card is left to study today" do
+      deck = create(:deck, round: 2)
+      create(:basic_card, deck:, correct_streak: 1)
+
+      expect(deck.waiting_for_tomorrow?).to be(false)
+    end
+
+    it "is false when every card is done at the round" do
+      deck = create(:deck, round: 1)
+      create(:basic_card, :correct_today, deck:)
+
+      expect(deck.waiting_for_tomorrow?).to be(false)
+    end
   end
 
   describe "#all_done?" do

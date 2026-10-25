@@ -182,6 +182,14 @@ RSpec.describe User do
       expect(default_user.next_unmet_deck).to eq(deck)
     end
 
+    it "skips decks waiting for tomorrow" do
+      waiting = create(:deck, name: "Alpha", round: 2)
+      create(:basic_card, :correct_today, deck: waiting)
+      deck = create(:deck, name: "Zebra")
+
+      expect(default_user.next_unmet_deck).to eq(deck)
+    end
+
     it "skips music decks" do
       create(:music_deck, name: "Alpha")
       deck = create(:deck, name: "Zebra")

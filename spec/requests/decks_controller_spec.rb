@@ -198,6 +198,21 @@ RSpec.describe DecksController do
       expect(rendered).to featured_title("Zebra")
     end
 
+    def seed_waiting_and_unmet
+      waiting = create(:deck, user: default_user, name: "Apple", round: 2)
+      create(:basic_card, :correct_today, deck: waiting)
+      create(:deck, user: default_user, name: "Zebra")
+    end
+
+    it "skips decks waiting for tomorrow" do
+      login_as(default_user)
+      seed_waiting_and_unmet
+
+      get(decks_path)
+
+      expect(rendered).to featured_title("Zebra")
+    end
+
     it "keeps the featured deck in its natural position as well" do
       login_as(default_user)
       studied_deck("Deck", 1.hour.ago)

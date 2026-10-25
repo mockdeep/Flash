@@ -29,6 +29,7 @@ class LanguageDeck < Deck
   TRADITIONAL_FORM = Arel.sql("COALESCE(senses.traditional, entries.headword)")
   LIST_ORDER = Arel.sql("MIN(sense_memberships.position)")
   STREAK = "MIN(COALESCE(skill_scores.correct_streak, 0))"
+  NOT_CORRECT_TODAY = "COALESCE(MAX(skill_scores.last_correct_at) < ?, TRUE)"
 
   def self.model_name
     Deck.model_name
@@ -51,8 +52,11 @@ class LanguageDeck < Deck
     LanguageCard.new(self, holding(Sense.where(id: id.to_s.split("-"))).take!)
   end
 
+  # A card waits for tomorrow once any of its senses was answered correctly
+  # today, in this deck or another.
   def study_pool(limit:)
     pool = entries.having("#{STREAK} < ?", round).order(LIST_ORDER)
+    pool = pool.having(NOT_CORRECT_TODAY, Date.current.beginning_of_day)
     cards_from(pool.limit(limit))
   end
 
@@ -89,9 +93,7 @@ class LanguageDeck < Deck
 
   # Backs of the cards holding the given senses as this list shows them now;
   # a sense the list no longer holds is absent.
-  def backs_of(sense_ids)
-    holding(Sense.where(id: sense_ids)).pluck(:back)
-  end
+  def backs_of(sense_ids) = holding(Sense.where(id: sense_ids)).pluck(:back)
 
   # The member senses of every card whose back reads exactly as the text;
   # a chosen option arrives as text, so this is how a miss finds its senses.
