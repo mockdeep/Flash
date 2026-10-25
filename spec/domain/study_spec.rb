@@ -792,6 +792,35 @@ RSpec.describe Study do
     end
   end
 
+  describe "#answer_card in practice" do
+    def practice_answer(card, answer)
+      study = described_class.new(deck: card.deck, practice: true)
+      study.answer_card(card_id: card.id, answer:)
+    end
+
+    it "leaves a right answer unscored" do
+      card = create(:basic_card, :correct_today, deck: create(:deck, round: 2))
+
+      practice_answer(card, card.back)
+
+      expect(card.reload.correct_count).to eq(0)
+    end
+
+    it "resets the streak on a miss" do
+      card = create(:basic_card, :correct_today, deck: create(:deck, round: 2))
+
+      practice_answer(card, "wrong")
+
+      expect(card.reload.correct_streak).to eq(0)
+    end
+
+    it "marks the result as practice" do
+      card = create(:basic_card, :correct_today, deck: create(:deck, round: 2))
+
+      expect(practice_answer(card, card.back).practice?).to be(true)
+    end
+  end
+
   describe "#answer_card" do
     context "when answer is correct" do
       it "increments view count" do

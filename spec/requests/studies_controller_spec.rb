@@ -20,6 +20,17 @@ RSpec.describe StudiesController do
     )
   end
 
+  def waiting_deck
+    deck = create(:deck, round: 2, name: "Alpha")
+    create(:basic_card, :correct_today, deck:, back: "Paris")
+    deck
+  end
+
+  def practice_answer(card:, answer:, stage: nil)
+    answer = { card_id: card.id, answer:, stage: }.compact
+    patch(deck_study_path(card.deck), params: { answer:, practice: true })
+  end
+
   def complete_milestone_goal
     deck = create(:deck, study_goal: 3)
     cards = create_list(:basic_card, 3, deck:, back: "Paris", correct_streak: 0)
@@ -370,12 +381,6 @@ RSpec.describe StudiesController do
     end
 
     context "when every card left was answered correctly today" do
-      def waiting_deck
-        deck = create(:deck, round: 2, name: "Alpha")
-        create(:basic_card, :correct_today, deck:)
-        deck
-      end
-
       it "asks to come back tomorrow" do
         get(deck_study_path(waiting_deck))
 
@@ -401,6 +406,53 @@ RSpec.describe StudiesController do
         get(deck_study_path(waiting_deck))
 
         expect(rendered).to have_link("All Decks", href: decks_path)
+      end
+
+      it "offers to keep practicing" do
+        deck = waiting_deck
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_link(
+          "Keep Practicing", href: deck_study_path(deck, practice: true)
+        )
+      end
+    end
+
+    context "when practicing" do
+      it "says streaks won't change" do
+        get(deck_study_path(waiting_deck, practice: true))
+
+        expect(rendered).to have_text("Practice — streaks won't change")
+      end
+
+      it "studies the cards answered correctly today" do
+        deck = waiting_deck
+        get(deck_study_path(deck, practice: true))
+
+        expect(rendered).to have_text(deck.cards.sole.front)
+      end
+
+      it "sends practice with each answer" do
+        get(deck_study_path(waiting_deck, practice: true))
+
+        field = ".study-answers-grid input[name='practice']"
+        expect(rendered).to have_css(field, visible: :all)
+      end
+
+      it "sends practice with a typed answer" do
+        deck = waiting_deck
+        deck.update!(round: 3)
+        get(deck_study_path(deck, practice: true))
+
+        expect(rendered)
+          .to have_css(".fuzzy-find input[name='practice']", visible: :all)
+      end
+
+      it "studies as usual while a card is left to study today" do
+        card = create(:basic_card)
+        get(deck_study_path(card.deck, practice: true))
+
+        expect(rendered).to have_no_text("Practice —")
       end
     end
 
@@ -687,6 +739,44 @@ RSpec.describe StudiesController do
 
         expect(rendered).to have_no_link("Done for Now")
       end
+    end
+  end
+
+  describe "#update in practice" do
+    it "leaves a right answer's streak as it was" do
+      card = waiting_deck.cards.sole
+      practice_answer(card:, answer: "Paris")
+
+      expect(card.reload.correct_streak).to eq(1)
+    end
+
+    it "resets the streak on a miss" do
+      card = waiting_deck.cards.sole
+      practice_answer(card:, answer: "London")
+
+      expect(card.reload.correct_streak).to eq(0)
+    end
+
+    it "says streaks won't change" do
+      practice_answer(card: waiting_deck.cards.sole, answer: "Paris")
+
+      expect(rendered).to have_text("Practice — streaks won't change")
+    end
+
+    it "keeps practicing with the next card" do
+      card = waiting_deck.cards.sole
+      practice_answer(card:, answer: "Paris")
+
+      path = deck_study_path(card.deck, exclude: card.id, practice: true)
+      expect(rendered).to have_link("Next Card", href: path)
+    end
+
+    it "keeps practicing after a passed reading stage" do
+      card = waiting_deck.cards.sole
+      card.update!(reading: "pā lí")
+      practice_answer(card:, answer: "pā lí", stage: "reading")
+
+      expect(rendered).to have_text("Practice — streaks won't change")
     end
   end
 

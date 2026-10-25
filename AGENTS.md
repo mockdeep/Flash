@@ -274,7 +274,7 @@ link_to("My Link", some_path, data:)
 **Current shortcuts:**
 - `1`-`5` - Select answer during study
 - `Space` - Next card after answering; Next Deck / Reset All Goals on the milestone
-- `k` - Keep Going on the milestone (starts a new batch on the same deck; demo too)
+- `k` - Keep Going on the milestone (starts a new batch on the same deck; demo too); Keep Practicing on the come-back-tomorrow note
 - `[` / `]` - Decrease / increase study text size (card-front kebab menu)
 - `e` - Open the edit-card dialog during study
 - `Ctrl+Enter` - Save the edit-card dialog
@@ -403,11 +403,12 @@ app/
 │   ├── deck_texts.rb             # "Source" block under the card preview (catalog + share preview): title / author / license, marked not included when unshareable
 │   ├── demo_banner.rb            # Demo-mode banner
 │   ├── error_explanation.rb      # Styled validation-error box
-│   ├── fuzzy_find_answers.rb     # Typed-answer input for fuzzy-find mode (round 3+); optional reading `stage`
+│   ├── fuzzy_find_answers.rb     # Typed-answer input for fuzzy-find mode (round 3+); extra hidden `fields` (reading `stage`, `practice`)
 │   ├── goal_form.rb              # One study-goal form per goal mode (no goal / daily goal / target date)
 │   ├── round_progress.rb         # Deck round indicator (ROUNDS = 3)
 │   ├── music_card_body.rb        # Mic-driven music study widget
 │   ├── next_deck_link.rb         # Next Deck button (space hotkey), on the milestone and the come-back-tomorrow note
+│   ├── practice_label.rb         # "Practice — streaks won't change" above the card while practicing
 │   ├── music_csv_instructions.rb # CSV format help block for music decks
 │   ├── replace_cards_dialog.rb   # Confirm dialog for re-importing a deck's cards
 │   ├── session_milestone.rb      # Study milestone prompt (daily goal reached; Next Deck / Reset All Goals)
@@ -861,7 +862,8 @@ Cards can carry an optional pronunciation/gloss (e.g. Mandarin pinyin) kept sepa
 ### Study Algorithm
 
 The study engine (`app/domain/study.rb`) manages card selection and answer processing:
-- **Once a day**: a card answered correctly today (`last_correct_at` since the start of today in the user's time zone; on a language deck, any of its senses, in any deck) is left out of the study pool until tomorrow (`Card.not_correct_today`, `LanguageDeck::NOT_CORRECT_TODAY`), so a streak climbs at most one step a day. Misses don't clear it. When every card left in the round is waiting (`Deck#waiting_for_tomorrow?`), the study page shows `Components::ComeBackTomorrow` with Next Deck and All Decks (Sign Up Free in demo mode). Music decks build their windows without the pool, so the rule doesn't touch them
+- **Once a day**: a card answered correctly today (`last_correct_at` since the start of today in the user's time zone; on a language deck, any of its senses, in any deck) is left out of the study pool until tomorrow (`Card.not_correct_today`, `Deck::SENSES_CORRECT_TODAY`), so a streak climbs at most one step a day. Misses don't clear it. When every card left in the round is waiting (`Deck#waiting_for_tomorrow?`), the study page shows `Components::ComeBackTomorrow` with Next Deck, Keep Practicing and All Decks (Sign Up Free and Keep Practicing in demo mode). Music decks build their windows without the pool, so the rule doesn't touch them
+- **Practice**: Keep Practicing opens the study page with `practice=true`, which `StudiesController` honours only while the deck is `waiting_for_tomorrow?` (so a stale link, or one used after midnight, studies as usual). `Study.for(practice: true)` studies the not-done cards answered correctly today instead (`study_pool(practice: true)`). A right answer writes nothing; a miss is a real one (streak reset, distractor recorded), so the card stays in practice until tomorrow. Every answer button, the fuzzy-find form, the reading-stage re-render and the Next Card link carry the flag, and `Study::Result#practice?` tells the answer view. `Components::PracticeLabel` ("Practice — streaks won't change") shows above the card
 - **Active window**: the not-done cards (at the current round) capped at `2^(round-1) × 20` — the pool of cards in play grows as the deck moves through rounds. Within it, the first card never viewed (`view_count` 0; card order on flat decks, list order on language decks, where it is the entry's lowest `skill_scores.view_count`) comes first; once every card has been seen, it picks at random
 - **Presentation mode**: multiple-choice below round 3, **fuzzy-find** (typed-answer) at round 3+ (`FUZZY_FIND_ROUND`); from round 2 (`READING_ROUND`) up, a card with a `reading` gets a **reading stage** first (see below) — `:reading` (multiple choice) at round 2, `:fuzzy_reading` at 3+. `possible_answers` branches on the mode, and `Components::StudyAnswers` renders it
 - **Multiple choice**: 4 distractors + the answer, shuffled. Distractors come from the card's own preset `distractors` (`card_distractors` rows for flat families, `ItemDistractor`s for language); a `"category"`-pool deck tops up from same-category then any sibling cards via `deck.cards_in_category`. No two options share a gloss: decoys are picked in random order, skipping any that shares one with the answer or a decoy already picked

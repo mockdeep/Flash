@@ -27,6 +27,7 @@ module Views
             render(
               Components::SessionProgress.new(deck:, completed:, study_goal:),
             )
+            render(Components::PracticeLabel.new) if result.practice?
 
             render_card_result
             unless deck.flat_cards?
@@ -137,7 +138,7 @@ module Views
 
           data = { hotkeys_target: "click", hotkey: " " }
           link_to(
-            deck_study_path(deck, exclude: result.card.id),
+            next_card_path,
             data:,
             class: "hotkey-button next-card-button",
           ) do
@@ -145,6 +146,11 @@ module Views
             span(class: "hotkey-hint") { "[space]" }
           end
         end
+      end
+
+      def next_card_path
+        practice = (true if result.practice?)
+        deck_study_path(deck, exclude: result.card.id, practice:)
       end
 
       # Card editing is a flat-card affair: language cards read their content

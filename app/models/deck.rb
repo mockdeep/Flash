@@ -14,6 +14,12 @@ class Deck < ApplicationRecord
       END
   SQL
   GUEST_CARD_LIMIT = 100
+  # Whether a language card had a sense answered correctly today (true) or
+  # none did (false), keyed by `practice` in `LanguageDeck#study_pool`.
+  SENSES_CORRECT_TODAY = {
+    true => "MAX(skill_scores.last_correct_at) >= ?",
+    false => "COALESCE(MAX(skill_scores.last_correct_at) < ?, TRUE)",
+  }.freeze
   Progress = Data.define(:total, :done)
 
   # The senses a snippet deck studies: those its snippet's sentences use,
@@ -175,9 +181,11 @@ class Deck < ApplicationRecord
   def shares_texts? = finished_snippets.any? && source.shareable?
 
   # A streak climbs once a day, so a card answered correctly today waits for
-  # tomorrow.
-  def study_pool(limit:)
-    cards.not_done(round).not_correct_today.ordered.limit(limit).to_a
+  # tomorrow; practice studies just those cards.
+  def study_pool(limit:, practice: false)
+    pool = cards.not_done(round)
+    pool = practice ? pool.correct_today : pool.not_correct_today
+    pool.ordered.limit(limit).to_a
   end
 
   # Cards left in the round, but every one answered correctly today.

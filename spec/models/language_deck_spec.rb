@@ -122,6 +122,15 @@ RSpec.describe LanguageDeck do
       expect(deck.study_pool(limit: 5)).to be_empty
     end
 
+    it "practices only the entries answered correctly today" do
+      deck = create(:reading_deck, round: 2)
+      create(:language_card, deck:, back: "one").record_correct!
+      create(:language_card, deck:, back: "two")
+
+      pool = deck.study_pool(limit: 5, practice: true)
+      expect(pool.map(&:back)).to eq(["one"])
+    end
+
     it "studies an entry answered correctly before today" do
       deck = create(:reading_deck, round: 2)
       card = create(:language_card, deck:)

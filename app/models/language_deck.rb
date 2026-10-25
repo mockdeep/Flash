@@ -29,7 +29,6 @@ class LanguageDeck < Deck
   TRADITIONAL_FORM = Arel.sql("COALESCE(senses.traditional, entries.headword)")
   LIST_ORDER = Arel.sql("MIN(sense_memberships.position)")
   STREAK = "MIN(COALESCE(skill_scores.correct_streak, 0))"
-  NOT_CORRECT_TODAY = "COALESCE(MAX(skill_scores.last_correct_at) < ?, TRUE)"
 
   def self.model_name
     Deck.model_name
@@ -53,10 +52,11 @@ class LanguageDeck < Deck
   end
 
   # A card waits for tomorrow once any of its senses was answered correctly
-  # today, in this deck or another.
-  def study_pool(limit:)
+  # today, in this deck or another; practice studies just those cards.
+  def study_pool(limit:, practice: false)
     pool = entries.having("#{STREAK} < ?", round).order(LIST_ORDER)
-    pool = pool.having(NOT_CORRECT_TODAY, Date.current.beginning_of_day)
+    today = Date.current.beginning_of_day
+    pool = pool.having(SENSES_CORRECT_TODAY[practice], today)
     cards_from(pool.limit(limit))
   end
 

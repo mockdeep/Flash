@@ -5,20 +5,22 @@ class StudiesController < ApplicationController
   before_action(:authenticate_guest)
 
   def show
-    deck = current_user.decks.find(params.expect(:deck_id))
+    deck = find_deck
     deck.catch_up_round!
-    study = Study.for(deck:, exclude_card_id: params[:exclude])
+    practice = practice?(deck)
+    study = Study.for(deck:, exclude_card_id: params[:exclude], practice:)
     deck.study_days.today.keep_going! if params[:reset_session]
     render_study(show_view_class(deck), deck:, study:)
   end
 
   def update
-    deck = current_user.decks.find(params.expect(:deck_id))
-    result = Study.for(deck:).record_answer(params)
+    deck = find_deck
+    practice = practice?(deck)
+    result = Study.for(deck:, practice:).record_answer(params)
     deck.update!(last_studied_at: Time.current)
     record_completion(deck, result)
     if result.reading_passed?
-      render_translation_stage(deck, result.card)
+      render_translation_stage(deck, result.card, practice:)
     else
       render_study(update_view_class(deck), deck:, result:)
     end
@@ -26,10 +28,18 @@ class StudiesController < ApplicationController
 
   private
 
+  def find_deck = current_user.decks.find(params.expect(:deck_id))
+
+  # Practice is only for a deck whose cards left have all had their turn
+  # today; past midnight, a practice link studies as usual.
+  def practice?(deck)
+    params[:practice].present? && deck.waiting_for_tomorrow?
+  end
+
   # A passed reading stage re-renders the question view pinned to the same
   # card, now asking for the translation.
-  def render_translation_stage(deck, card)
-    study = Study.for(deck:, card_id: card.id)
+  def render_translation_stage(deck, card, practice:)
+    study = Study.for(deck:, card_id: card.id, practice:)
     render_study(show_view_class(deck), deck:, study:)
   end
 

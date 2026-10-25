@@ -10,14 +10,15 @@ module Components
       spellcheck: "false",
     }.freeze
 
-    attr_accessor :deck, :card, :answers, :stage
+    attr_accessor :deck, :card, :answers, :fields
 
-    def initialize(deck:, card:, answers:, stage:)
+    # The fields are extra hidden fields to send with the answer, by name.
+    def initialize(deck:, card:, answers:, fields:)
       super()
       self.deck = deck
       self.card = card
       self.answers = answers
-      self.stage = stage
+      self.fields = fields
     end
 
     def view_template
@@ -78,7 +79,7 @@ module Components
 
     def render_form_fields(form)
       form.hidden_field("answer[card_id]", value: card.id)
-      form.hidden_field("answer[stage]", value: stage) if stage
+      fields.each { |name, value| form.hidden_field(name, value:) }
       form.hidden_field(
         "answer[answer]",
         data: { fuzzy_find_target: "answerInput" },
