@@ -33,6 +33,12 @@ class Entry < ApplicationRecord
 
   def lexicon = Lexicon.for(language)
 
-  # The headword as studied: a noun with its article, "a casa".
-  def term(written = headword) = [article, written].compact_blank.join(" ")
+  # The headword as studied: a noun with its article, "a casa", or with
+  # one cut short, "l'acqua".
+  def term(written = headword)
+    return written unless article
+    return "#{article}#{written}" if article.end_with?("'")
+
+    "#{article} #{written}"
+  end
 end

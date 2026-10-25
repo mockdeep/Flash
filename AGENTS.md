@@ -428,7 +428,11 @@ app/
 ├── domain/
 │   ├── deck_section.rb           # A section of a set of decks (a user's, or the catalog's): one per language A–Z, then Basic, then Music; `first_unmet` drives Next Deck; `card_count` (the heading's count) counts a source's decks once
 │   ├── language.rb               # What processing a snippet needs per language: sentence ends, word characters, the segmenter's form and its check, its lexicon, skip reasons, whether words are spaced, prompts (`Language::MANDARIN`, `Language::PORTUGUESE`)
-│   ├── lexicon.rb                # How a language's entries are stored, snippet language or not: readings or none, articles or none, traditional forms or none, list categories, refiner rules (`Lexicon::MANDARIN`, `PORTUGUESE`, `GERMAN`, `SPANISH`; a plain one for any other)
+│   ├── lexicon.rb                # How a language's entries are stored, snippet language or not: readings or none, articles or none, traditional forms or none, list categories, refiner rules (`Lexicon::MANDARIN`, `PORTUGUESE`, `GERMAN`, `SPANISH`, `ITALIAN`; a plain one for any other)
+│   ├── lexicon/
+│   │   ├── german.rb             # German's list categories and refiner rules (Mandarin's and Portuguese's live with their prompts in `Snippets`)
+│   │   ├── italian.rb            # Italian's, likewise
+│   │   └── spanish.rb            # Spanish's, likewise
 │   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
 │   └── music_study.rb            # MusicStudy < Study; windows cards into note sequences
 ├── helpers/
@@ -924,7 +928,7 @@ The compendium can be reviewed directly, not only through snippets. Both tools r
   - `remove(sense)`: delete a sense, refused (`Edit::Refused`) while any token, list or learner uses it. `revise` and `remove` delete an entry they leave without senses.
   - `attach(sense, word_list, category:)` / `detach(sense, word_list)`: put a sense into a list (after the senses it holds) or take it out.
   - `recategorize(sense, word_list, category:)`: file a sense under another category in a list.
-- **Articles**: an entry is a headword plus its reading and its `article`. In a language whose `Lexicon` has articles, a noun carries its definite article in `article`, never in its headword: Portuguese "o", "a", "os", "as" (matching its gender and number), German "der", "die", "das", Spanish "el", "la", "los", "las" (so far only on the A1 list's nouns). So *o capital* and *a capital* are two entries and two cards. An `Entry` takes only an article its lexicon lists, and a blank reading or article is stored as none. `Entry#term` ("a casa") is what the card front, the Read-tab popover, `compendium:lookup` and `snippets:review` show.
+- **Articles**: an entry is a headword plus its reading and its `article`. In a language whose `Lexicon` has articles, a noun carries its definite article in `article`, never in its headword: Portuguese "o", "a", "os", "as" (matching its gender and number), German "der", "die", "das", Spanish "el", "la", "los", "las" (so far only on the A1 list's nouns), Italian "il", "lo", "la", "l'", "i", "gli", "le" (where "l'" joins its noun without a space, "l'acqua"). So *o capital* and *a capital* are two entries and two cards. An `Entry` takes only an article its lexicon lists, and a blank reading or article is stored as none. `Entry#term` ("a casa") is what the card front, the Read-tab popover, `compendium:lookup` and `snippets:review` show.
 - Splitting a seed sense that merges two meanings (花 "to spend / flower") is `revise` to narrow it, `add` for the other meaning, `attach` where the new sense belongs, and `Snippets::Review.repoint` for tokens; learners keep their progress on the narrowed sense.
 - **Learner data never comes down**, so locally `remove` cannot see progress on a sense and nothing shows what a `revise` changes for learners. The dry-run push is the check: it counts the progress and distractor history any deletes would take.
 
