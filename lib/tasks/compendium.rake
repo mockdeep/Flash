@@ -79,7 +79,7 @@ module CompendiumTasks
     puts("Dry run, rolled back. Push with DRY_RUN=false to commit")
   end
 
-  # Fetched fresh every run, since Heroku rotates it, and never written down.
+  # Fetched fresh every run from Heroku's config, so it's never written down.
   # Closing the connection rolls back anything left uncommitted.
   def with_production
     url, status = Open3.capture2(
