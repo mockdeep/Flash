@@ -28,7 +28,7 @@ after n entries, for a short run.
   problem where the suggestion gives one.
 - **Check bigger suggestions against a reference** before putting them
   forward, as in `compendium-review` (CC-CEDICT or Wiktionary for Mandarin;
-  Wiktionary, Priberam or Michaelis for Portuguese; Wiktionary for others).
+  Wiktionary, Priberam or Michaelis for Portuguese; Wiktionary or tagalog.com for Filipino; Wiktionary for others).
   Say when a reference disagrees with the suggestion.
 - Keep it brief: tables for the bulk pass, a few lines per suggestion after.
 

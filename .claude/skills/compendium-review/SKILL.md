@@ -1,6 +1,6 @@
 ---
 name: compendium-review
-description: Review Chinese or Portuguese vocabulary in Flash's compendium with the user — walk a processed snippet (unresolved words, new senses, wrong picks), look into and fix any word or sense, finish a snippet, and push the results to production. Use when the user wants to process, review or finish a snippet, check or fix a gloss, reading or sense, split a merged sense, or push compendium changes.
+description: Review Chinese, Portuguese or Filipino vocabulary in Flash's compendium with the user — walk a processed snippet (unresolved words, new senses, wrong picks), look into and fix any word or sense, finish a snippet, and push the results to production. Use when the user wants to process, review or finish a snippet, check or fix a gloss, reading or sense, split a merged sense, or push compendium changes.
 ---
 
 # Compendium review
@@ -18,13 +18,16 @@ what the user agrees to. AGENTS.md ("Snippet Processing", "Compendium Review",
   gloss, and why it is wrong or right *in this sentence*.
 - **Back each judgment with a reference**, not your own say-so. Mandarin:
   CC-CEDICT (look the word up on mdbg.net) or Wiktionary. Portuguese:
-  Wiktionary, Priberam or Michaelis (Michaelis for Brazilian usage). Where
+  Wiktionary, Priberam or Michaelis (Michaelis for Brazilian usage).
+  Filipino: Wiktionary or tagalog.com, and the UP Diksiyonaryong Filipino
+  for accents. Where
   references disagree or the call is a policy question, say so and let the
   user decide.
 - **Judge against the language's card rules**, and read them at the start of
   a review: `app/actions/snippets/mandarin/policy.rb` for Mandarin
   (segmentation, readings, function words), the prompts in
-  `app/actions/snippets/portuguese.rb` for Portuguese (segmentation, glosses,
+  `app/actions/snippets/portuguese.rb` for Portuguese and
+  `app/actions/snippets/filipino.rb` for Filipino (segmentation, glosses,
   skips).
 - **Propose fixes in batches and wait for approval** before running any edit.
   Reading commands (`snippets:review`, `compendium:lookup`) need no approval.
@@ -68,7 +71,7 @@ text, so run it in the background and report when it finishes. Lines starting
      They don't block finishing.
    - **Unresolved** words, with the reason each was left: decide the right
      sense, or whether the sentence was cut wrongly.
-   - **Skipped** words, which get no card: in Portuguese, names English
+   - **Skipped** words, which get no card: in Portuguese and Filipino, names English
      leaves as they are, people's or places' (`name`), and titles or other
      names left in another language (`foreign`). Check each reason holds.
      Give a wrongly skipped one a sense with `add_sense` or `repoint`, which
@@ -101,6 +104,22 @@ text, so run it in the background and report when it finishes. Lines starting
        "which" / "than", *se* "if" / "oneself", *a* "the" / "to", and a
        contraction as used (*da* "of the" / "from the").
      - There are no readings: a sense has a gloss alone.
+   - **Filipino**, like Portuguese where it isn't said otherwise:
+     - A word keeps its affixes and the accents the text writes: *kinakain*
+       and *kumain* are their own entries, not *kain*, and *bukás* "open"
+       and *búkas* "tomorrow" are two. A headword that drops or adds an
+       accent is wrong.
+     - A verb's gloss carries its aspect and focus: *kumain* "ate",
+       *kumakain* "is eating", *kinain* "was eaten".
+     - A word with a joined linker (*isang*), a shortened *at* or *ay*
+       (*kaya't*, *siya'y*) or a hyphen (*tuwang-tuwa*, *nag-iisip*) is one
+       word.
+     - Markers and particles get cards: an English word where one does the
+       job (*sa* "to", *lang* "only"), else a short label in brackets (*ang*
+       "(topic marker)", *mga* "(plural)", *po* "(polite)"). *na* takes the
+       sense its job needs: "already" or "(linker)".
+     - Titles (*Don*, *Padre*, *G.* written out as *Ginoo*) get cards;
+       Spanish or Latin left as it is is skipped as `foreign`.
 3. Propose the fixes; apply the approved ones (see Edits); run the report again.
 4. When nothing is unresolved, finish it:
    `bin/rails runner 'Snippets::Finish.call(Snippet.find(<id>))'`. It strips

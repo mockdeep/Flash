@@ -217,6 +217,16 @@ RSpec.describe SourcesController do
       expect(rendered)
         .to have_select("License", selected: "All rights reserved")
     end
+
+    it "offers each language snippets can be processed in" do
+      login_admin
+
+      get(new_source_path)
+
+      languages = ["Filipino", "Mandarin", "Portuguese"]
+
+      expect(rendered).to have_select("Language", options: languages)
+    end
   end
 
   describe "#create" do

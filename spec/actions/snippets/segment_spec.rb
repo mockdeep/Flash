@@ -23,7 +23,7 @@ RSpec.describe Snippets::Segment do
   def segmented_words(body) = segmented_tokens(body).pluck("text")
 
   # Each word is a text, or a [text, headword] pair for a capitalised one.
-  def portuguese_answer(*words)
+  def headword_answer(*words)
     words = words.map { |text, headword = text| { text:, headword: } }
 
     { sentences: [{ id: 0, words: }] }
@@ -43,6 +43,14 @@ RSpec.describe Snippets::Segment do
     sentence.reload.tokens
   end
 
+  def filipino_tokens(body)
+    word_list = create(:word_list, language: "fil")
+    snippet = create(:snippet, word_list:)
+    sentence = create(:snippet_sentence, snippet:, body:)
+    described_class.call([sentence])
+    sentence.reload.tokens
+  end
+
   def recut(tokens, *words)
     llm.answer(answer(*words))
     body = tokens.pluck(:text).join
@@ -53,43 +61,43 @@ RSpec.describe Snippets::Segment do
 
   describe ".call in Portuguese" do
     it "keeps the lower-cased form of a capitalised word" do
-      llm.answer(portuguese_answer(["Ela", "ela"], "saiu", "."))
+      llm.answer(headword_answer(["Ela", "ela"], "saiu", "."))
 
       expect(portuguese_tokens("Ela saiu.").first)
         .to eq("text" => "Ela", "headword" => "ela")
     end
 
     it "keeps a fixed phrase as one token" do
-      llm.answer(portuguese_answer(["De repente", "de repente"], "parou", "."))
+      llm.answer(headword_answer(["De repente", "de repente"], "parou", "."))
 
       expect(portuguese_tokens("De repente parou.").pluck("text"))
         .to eq(["De repente", "parou", "."])
     end
 
     it "asks again when a headword is more than the word in lower case" do
-      llm.answer(portuguese_answer(["falava", "falar"]))
-      llm.answer(portuguese_answer("falava"))
+      llm.answer(headword_answer(["falava", "falar"]))
+      llm.answer(headword_answer("falava"))
 
       expect(portuguese_tokens("falava")).to eq([{ "text" => "falava" }])
     end
 
     it "studies an abbreviation under the word it stands for" do
-      llm.answer(portuguese_answer(["D.", "Dona"], "Inácia"))
+      llm.answer(headword_answer(["D.", "Dona"], "Inácia"))
 
       expect(portuguese_tokens("D. Inácia").first)
         .to eq("text" => "D.", "headword" => "Dona")
     end
 
     it "asks again when a headword is not the abbreviation written out" do
-      llm.answer(portuguese_answer(["Sr.", "Doutor"]))
-      llm.answer(portuguese_answer(["Sr.", "Senhor"]))
+      llm.answer(headword_answer(["Sr.", "Doutor"]))
+      llm.answer(headword_answer(["Sr.", "Senhor"]))
 
       expect(portuguese_tokens("Sr.").sole["headword"]).to eq("Senhor")
     end
 
     it "writes out only a word that ends in a full stop" do
-      llm.answer(portuguese_answer(["Sr", "Senhor"]))
-      llm.answer(portuguese_answer("Sr"))
+      llm.answer(headword_answer(["Sr", "Senhor"]))
+      llm.answer(headword_answer("Sr"))
 
       expect(portuguese_tokens("Sr")).to eq([{ "text" => "Sr" }])
     end
@@ -103,7 +111,7 @@ RSpec.describe Snippets::Segment do
     end
 
     it "offers the reasons to skip a word" do
-      llm.answer(portuguese_answer("sim"))
+      llm.answer(headword_answer("sim"))
       portuguese_tokens("sim")
 
       expect(llm.calls.sole.schema.to_json)
@@ -111,7 +119,7 @@ RSpec.describe Snippets::Segment do
     end
 
     it "asks for each word's headword" do
-      llm.answer(portuguese_answer("sim"))
+      llm.answer(headword_answer("sim"))
       portuguese_tokens("sim")
 
       expect(llm.calls.sole.schema.to_json)
@@ -123,6 +131,36 @@ RSpec.describe Snippets::Segment do
 
       expect(portuguese_tokens("Diga-me, Ana.").pluck("text"))
         .to eq(["Diga-me", ",", "Ana", "."])
+    end
+  end
+
+  describe ".call in Filipino" do
+    it "keeps a word's accents" do
+      llm.answer(headword_answer(["Ibinukás", "ibinukás"], "niya", "."))
+
+      expect(filipino_tokens("Ibinukás niya.").first)
+        .to eq("text" => "Ibinukás", "headword" => "ibinukás")
+    end
+
+    it "asks again when a headword drops an accent" do
+      llm.answer(headword_answer(["susô", "suso"]))
+      llm.answer(headword_answer("susô"))
+
+      expect(filipino_tokens("susô")).to eq([{ "text" => "susô" }])
+    end
+
+    it "studies a Filipino abbreviation under the word it stands for" do
+      llm.answer(headword_answer(["Gng.", "Ginang"], "Reyes"))
+
+      expect(filipino_tokens("Gng. Reyes").first)
+        .to eq("text" => "Gng.", "headword" => "Ginang")
+    end
+
+    it "falls back to words and punctuation after two failures" do
+      2.times { llm.answer({ sentences: [] }) }
+
+      expect(filipino_tokens("Kaya't umalis siya.").pluck("text"))
+        .to eq(["Kaya't", "umalis", "siya", "."])
     end
   end
 
@@ -160,7 +198,7 @@ RSpec.describe Snippets::Segment do
     end
 
     it "asks for no traditional form in Portuguese" do
-      llm.answer(portuguese_answer("saiu"))
+      llm.answer(headword_answer("saiu"))
       portuguese_tokens("saiu")
 
       expect(llm.calls.sole.schema.to_json).not_to include("traditional")

@@ -32,6 +32,14 @@ class Lexicon
     refine: [Snippets::Portuguese::GLOSSES, Snippets::Portuguese::ARTICLES]
       .join("\n").freeze,
   )
+  FILIPINO = new(
+    code: "fil",
+    readings: false,
+    articles: [],
+    traditional: false,
+    categories: Snippets::Filipino::CATEGORIES,
+    refine: Snippets::Filipino::GLOSSES,
+  )
   GERMAN = new(
     code: "de",
     readings: false,
@@ -63,6 +71,7 @@ class Lexicon
   ALL = [
     MANDARIN,
     PORTUGUESE,
+    FILIPINO,
     GERMAN,
     SPANISH,
     ITALIAN,
