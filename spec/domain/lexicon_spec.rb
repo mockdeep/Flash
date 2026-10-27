@@ -8,6 +8,10 @@ RSpec.describe Lexicon do
       expect(described_class.for("de")).to eq(described_class::GERMAN)
     end
 
+    it "files Filipino words under its own categories" do
+      expect(described_class.for("fil").categories).to include("marker")
+    end
+
     it "gives any other language a plain one" do
       expect(described_class.for("ja").articles).to be_empty
     end

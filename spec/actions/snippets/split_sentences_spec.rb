@@ -9,6 +9,8 @@ RSpec.describe Snippets::SplitSentences do
     described_class.call(body, Language::PORTUGUESE)
   end
 
+  def split_filipino(body) = described_class.call(body, Language::FILIPINO)
+
   describe ".call" do
     it "splits on terminal punctuation" do
       expect(split("我爱你。你呢？好！")).to eq(["我爱你。", "你呢？", "好！"])
@@ -66,6 +68,23 @@ RSpec.describe Snippets::SplitSentences do
     it "runs on past an ellipsis before a lower-case word" do
       expect(split_portuguese("Eu... não sei. Talvez amanhã."))
         .to eq(["Eu... não sei.", "Talvez amanhã."])
+    end
+  end
+
+  describe ".call in Filipino" do
+    it "splits on terminal punctuation" do
+      expect(split_filipino("Hindi niya alam. Tama ka!"))
+        .to eq(["Hindi niya alam.", "Tama ka!"])
+    end
+
+    it "does not split after a Filipino title" do
+      expect(split_filipino("Dumating si Gng. Reyes kahapon."))
+        .to eq(["Dumating si Gng. Reyes kahapon."])
+    end
+
+    it "keeps a line of dialogue with its speech tag" do
+      expect(split_filipino("“Maliliit na susô!” sagot ni Padre Camora."))
+        .to eq(["“Maliliit na susô!” sagot ni Padre Camora."])
     end
   end
 end

@@ -46,37 +46,61 @@ class Language
       letters = text.delete_suffix(".").chars.map { Regexp.escape(it) }
       text.end_with?(".") && form.match?(/\A#{letters.join("[^.]*")}[^.]*\z/i)
     end
+  # In a language written in letters, a word studies under its own form,
+  # lower-cased unless it is a name or a title before one, and an
+  # abbreviation under the word written out.
+  AS_WRITTEN =
+    lambda do |text, form|
+      form.casecmp?(text) || ABBREVIATION.call(text, form)
+    end
+  LETTERED_PIECE = /[\p{L}\p{M}\p{N}'’-]+|\S/
+  # A sentence in a language written in letters runs on past a full stop
+  # after one of its titles or an initial (J. R. Ward), and past an ending
+  # followed by a lower-case word: the speech tag after a line of dialogue,
+  # or a trailing-off ellipsis.
+  LETTERED_SENTENCE =
+    lambda do |titles|
+      /
+        (?:
+          \b(?:#{titles.join("|")}|[[:upper:]])\. |
+          [.!?…]+[”»"’)]*(?=\s+[—–]?\s*[[:lower:]]) |
+          [^.!?…\n]
+        )+
+        [.!?…]*[”»"’)]*
+      /x
+    end
   # Titles whose full stop doesn't end a sentence: Senhor, Doutora, Padre,
   # Frei, Santo and the like, and the St. of names left in English.
-  TITLES = "Sr Sra Srta Dr Dra Prof Profa Pe Fr Sto Sta St".split.freeze
-  # A sentence runs on past a full stop after one of the TITLES or an
-  # initial (J. R. Ward), and past an ending followed by a lower-case word:
-  # the speech tag set off by a dash after a line of dialogue, or a
-  # trailing-off ellipsis. A word studies under its own form, lower-cased
-  # unless it is a name or a title before one, and an abbreviation under
-  # the word written out.
+  PORTUGUESE_TITLES =
+    "Sr Sra Srta Dr Dra Prof Profa Pe Fr Sto Sta St".split.freeze
   PORTUGUESE = new(
     code: "pt",
-    sentence: /
-      (?:
-        \b(?:#{TITLES.join("|")}|[[:upper:]])\. |
-        [.!?…]+[”»"’)]*(?=\s+[—–]?\s*[[:lower:]]) |
-        [^.!?…\n]
-      )+
-      [.!?…]*[”»"’)]*
-    /x,
+    sentence: LETTERED_SENTENCE.call(PORTUGUESE_TITLES),
     word_char: /\p{L}/,
-    piece: /[\p{L}\p{M}\p{N}'’-]+|\S/,
+    piece: LETTERED_PIECE,
     form: "headword",
-    form_fits: lambda { |text, form|
-      form.casecmp?(text) || ABBREVIATION.call(text, form)
-    },
+    form_fits: AS_WRITTEN,
     lexicon: Lexicon::PORTUGUESE,
     skips: ["foreign", "name"],
     spaces: true,
     prompts: Snippets::Portuguese::PROMPTS,
   )
-  ALL = [MANDARIN, PORTUGUESE].index_by(&:code).freeze
+  # Ginoo, Ginang, Binibini, Doktor, and the Spanish titles a text may keep.
+  FILIPINO_TITLES = "G Gng Bb Dr Dra Sr Sra Srta Pe".split.freeze
+  # A word keeps its accents and affixes.
+  FILIPINO = new(
+    code: "fil",
+    sentence: LETTERED_SENTENCE.call(FILIPINO_TITLES),
+    word_char: /\p{L}/,
+    piece: LETTERED_PIECE,
+    form: "headword",
+    form_fits: AS_WRITTEN,
+    lexicon: Lexicon::FILIPINO,
+    skips: ["foreign", "name"],
+    spaces: true,
+    prompts: Snippets::Filipino::PROMPTS,
+  )
+  ALL = [MANDARIN, PORTUGUESE, FILIPINO].index_by(&:code).freeze
 
   def self.for(code) = ALL.fetch(code)
   def self.supported?(code) = ALL.key?(code)

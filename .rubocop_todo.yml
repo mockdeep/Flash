@@ -54,6 +54,7 @@ I18n/GetText/DecorateString:
 # Offense count: 34
 I18n/RailsI18n/DecorateString:
   Exclude:
+    - 'app/actions/snippets/filipino.rb'
     - 'app/actions/snippets/portuguese.rb'
     - 'app/views/catalog/index.rb'
     - 'app/views/catalog/show.rb'
@@ -185,6 +186,7 @@ Metrics/MethodLength:
 Metrics/ModuleLength:
   Exclude:
     - 'app/actions/data_sets/projection.rb'
+    - 'app/actions/snippets/filipino.rb'
     - 'app/actions/snippets/mandarin.rb'
     - 'app/actions/snippets/portuguese.rb'
 
