@@ -51,21 +51,26 @@ class Deck < ApplicationRecord
         (#{SNIPPET_SENSES}))
     GROUP BY senses.entry_id
   SQL
+  # Both counts come from one pass over the entries, since grouping them is
+  # the costly part.
+  LANGUAGE_PROGRESS = <<~SQL.squish
+    LEFT JOIN LATERAL (
+      SELECT COUNT(*) AS total,
+        COUNT(*) FILTER (WHERE entries.correct_streak >= decks.round) AS done
+      FROM (#{LANGUAGE_ENTRIES}) entries
+      WHERE users.role <> 'guest' OR entries.list_row <= :card_limit
+    ) language_progress ON TRUE
+  SQL
   PROGRESS_COLUMNS = <<~SQL.squish
     decks.*,
     CASE WHEN decks.word_list_id IS NULL THEN
       (SELECT COUNT(*) FROM cards WHERE cards.deck_id = decks.id)
-    ELSE
-      (SELECT COUNT(*) FROM (#{LANGUAGE_ENTRIES}) entries
-        WHERE users.role <> 'guest' OR entries.list_row <= :card_limit)
+    ELSE language_progress.total
     END AS cards_count,
     CASE WHEN decks.word_list_id IS NULL THEN
       (SELECT COUNT(*) FROM cards
         WHERE cards.deck_id = decks.id AND cards.correct_streak >= decks.round)
-    ELSE
-      (SELECT COUNT(*) FROM (#{LANGUAGE_ENTRIES}) entries
-        WHERE (users.role <> 'guest' OR entries.list_row <= :card_limit)
-          AND entries.correct_streak >= decks.round)
+    ELSE language_progress.done
     END AS done_count
   SQL
 
@@ -92,8 +97,8 @@ class Deck < ApplicationRecord
     with_goal.where(study_days: { id: nil }).or(with_goal.where(GOAL_UNMET))
   end
 
-  def self.progress_columns
-    sanitize_sql_array([PROGRESS_COLUMNS, { card_limit: GUEST_CARD_LIMIT }])
+  def self.language_progress
+    sanitize_sql_array([LANGUAGE_PROGRESS, { card_limit: GUEST_CARD_LIMIT }])
   end
 
   # Flat-card decks own their name (the column); language decks override the
@@ -139,9 +144,8 @@ class Deck < ApplicationRecord
   # A source's section decks follow the source.
   scope :ordered, -> { left_joins(:word_list).order(NAME_SOURCE, :snippet_id) }
   scope :publicly_visible, -> { where(visibility: "public") }
-  scope :recently_studied,
-        -> { where.not(last_studied_at: nil).reorder(last_studied_at: :desc) }
-  scope :with_progress, -> { joins(:user).select(progress_columns) }
+  scope :with_progress,
+        -> { joins(:user).joins(language_progress).select(PROGRESS_COLUMNS) }
 
   def music? = false
 

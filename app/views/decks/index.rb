@@ -39,18 +39,20 @@ module Views
       def render_deck_sections
         DeckSection.for(current_user.decks).each do |deck_section|
           render(Components::DeckRail.new(deck_section:)) do
-            render_rail(deck_section.decks.ordered.with_progress)
+            render_rail(deck_section.decks.ordered)
           end
         end
       end
 
       # The featured deck repeats at the head of the rail; the copy in its
       # natural slot stays put so the list order never shifts underneath the
-      # reader.
+      # reader. The decks load once, since counting their cards is the
+      # page's heaviest query.
       def render_rail(section_decks)
-        render_featured(section_decks)
-
         unmet_ids = section_decks.goal_unmet_today.ids
+        section_decks = section_decks.with_progress.to_a
+        render_featured(section_decks, unmet_ids)
+
         section_decks.chunk_while { |a, b| same_list?(a, b) }.each do |decks|
           render_rail_card(card_deck(decks, unmet_ids))
         end
@@ -64,22 +66,29 @@ module Views
       # same deck Next Deck would, else the one last studied.
       def card_deck(decks, unmet_ids)
         decks.find { unmet_ids.include?(it.id) } ||
-          decks.select(&:last_studied_at).max_by(&:last_studied_at) ||
+          last_studied(decks) ||
           decks.first
+      end
+
+      def last_studied(decks)
+        decks.select(&:last_studied_at).max_by(&:last_studied_at)
       end
 
       # Same order as DeckSection#first_unmet, so the milestone's Next Deck
       # and the featured deck agree.
-      def render_featured(section_decks)
-        unmet =
-          section_decks.goal_unmet_today.find { !it.waiting_for_tomorrow? }
+      def render_featured(section_decks, unmet_ids)
+        unmet = section_decks.find { up_next?(it, unmet_ids) }
         return render_featured_card(unmet, "→ Up next") if unmet
 
-        recent = section_decks.recently_studied.first
+        recent = last_studied(section_decks)
         return if recent.nil?
 
         ago = time_ago_in_words(recent.last_studied_at)
         render_featured_card(recent, "↻ Last studied #{ago} ago")
+      end
+
+      def up_next?(deck, unmet_ids)
+        unmet_ids.include?(deck.id) && !deck.waiting_for_tomorrow?
       end
 
       def render_featured_card(deck, label)
