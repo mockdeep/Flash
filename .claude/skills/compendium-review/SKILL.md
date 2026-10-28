@@ -118,7 +118,10 @@ text, so run it in the background and report when it finishes. Lines starting
        job (*sa* "to", *lang* "only"), else a short label in brackets (*ang*
        "(topic marker)", *mga* "(plural)", *po* "(polite)"). *na* takes the
        sense its job needs: "already" or "(linker)".
-     - Titles (*Don*, *Padre*, *G.* written out as *Ginoo*) get cards;
+     - Titles (*Don*, *Padre*, *G.* written out as *ginoo*) get cards,
+       studied in lower case, as is any word the text capitalises out of
+       respect (*hari*, *heneral*); only names, peoples, languages, months
+       and days, and words made from a place's name keep a capital;
        Spanish or Latin left as it is is skipped as `foreign`.
 3. Propose the fixes; apply the approved ones (see Edits); run the report again.
 4. When nothing is unresolved, finish it:
