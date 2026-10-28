@@ -150,10 +150,10 @@ RSpec.describe Snippets::Segment do
     end
 
     it "studies a Filipino abbreviation under the word it stands for" do
-      llm.answer(headword_answer(["Gng.", "Ginang"], "Reyes"))
+      llm.answer(headword_answer(["Gng.", "ginang"], "Reyes"))
 
       expect(filipino_tokens("Gng. Reyes").first)
-        .to eq("text" => "Gng.", "headword" => "Ginang")
+        .to eq("text" => "Gng.", "headword" => "ginang")
     end
 
     it "falls back to words and punctuation after two failures" do

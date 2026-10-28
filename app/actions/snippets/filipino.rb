@@ -28,8 +28,8 @@ module Snippets
          kay, mga, ay, na, pa, ba, din, rin, daw, raw, lang, nga, naman,
          po).
       7. A name of several words is one word (Ben Zayb, Ilog Pasig), but a
-         title before a name is a word of its own, studied with its capital
-         (Don, Donya, Padre, Senyor, Kapitan, and abbreviations such as G.,
+         title before a name is a word of its own, studied in lower case
+         (don, donya, padre, senyor, kapitan, and abbreviations such as G.,
          Gng., Bb., Dr., Sto., Sta. and Mr., which are studied written
          out): "Sta. Cruz" is "Sta." and "Cruz".
       8. Digits are one token; punctuation is never part of a word, except
@@ -78,14 +78,13 @@ module Snippets
 
       Return each word as `text`, exactly as written, and `headword`, the
       form it is studied under: the same word in lower case, accents kept,
-      unless it is a name, a title before one (Don, Padre, G.) or a Roman
-      numeral (Leon XIII), which keeps its capitals. A word
-      capitalised only because it starts a sentence is lower-cased ("Hindi"
-      → "hindi"). An abbreviation's headword is the word it stands for
-      here, written out with its capital: G. is "Ginoo", Gng. is "Ginang",
-      Bb. is "Binibini", Dr. is "Doktor" or "Doktora", Sto. is "Santo",
-      Sta. is "Santa", Mr. is "Mister". Otherwise the headword differs
-      from the text in letter case alone.
+      unless it keeps its capital as said below, or is a Roman numeral
+      (Leon XIII). A word capitalised only because it starts a sentence is
+      lower-cased ("Hindi" → "hindi"). An abbreviation's headword is the
+      word it stands for here, written out in lower case: G. is "ginoo",
+      Gng. is "ginang", Bb. is "binibini", Dr. is "doktor" or "doktora",
+      Sto. is "santo", Sta. is "santa", Mr. is "mister". Otherwise the
+      headword differs from the text in letter case alone.
 
       Some words get no card; mark each, kept whole as one word:
       - `skip: "name"`: a name English leaves as it is: a person or
@@ -95,16 +94,18 @@ module Snippets
       - `skip: "foreign"`: a passage, title or other name left in another
         language, such as Spanish or Latin the text quotes as it is
         ("Noli me tangere", "¡Qué barbaridad!").
-      A title before a name gets a card: "Don Custodio" is "Don" and
+      A title before a name gets a card: "Don Custodio" is "don" and
       "Custodio" (`skip: "name"`).
       A name English calls something else gets a card like any other word
       ("Maynila" Manila, "Espanya" Spain, "Koliseo" Colosseum), and so does
       a Spanish or English word the sentence uses as Filipino ("proyekto",
-      "Senyor"). A word the text writes with a capital mid-sentence keeps it
-      in its headword, linker and all: a name, a people or one of its
-      members (Indio, Indiong, Hudyo, Amerikano, Yankee), a month or day
+      "senyor"). Only these keep their capital in the headword, linker and
+      all: a name, a people or one of its members (Indio, Indiong, Hudyo,
+      Amerikano, Yankee), a language (Ingles, Kastila), a month or day
       (Pebrero, Lunes) and a word made from a place's name (Kabitenyo,
-      Pilipino, taga-Timog).
+      Pilipino, taga-Timog). Every other word is lower case, even where
+      the text capitalises it out of respect or as a title, with a name
+      or without: "hari", "heneral", "kataas-taasan", "padre".
 
       A sentence may carry `feedback`: what a reviewer found wrong with an
       earlier segmentation of it, and `previous`: that segmentation's words.
@@ -173,8 +174,10 @@ module Snippets
         what the form adds (a completed action glossed as ongoing, an
         object-focus verb glossed as actor-focus, a plural as singular)
       - the headword is not the word in lower case with its accents, or
-        lower-cases a name or a title before one, or does not write out the
-        word an abbreviation stands for here (G. is "Ginoo")
+        lower-cases a name, a people, a language, a month or day or a word
+        made from a place's name, or capitalises any other word, a title
+        included, or does not write out the word an abbreviation stands for
+        here (G. is "ginoo")
       - another occurrence proposes the same word in the same meaning under a
         different gloss: accept the better wording and reject the other
       - the "word" is not a word, but a fragment of bad segmentation, or a
