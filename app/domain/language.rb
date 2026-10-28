@@ -85,8 +85,9 @@ class Language
     spaces: true,
     prompts: Snippets::Portuguese::PROMPTS,
   )
-  # Ginoo, Ginang, Binibini, Doktor, and the Spanish titles a text may keep.
-  FILIPINO_TITLES = "G Gng Bb Dr Dra Sr Sra Srta Pe".split.freeze
+  # Ginoo, Ginang, Binibini, Doktor, and the Spanish and English titles a
+  # text may keep: Santo, Santa, Mister.
+  FILIPINO_TITLES = "G Gng Bb Dr Dra Sr Sra Srta Pe Sto Sta Mr Mrs".split.freeze
   # A word keeps its accents and affixes.
   FILIPINO = new(
     code: "fil",

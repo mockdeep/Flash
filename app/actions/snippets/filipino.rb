@@ -30,7 +30,8 @@ module Snippets
       7. A name of several words is one word (Ben Zayb, Ilog Pasig), but a
          title before a name is a word of its own, studied with its capital
          (Don, Donya, Padre, Senyor, Kapitan, and abbreviations such as G.,
-         Gng., Bb. and Dr., which are studied written out).
+         Gng., Bb., Dr., Sto., Sta. and Mr., which are studied written
+         out): "Sta. Cruz" is "Sta." and "Cruz".
       8. Digits are one token; punctuation is never part of a word, except
          the full stop of an abbreviation (G., Gng., Dr.) and the apostrophe
          of a shortened "at" or "ay" (kaya't).
@@ -82,8 +83,9 @@ module Snippets
       capitalised only because it starts a sentence is lower-cased ("Hindi"
       → "hindi"). An abbreviation's headword is the word it stands for
       here, written out with its capital: G. is "Ginoo", Gng. is "Ginang",
-      Bb. is "Binibini", Dr. is "Doktor" or "Doktora". Otherwise the
-      headword differs from the text in letter case alone.
+      Bb. is "Binibini", Dr. is "Doktor" or "Doktora", Sto. is "Santo",
+      Sta. is "Santa", Mr. is "Mister". Otherwise the headword differs
+      from the text in letter case alone.
 
       Some words get no card; mark each, kept whole as one word:
       - `skip: "name"`: a name English leaves as it is: a person or
