@@ -82,6 +82,11 @@ RSpec.describe Snippets::SplitSentences do
         .to eq(["Dumating si Gng. Reyes kahapon."])
     end
 
+    it "does not split after a saint's title" do
+      expect(split_filipino("Sumapit sila sa Plaza de Sta. Cruz."))
+        .to eq(["Sumapit sila sa Plaza de Sta. Cruz."])
+    end
+
     it "keeps a line of dialogue with its speech tag" do
       expect(split_filipino("“Maliliit na susô!” sagot ni Padre Camora."))
         .to eq(["“Maliliit na susô!” sagot ni Padre Camora."])
