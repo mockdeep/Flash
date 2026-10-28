@@ -98,11 +98,13 @@ module Snippets
       A title before a name gets a card: "Don Custodio" is "Don" and
       "Custodio" (`skip: "name"`).
       A name English calls something else gets a card like any other word
-      ("Maynila" Manila, "Espanya" Spain), and so does a Spanish or English
-      word the sentence uses as Filipino ("proyekto", "Senyor", "Indio").
-      Such a name keeps its capital in its headword, as do a month or day
+      ("Maynila" Manila, "Espanya" Spain, "Koliseo" Colosseum), and so does
+      a Spanish or English word the sentence uses as Filipino ("proyekto",
+      "Senyor"). A word the text writes with a capital mid-sentence keeps it
+      in its headword, linker and all: a name, a people or one of its
+      members (Indio, Indiong, Hudyo, Amerikano, Yankee), a month or day
       (Pebrero, Lunes) and a word made from a place's name (Kabitenyo,
-      Pilipino).
+      Pilipino, taga-Timog).
 
       A sentence may carry `feedback`: what a reviewer found wrong with an
       earlier segmentation of it, and `previous`: that segmentation's words.
