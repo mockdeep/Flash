@@ -120,9 +120,12 @@ text, so run it in the background and report when it finishes. Lines starting
        sense its job needs: "already" or "(linker)".
      - Titles (*Don*, *Padre*, *G.* written out as *ginoo*) get cards,
        studied in lower case, as is any word the text capitalises out of
-       respect (*hari*, *heneral*); only names, peoples, languages, months
-       and days, and words made from a place's name keep a capital;
-       Spanish or Latin left as it is is skipped as `foreign`.
+       respect (*hari*, *heneral*); only names, peoples, languages, months,
+       days and holidays, and words made from a place's name keep a
+       capital; Spanish or Latin left as it is is skipped as `foreign`.
+     - Nouns are glossed singular (*mga* marks the plural), verbs "is" or
+       "was" unless the form marks a plural subject (*nagsialis*), and
+       pronouns of either gender with both ("he, she").
 3. Propose the fixes; apply the approved ones (see Edits); run the report again.
 4. When nothing is unresolved, finish it:
    `bin/rails runner 'Snippets::Finish.call(Snippet.find(<id>))'`. It strips
