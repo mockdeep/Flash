@@ -15,7 +15,8 @@ module Snippets
          add none it leaves out.
       3. A word with the linker joined to it is one word (isang, ideang,
          iyong), as is a word with a shortened "at" or "ay" joined by an
-         apostrophe (kaya't, siya'y).
+         apostrophe (kaya't, siya'y). A "ng" written apart is a word of its
+         own: never join it to the word before.
       4. A hyphenated word is one word: a repeated root (tuwang-tuwa,
          kaisa-isang, kaiba-iba), a prefix before a vowel (nag-iisip,
          mag-alaga) or a compound (bahay-kubo).
@@ -28,13 +29,25 @@ module Snippets
          kay, mga, ay, na, pa, ba, din, rin, daw, raw, lang, nga, naman,
          po).
       7. A name of several words is one word (Ben Zayb, Ilog Pasig), but a
-         title before a name is a word of its own, studied in lower case
-         (don, donya, padre, senyor, kapitan, and abbreviations such as G.,
-         Gng., Bb., Dr., Sto., Sta. and Mr., which are studied written
-         out): "Sta. Cruz" is "Sta." and "Cruz".
+         title before a name is a word of its own (don, padre, kapitan,
+         tandang, G., Sta.): "Sta. Cruz" is "Sta." and "Cruz".
       8. Digits are one token; punctuation is never part of a word, except
          the full stop of an abbreviation (G., Gng., Dr.) and the apostrophe
          of a shortened "at" or "ay" (kaya't).
+
+      Headword rules. A word studies under its headword: the word as
+      written, accents kept, in lower case. Only these keep their capital,
+      linker and all: a name (Maynila, Koliseo), a people or one of its
+      members (Indio, Indiong, Hudyo, Amerikano), a language (Ingles,
+      Kastila), a month, day or holiday (Pebrero, Lunes, Pasko), a word
+      made from a place's name (Kabitenyo, Pilipino, taga-Timog) and a
+      Roman numeral (Leon XIII). Every other word is lower case, even where
+      the text capitalises it to start a sentence, out of respect or as a
+      title: "hindi", "hari", "heneral", "kataas-taasan", "padre". An
+      abbreviation's headword is the word it stands for here, written out
+      in lower case: G. is "ginoo", Gng. is "ginang", Bb. is "binibini",
+      Dr. is "doktor" or "doktora", Sto. is "santo", Sta. is "santa", Mr.
+      is "mister".
     TEXT
 
     GLOSSES = <<~TEXT
@@ -48,10 +61,14 @@ module Snippets
         ipinagluto "cooked for". A noun or adjective made from a root
         carries what the affix adds (pagkain "food", kainan "eating place",
         maganda "beautiful").
+      - Gloss a noun in the singular (mga marks the plural), a verb with
+        "is" or "was" unless its form marks a plural subject (nagsialis "all
+        left"), and a pronoun of either gender with both (siya "he, she",
+        niya "his, her").
       - Give the subject only when the form fixes it and English would lose
         it: kami "we (not you)", tayo "we (including you)".
       - Gloss a word with a joined linker or shortened "at" or "ay" by the
-        whole (isang "a, one", kaya't "and so", siya'y "he is" or "she is").
+        whole (isang "a, one", kaya't "and so", siya'y "he is, she is").
       - Gloss a marker or particle by the English word doing the same job
         here (sa "to", "at" or "in"; ng "of"; kay "to (a person)"; din
         "also"; lang "only"; pa "still" or "yet"; na "already"). Where
@@ -77,14 +94,8 @@ module Snippets
       word: it is a token of its own or left out.
 
       Return each word as `text`, exactly as written, and `headword`, the
-      form it is studied under: the same word in lower case, accents kept,
-      unless it keeps its capital as said below, or is a Roman numeral
-      (Leon XIII). A word capitalised only because it starts a sentence is
-      lower-cased ("Hindi" → "hindi"). An abbreviation's headword is the
-      word it stands for here, written out in lower case: G. is "ginoo",
-      Gng. is "ginang", Bb. is "binibini", Dr. is "doktor" or "doktora",
-      Sto. is "santo", Sta. is "santa", Mr. is "mister". Otherwise the
-      headword differs from the text in letter case alone.
+      form it is studied under by the headword rules below: it differs
+      from the text in letter case alone, except for an abbreviation.
 
       Some words get no card; mark each, kept whole as one word:
       - `skip: "name"`: a name English leaves as it is: a person or
@@ -99,13 +110,7 @@ module Snippets
       A name English calls something else gets a card like any other word
       ("Maynila" Manila, "Espanya" Spain, "Koliseo" Colosseum), and so does
       a Spanish or English word the sentence uses as Filipino ("proyekto",
-      "senyor"). Only these keep their capital in the headword, linker and
-      all: a name, a people or one of its members (Indio, Indiong, Hudyo,
-      Amerikano, Yankee), a language (Ingles, Kastila), a month or day
-      (Pebrero, Lunes) and a word made from a place's name (Kabitenyo,
-      Pilipino, taga-Timog). Every other word is lower case, even where
-      the text capitalises it out of respect or as a title, with a name
-      or without: "hari", "heneral", "kataas-taasan", "padre".
+      "senyor", "padre de pamilya").
 
       A sentence may carry `feedback`: what a reviewer found wrong with an
       earlier segmentation of it, and `previous`: that segmentation's words.
@@ -173,11 +178,7 @@ module Snippets
       - the gloss is not what this form means in this sentence, or loses
         what the form adds (a completed action glossed as ongoing, an
         object-focus verb glossed as actor-focus, a plural as singular)
-      - the headword is not the word in lower case with its accents, or
-        lower-cases a name, a people, a language, a month or day or a word
-        made from a place's name, or capitalises any other word, a title
-        included, or does not write out the word an abbreviation stands for
-        here (G. is "ginoo")
+      - the headword breaks the headword rules below
       - another occurrence proposes the same word in the same meaning under a
         different gloss: accept the better wording and reject the other
       - the "word" is not a word, but a fragment of bad segmentation, or a
