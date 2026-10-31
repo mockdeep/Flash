@@ -35,10 +35,11 @@ class LanguageCard
     @correct_streak = entry.correct_streak
   end
 
-  delegate :reading, :back, :category, :sense_ids, to: :entry
-  delegate :view_count, :form, to: :entry
+  delegate :reading, :back, :category, :view_count, :form, to: :entry
 
   def id = entry.card_id
+
+  def sense_ids = entry[:sense_ids]
 
   def front = entry.term(form)
 
