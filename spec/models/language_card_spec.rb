@@ -50,6 +50,30 @@ RSpec.describe LanguageCard do
     expect(card.back).to eq("flower")
   end
 
+  it "holds only the senses its own list selected" do
+    card = create(:language_card, front: "花", back: "flower")
+    create(:language_card, front: "花", back: "to spend")
+
+    expect(card.sense_ids).to eq([sense_of(card, "flower").id])
+  end
+
+  it "holds its senses in membership order" do
+    card = create(:language_card, back: "understand; clear")
+    understand, clear = card.sense_ids
+    sense_of(card, "understand").sense_memberships.sole.update!(position: 9)
+
+    expect(card.deck.card(card.id).sense_ids).to eq([clear, understand])
+  end
+
+  it "scores only the senses its own list selected" do
+    card = create(:language_card, front: "花", back: "flower")
+    create(:language_card, front: "花", back: "to spend")
+
+    card.record_correct!
+
+    expect(SkillScore.pluck(:sense_id)).to eq(card.sense_ids)
+  end
+
   it "files under the list's category for the word" do
     card = create(:language_card, category: "Nature")
 
