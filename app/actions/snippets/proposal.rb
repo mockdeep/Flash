@@ -2,9 +2,10 @@
 
 module Snippets
   # A proposer's decision for one occurrence: an existing sense, a new one,
-  # or a complaint that the token is missegmented. Only a new sense goes
-  # before the judge; selection among existing senses measured accurate
-  # enough to stand alone (docs/compendium.md).
+  # or a complaint that the token is missegmented. A new sense goes before
+  # the judge, and so does an existing one for a spelling not yet settled;
+  # otherwise selection among existing senses measured accurate enough to
+  # stand alone (docs/compendium.md).
   Proposal =
     Struct.new(
       :occurrence, :decision, :sense_id, :reading, :gloss, :note, :article
@@ -14,6 +15,11 @@ module Snippets
       end
 
       def new_sense? = decision == "new"
+
+      def judged?
+        new_sense? ||
+          (decision == "existing" && occurrence.unsettled_spelling?)
+      end
 
       delegate :headword, :traditional, :language, to: :occurrence
 
@@ -38,13 +44,21 @@ module Snippets
 
       # What the judge is shown beside the occurrence.
       def proposed
-        { headword:, reading: sense_reading, article: sense_article, gloss: }
-          .compact
+        fields =
+          { headword:, reading: sense_reading, article: sense_article, gloss: }
+
+        fields.merge(occurrence.respelled? ? respelling : {}).compact
       end
 
       private
 
       def listed_sense? = occurrence.senses.map(&:id).include?(sense_id)
+
+      def respelling
+        return { respelled: true } if new_sense?
+
+        { respelled: true, sense_id:, gloss: Sense.find(sense_id).gloss }
+      end
 
       def new_sense_problem
         missing = [

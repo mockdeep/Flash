@@ -6,8 +6,11 @@ module Components
   # out), over its gloss, and once the word is done at the deck's round, a
   # Restudy button; or, for a word the segmenter skipped, why it has no card.
   class ReadingLookup < Components::Base
-    SKIPS = { "name" => "name", "foreign" => "title in another language" }
-      .freeze
+    SKIPS = {
+      "emoticon" => "emoticon",
+      "foreign" => "in another language",
+      "name" => "name",
+    }.freeze
 
     attr_accessor :id, :text, :sense, :skip, :state
 

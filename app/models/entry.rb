@@ -8,6 +8,7 @@
 # senses' memberships.
 class Entry < ApplicationRecord
   has_many :senses, dependent: :restrict_with_exception
+  has_many :spellings, dependent: :destroy
 
   validates :language, presence: true, inclusion: { in: WordList::LANGUAGES.keys }
   validates :headword, presence: true

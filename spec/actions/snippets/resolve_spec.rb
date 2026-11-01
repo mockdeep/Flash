@@ -219,4 +219,62 @@ RSpec.describe Snippets::Resolve do
       end
     end
   end
+
+  describe ".call with a respelled word" do
+    def respelled_sentence
+      snippet = create(:snippet, word_list: create(:word_list, language: "fil"))
+      tokens = [{ "text" => "sya", "headword" => "siya" }]
+      create(:snippet_sentence, snippet:, body: "sya", tokens:)
+    end
+
+    def siya
+      entry = create(:entry, language: "fil", headword: "siya")
+      create(:sense, entry:, gloss: "he, she")
+    end
+
+    def picked(sense) = decisions("existing", sense_id: sense.id)
+
+    it "has the judge check a listed sense for a new spelling" do
+      llm.answer(picked(siya), verdicts(true))
+      described_class.call([respelled_sentence])
+
+      expect(llm.calls.map(&:model))
+        .to eq(["claude-sonnet-5-5", "claude-opus-5-5"])
+    end
+
+    it "shows the judge the listed sense" do
+      sense = siya
+      llm.answer(picked(sense), verdicts(true))
+      described_class.call([respelled_sentence])
+
+      expect(JSON.parse(llm.calls.last.prompt)["occurrences"].sole)
+        .to include("sense_id" => sense.id, "gloss" => "he, she")
+    end
+
+    it "marks a new sense for a new spelling as respelled" do
+      llm.answer(decisions, verdicts(true))
+      described_class.call([respelled_sentence])
+
+      expect(JSON.parse(llm.calls.last.prompt)["occurrences"].sole)
+        .to include("respelled" => true)
+    end
+
+    it "leaves a spelling the judge keeps rejecting unresolved" do
+      sense = siya
+      answers = [picked(sense), verdicts(false)]
+      llm.answer(*answers, *answers)
+
+      expect(resolved_token(respelled_sentence))
+        .to include("outcome" => "unresolved")
+    end
+
+    it "skips the judge for a settled spelling" do
+      sense = siya
+      create(:spelling, entry: sense.entry, text: "sya")
+      llm.answer(picked(sense))
+      described_class.call([respelled_sentence])
+
+      expect(llm.calls.size).to eq(1)
+    end
+  end
 end

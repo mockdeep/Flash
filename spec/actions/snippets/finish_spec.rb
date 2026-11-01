@@ -9,6 +9,12 @@ RSpec.describe Snippets::Finish do
     snippet
   end
 
+  def filipino_snippet_with(tokens)
+    snippet = create(:snippet, word_list: create(:word_list, language: "fil"))
+    create(:snippet_sentence, snippet:, tokens:)
+    snippet
+  end
+
   def front_matter_snippet(*tokens)
     snippet = snippet_with
     create(:front_matter, source: snippet.source, tokens:)
@@ -40,6 +46,15 @@ RSpec.describe Snippets::Finish do
       described_class.call(snippet_with(token))
 
       expect(sense.reload.traditional).to eq("愛")
+    end
+
+    it "records a respelling before stripping its token" do
+      file_everything_as_verbs
+      entry = create(:entry, language: "fil", headword: "siya")
+      tokens = [{ "text" => "sya", "sense_id" => create(:sense, entry:).id }]
+      described_class.call(filipino_snippet_with(tokens))
+
+      expect(entry.spellings.pluck(:text)).to eq(["sya"])
     end
 
     it "strips the pipeline's working keys" do

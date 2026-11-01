@@ -10,6 +10,7 @@ module Compendium
   # reverse, so no foreign key is ever left dangling.
   TABLES = [
     "entries",
+    "spellings",
     "senses",
     "sense_examples",
     "word_lists",

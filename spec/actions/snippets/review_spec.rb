@@ -46,6 +46,43 @@ RSpec.describe Snippets::Review do
     end
   end
 
+  describe ".repoint with a headword on the token" do
+    it "moves the token to the sense's headword" do
+      sentence = sentence_with({ "text" => "yung", "headword" => "iyong" })
+      sense = create(:sense, entry: create(:entry, headword: "iyon"))
+      described_class.repoint(sentence, 0, sense)
+
+      expect(sentence.reload.tokens.sole["headword"]).to eq("iyon")
+    end
+  end
+
+  describe ".repoint_spelling" do
+    def yung(headword = "iyong") = { "text" => "yung", "headword" => headword }
+
+    def iyon = create(:sense, entry: create(:entry, headword: "iyon"))
+
+    def repoint_tokens(*tokens, text: "Yung")
+      snippet = create(:snippet)
+      sentence = create(:snippet_sentence, snippet:, tokens:)
+      described_class.repoint_spelling(snippet, text, "iyong", iyon)
+      sentence.reload.tokens
+    end
+
+    it "points every use of the spelling at the sense" do
+      expect(repoint_tokens(yung, yung).pluck("headword"))
+        .to eq(["iyon", "iyon"])
+    end
+
+    it "leaves the spelling's other headwords alone" do
+      expect(repoint_tokens(yung("iyan")).sole).not_to have_key("sense_id")
+    end
+
+    it "leaves other spellings alone" do
+      expect(repoint_tokens({ "text" => "ung", "headword" => "iyong" }).sole)
+        .not_to have_key("sense_id")
+    end
+  end
+
   describe ".add_sense" do
     def add(sentence, gloss: "to love", reading: "ài")
       described_class.add_sense(sentence, 0, reading:, gloss:)

@@ -9,8 +9,11 @@ module Snippets
   # answer is checked mechanically: the words must rejoin to the sentence's
   # word characters, and each form must fit its word as the language says.
   # A sentence that fails is asked again on its own, and one that fails
-  # twice falls back to the language's pieces (characters for Mandarin).
+  # twice falls back to the language's pieces (characters for Mandarin). A
+  # sentence with no letters or digits (an emoticon) goes straight to pieces,
+  # since the model has nothing to cut.
   module Segment
+    TEXT = /[\p{L}\p{N}]/
     WORD = {
       type: "object",
       additionalProperties: false,
@@ -40,9 +43,13 @@ module Snippets
     # `feedback` maps a sentence to what was wrong with its last
     # segmentation, for one sent back to be segmented again.
     def self.call(sentences, feedback: {})
-      answers = ask(sentences, feedback)
+      worded, wordless = sentences.partition { it.body.match?(TEXT) }
+      wordless.each { it.update!(tokens: pieces(it)) }
+      return if worded.empty?
 
-      sentences.each_with_index do |sentence, id|
+      answers = ask(worded, feedback)
+
+      worded.each_with_index do |sentence, id|
         tokens = tokens(sentence, answers[id], feedback)
         tokens = Recut.call(sentence, tokens) if feedback.key?(sentence)
         sentence.update!(tokens:)
@@ -50,13 +57,16 @@ module Snippets
     end
 
     def self.tokens(sentence, row, feedback)
-      language = sentence.language
       words =
         verified(sentence, row) ||
         verified(sentence, ask([sentence], feedback).values.first) ||
-        sentence.body.scan(language.piece).map { |piece| { "text" => piece } }
+        pieces(sentence)
 
-      words.map { |word| token(word, language) }
+      words.map { |word| token(word, sentence.language) }
+    end
+
+    def self.pieces(sentence)
+      sentence.body.scan(sentence.language.piece).map { { "text" => it } }
     end
 
     # The headword and traditional form are kept only where they differ

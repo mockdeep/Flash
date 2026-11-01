@@ -34,7 +34,8 @@ module Snippets
         *section("Translations", translations(snippet)),
         *section("Unresolved", unresolved(sentences)),
         *section("Created", created(tokens)),
-        *section("Skipped", skipped(sentences)),
+        *section("Respelled", RespelledReport.call(all)),
+        *section("Skipped", SkippedReport.call(sentences)),
       ]
     end
 
@@ -88,17 +89,6 @@ module Snippets
       end
     end
 
-    def self.skipped(sentences)
-      sentences.flat_map do |sentence|
-        sentence.tokens.each_with_index.filter_map do |token, index|
-          next unless token["skip"]
-
-          "  sentence #{sentence.id} token #{index} #{token["text"]}: " \
-            "#{token["skip"]}"
-        end
-      end
-    end
-
     def self.created(tokens)
       created = tokens.select { |token| token["outcome"] == "created" }
       senses = Sense.where(id: created.pluck("sense_id")).order(:id)
@@ -109,7 +99,9 @@ module Snippets
     def self.sentence_lines(sentence, place)
       senses = Sense.where(id: sentence.tokens.pluck("sense_id")).index_by(&:id)
       lines =
-        sentence.tokens.each_with_index.map do |token, index|
+        sentence.tokens.each_with_index.filter_map do |token, index|
+          next if token["skip"]
+
           sense = senses[token["sense_id"]]
           "  #{index} #{token_line(sentence, token, sense)}"
         end
@@ -122,7 +114,6 @@ module Snippets
       outcome = token["outcome"] && " [#{token["outcome"]}]"
       return "#{text} → #{describe(sense)}#{outcome}" if sense
       return "#{text}: unresolved (#{token["note"]})" if token["note"]
-      return "#{text}: skipped (#{token["skip"]})" if token["skip"]
       return "#{text}: not resolved yet" if sentence.needs_sense?(token)
 
       text

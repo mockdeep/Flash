@@ -315,10 +315,16 @@ RSpec.describe Components::SnippetReading, type: :view do
     expect(page).to have_css("[popover]", exact_text: "name")
   end
 
-  it "says a skipped foreign title is one" do
+  it "says a skipped foreign word is in another language" do
     page = skipped_snippet("foreign")
 
-    expect(page).to have_css("[popover]", text: "title in another language")
+    expect(page).to have_css("[popover]", exact_text: "in another language")
+  end
+
+  it "says a skipped emoticon is one" do
+    page = skipped_snippet("emoticon")
+
+    expect(page).to have_css("[popover]", exact_text: "emoticon")
   end
 
   it "opens a skipped word's popover from the word" do

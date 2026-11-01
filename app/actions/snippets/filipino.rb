@@ -19,10 +19,12 @@ module Snippets
          own: never join it to the word before.
       4. A hyphenated word is one word: a repeated root (tuwang-tuwa,
          kaisa-isang, kaiba-iba), a prefix before a vowel (nag-iisip,
-         mag-alaga) or a compound (bahay-kubo).
+         mag-alaga) or a compound (bahay-kubo). A repeated word is one word
+         with or without its hyphen ("isa isa", "buklat buklatin").
       5. A fixed phrase is one word when its meaning cannot be worked out
          from its words (para sa "for", dahil sa "because of", kung saan
-         "where"). Split a combination whose words, each glossed on its
+         "where", na lang "just", pa lang "just", buti na lang "thankfully",
+         sa totoo lang "to tell the truth"). Split a combination whose words, each glossed on its
          own, already say what it means. When unsure, keep whole what a
          standard dictionary lists as one entry.
       6. A marker or particle is a word of its own (ang, ng, sa, si, ni,
@@ -47,13 +49,23 @@ module Snippets
       abbreviation's headword is the word it stands for here, written out
       in lower case: G. is "ginoo", Gng. is "ginang", Bb. is "binibini",
       Dr. is "doktor" or "doktora", Sto. is "santo", Sta. is "santa", Mr.
-      is "mister".
+      is "mister", Ms. is "miss".
+
+      A word the text spells some other way than the dictionary studies
+      under the standard spelling, chosen by what it means here: a casual
+      spelling (sya "siya", nya "niya", kelangan "kailangan", pede "puwede",
+      dun "doon", wag "huwag", yung "iyong", ng meaning "when" "nang"), a
+      repeated word without its hyphen (isa isa "isa-isa"), a stretched
+      spelling (Hindeeee "hindi") or a typo (katandaaan "katandaan"). A
+      contraction stays one word as written and studies under its full form,
+      space included (sakin "sa akin", sayo "sa iyo", anlandi "ang landi",
+      nanaman "na naman", palang "pa lang"). A word with no standard
+      spelling studies as written ("nameet", "madiscover").
     TEXT
 
     GLOSSES = <<~TEXT
       Gloss rules:
-      - Gloss what is written, as it is used in this sentence, even where the
-        text has a typo. Never gloss the word the author probably meant.
+      - Gloss the headword as it is used in this sentence.
       - A gloss is what a reader needs in place of this form: usually one to
         four English words that carry what the form adds. A verb's gloss
         carries its aspect and focus: kumain "ate", kumakain "is eating",
@@ -67,6 +79,13 @@ module Snippets
         niya "his, her").
       - Give the subject only when the form fixes it and English would lose
         it: kami "we (not you)", tayo "we (including you)".
+      - A pronoun after a noun it owns is possessive: "bayad mo" has mo
+        "your", "teacher namin" has namin "our (not your)", "president
+        natin" has natin "our (including you)".
+      - A verb after a word that takes one (para, sanay, kaya, kinaya,
+        gusto, ayaw) reads "to ...", whatever its form elsewhere: "para
+        tumakas" has tumakas "to escape", "sanay na akong tumalon" has
+        tumalon "to jump".
       - Gloss a word with a joined linker or shortened "at" or "ay" by the
         whole (isang "a, one", kaya't "and so", siya'y "he is, she is").
       - Gloss a marker or particle by the English word doing the same job
@@ -95,7 +114,8 @@ module Snippets
 
       Return each word as `text`, exactly as written, and `headword`, the
       form it is studied under by the headword rules below: it differs
-      from the text in letter case alone, except for an abbreviation.
+      from the text in letter case alone, except for an abbreviation or a
+      word the text does not spell the standard way.
 
       Some words get no card; mark each, kept whole as one word:
       - `skip: "name"`: a name English leaves as it is: a person or
@@ -104,13 +124,18 @@ module Snippets
         the same name ("Pateros", "Pasig").
       - `skip: "foreign"`: a passage, title or other name left in another
         language, such as Spanish or Latin the text quotes as it is
-        ("Noli me tangere", "¡Qué barbaridad!").
+        ("Noli me tangere", "¡Qué barbaridad!"), and English in its English
+        spelling, a lone word or a run of them, song lyrics included
+        ("handsome", "I can't deny").
+      - `skip: "emoticon"`: an emoticon with letters in it ("XD", "T_T",
+        "O__O", ":D").
       A title before a name gets a card: "Don Custodio" is "don" and
       "Custodio" (`skip: "name"`).
       A name English calls something else gets a card like any other word
       ("Maynila" Manila, "Espanya" Spain, "Koliseo" Colosseum), and so does
-      a Spanish or English word the sentence uses as Filipino ("proyekto",
-      "senyor", "padre de pamilya").
+      a Spanish word the sentence uses as Filipino ("proyekto", "senyor",
+      "padre de pamilya") and an English word respelled or given a Filipino
+      affix ("kyut", "nagbablush", "i-check").
 
       A sentence may carry `feedback`: what a reviewer found wrong with an
       earlier segmentation of it, and `previous`: that segmentation's words.
@@ -141,9 +166,11 @@ module Snippets
         occurrences are the same word in the same new meaning, give them
         the identical gloss.
       - "missegmented": the token breaks the segmentation rules below: two
-        words joined, a piece cut from a longer word or fixed phrase, or a
-        whole the rules split. Say in note how it should have been split or
-        joined. The sentence is segmented again.
+        words joined, a piece cut from a longer word or fixed phrase, a
+        whole the rules split, or a headword that is not the standard
+        spelling of the word as used here. Say in note how it should have
+        been split or joined, or what its headword should be. The sentence
+        is segmented again.
 
       An occurrence may carry `rejection`: a reviewer's reason for turning
       down an earlier proposal for it. Take it into account.
@@ -191,6 +218,13 @@ module Snippets
       A sentence may carry `resegmented`: the complaint it was already
       segmented again over. A word the complaint asked for is not bad
       segmentation on that ground alone.
+
+      An occurrence marked `respelled` is a word the text spells differently
+      from its headword: reject it if the word as written here is not that
+      headword, but another word or a spelling of its own. With a `sense_id`
+      as well, it picks that listed sense rather than proposing a new one:
+      accept it if the word here is that headword in that sense, whatever
+      the first objection above would say.
 
       Accept when the gloss is right for the sentence and the sense is
       distinct from the listed ones. Give a verdict for every occurrence,
