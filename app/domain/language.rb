@@ -55,18 +55,21 @@ class Language
     end
   LETTERED_PIECE = /[\p{L}\p{M}\p{N}'’-]+|\S/
   # A sentence in a language written in letters runs on past a full stop
-  # after one of its titles or an initial (J. R. Ward), and past an ending
+  # after one of its titles or an initial (J. R. Ward), past an ending
   # followed by a lower-case word: the speech tag after a line of dialogue,
-  # or a trailing-off ellipsis.
+  # or a trailing-off ellipsis, and past punctuation inside a word, number
+  # or emoticon (5.07, sh!t, =.=). A capital after it starts a new sentence,
+  # for a text that leaves out the space.
   LETTERED_SENTENCE =
     lambda do |titles|
       /
         (?:
           \b(?:#{titles.join("|")}|[[:upper:]])\. |
-          [.!?…]+[”»"’)]*(?=\s+[—–]?\s*[[:lower:]]) |
+          [.!?…]+[”»"’)*]*(?=\s+[—–]?\s*[[:lower:]]) |
+          [.!?…]+(?=[^\s.!?…”»"’)*\p{Lu}]) |
           [^.!?…\n]
         )+
-        [.!?…]*[”»"’)]*
+        [.!?…]*[”»"’)*]*
       /x
     end
   # Titles whose full stop doesn't end a sentence: Senhor, Doutora, Padre,

@@ -22,8 +22,9 @@ RSpec.describe Components::SnippetReading, type: :view do
 
   def snippet_with(body, *token_lists)
     snippet = create(:snippet, body:)
-    token_lists.each.with_index do |tokens, position|
-      create(:snippet_sentence, snippet:, position:, tokens:)
+    lines = Snippets::SplitSentences.call(body, snippet.language)
+    token_lists.zip(lines).each.with_index do |(tokens, line), position|
+      create(:snippet_sentence, snippet:, position:, tokens:, body: line)
     end
     snippet
   end
@@ -35,7 +36,7 @@ RSpec.describe Components::SnippetReading, type: :view do
     sense = create(:sense, entry:, gloss: "house")
     snippet = create(:snippet, source:, body: "A casa.")
     tokens = [{ "text" => "A" }, { "text" => "casa", "sense_id" => sense.id }]
-    create(:snippet_sentence, snippet:, tokens:)
+    create(:snippet_sentence, snippet:, tokens:, body: "A casa.")
     render_for(snippet, round:, source:)
   end
 
@@ -284,7 +285,7 @@ RSpec.describe Components::SnippetReading, type: :view do
     sense = create(:sense, entry:, gloss: "Ms.")
     snippet = create(:snippet, source:, body: "D.")
     tokens = [{ "text" => "D.", "sense_id" => sense.id }]
-    create(:snippet_sentence, snippet:, tokens:)
+    create(:snippet_sentence, snippet:, tokens:, body: "D.")
     render_for(snippet, source:)
   end
 
@@ -303,7 +304,8 @@ RSpec.describe Components::SnippetReading, type: :view do
   def skipped_snippet(skip)
     source = create(:source, word_list: create(:word_list, language: "pt"))
     snippet = create(:snippet, source:, body: "Inácia.")
-    create(:snippet_sentence, snippet:, tokens: [{ "text" => "Inácia", skip: }])
+    tokens = [{ "text" => "Inácia", skip: }]
+    create(:snippet_sentence, snippet:, tokens:, body: "Inácia.")
     render_for(snippet, source:)
   end
 

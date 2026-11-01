@@ -77,12 +77,26 @@ class Snippet < ApplicationRecord
   end
 
   # The body's lines, which splitting drops, each with its sentences. No
-  # sentence spans a line, so each line holds as many as it splits into.
+  # sentence spans a line, so each line takes the stored sentences found in
+  # it, in order, which holds however the splitter has changed since.
   def paragraphs
     remaining = sentences.reject(&:heading?)
     body.split(/\s*\n\s*/).map(&:strip).compact_blank.map do |text|
-      count = Snippets::SplitSentences.call(text, language).size
-      Paragraph.new(text:, sentences: remaining.shift(count))
+      Paragraph.new(text:, sentences: take_sentences(text, remaining))
     end
+  end
+
+  private
+
+  def take_sentences(text, remaining)
+    rest = text
+    found =
+      remaining.take_while do |sentence|
+        at = rest.index(sentence.body)
+        rest = rest[(at + sentence.body.size)..] if at
+        at
+      end
+
+    remaining.shift(found.size)
   end
 end

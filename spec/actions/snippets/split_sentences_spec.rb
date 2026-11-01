@@ -82,6 +82,26 @@ RSpec.describe Snippets::SplitSentences do
         .to eq(["Dumating si Gng. Reyes kahapon."])
     end
 
+    it "keeps a number whole" do
+      expect(split_filipino("Mga 5.07 na.")).to eq(["Mga 5.07 na."])
+    end
+
+    it "keeps punctuation inside a word" do
+      expect(split_filipino("Ano ba sh!t ito.")).to eq(["Ano ba sh!t ito."])
+    end
+
+    it "keeps an emoticon whole" do
+      expect(split_filipino("=.=")).to eq(["=.="])
+    end
+
+    it "keeps a closing asterisk with its sentence" do
+      expect(split_filipino("*KRINGGG!* Sige.")).to eq(["*KRINGGG!*", "Sige."])
+    end
+
+    it "splits before a capital when the space is left out" do
+      expect(split_filipino("Oo.Sige.")).to eq(["Oo.", "Sige."])
+    end
+
     it "does not split after a saint's title" do
       expect(split_filipino("Sumapit sila sa Plaza de Sta. Cruz."))
         .to eq(["Sumapit sila sa Plaza de Sta. Cruz."])
