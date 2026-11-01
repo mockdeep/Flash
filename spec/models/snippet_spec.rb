@@ -100,6 +100,14 @@ RSpec.describe Snippet do
         .to eq([sentences.take(1), sentences.drop(1)])
     end
 
+    it "keeps a line's stored sentences when today's splitter would differ" do
+      snippet = create(:snippet, body: "我爱你。你爱我。\n他爱她。")
+      sentences = sentences_of(snippet, "我爱你。你爱我。", "他爱她。")
+
+      expect(snippet.paragraphs.map(&:sentences))
+        .to eq([sentences.take(1), sentences.drop(1)])
+    end
+
     # The texts a line as written comes back as, from its tokens' texts.
     def paragraph_texts(text, *texts)
       tokens = texts.map { { "text" => it } }
