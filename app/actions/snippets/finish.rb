@@ -3,7 +3,8 @@
 module Snippets
   # Closes a reviewed snippet, with its source's front matter: every Chinese
   # word must have a sense. Puts a
-  # traditional text's spellings on its senses (Spell), strips the
+  # traditional text's spellings on its senses (Spell), remembers the
+  # spellings a review has passed (RecordSpellings), strips the
   # pipeline's working keys from its tokens, so the snippet reads
   # finished and can be pushed, adds its senses to its word_list, and files
   # the list's new memberships by category. Safe to run again: a finished
@@ -17,6 +18,7 @@ module Snippets
       unsensed!(snippet)
       snippet.transaction do
         Spell.call(snippet)
+        RecordSpellings.call(snippet)
         snippet.sentences_with_front_matter.each { strip(it) }
         Attach.call(snippet)
       end

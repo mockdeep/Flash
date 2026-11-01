@@ -73,7 +73,9 @@ text, so run it in the background and report when it finishes. Lines starting
      sense, or whether the sentence was cut wrongly.
    - **Skipped** words, which get no card: in Portuguese and Filipino, names English
      leaves as they are, people's or places' (`name`), and titles or other
-     names left in another language (`foreign`). Check each reason holds.
+     names left in another language (`foreign`). In Filipino, `foreign` also
+     covers English in its English spelling, and emoticons with letters in
+     them are `emoticon`. Check each reason holds.
      Give a wrongly skipped one a sense with `add_sense` or `repoint`, which
      takes the skip off. A name English calls something else (Lisboa
      "Lisbon", Deus "God") gets a card; one that slipped through with a
@@ -123,9 +125,20 @@ text, so run it in the background and report when it finishes. Lines starting
        respect (*hari*, *heneral*); only names, peoples, languages, months,
        days and holidays, and words made from a place's name keep a
        capital; Spanish or Latin left as it is is skipped as `foreign`.
+     - A word spelled off the dictionary (*sya*, *Hindeeee*, a typo) studies
+       under the standard spelling (*siya*, *hindi*), and a contraction under
+       its full form (*sakin* → *sa akin*), with the token left as written.
+       Opus sees a spelling until it is settled, and the report's
+       **Respelled** section lists the unsettled ones once each. Check that
+       list rather than each token; fix a wrong one with
+       `Snippets::Review.repoint_spelling(snippet, text, headword, sense)`.
+       Finish remembers what stands, so a spelling comes up once.
      - Nouns are glossed singular (*mga* marks the plural), verbs "is" or
        "was" unless the form marks a plural subject (*nagsialis*), and
        pronouns of either gender with both ("he, she").
+     - Scan pronouns after a noun, which should be possessive (*bayad mo*
+       "your", *teacher namin* "our"), and verbs after *para*, *sanay*,
+       *kaya* or *gusto*, which should read "to ..." (*para tumakas*).
 3. Propose the fixes; apply the approved ones (see Edits); run the report again.
 4. When nothing is unresolved, finish it:
    `bin/rails runner 'Snippets::Finish.call(Snippet.find(<id>))'`. It strips

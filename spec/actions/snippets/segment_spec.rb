@@ -134,6 +134,31 @@ RSpec.describe Snippets::Segment do
     end
   end
 
+  describe ".call with a sentence of no words" do
+    it "cuts it into pieces" do
+      expect(filipino_tokens("=_=").pluck("text")).to eq(["=", "_", "="])
+    end
+
+    it "does not ask the model" do
+      filipino_tokens("=_=")
+
+      expect(llm.calls).to be_empty
+    end
+
+    def filipino_sentences(*bodies)
+      snippet = create(:snippet, word_list: create(:word_list, language: "fil"))
+      bodies.map { create(:snippet_sentence, snippet:, body: it) }
+    end
+
+    it "asks about the sentences with words" do
+      smile, words = filipino_sentences(":)", "sige")
+      llm.answer(headword_answer("sige"))
+      described_class.call([smile, words])
+
+      expect(words.reload.tokens).to eq([{ "text" => "sige" }])
+    end
+  end
+
   describe ".call in Filipino" do
     it "keeps a word's accents" do
       llm.answer(headword_answer(["Ibinukás", "ibinukás"], "niya", "."))
@@ -149,11 +174,40 @@ RSpec.describe Snippets::Segment do
       expect(filipino_tokens("susô")).to eq([{ "text" => "susô" }])
     end
 
+    it "studies a casual spelling under its standard form" do
+      llm.answer(headword_answer(["sya", "siya"]))
+
+      expect(filipino_tokens("sya"))
+        .to eq([{ "text" => "sya", "headword" => "siya" }])
+    end
+
+    it "studies a contraction under its full form" do
+      llm.answer(headword_answer(["sakin", "sa akin"]))
+
+      expect(filipino_tokens("sakin"))
+        .to eq([{ "text" => "sakin", "headword" => "sa akin" }])
+    end
+
+    it "asks again when a word comes back without a headword" do
+      llm.answer(headword_answer(["sya", ""]))
+      llm.answer(headword_answer(["sya", "siya"]))
+
+      expect(filipino_tokens("sya").first).to include("headword" => "siya")
+    end
+
     it "studies a Filipino abbreviation under the word it stands for" do
       llm.answer(headword_answer(["Gng.", "ginang"], "Reyes"))
 
       expect(filipino_tokens("Gng. Reyes").first)
         .to eq("text" => "Gng.", "headword" => "ginang")
+    end
+
+    it "offers emoticon as a reason to skip a word" do
+      llm.answer(headword_answer("sige"))
+      filipino_tokens("sige")
+
+      enum = '"enum":["emoticon","foreign","name"]'
+      expect(llm.calls.sole.schema.to_json).to include(enum)
     end
 
     it "falls back to words and punctuation after two failures" do

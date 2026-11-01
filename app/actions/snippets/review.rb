@@ -10,10 +10,28 @@ module Snippets
   module Review
     def self.repoint(sentence, index, sense)
       tokens = sentence.tokens.dup
-      tokens[index] =
-        tokens[index].except("note", "skip")
-          .merge("outcome" => "matched", "sense_id" => sense.id)
+      tokens[index] = repointed(tokens[index], sense)
       sentence.update!(tokens:)
+    end
+
+    def self.repointed(token, sense)
+      fields = { "outcome" => "matched", "sense_id" => sense.id }
+      fields["headword"] = sense.entry.headword if token.key?("headword")
+
+      token.except("note", "skip").merge(fields)
+    end
+
+    # Repoints every token of a snippet that spells a word `text` and studies
+    # it under `headword`, for a respelling the report shows was wrong.
+    def self.repoint_spelling(snippet, text, headword, sense)
+      snippet.sentences_with_front_matter.each do |sentence|
+        sentence.tokens.each_with_index do |token, index|
+          next unless token["text"].casecmp?(text)
+          next unless token["headword"] == headword
+
+          repoint(sentence, index, sense)
+        end
+      end
     end
 
     # A sense under the token's headword, made unless the entry for that

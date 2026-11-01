@@ -56,6 +56,14 @@ module Snippets
       sentence.tokens[index]["traditional"] || word if language.traditional
     end
 
+    # Written some other way than its headword, in a language that allows it.
+    def respelled? = language.respells && !word.casecmp?(headword)
+
+    # A respelling a judge still has to see, even on a listed sense.
+    def unsettled_spelling?
+      respelled? && !Spelling.settled?(language.code, word, headword)
+    end
+
     # Read afresh on every call: a sense created for an earlier token is there
     # for the next rung to pick.
     def senses

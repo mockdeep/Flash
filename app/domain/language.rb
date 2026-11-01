@@ -11,7 +11,9 @@
 # with `traditional` forms gets each word's traditional form from the
 # segmenter too, which `form_fits` checks the same way. `skips` are the
 # reasons the segmenter may give for a word to get no card. A language
-# written with `spaces` between its words breaks lines at them.
+# written with `spaces` between its words breaks lines at them. A language
+# that `respells` lets a word study under another spelling than the text's,
+# which is judged and reviewed once and then remembered as a `Spelling`.
 Language = Data.define(
   :code,
   :sentence,
@@ -22,6 +24,7 @@ Language = Data.define(
   :lexicon,
   :skips,
   :spaces,
+  :respells,
   :prompts,
 )
 
@@ -37,6 +40,7 @@ class Language
     lexicon: Lexicon::MANDARIN,
     skips: [],
     spaces: false,
+    respells: false,
     prompts: Snippets::Mandarin::PROMPTS,
   )
   # An abbreviation (Sr., Pe.) studies under the word it stands for, which
@@ -52,6 +56,15 @@ class Language
   AS_WRITTEN =
     lambda do |text, form|
       form.casecmp?(text) || ABBREVIATION.call(text, form)
+    end
+  BARE_LETTERS =
+    ->(text) { text.unicode_normalize(:nfd).gsub(/\p{M}/, "").downcase }
+  # A word the text spells informally studies under its standard spelling,
+  # which nothing mechanical can check. Dropping an accent is still refused.
+  STANDARD_FORM =
+    lambda do |text, form|
+      AS_WRITTEN.call(text, form) ||
+        (form.present? && BARE_LETTERS.call(text) != BARE_LETTERS.call(form))
     end
   LETTERED_PIECE = /[\p{L}\p{M}\p{N}'’-]+|\S/
   # A sentence in a language written in letters runs on past a full stop
@@ -86,22 +99,26 @@ class Language
     lexicon: Lexicon::PORTUGUESE,
     skips: ["foreign", "name"],
     spaces: true,
+    respells: false,
     prompts: Snippets::Portuguese::PROMPTS,
   )
   # Ginoo, Ginang, Binibini, Doktor, and the Spanish and English titles a
   # text may keep: Santo, Santa, Mister.
-  FILIPINO_TITLES = "G Gng Bb Dr Dra Sr Sra Srta Pe Sto Sta Mr Mrs".split.freeze
-  # A word keeps its accents and affixes.
+  FILIPINO_TITLES =
+    "G Gng Bb Dr Dra Sr Sra Srta Pe Sto Sta Mr Mrs Ms".split.freeze
+  # A word keeps its accents and affixes, and studies under its standard
+  # spelling.
   FILIPINO = new(
     code: "fil",
     sentence: LETTERED_SENTENCE.call(FILIPINO_TITLES),
     word_char: /\p{L}/,
     piece: LETTERED_PIECE,
     form: "headword",
-    form_fits: AS_WRITTEN,
+    form_fits: STANDARD_FORM,
     lexicon: Lexicon::FILIPINO,
-    skips: ["foreign", "name"],
+    skips: ["emoticon", "foreign", "name"],
     spaces: true,
+    respells: true,
     prompts: Snippets::Filipino::PROMPTS,
   )
   ALL = [MANDARIN, PORTUGUESE, FILIPINO].index_by(&:code).freeze

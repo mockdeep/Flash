@@ -98,8 +98,8 @@ module Snippets
 
     def self.attempt(occurrences, language, proposer:, judge:)
       proposals = Propose.call(occurrences, model: proposer, language:)
-      new_senses, settled = proposals.partition(&:new_sense?)
-      accepted = Judge.call(new_senses, model: judge, language:)
+      judged, settled = proposals.partition(&:judged?)
+      accepted = Judge.call(judged, model: judge, language:)
 
       (settled + accepted).to_h do |proposal|
         [proposal.occurrence.key, Record.call(proposal)]

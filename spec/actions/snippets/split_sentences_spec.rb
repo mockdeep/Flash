@@ -102,6 +102,11 @@ RSpec.describe Snippets::SplitSentences do
       expect(split_filipino("Oo.Sige.")).to eq(["Oo.", "Sige."])
     end
 
+    it "does not split after Ms." do
+      expect(split_filipino("Dumating si Ms. Reyes kahapon."))
+        .to eq(["Dumating si Ms. Reyes kahapon."])
+    end
+
     it "does not split after a saint's title" do
       expect(split_filipino("Sumapit sila sa Plaza de Sta. Cruz."))
         .to eq(["Sumapit sila sa Plaza de Sta. Cruz."])

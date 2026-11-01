@@ -120,16 +120,16 @@ RSpec.describe Snippets::Report do
         .to end_with("  0 爱 → ##{sense.id} 爱 ài: to love")
     end
 
-    it "lists the skipped words with their reasons" do
+    it "lists a skipped word once with its reason and first place" do
       token = { "text" => "爱", "skip" => "foreign" }
 
-      expect(report(token))
-        .to match(/Skipped:\n  sentence \d+ token 0 爱: foreign/)
+      expect(report(token, token))
+        .to match(/Skipped:\n  爱: foreign \(2, first at sentence \d+ token 0\)/)
     end
 
-    it "shows a skipped word" do
+    it "leaves a skipped word out of its sentence's tokens" do
       expect(report({ "text" => "爱", "skip" => "foreign" }))
-        .to end_with("  0 爱: skipped (foreign)")
+        .not_to include("  0 爱")
     end
 
     it "shows a sense without a reading" do
@@ -193,6 +193,48 @@ RSpec.describe Snippets::Report do
       create(:sense_membership)
 
       expect(described_class.unused).to eq("")
+    end
+  end
+
+  describe ".call with respelled words" do
+    def filipino_report(*tokens)
+      snippet = create(:snippet, word_list: create(:word_list, language: "fil"))
+      create(:snippet_sentence, snippet:, tokens:)
+      described_class.call(snippet)
+    end
+
+    def spelled(text, headword, **rest)
+      { "text" => text, "headword" => headword, **rest.stringify_keys }
+    end
+
+    it "lists a spelling once with how often it stands for a headword" do
+      words = Array.new(2) { spelled("Sya", "siya") }
+
+      expect(filipino_report(*words)).to include("Respelled:\n  sya → siya (2)")
+    end
+
+    it "lists each headword a spelling stands for" do
+      words = [spelled("yung", "iyong"), spelled("yung", "iyon")]
+
+      expect(filipino_report(*words)).to include("yung → iyong (1), iyon (1)")
+    end
+
+    it "marks a headword made for the spelling" do
+      expect(filipino_report(spelled("sakin", "sa akin", outcome: "created")))
+        .to include("sakin → sa akin (1) new")
+    end
+
+    it "leaves out a settled spelling" do
+      entry = create(:entry, language: "fil", headword: "siya")
+      create(:spelling, entry:, text: "sya")
+
+      expect(filipino_report(spelled("sya", "siya")))
+        .not_to include("Respelled:")
+    end
+
+    it "leaves out a skipped word" do
+      expect(filipino_report(spelled("sya", "siya", skip: "foreign")))
+        .not_to include("Respelled:")
     end
   end
 end
