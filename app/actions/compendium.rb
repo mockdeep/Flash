@@ -37,6 +37,17 @@ module Compendium
     (names - [OWNER_COLUMN[table]]).sort
   end
 
+  # Each table's columns. With `only`, those of its tables and columns the
+  # database still has, so one since dropped changes the checksum.
+  def self.layout(connection, only: nil)
+    layout = TABLES.index_with { columns(connection, it) }
+    return layout if only.nil?
+
+    layout.slice(*only.keys).to_h do |table, names|
+      [table, names & only[table]]
+    end
+  end
+
   def self.quote(connection, columns, prefix: "")
     columns.map { |name| prefix + connection.quote_ident(name) }.join(", ")
   end
