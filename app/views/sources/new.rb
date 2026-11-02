@@ -36,13 +36,18 @@ module Views
         form_with(**options) do |form|
           render(Components::ErrorExplanation.new(errors: source.errors))
 
-          render_field(form, :title, "Title", required: true)
-          render_language_field(form)
-          render_field(form, :author, "Author")
-          render_field(form, :source_url, "Source URL", type: "url")
-          render_license_field(form)
+          render_fields(form)
           render_actions(form)
         end
+      end
+
+      def render_fields(form)
+        render_field(form, :title, "Title", required: true)
+        render_language_field(form)
+        render_script_field(form)
+        render_field(form, :author, "Author")
+        render_field(form, :source_url, "Source URL", type: "url")
+        render_license_field(form)
       end
 
       def render_field(form, name, label, **)
@@ -61,6 +66,20 @@ module Views
             :language,
             languages,
             { selected: source.word_list&.language },
+            class: "form-input",
+          )
+        end
+      end
+
+      def render_script_field(form)
+        scripts = LanguageDeck::SCRIPTS.map { [it.capitalize, it] }
+
+        div(class: "form-field") do
+          form.label(:script, "Script (Mandarin only)", class: "form-label")
+          form.select(
+            :script,
+            scripts,
+            { selected: source.script },
             class: "form-input",
           )
         end

@@ -1,32 +1,24 @@
 # frozen_string_literal: true
 
 module Snippets
-  # Puts a traditional text's spelling of each word on the sense it studies
+  # Puts a traditional source's spelling of each word on the sense it studies
   # as, since each traditional spelling of a meaning is studied on its own.
-  # A sense whose spelling no text has used yet, a guess, takes the text's.
-  # One whose spelling a text has used keeps it, and the token moves to a
-  # sibling of the same gloss spelled as this text spells it. A snippet in
-  # simplified says nothing about spelling and is left alone; so is one
-  # already finished, whose working keys are gone.
+  # A sense whose spelling no traditional source has written, a guess, takes
+  # the text's. One whose spelling such a source has written keeps it, and
+  # the token moves to a sibling of the same gloss spelled as this text
+  # spells it. A simplified source says nothing about spelling and is left
+  # alone.
   module Spell
     def self.call(snippet)
-      return unless traditional?(snippet)
+      return unless snippet.source.traditional?
 
       snippet.sentences_with_front_matter.each { respell(it) }
-    end
-
-    # Some word of it simplifies to another form.
-    def self.traditional?(snippet)
-      snippet.language.traditional &&
-        snippet.sentences_with_front_matter.any? do |sentence|
-          sentence.tokens.any? { |token| token.key?("headword") }
-        end
     end
 
     def self.respell(sentence)
       tokens =
         sentence.tokens.map do |token|
-          next token unless token["sense_id"]
+          next token unless spells?(token)
 
           sense = spelled(Sense.find(token["sense_id"]), token["text"])
           token.merge("sense_id" => sense.id)
@@ -34,10 +26,17 @@ module Snippets
       sentence.update!(tokens:)
     end
 
+    # A word still in review, which a finished one no longer is. A
+    # "traditional" key says the text's spelling isn't the Taiwan form.
+    def self.spells?(token)
+      token.key?("outcome") && token.key?("sense_id") &&
+        !token.key?("traditional")
+    end
+
     def self.spelled(sense, spelling)
       return sense if sense.traditional == spelling
 
-      if used?(sense)
+      if written?(sense)
         sense.entry.senses
           .find_or_create_by!(gloss: sense.gloss, traditional: spelling)
       else
@@ -45,14 +44,11 @@ module Snippets
       end
     end
 
-    # A text has used a spelling when a token pointing at the sense is
-    # written in it, and the spelling is not also the simplified form.
-    def self.used?(sense)
-      traditional = sense.traditional
-      written = [{ sense_id: sense.id, text: traditional }].to_json
+    def self.written?(sense)
+      written = [{ sense_id: sense.id, text: sense.traditional }].to_json
 
-      traditional != sense.entry.headword &&
-        SnippetSentence.exists?(["tokens @> ?", written])
+      SnippetSentence.where(source: Source.traditional)
+        .exists?(["tokens @> ?", written])
     end
   end
 end

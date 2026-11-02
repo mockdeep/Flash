@@ -25,6 +25,11 @@ RSpec.describe Snippets::Finish do
     { "text" => "爱", "sense_id" => sense.id, **working.stringify_keys }
   end
 
+  def traditional_snippet_with(sense)
+    token = resolved(sense, text: "愛", headword: "爱", outcome: "matched")
+    snippet_with(token).tap { it.source.update!(script: "traditional") }
+  end
+
   def finish_despite_refusal(snippet)
     described_class.call(snippet)
   rescue described_class::Unfinished
@@ -42,8 +47,7 @@ RSpec.describe Snippets::Finish do
     it "puts a traditional text's spelling on its senses" do
       file_everything_as_verbs
       sense = create(:sense)
-      token = resolved(sense, text: "愛", headword: "爱")
-      described_class.call(snippet_with(token))
+      described_class.call(traditional_snippet_with(sense))
 
       expect(sense.reload.traditional).to eq("愛")
     end

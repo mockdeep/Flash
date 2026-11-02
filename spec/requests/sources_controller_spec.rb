@@ -20,6 +20,7 @@ RSpec.describe SourcesController do
       source: {
         title:,
         language:,
+        script: "traditional",
         author: "鲁迅",
         source_url: "https://zh.wikisource.org/",
         license: "public_domain",
@@ -216,6 +217,15 @@ RSpec.describe SourcesController do
 
       expect(rendered)
         .to have_select("License", selected: "All rights reserved")
+    end
+
+    it "starts on simplified" do
+      login_admin
+
+      get(new_source_path)
+
+      expect(rendered)
+        .to have_select("Script (Mandarin only)", selected: "Simplified")
     end
 
     it "offers each language snippets can be processed in" do

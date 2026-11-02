@@ -40,8 +40,9 @@ what the user agrees to. AGENTS.md ("Snippet Processing", "Compendium Review",
    worker first). It refuses while local work is unpushed; never pass
    `FORCE=true` without the user saying so, since it discards that work.
 2. Sources and their snippets are added in the app (`/sources`, admin only,
-   where a source's language is chosen), locally or in production. One added
-   in production arrives with the next pull.
+   where a source's language is chosen, and for Mandarin its script: a text
+   mixing simplified and traditional stays Simplified), locally or in
+   production. One added in production arrives with the next pull.
 
 ## Processing
 
@@ -199,7 +200,7 @@ Compendium::Edit.detach(Sense.find(456), WordList.find(3))
   `revise(sense, traditional:)`. `add_sense` takes the token's.
 - Each traditional spelling of a meaning is a sense of its own (想像 and 想象
   "imagination"); don't merge senses that differ only in traditional form.
-  Finish puts a traditional text's spellings on its senses.
+  Finish puts a traditional source's spellings on its senses.
 - `remove` refuses while a token, list or learner uses the sense; read the
   refusal back to the user rather than working around it.
 - Never clear out a language's entries wholesale: the compendium holds seed
