@@ -16,12 +16,39 @@ RSpec.describe Source do
       .in_array(described_class::LICENSES.keys)
   end
 
+  it do
+    expect(build(:source)).to validate_inclusion_of(:script)
+      .in_array(LanguageDeck::SCRIPTS)
+  end
+
   it { is_expected.to allow_value("https://zh.wikipedia.org/").for(:source_url) }
   it { is_expected.to allow_value("").for(:source_url) }
   it { is_expected.not_to allow_value("zh.wikipedia.org").for(:source_url) }
 
   it "shares with nobody by default" do
     expect(described_class.new.license).to eq("all_rights_reserved")
+  end
+
+  it "counts as simplified by default" do
+    expect(described_class.new.script).to eq("simplified")
+  end
+
+  it "is traditional when a Mandarin source says so" do
+    expect(build(:source, script: "traditional")).to be_traditional
+  end
+
+  it "is not traditional in a language without traditional forms" do
+    word_list = build(:word_list, language: "pt")
+    source = build(:source, word_list:, script: "traditional")
+
+    expect(source).not_to be_traditional
+  end
+
+  it "finds the traditional sources" do
+    source = create(:source, script: "traditional")
+    create(:source)
+
+    expect(described_class.traditional).to contain_exactly(source)
   end
 
   it "is removed with its word_list" do

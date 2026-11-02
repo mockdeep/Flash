@@ -29,16 +29,21 @@ class Source < ApplicationRecord
            inverse_of: :source
 
   scope :listed, -> { joins(:listing) }
+  scope :traditional, -> { where(script: "traditional") }
 
   validates :word_list, :title, presence: true
   validates :word_list_id, uniqueness: true
   validates :license, inclusion: { in: LICENSES.keys }
+  validates :script, inclusion: { in: LanguageDeck::SCRIPTS }
   validates :source_url,
             format: { with: %r{\Ahttps?://\S+\z}, allow_blank: true }
   validate(:supported_language)
 
   def language = Language.for(word_list.language)
   def listed? = listing.present?
+
+  # A text mixing the two stays simplified, so its spellings prove nothing.
+  def traditional? = language.traditional && script == "traditional"
 
   # Where a learner adding the source starts.
   def first_section = snippets.studyable.first
