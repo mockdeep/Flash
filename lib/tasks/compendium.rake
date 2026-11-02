@@ -4,10 +4,11 @@ require "open3"
 
 # Moves the compendium between this machine and production through a
 # snapshot in tmp/compendium (docs/compendium.md, Compendium sync). The
-# checksum of the compendium local last matched production on is kept in
-# ar_internal_metadata.
+# checksum of the compendium local last matched production on, and the
+# columns it covers, are kept in ar_internal_metadata.
 module CompendiumTasks
   CHECKSUM = "compendium_checksum"
+  COLUMNS = "compendium_columns"
   DIR = Rails.root.join("tmp/compendium")
   UNPUSHED = "Local compendium has unpushed changes; push them, " \
              "or pull with FORCE=true to discard them"
@@ -22,7 +23,7 @@ module CompendiumTasks
     ActiveRecord::Base.transaction do
       Compendium::Load.call(local, snapshot, owner_id: Seeds::Admin.call.id)
     end
-    metadata[CHECKSUM] = snapshot.checksum
+    remember(snapshot)
     puts("Pulled; the word lists belong to #{Seeds::Admin::USERNAME}")
   end
 
@@ -65,13 +66,21 @@ module CompendiumTasks
   def credentials
     username = ENV.fetch("COMPENDIUM_USERNAME", nil)
 
-    { checksum: metadata[CHECKSUM], username: }
+    columns = metadata[COLUMNS]&.then { JSON.parse(it) }
+    baseline = Compendium::Baseline.new(checksum: metadata[CHECKSUM], columns:)
+
+    { baseline:, username: }
   end
 
   def commit(remote)
     remote.exec("COMMIT")
-    metadata[CHECKSUM] = Compendium::Snapshot.new(DIR.join("local")).checksum
+    remember(Compendium::Snapshot.new(DIR.join("local")))
     puts("Pushed")
+  end
+
+  def remember(snapshot)
+    metadata[CHECKSUM] = snapshot.checksum
+    metadata[COLUMNS] = snapshot.layout.to_json
   end
 
   def roll_back(remote)

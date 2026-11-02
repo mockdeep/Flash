@@ -26,4 +26,41 @@ RSpec.describe Compendium::Export do
 
     expect(headers).not_to include("user_id")
   end
+
+  context "when given only some tables and columns" do
+    def export_entry_ids(dir)
+      snapshot = Compendium::Snapshot.new(dir)
+
+      described_class.call(connection, snapshot, only: { "entries" => ["id"] })
+    end
+
+    it "writes just those columns" do
+      expect(export_entry_ids(Dir.mktmpdir).path("entries").readlines)
+        .to eq(["id\n"])
+    end
+
+    it "leaves the other tables unwritten" do
+      expect(export_entry_ids(Dir.mktmpdir).path("senses")).not_to exist
+    end
+
+    it "returns a snapshot of just those tables" do
+      expect(export_entry_ids(Dir.mktmpdir).tables).to eq(["entries"])
+    end
+
+    it "skips a column the database no longer has" do
+      only = { "entries" => ["id", "dropped"] }
+      snapshot = Compendium::Snapshot.new(Dir.mktmpdir)
+      described_class.call(connection, snapshot, only:)
+
+      expect(snapshot.path("entries").readlines).to eq(["id\n"])
+    end
+
+    it "skips a table the database no longer has" do
+      only = { "entries" => ["id"], "dropped" => ["id"] }
+      snapshot = Compendium::Snapshot.new(Dir.mktmpdir)
+
+      expect(described_class.call(connection, snapshot, only:).tables)
+        .to eq(["entries"])
+    end
+  end
 end

@@ -5,11 +5,11 @@ module Compendium
   # `remote`. Raises Refused, before writing anything, when a guard fails. It
   # runs no transaction of its own: the caller commits or rolls back.
   module Push
-    def self.call(local:, remote:, dir:, checksum:, username:)
+    def self.call(local:, remote:, dir:, baseline:, username:)
       none_in_progress!
       same_migrations!(local, remote)
       owner_id = owner_id!(remote, username)
-      unchanged!(remote, Snapshot.new(dir.join("production")), checksum)
+      unchanged!(remote, Snapshot.new(dir.join("production")), baseline)
 
       snapshot = Export.call(local, Snapshot.new(dir.join("local")))
       Apply.call(remote, snapshot, owner_id:)
@@ -50,8 +50,11 @@ module Compendium
       raise(Refused, "No admin named #{username} in production")
     end
 
-    def self.unchanged!(remote, snapshot, checksum)
-      return if Export.call(remote, snapshot).checksum == checksum
+    # Compares only the columns the checksum covers, so a migration adding a
+    # column or table doesn't read as production having changed.
+    def self.unchanged!(remote, snapshot, baseline)
+      export = Export.call(remote, snapshot, only: baseline.columns)
+      return if export.checksum == baseline.checksum
 
       raise(Refused, "Production changed since the last pull; pull again")
     end

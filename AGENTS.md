@@ -321,6 +321,7 @@ app/
 │   ├── compendium.rb             # Lookup / edit / sync namespace: TABLES (parents first), column helpers, Refused
 │   ├── compendium/
 │   │   ├── apply.rb              # Snapshot → database: add / update / delete by id, with a Report
+│   │   ├── baseline.rb           # What the last pull or push left: the checksum and the columns it covers
 │   │   ├── cast.rb               # A source's narrator and characters with their genders, built finished snippet by snippet (Sonnet)
 │   │   ├── confirm.rb            # Opus keeps or drops each suggestion Flag made
 │   │   ├── briefing.rb           # Prompt for reviewing entries: grouped by headword, each sense's lists and sampled snippet uses
@@ -962,7 +963,7 @@ The compendium tables (`Compendium::TABLES`: entries, spellings, senses, sense_e
 - **`rails compendium:pull`**: refuses if the local compendium differs from what the last pull or push left (`FORCE=true` discards it), then exports production, runs `db:reset`, and loads the snapshot with every word list given to the seed admin. A plain `db:reset` never touches production.
 - **`rails compendium:push`**: refuses while any snippet or source's front matter is `:in_progress` (a `:new` one travels untouched), both databases have the same `schema_migrations`, `COMPENDIUM_USERNAME` names a production admin, and production still matches the last pull's checksum. Then it applies the local snapshot to production in one transaction and prints the adds / updates / deletes per table plus the learner data the deletes take (`Apply::LOSSES`: skill_scores, sense_distractors, source_readers, source_listings). It rolls back unless `DRY_RUN=false`.
 - **Owners**: `word_lists.user_id` is never in a snapshot. Apply never changes an existing list's owner, and gives new lists to `COMPENDIUM_USERNAME`.
-- **Checksum**: kept under `compendium_checksum` in `ar_internal_metadata`, updated by every pull and committed push.
+- **Checksum**: kept under `compendium_checksum` in `ar_internal_metadata`, updated by every pull and committed push, with the tables and columns it covers under `compendium_columns`. A push exports production to just those, so a migration adding a column or table doesn't read as production having changed; dropping or renaming one still refuses, and so does a migration that changes existing data. A pull's check stays on the whole snapshot, so a value set in a new local column isn't lost: it refuses after such a migration until `FORCE=true`.
 - **Specs** run Export / Load / Apply / Push against the one test database; only the rake glue in `lib/tasks/compendium.rake` is unspecced.
 
 ### Subscription Transparency

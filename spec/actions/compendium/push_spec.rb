@@ -3,10 +3,11 @@
 require "rails_helper"
 
 RSpec.describe Compendium::Push do
-  def push(dir: Pathname(Dir.mktmpdir), remote: connection, **overrides)
+  def push(remote: connection, checksum: export.checksum, columns: nil, **rest)
     admin = create(:user, :admin)
-    checksum = export.checksum
-    options = { checksum:, username: admin.username, **overrides }
+    baseline = Compendium::Baseline.new(checksum:, columns:)
+    options = { baseline:, username: admin.username, **rest }
+    dir = Pathname(Dir.mktmpdir)
 
     described_class.call(local: connection, remote:, dir:, **options)
   end
@@ -72,5 +73,35 @@ RSpec.describe Compendium::Push do
   it "refuses when the remote changed since the last pull" do
     expect { push(checksum: "stale") }
       .to raise_error(Compendium::Refused, /Production changed/)
+  end
+
+  context "when the checksum covers only some columns" do
+    def covered
+      columns = Compendium.columns(connection, "sources") - ["script"]
+
+      { "sources" => columns }
+    end
+
+    def covered_checksum
+      snapshot = Compendium::Snapshot.new(Dir.mktmpdir)
+
+      Compendium::Export.call(connection, snapshot, only: covered).checksum
+    end
+
+    it "lets a push through past a column added since" do
+      checksum = covered_checksum
+
+      expect(push(checksum:, columns: covered).changes["sources"])
+        .to eq(added: 0, updated: 0, deleted: 0)
+    end
+
+    it "still refuses when a covered column changed" do
+      source = create(:source)
+      checksum = covered_checksum
+      source.update!(title: "Changed")
+
+      expect { push(checksum:, columns: covered) }
+        .to raise_error(Compendium::Refused, /Production changed/)
+    end
   end
 end
