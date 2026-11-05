@@ -138,8 +138,6 @@ class LanguageDeck < Deck
 
   def count_progress = rows(entries).pick(*progress_counts)
 
-  def lowest_streak = rows(entries).minimum(:correct_streak)
-
   def cards_from(scope) = scope.map { |entry| LanguageCard.new(self, entry) }
 
   def senses_filed(category)

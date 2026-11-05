@@ -20,7 +20,7 @@ class Deck < ApplicationRecord
     true => "MAX(skill_scores.last_correct_at) >= ?",
     false => "COALESCE(MAX(skill_scores.last_correct_at) < ?, TRUE)",
   }.freeze
-  Progress = Data.define(:total, :done)
+  Progress = Data.define(:total, :done, :lowest)
 
   # The senses a snippet deck studies: those its snippet's sentences use,
   # and its source's title and author (`Snippet#studied_sense_ids`).
@@ -200,7 +200,7 @@ class Deck < ApplicationRecord
   # Progress is shared between a user's decks, so a deck can open with every
   # card done at its round; it moves on to the first round with work left.
   def catch_up_round!
-    lowest = lowest_streak
+    lowest = progress.lowest
     update!(round: lowest + 1) if lowest && lowest >= round
   end
 
@@ -280,16 +280,15 @@ class Deck < ApplicationRecord
 
   private
 
-  # Total and done cards come from one query, kept per round: a study page
-  # asks for them several times, and a new round mid-request counts afresh.
+  # Total, done and lowest streak come from one query, kept per round: a
+  # study page asks for them several times, and a new round mid-request
+  # counts afresh.
   def progress
     @progress ||= {}
     @progress[round] ||= Progress.new(*count_progress)
   end
 
   def count_progress = cards.pick(*progress_counts)
-
-  def lowest_streak = cards.minimum(:correct_streak)
 
   # A snippet deck studies only the senses its snippet uses.
   def studied_senses
@@ -298,7 +297,11 @@ class Deck < ApplicationRecord
 
   def progress_counts
     done = ["COUNT(*) FILTER (WHERE correct_streak >= ?)", round]
-    [Arel.sql("COUNT(*)"), Arel.sql(self.class.sanitize_sql_array(done))]
+    [
+      Arel.sql("COUNT(*)"),
+      Arel.sql(self.class.sanitize_sql_array(done)),
+      Arel.sql("MIN(correct_streak)"),
+    ]
   end
 
   def clear_target
