@@ -25,7 +25,8 @@ module Snippets
            (贞观, 康熙) are words.
         3. A number and its measure word split, even when a dictionary lists
            the pair (一本 → 一, 本; 五人 → 五, 人), unless together they mean
-           more than the number times the unit (一定, 一些, 一样, 一直).
+           more than the number times the unit (一定, 一些, 一样, 一直, and
+           一个人 where it means "alone").
         4. An established idiom (成语) stays whole (一帆风顺, 画蛇添足,
            自相矛盾). One-off phrases, quotations and parallel sayings split
            into their words, which may be two-character words, not always
@@ -81,6 +82,8 @@ module Snippets
         the verb ("up", "out", "finished"), not its meaning as a verb on its
         own ("to rise", "to go out"). Gloss it in plain English, with no
         grammar label ("up", not "up (direction complement)").
+        The same holds for pronouns and 一: 他 as an object is "him", not
+        "he", and 一 right before a verb (一看) is "as soon as", not "a bit".
       TEXT
     end
   end
