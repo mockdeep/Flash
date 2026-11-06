@@ -4,18 +4,11 @@ module Snippets
   # The prompts for processing Mandarin snippets.
   module Mandarin
     SEGMENT_INSTRUCTIONS = <<~TEXT
-      You segment Chinese sentences into words for a vocabulary
-      builder. For each sentence, return its words in order. Keep names and
-      idioms whole. Each word should be one a learner could look up, so
-      split grammatical particles off the word they follow: aspect
-      particles (了, 着/著, 过/過) and structural particles (的, 地, 得) are
-      words of their own ("花了" is "花", "了"; "看着" is "看", "着"), unless
-      the combination has a meaning of its own ("为了", "除了", "觉得",
-      "目的"). Every character of the sentence must appear in
+      You segment Chinese sentences into words for a vocabulary builder,
+      under the segmentation rules below. For each sentence, return its
+      words in order. Every character of the sentence must appear in
       exactly one word, unchanged: do not drop, add, convert or correct
-      characters. Punctuation is never part of a word: quotation marks,
-      title marks (《》), brackets and the rest are tokens of their own or
-      left out ("《新黑客辞典》" is "《", "新黑客辞典", "》").
+      characters. Punctuation may be returned as tokens or left out.
 
       Return each word as `text`, exactly as written, and `simplified`, the
       same word in simplified characters, character for character; it is
@@ -57,15 +50,9 @@ module Snippets
         rendering of this sentence. 人体健康 is "human health", so 健康
         "healthy" does not fit there, and a new sense "health" is needed.
       - "new": no listed sense covers this occurrence. Return a reading and a
-        gloss. The reading is pinyin with tone marks and the syllables
-        joined ("niànshū"), capitalised for names; when a listed sense is
-        pronounced the same way, copy its reading exactly. The gloss is a
-        short English gloss of this one meaning. No hanzi, no pinyin, no
-        cross-references. Gloss a proper noun by the English name of what it
-        names in this text (新 in 新马 is "Singapore"), and a function word
-        by its function ("possessive particle"). When
-        two occurrences are the same word in the same new meaning, give them
-        the identical reading and gloss.
+        gloss under the reading and gloss rules below. When two occurrences
+        are the same word in the same new meaning, give them the identical
+        reading and gloss.
       - "missegmented": the token breaks the segmentation rules below: two
         words joined (a verb with its aspect particle, "花了"), a piece cut
         from a longer word, or a whole the rules split. Say in note how it
@@ -114,8 +101,6 @@ module Snippets
         other
       - the "word" is not a word, but a fragment of bad segmentation, or a
         whole the segmentation rules below would split
-      - the gloss holds hanzi, pinyin, cross-references, several unrelated
-        meanings, or explanation beyond a short gloss
       - the reading or gloss breaks the reading and gloss rules below
 
       A sentence may carry `resegmented`: the complaint it was already

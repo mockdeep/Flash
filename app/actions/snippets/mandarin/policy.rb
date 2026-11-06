@@ -45,18 +45,26 @@ module Snippets
            split off (出生于 → 出生, 于; 水中 → 水, 中; 老师们 → 老师, 们),
            unless the whole has a meaning of its own (位于, 于是, 之后, 总之).
            Pronouns with 们 stay whole (我们, 你们, 他们, 她们, 它们,
-           咱们).
+           咱们). Aspect particles (了, 着 / 著, 过 / 過) and structural
+           particles (的, 地, 得) split off too (花了 → 花, 了; 看着 → 看,
+           着), unless the whole has a meaning of its own (为了, 除了, 觉得,
+           目的).
            Verb results follow the base rule: whole when the pair means more
            than verb plus result (看见, 学会), split when the result just adds
            its usual meaning (炒熟 → 炒, 熟; 剪短 → 剪, 短; 贴上 → 贴, 上).
            Suffixes that make a new word stay attached (科学家, 美国人, 营业员,
            可能性).
         Characters that are not Chinese (kana, Latin letters) are never part
-        of a word with Chinese characters.
+        of a word with Chinese characters, and punctuation is never part of
+        a word: quotation marks, title marks and brackets are tokens of
+        their own (《新黑客辞典》 → 《, 新黑客辞典, 》).
       TEXT
 
       READING = <<~TEXT
         Reading and gloss rules:
+        - A reading is pinyin with tone marks and its syllables joined
+          (niànshū), capitalised for a name. A sense pronounced like a
+          listed one copies its reading exactly.
         - Write the tone changes of 一 and 不 as spoken (不错 búcuò, 一定
           yídìng, 一样 yíyàng). 一 keeps yī when counted on its own, as an
           ordinal, or at the end of a word (第一, 统一). A 一 or 不 that is a
@@ -66,10 +74,14 @@ module Snippets
           the text has a typo or a stray character. Never gloss the word the
           author probably meant instead.
         - A gloss is what a reader needs in place of the word: usually one to
-          four words. A name is glossed by its usual English name alone
-          (Mencius, Tsuen Wan, Aojiu Festival), with no note on what it is.
-          Leave out explanations of use, customs or grammar, a literal
-          translation alongside the meaning, and the word's pinyin.
+          four words, for this one meaning. A name is glossed by the usual
+          English name of what it names in this text (Mencius, Tsuen Wan; 新
+          in 新马 is Singapore), with no note on what it is. A function word
+          English has no word for is glossed by its job ("possessive
+          particle").
+        - Leave out hanzi, pinyin, cross-references, other meanings,
+          explanations of use, customs or grammar, and a literal translation
+          alongside the meaning.
       TEXT
 
       FUNCTION_WORDS = <<~TEXT
