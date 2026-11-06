@@ -12,8 +12,11 @@ module Snippets
         more than, or something other than, its parts put together (心碎,
         有趣, 只是, 看到, 民主主义, 公共汽车 "bus"). Split a combination whose
         parts, each glossed on its own, already say what the whole means
-        (除夕夜 → 除夕, 夜; 空气质量 → 空气, 质量; 等地 → 等, 地). When unsure,
-        keep a word a standard dictionary lists whole. A word only counts
+        (除夕夜 → 除夕, 夜; 空气质量 → 空气, 质量; 等地 → 等, 地). A
+        dictionary listing alone does not make a word: split a listed word
+        whose parts already give its meaning (大雨 → 大, 雨; 左脚 → 左, 脚;
+        交给 → 交, 给; 小猫 → 小, 猫). Keep a listed word whole only when its
+        meaning is not plain from its parts. A word only counts
         when it carries its own meaning here: 东西 is "thing", but in 东西两边
         it is 东 "east" + 西 "west". The fixed patterns below apply either
         way.
@@ -41,6 +44,8 @@ module Snippets
         6. The grammatical pieces 们, 于 / 於, 之, 中 ("in"), 所, 者 always
            split off (出生于 → 出生, 于; 水中 → 水, 中; 老师们 → 老师, 们),
            unless the whole has a meaning of its own (位于, 于是, 之后, 总之).
+           Pronouns with 们 stay whole (我们, 你们, 他们, 她们, 它们,
+           咱们).
            Verb results follow the base rule: whole when the pair means more
            than verb plus result (看见, 学会), split when the result just adds
            its usual meaning (炒熟 → 炒, 熟; 剪短 → 剪, 短; 贴上 → 贴, 上).
@@ -56,6 +61,7 @@ module Snippets
           yídìng, 一样 yíyàng). 一 keeps yī when counted on its own, as an
           ordinal, or at the end of a word (第一, 统一). A 一 or 不 that is a
           token of its own reads yī / bù. Never write the third-tone change.
+        - 地方 "place" is dìfang; dìfāng is "local, regional".
         - Gloss what is written, as it is used in this sentence, even where
           the text has a typo or a stray character. Never gloss the word the
           author probably meant instead.
@@ -84,6 +90,9 @@ module Snippets
         grammar label ("up", not "up (direction complement)").
         The same holds for pronouns and 一: 他 as an object is "him", not
         "he", and 一 right before a verb (一看) is "as soon as", not "a bit".
+        他 before 的 is "his", not "he". 太 … 了 is "too", not "very". 去 or
+        来 after the place a verb heads for marks direction ("that way",
+        "this way"), not "to go" / "to come".
       TEXT
     end
   end
