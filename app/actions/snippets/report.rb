@@ -36,6 +36,7 @@ module Snippets
         *section("Created", created(tokens)),
         *section("Respelled", RespelledReport.call(all)),
         *section("Skipped", SkippedReport.call(sentences)),
+        *section("Cut differently", CutReport.call(sentences, snippet.source)),
       ]
     end
 

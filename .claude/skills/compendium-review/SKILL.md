@@ -81,6 +81,11 @@ text, so run it in the background and report when it finishes. Lines starting
      takes the skip off. A name English calls something else (Lisboa
      "Lisbon", Deus "God") gets a card; one that slipped through with a
      gloss that only repeats it should be skipped instead.
+   - **Cut differently**: a word the source keeps whole in one sentence and
+     cuts into words in another (天上 and 天 + 上), naming this stretch's
+     sentences that use the rarer form. Decide which cut the rules want and
+     `resegment` the sentences that differ. Some are real differences of
+     meaning (东西 "thing" and 东 + 西 "east and west"): leave those.
    - **Created** senses: check each new reading and gloss against a reference
      and the policy, and for Mandarin the traditional form in brackets (发
      "hair" is 髮, not 發). Look for twins of an existing sense

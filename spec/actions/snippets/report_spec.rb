@@ -127,6 +127,15 @@ RSpec.describe Snippets::Report do
         .to match(/Skipped:\n  爱: foreign \(2, first at sentence \d+ token 0\)/)
     end
 
+    it "lists a word cut differently elsewhere in its source" do
+      snippet = snippet_of([{ "text" => "天" }, { "text" => "上" }])
+      other = create(:snippet, source: snippet.source)
+      create(:snippet_sentence, snippet: other, tokens: [{ "text" => "天上" }])
+
+      expect(described_class.call(snippet))
+        .to include("Cut differently:\n  天上: cut 天 + 上")
+    end
+
     it "leaves a skipped word out of its sentence's tokens" do
       expect(report({ "text" => "爱", "skip" => "foreign" }))
         .not_to include("  0 爱")
