@@ -10,20 +10,15 @@ module Snippets
       exactly one word, unchanged: do not drop, add, convert or correct
       characters. Punctuation may be returned as tokens or left out.
 
-      Return each word as `text`, exactly as written, and `simplified`, the
-      same word in simplified characters, character for character; it is
-      identical to `text` for a word already in simplified characters or
-      with no Chinese in it. Where a traditional character simplifies more
-      than one way, choose by its meaning here: 著 as an aspect particle is
-      着, but stays 著 for "to write"; 乾 is 干 for "dry", but stays 乾 in
-      乾坤.
-
-      Return `traditional` too: the same word in traditional characters as
-      Taiwan writes it, character for character; it is identical to `text`
-      for a word already in traditional characters or with no Chinese in
-      it. Where a simplified character stands for more than one traditional
-      one, choose by its meaning here: 发 is 髮 for "hair", but 發 for "to
-      send"; 干 is 乾 for "dry", but 幹 for "to do".
+      Return each word as `text`, exactly as written; `simplified`, the same
+      word in simplified characters; and `traditional`, the same word in
+      traditional characters as Taiwan writes it. Both convert character
+      for character, and either is identical to `text` where the word is
+      already in that script or has no Chinese in it. Where a character
+      converts more than one way, choose by its meaning here: 著 as an
+      aspect particle simplifies to 着, but stays 著 for "to write"; 发 is
+      髮 for "hair", but 發 for "to send"; 干 is 乾 for "dry", but 幹 for
+      "to do".
 
       A sentence may carry `feedback`: what a reviewer found wrong with an
       earlier segmentation of it, and `previous`: that segmentation's words.
@@ -49,7 +44,8 @@ module Snippets
         fits when its gloss could stand in for the word in an English
         rendering of this sentence. 人体健康 is "human health", so 健康
         "healthy" does not fit there, and a new sense "health" is needed.
-      - "new": no listed sense covers this occurrence. Return a reading and a
+      - "new": no listed sense covers this occurrence (for a function word,
+        none names the role it plays here). Return a reading and a
         gloss under the reading and gloss rules below. When two occurrences
         are the same word in the same new meaning, give them the identical
         reading and gloss.
