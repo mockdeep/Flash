@@ -14,7 +14,8 @@ module Snippets
         parts, each glossed on its own, already say what the whole means,
         even one a dictionary lists (除夕夜 → 除夕, 夜; 空气质量 → 空气,
         质量; 大雨 → 大, 雨; 交给 → 交, 给; 小猫 → 小, 猫). Exceptions kept
-        whole: 很多, 天上, 地上, 山洞, and the direction words 进去, 出来,
+        whole: 很多, 天上, 地上, 山洞, 大声, 家里, 这时, 整天, 有人, 不能 (but
+        能不能 → 能, 不, 能), and the direction words 进去, 出来,
         进来, 出去, 下来, 上来, 下去, 过去, 过来, 回去, 回来, 起来 after a
         verb (跳出来 → 跳, 出来). A word only counts when it carries its own
         meaning here: 东西 is "thing", but in 东西两边 it is 东 "east" + 西
@@ -27,8 +28,8 @@ module Snippets
            (贞观, 康熙) are words.
         3. A number and its measure word split, even when a dictionary lists
            the pair (一本 → 一, 本; 五人 → 五, 人), unless together they mean
-           more than the number times the unit (一定, 一些, 一样, 一直, and
-           一个人 where it means "alone").
+           more than the number times the unit (一定, 一些, 一样, 一直, 一个人
+           where it means "alone", and 这个, 那个, 哪个 even before a noun).
         4. An established idiom (成语) stays whole (一帆风顺, 画蛇添足,
            自相矛盾). One-off phrases, quotations and parallel sayings split
            into their words, which may be two-character words, not always
@@ -48,8 +49,9 @@ module Snippets
            觉得, 目的). Pronouns with 们 stay whole (我们, 你们, 他们, 她们,
            它们, 咱们).
         7. Verb results follow the base rule: whole when the pair means more
-           than verb plus result (看见, 学会), split when the result just adds
-           its usual meaning (炒熟 → 炒, 熟; 剪短 → 剪, 短; 贴上 → 贴, 上).
+           than verb plus result (看见, 学会), and so do the everyday pairs
+           来到, 回到, 变成 and 摔倒; split when the result just adds its usual
+           meaning (炒熟 → 炒, 熟; 剪短 → 剪, 短; 贴上 → 贴, 上).
         8. Suffixes that make a new word stay attached (科学家, 美国人, 营业员,
            可能性).
         Characters that are not Chinese (kana, Latin letters) are never part
@@ -79,6 +81,10 @@ module Snippets
         - Leave out hanzi, pinyin, cross-references, other meanings,
           explanations of use, customs or grammar, and a literal translation
           alongside the meaning.
+        - A listed sense fits only if its whole gloss could stand in for the
+          word here; one that strings together different meanings (鲁 "rash;
+          crude; short name for Shandong") never does, so propose a sense with
+          the one meaning needed. Synonyms (杯 "cup; glass") are fine.
       TEXT
 
       FUNCTION_WORDS = <<~TEXT
