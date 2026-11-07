@@ -2,6 +2,7 @@
 
 class SessionsController < ApplicationController
   skip_before_action(:authenticate_user, only: [:new, :create])
+  rate_limit(to: 10, within: 3.minutes, only: :create)
 
   def new
     render(Views::Sessions::New.new)

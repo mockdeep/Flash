@@ -63,6 +63,20 @@ RSpec.describe SessionsController do
         expect(response.body).to include("Log in to")
       end
     end
+
+    context "when too many attempts come from one address" do
+      it "refuses further attempts" do
+        store = ActiveSupport::Cache::MemoryStore.new
+        allow(Rails.cache).to receive(:increment) do |*args, **options|
+          store.increment(*args, **options)
+        end
+        10.times { post(session_path, params: invalid_create_params) }
+
+        post(session_path, params: invalid_create_params)
+
+        expect(response).to have_http_status(:too_many_requests)
+      end
+    end
   end
 
   describe "#destroy" do
