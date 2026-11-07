@@ -11,15 +11,14 @@ module Snippets
         learner could not get from its parts. Keep a word whole when it means
         more than, or something other than, its parts put together (心碎,
         有趣, 只是, 看到, 民主主义, 公共汽车 "bus"). Split a combination whose
-        parts, each glossed on its own, already say what the whole means
-        (除夕夜 → 除夕, 夜; 空气质量 → 空气, 质量; 等地 → 等, 地). A
-        dictionary listing alone does not make a word: split a listed word
-        whose parts already give its meaning (大雨 → 大, 雨; 左脚 → 左, 脚;
-        交给 → 交, 给; 小猫 → 小, 猫). Keep a listed word whole only when its
-        meaning is not plain from its parts. A word only counts
-        when it carries its own meaning here: 东西 is "thing", but in 东西两边
-        it is 东 "east" + 西 "west". The fixed patterns below apply either
-        way.
+        parts, each glossed on its own, already say what the whole means,
+        even one a dictionary lists (除夕夜 → 除夕, 夜; 空气质量 → 空气,
+        质量; 大雨 → 大, 雨; 交给 → 交, 给; 小猫 → 小, 猫). Exceptions kept
+        whole: 很多, 天上, 地上, 山洞, and the direction words 进去, 出来,
+        进来, 出去, 下来, 上来, 下去, 过去, 过来, 回去, 回来, 起来 after a
+        verb (跳出来 → 跳, 出来). A word only counts when it carries its own
+        meaning here: 东西 is "thing", but in 东西两边 it is 东 "east" + 西
+        "west". The fixed patterns below apply either way.
         1. Numbers: Arabic digits stay one token. Chinese numerals split into
            single characters (二十五 → 二, 十, 五; 六百多 → 六, 百, 多). A word
            that merely contains a numeral is a word (四季, 五金).
@@ -41,23 +40,21 @@ module Snippets
            its words (中国古代史研究 → 中国, 古代史, 研究; 燕王 → 燕, 王), as do
            an unlisted grouping of surnames (李杜 → 李, 杜) and a surname with
            氏 or 姓 (王氏 → 王, 氏).
-        6. The grammatical pieces 们, 于 / 於, 之, 中 ("in"), 所, 者 always
-           split off (出生于 → 出生, 于; 水中 → 水, 中; 老师们 → 老师, 们),
-           unless the whole has a meaning of its own (位于, 于是, 之后, 总之).
-           Pronouns with 们 stay whole (我们, 你们, 他们, 她们, 它们,
-           咱们). Aspect particles (了, 着 / 著, 过 / 過) and structural
-           particles (的, 地, 得) split off too (花了 → 花, 了; 看着 → 看,
-           着), unless the whole has a meaning of its own (为了, 除了, 觉得,
-           目的).
-           Verb results follow the base rule: whole when the pair means more
+        6. The grammatical pieces 们, 于 / 於, 之, 中 ("in"), 所, 者 split
+           off (出生于 → 出生, 于; 水中 → 水, 中; 老师们 → 老师, 们), and so
+           do aspect particles (了, 着 / 著, 过 / 過) and structural
+           particles (的, 地, 得) (花了 → 花, 了; 看着 → 看, 着), unless the
+           whole has a meaning of its own (位于, 于是, 之后, 总之, 为了, 除了,
+           觉得, 目的). Pronouns with 们 stay whole (我们, 你们, 他们, 她们,
+           它们, 咱们).
+        7. Verb results follow the base rule: whole when the pair means more
            than verb plus result (看见, 学会), split when the result just adds
            its usual meaning (炒熟 → 炒, 熟; 剪短 → 剪, 短; 贴上 → 贴, 上).
-           Suffixes that make a new word stay attached (科学家, 美国人, 营业员,
+        8. Suffixes that make a new word stay attached (科学家, 美国人, 营业员,
            可能性).
         Characters that are not Chinese (kana, Latin letters) are never part
         of a word with Chinese characters, and punctuation is never part of
-        a word: quotation marks, title marks and brackets are tokens of
-        their own (《新黑客辞典》 → 《, 新黑客辞典, 》).
+        a word (《新黑客辞典》 → 《, 新黑客辞典, 》).
       TEXT
 
       READING = <<~TEXT
@@ -93,16 +90,15 @@ module Snippets
         "already", "only then" or "mostly" rather than the commonest gloss; a
         conjunction may mark contrast ("as for", "but") rather than sequence
         ("then"); 以 in 以X为Y and its short forms (以X最…, 以X较为…) marks the
-        thing taken as Y or singled out: "to take as", not "by means of". When
-        no listed sense names the role, propose a new one.
+        thing taken as Y or singled out: "to take as", not "by means of".
         The same holds for a direction or result word split off after a verb
         (拿起 → 拿, 起; 跑出 → 跑, 出; 写完 → 写, 完): it names what it adds to
         the verb ("up", "out", "finished"), not its meaning as a verb on its
         own ("to rise", "to go out"). Gloss it in plain English, with no
         grammar label ("up", not "up (direction complement)").
-        The same holds for pronouns and 一: 他 as an object is "him", not
-        "he", and 一 right before a verb (一看) is "as soon as", not "a bit".
-        他 before 的 is "his", not "he". 太 … 了 is "too", not "very". 去 or
+        The same holds for pronouns and 一: 他 is "him" as an object and
+        "his" before 的, not "he", and 一 right before a verb (一看) is "as
+        soon as", not "a bit". 太 … 了 is "too", not "very". 去 or
         来 after the place a verb heads for marks direction ("that way",
         "this way"), not "to go" / "to come".
       TEXT
