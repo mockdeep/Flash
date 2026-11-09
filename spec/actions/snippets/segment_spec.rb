@@ -51,6 +51,12 @@ RSpec.describe Snippets::Segment do
     sentence.reload.tokens
   end
 
+  def curriculum_word(headword)
+    list = create(:word_list, curriculum: true)
+    sense = create(:sense, entry: create(:entry, headword:))
+    create(:sense_membership, sense:, word_list: list)
+  end
+
   def recut(tokens, *words)
     llm.answer(answer(*words))
     body = tokens.pluck(:text).join
@@ -286,6 +292,14 @@ RSpec.describe Snippets::Segment do
 
       expect(llm.calls.first.prompt)
         .to eq('[{"id":0,"sentence":"我"},{"id":1,"sentence":"你"}]')
+    end
+
+    it "lists the curriculum words a sentence writes" do
+      curriculum_word("东西")
+      llm.answer(answer("买", "东西"))
+      described_class.call([create(:snippet_sentence, body: "买东西")])
+
+      expect(llm.calls.sole.prompt).to include('"curriculum_words":["东西"]')
     end
 
     it "passes on what was wrong with an earlier segmentation" do

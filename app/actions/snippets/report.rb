@@ -35,8 +35,15 @@ module Snippets
         *section("Unresolved", unresolved(sentences)),
         *section("Created", created(tokens)),
         *section("Respelled", RespelledReport.call(all)),
+        *cuts(snippet, sentences),
+      ]
+    end
+
+    def self.cuts(snippet, sentences)
+      [
         *section("Skipped", SkippedReport.call(sentences)),
         *section("Cut differently", CutReport.call(sentences, snippet.source)),
+        *section("Curriculum words cut", CurriculumReport.call(sentences)),
       ]
     end
 

@@ -21,6 +21,12 @@ RSpec.describe Snippets::Report do
     snippet
   end
 
+  def curriculum_word(headword)
+    list = create(:word_list, curriculum: true)
+    sense = create(:sense, entry: create(:entry, headword:))
+    create(:sense_membership, sense:, word_list: list)
+  end
+
   def resolved(sense, outcome = "matched")
     { "text" => "爱", "outcome" => outcome, "sense_id" => sense.id }
   end
@@ -134,6 +140,15 @@ RSpec.describe Snippets::Report do
 
       expect(described_class.call(snippet))
         .to include("Cut differently:\n  天上: cut 天 + 上")
+    end
+
+    it "lists a curriculum word the snippet cuts" do
+      curriculum_word("天上")
+      snippet = snippet_of([{ "text" => "天" }, { "text" => "上" }])
+      snippet.sentences.sole.update!(body: "天上")
+
+      expect(described_class.call(snippet))
+        .to include("Curriculum words cut:\n  天上: cut 天 + 上")
     end
 
     it "leaves a skipped word out of its sentence's tokens" do
