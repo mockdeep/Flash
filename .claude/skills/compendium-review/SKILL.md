@@ -86,6 +86,10 @@ text, so run it in the background and report when it finishes. Lines starting
      sentences that use the rarer form. Decide which cut the rules want and
      `resegment` the sentences that differ. Some are real differences of
      meaning (东西 "thing" and 东 + 西 "east and west"): leave those.
+   - **Curriculum words cut** (Mandarin): an HSK word a sentence writes but
+     the cut splits. HSK words stay whole wherever they are used as that
+     word, so `resegment` a slip; leave a real difference of meaning (一道
+     "a beam of" in 一道金光, 才能 "only then can").
    - **Created** senses: check each new reading and gloss against a reference
      and the policy, and for Mandarin the traditional form in brackets (发
      "hair" is 髮, not 發). Look for twins of an existing sense

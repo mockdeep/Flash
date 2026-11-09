@@ -7,53 +7,50 @@ module Snippets
     # not taken from the texts the rules were tested on.
     module Policy
       SEGMENTATION = <<~TEXT
-        Segmentation rules. The base rule: a word is a unit whose meaning a
-        learner could not get from its parts. Keep a word whole when it means
-        more than, or something other than, its parts put together (心碎,
-        有趣, 只是, 看到, 民主主义, 公共汽车 "bus"). Split a combination whose
-        parts, each glossed on its own, already say what the whole means,
-        even one a dictionary lists (除夕夜 → 除夕, 夜; 空气质量 → 空气,
-        质量; 大雨 → 大, 雨; 交给 → 交, 给; 小猫 → 小, 猫). Exceptions kept
-        whole: 很多, 天上, 地上, 山洞, 大声, 家里, 这时, 整天, 有人, 不能 (but
-        能不能 → 能, 不, 能), and the direction words 进去, 出来,
-        进来, 出去, 下来, 上来, 下去, 过去, 过来, 回去, 回来, 起来 after a
-        verb (跳出来 → 跳, 出来). A word only counts when it carries its own
-        meaning here: 东西 is "thing", but in 东西两边 it is 东 "east" + 西
-        "west". The fixed patterns below apply either way.
+        Segmentation rules. The base rule: split a word into the smallest
+        pieces that each carry a natural meaning of their own in this
+        sentence, down to single characters where that holds (很多 → 很, 多;
+        山洞 → 山, 洞; 大声 → 大, 声). A piece's meaning is natural when an
+        ordinary English word or suffix says what that character means (大
+        "big", 性 "-ity"), not only a grammatical role ("successfully").
+        Keep a word whole when:
+        - it is a curriculum (HSK) word. The curriculum words a sentence
+          writes are listed with it as curriculum_words; keep one whole
+          wherever it is used as that word;
+        - a piece would only get a grammatical gloss: direction words after
+          a verb (跳出来 → 跳, 出来; 进去, 回来) and results such as 看到;
+        - its pieces mislead, because their own meanings don't add up to
+          the word's (东西 "thing", 金星 "Venus", 筋斗 "somersault"), it
+          borrows a sound (阎王, 兜率宫, 释迦牟尼), or it is a pun (弼马温).
+        A word only counts when it carries its own meaning here: 东西 is
+        "thing", but in 东西两边 it is 东 "east" + 西 "west". The fixed
+        patterns below apply either way.
         1. Numbers: Arabic digits stay one token. Chinese numerals split into
-           single characters (二十五 → 二, 十, 五; 六百多 → 六, 百, 多). A word
-           that merely contains a numeral is a word (四季, 五金).
+           single characters (二十五 → 二, 十, 五; 六百多 → 六, 百, 多). A
+           numbered set splits like any counted noun (二十八宿 → 二, 十, 八,
+           宿; 五行 → 五, 行).
         2. Dates and times split into number and unit (十八世纪 → 十, 八, 世纪;
-           十一月 → 十, 一, 月; 2008年 → 2008, 年; 初一 → 初, 一). Era names
-           (贞观, 康熙) are words.
-        3. A number and its measure word split, even when a dictionary lists
-           the pair (一本 → 一, 本; 五人 → 五, 人), unless together they mean
-           more than the number times the unit (一定, 一些, 一样, 一直, 一个人
-           where it means "alone", and 这个, 那个, 哪个 even before a noun).
-        4. An established idiom (成语) stays whole (一帆风顺, 画蛇添足,
-           自相矛盾). One-off phrases, quotations and parallel sayings split
-           into their words, which may be two-character words, not always
-           single characters (学而时习之 → 学, 而, 时, 习, 之; 床前明月光 → 床,
-           前, 明月, 光; 无灾无祸 → 无, 灾, 无, 祸).
-        5. Personal names, places and era names stay whole (李白, 杭州). So
-           does a well-known name or title (红楼梦, 史记, 唐太宗, 唐诗三百首,
-           春节联欢晚会). A title that only describes its subject splits into
-           its words (中国古代史研究 → 中国, 古代史, 研究; 燕王 → 燕, 王), as do
-           an unlisted grouping of surnames (李杜 → 李, 杜) and a surname with
-           氏 or 姓 (王氏 → 王, 氏).
+           2008年 → 2008, 年; 初一 → 初, 一). Era names (贞观, 康熙) are words.
+        3. A number and its measure word split (一本 → 一, 本; 五人 → 五, 人),
+           unless together they mean more than the number times the unit
+           (一个人 where it means "alone", 一个个 "every one of them").
+        4. An idiom splits like any phrase, so the reader sees its image
+           (天罗地网 → 天, 罗, 地, 网); a piece that is a curriculum word or
+           would mislead stays whole inside it. Quotations split the same
+           way (学而时习之 → 学, 而, 时, 习, 之).
+        5. Personal names stay whole (李白, 孙悟空, 哪吒). Titles and other
+           names split into their pieces like any description, even where a
+           piece is literary (太上老君 → 太, 上, 老, 君; 花果山 → 花, 果, 山;
+           瑶池 → 瑶, 池), unless their pieces mislead (金星, 阎王, 弼马温).
         6. The grammatical pieces 们, 于 / 於, 之, 中 ("in"), 所, 者 split
            off (出生于 → 出生, 于; 水中 → 水, 中; 老师们 → 老师, 们), and so
            do aspect particles (了, 着 / 著, 过 / 過) and structural
-           particles (的, 地, 得) (花了 → 花, 了; 看着 → 看, 着), unless the
-           whole has a meaning of its own (位于, 于是, 之后, 总之, 为了, 除了,
-           觉得, 目的). Pronouns with 们 stay whole (我们, 你们, 他们, 她们,
-           它们, 咱们).
-        7. Verb results follow the base rule: whole when the pair means more
-           than verb plus result (看见, 学会), and so do the everyday pairs
-           来到, 回到, 变成 and 摔倒; split when the result just adds its usual
-           meaning (炒熟 → 炒, 熟; 剪短 → 剪, 短; 贴上 → 贴, 上).
-        8. Suffixes that make a new word stay attached (科学家, 美国人, 营业员,
-           可能性).
+           particles (的, 地, 得) (花了 → 花, 了; 看着 → 看, 着).
+        7. A verb's result splits when it adds its usual meaning (炒熟 → 炒,
+           熟; 剪短 → 剪, 短; 贴上 → 贴, 上) and stays with the verb when it
+           has no natural gloss of its own (看到).
+        8. A suffix splits off like 们, glossed by the English suffix or word
+           that matches (科学家 → 科学, 家 "-ist"; 可能性 → 可能, 性 "-ity").
         Characters that are not Chinese (kana, Latin letters) are never part
         of a word with Chinese characters, and punctuation is never part of
         a word (《新黑客辞典》 → 《, 新黑客辞典, 》).
@@ -85,6 +82,9 @@ module Snippets
           word here; one that strings together different meanings (鲁 "rash;
           crude; short name for Shandong") never does, so propose a sense with
           the one meaning needed. Synonyms (杯 "cup; glass") are fine.
+        - Prefer a character's core meaning when it still reads (大 "big" in
+          大笑, not "loudly"). A suffix split off is glossed by the English
+          suffix that matches ("-ness", "-ize", "-ist").
       TEXT
 
       FUNCTION_WORDS = <<~TEXT

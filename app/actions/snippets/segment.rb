@@ -82,15 +82,19 @@ module Snippets
     end
 
     def self.ask(sentences, feedback)
-      prompt =
-        sentences.each_with_index.map do |sentence, id|
-          { id:, sentence: sentence.body, **revision(sentence, feedback) }
-        end
-
       language = sentences.first.language
+      prompt = prompt(sentences, feedback, CurriculumWords.for(language))
       system = language.prompts.segment
       schema = schema(language)
       Llm::AskEach.call(sentences, prompt:, system:, schema:, **ASK)
+    end
+
+    def self.prompt(sentences, feedback, curriculum)
+      sentences.each_with_index.map do |sentence, id|
+        words = curriculum.found_in(sentence.body).presence
+        { id:, sentence: sentence.body, curriculum_words: words }.compact
+          .merge(revision(sentence, feedback))
+      end
     end
 
     # Each word comes with the form it studies under, named as the language
