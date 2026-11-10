@@ -321,7 +321,7 @@ body {
     8px 8px 0 0 var(--color-border-dark),
     0 4px 12px var(--color-shadow-warm-md);
   text-align: center;
-  animation: card-enter var(--transition-slow) ease-out;
+  animation: card-enter var(--transition-slow);
 }
 
 .study-page[data-size="s"]  .card-front { font-size: clamp(18px, 3.5vw, 24px); }
@@ -570,7 +570,7 @@ body {
 
 /* Answer feedback row animation */
 .answer-row {
-  animation: answer-reveal var(--transition-slow) ease-out;
+  animation: answer-reveal var(--transition-slow);
 }
 
 .answer-number {
@@ -704,7 +704,7 @@ body {
   letter-spacing: 0.5px;
   cursor: pointer;
   transition: color var(--transition), background var(--transition);
-  animation: answer-reveal var(--transition-slow) ease-out;
+  animation: answer-reveal var(--transition-slow);
 }
 
 .study-example__toggle:hover,
@@ -734,7 +734,7 @@ body {
     4px 4px 0 0 var(--color-border-dark),
     0 6px 18px rgb(var(--color-foreground-channels) / 12%);
   text-align: left;
-  animation: example-drop var(--transition-slow) ease-out;
+  animation: example-drop var(--transition-slow);
 }
 
 @keyframes example-drop {
@@ -810,7 +810,7 @@ body {
   font-family: var(--font-mono);
   font-size: 15px;
   white-space: nowrap;
-  animation: answer-reveal var(--transition-slow) ease-out;
+  animation: answer-reveal var(--transition-slow);
 }
 
 .card-reading:empty {
@@ -1061,7 +1061,7 @@ body {
   font-family: var(--font-body);
   text-decoration: none;
   cursor: pointer;
-  animation: next-card-appear var(--transition-slow) ease-out;
+  animation: next-card-appear var(--transition-slow);
 }
 
 @keyframes next-card-appear {
@@ -1171,7 +1171,7 @@ body {
     8px 8px 0 0 var(--color-border-dark),
     0 4px 12px var(--color-shadow-warm-md);
   text-align: center;
-  animation: card-enter var(--transition-slow) ease-out;
+  animation: card-enter var(--transition-slow);
 }
 
 .session-milestone p {
