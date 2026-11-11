@@ -284,17 +284,6 @@ body {
   line-height: 1.3;
 }
 
-@keyframes card-enter {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
 .card-front-wrapper::before {
   position: absolute;
   top: -4px;
@@ -321,7 +310,6 @@ body {
     8px 8px 0 0 var(--color-border-dark),
     0 4px 12px var(--color-shadow-warm-md);
   text-align: center;
-  animation: card-enter var(--transition-slow);
 }
 
 .study-page[data-size="s"]  .card-front { font-size: clamp(18px, 3.5vw, 24px); }
@@ -568,11 +556,6 @@ body {
   width: 100%;
 }
 
-/* Answer feedback row animation */
-.answer-row {
-  animation: answer-reveal var(--transition-slow);
-}
-
 .answer-number {
   position: relative;
   z-index: 1;
@@ -596,11 +579,6 @@ body {
   z-index: 1;
   flex: 1;
   line-height: 1.5;
-}
-
-@keyframes answer-reveal {
-  from { opacity: 0.5; }
-  to { opacity: 1; }
 }
 
 .answer-correct {
@@ -704,7 +682,6 @@ body {
   letter-spacing: 0.5px;
   cursor: pointer;
   transition: color var(--transition), background var(--transition);
-  animation: answer-reveal var(--transition-slow);
 }
 
 .study-example__toggle:hover,
@@ -734,18 +711,6 @@ body {
     4px 4px 0 0 var(--color-border-dark),
     0 6px 18px rgb(var(--color-foreground-channels) / 12%);
   text-align: left;
-  animation: example-drop var(--transition-slow);
-}
-
-@keyframes example-drop {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .study-example__label {
@@ -810,7 +775,6 @@ body {
   font-family: var(--font-mono);
   font-size: 15px;
   white-space: nowrap;
-  animation: answer-reveal var(--transition-slow);
 }
 
 .card-reading:empty {
@@ -1061,18 +1025,6 @@ body {
   font-family: var(--font-body);
   text-decoration: none;
   cursor: pointer;
-  animation: next-card-appear var(--transition-slow);
-}
-
-@keyframes next-card-appear {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
 }
 
 .next-card-button:hover {
@@ -1171,7 +1123,6 @@ body {
     8px 8px 0 0 var(--color-border-dark),
     0 4px 12px var(--color-shadow-warm-md);
   text-align: center;
-  animation: card-enter var(--transition-slow);
 }
 
 .session-milestone p {
