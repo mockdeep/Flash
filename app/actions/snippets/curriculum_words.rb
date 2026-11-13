@@ -3,9 +3,11 @@
 module Snippets
   # The words of a language's curriculum lists (Mandarin's HSK lists) that a
   # text writes, so the segmenter keeps them whole and review can spot one
-  # it cut. A word counts in its headword or its traditional form; a single
-  # character is never cut, so only longer words are looked for.
+  # it cut. A word counts in its headword or its traditional form, and a word
+  # ending in the erhua suffix also without it, since texts often drop it; a
+  # single character is never cut, so only longer words are looked for.
   class CurriculumWords
+    ERHUA = /[儿兒]\z/
     def self.for(language)
       senses =
         Sense.joins(:entry, :sense_memberships).where(
@@ -17,7 +19,8 @@ module Snippets
     end
 
     def initialize(words)
-      @words = words.select { it.length > 1 }.to_set
+      @words = words.flat_map { [it, it.sub(ERHUA, "")] }
+        .select { it.length > 1 }.to_set
       @longest = @words.map(&:length).max || 0
     end
 

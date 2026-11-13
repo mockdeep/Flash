@@ -12,23 +12,36 @@ module Snippets
         sentence, down to single characters where that holds (很多 → 很, 多;
         山洞 → 山, 洞; 大声 → 大, 声). A piece's meaning is natural when an
         ordinary English word or suffix says what that character means (大
-        "big", 性 "-ity"), not only a grammatical role ("successfully").
+        "big", 性 "-ity"), not only a grammatical role ("successfully"), and
+        when the character has that meaning in other common words too, not
+        one worked backwards from this word (一 "suddenly" in 一拥而上 is
+        worked backwards). A reader of a split word sees only its pieces'
+        glosses, never the word's own meaning, so the pieces must still
+        carry the sentence: 春节 "spring" + "festival" does, but 冬至
+        "winter" + "extreme" does not say "winter solstice".
         Keep a word whole when:
         - it is a curriculum (HSK) word. The curriculum words a sentence
           writes are listed with it as curriculum_words; keep one whole
           wherever it is used as that word;
-        - a piece would only get a grammatical gloss: direction words after
-          a verb (跳出来 → 跳, 出来; 进去, 回来) and results such as 看到;
         - its pieces mislead, because their own meanings don't add up to
-          the word's (东西 "thing", 金星 "Venus", 筋斗 "somersault"), it
-          borrows a sound (阎王, 兜率宫, 释迦牟尼), or it is a pun (弼马温).
+          the word's (东西 "thing", 金星 "Venus", 轮回 "reincarnation"), it
+          borrows a sound (阎王, 兜率宫, 释迦牟尼), or it is a pun (弼马温);
+        - it is doubled (看看, 天天, 慢慢, 帮帮忙, 绿油油, 干干净净): the
+          doubling changes the meaning in a way the pieces don't show. A
+          doubled piece inside an idiom stays one piece (哈哈 · 大 · 笑);
+        - it ends in the noun suffix 子, 头 or 儿 (桃子, 石头, 鸟儿), since
+          the word, not its root, is what people say. Where 子 or 头 has a
+          meaning of its own (太子 "son", 磕头 "head") it splits as usual;
+        - it is a two-character literary word whose characters hardly
+          occur alone (巍峨, 恢弘).
         A word only counts when it carries its own meaning here: 东西 is
         "thing", but in 东西两边 it is 东 "east" + 西 "west". The fixed
         patterns below apply either way.
         1. Numbers: Arabic digits stay one token. Chinese numerals split into
            single characters (二十五 → 二, 十, 五; 六百多 → 六, 百, 多). A
            numbered set splits like any counted noun (二十八宿 → 二, 十, 八,
-           宿; 五行 → 五, 行).
+           宿), unless its pieces no longer carry the meaning (五行 "the Five
+           Elements").
         2. Dates and times split into number and unit (十八世纪 → 十, 八, 世纪;
            2008年 → 2008, 年; 初一 → 初, 一). Era names (贞观, 康熙) are words.
         3. A number and its measure word split (一本 → 一, 本; 五人 → 五, 人),
@@ -38,17 +51,26 @@ module Snippets
            (天罗地网 → 天, 罗, 地, 网); a piece that is a curriculum word or
            would mislead stays whole inside it. Quotations split the same
            way (学而时习之 → 学, 而, 时, 习, 之).
-        5. Personal names stay whole (李白, 孙悟空, 哪吒). Titles and other
-           names split into their pieces like any description, even where a
-           piece is literary (太上老君 → 太, 上, 老, 君; 花果山 → 花, 果, 山;
-           瑶池 → 瑶, 池), unless their pieces mislead (金星, 阎王, 弼马温).
+        5. Personal names stay whole (李白, 孙悟空, 哪吒). Other names and
+           titles follow their usual English name. Where English translates
+           the pieces, they split like any description, even where a piece
+           is literary (花果山 Flower-Fruit Mountain → 花, 果, 山; 太上老君 →
+           太, 上, 老, 君; 瑶池 → 瑶, 池). Where English uses the sound, the
+           name stays whole (北京 Beijing, 香港 Hong Kong, 四川 Sichuan).
+           Where it does both, the part English sounds out is one piece and
+           the rest splits (泰山 Mount Tai → 泰, 山; 宋仁宗 → 宋, 仁宗; 客家人
+           → 客家, 人).
         6. The grammatical pieces 们, 于 / 於, 之, 中 ("in"), 所, 者 split
            off (出生于 → 出生, 于; 水中 → 水, 中; 老师们 → 老师, 们), and so
            do aspect particles (了, 着 / 著, 过 / 過) and structural
            particles (的, 地, 得) (花了 → 花, 了; 看着 → 看, 着).
-        7. A verb's result splits when it adds its usual meaning (炒熟 → 炒,
-           熟; 剪短 → 剪, 短; 贴上 → 贴, 上) and stays with the verb when it
-           has no natural gloss of its own (看到).
+        7. A verb's direction or result splits off only when it is literal
+           and the second piece is used alone with that meaning (放下 → 放,
+           下; 推倒 → 推, 倒; 炒熟 → 炒, 熟; 来到 → 来, 到; 跳出来 → 跳,
+           出来). It stays with the verb when it is figurative or only marks
+           success (想起, 看出, 记住, 看到), or when its meaning there never
+           stands alone (推开, 去掉, 做成, 改为, 建成). Potential forms
+           follow the word they come from (看不见 like 看见, 忍不住 like 忍住).
         8. A suffix splits off like 们, glossed by the English suffix or word
            that matches (科学家 → 科学, 家 "-ist"; 可能性 → 可能, 性 "-ity").
         Characters that are not Chinese (kana, Latin letters) are never part
