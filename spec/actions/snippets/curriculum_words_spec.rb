@@ -59,6 +59,24 @@ RSpec.describe Snippets::CurriculumWords do
       expect(words.found_in("买东西")).to eq(["东西"])
     end
 
+    it "finds a word ending in 儿 written without it" do
+      words = described_class.new(["一点儿"])
+
+      expect(words.found_in("有一点累")).to eq(["一点"])
+    end
+
+    it "finds a traditional word ending in 兒 written without it" do
+      words = described_class.new(["一點兒"])
+
+      expect(words.found_in("有一點累")).to eq(["一點"])
+    end
+
+    it "does not take a lone character from a two-character 儿 word" do
+      words = described_class.new(["点儿"])
+
+      expect(words.found_in("一点")).to be_empty
+    end
+
     it "finds nothing in a text with no curriculum words" do
       words = described_class.new([])
 

@@ -188,6 +188,7 @@ Metrics/ModuleLength:
     - 'app/actions/data_sets/projection.rb'
     - 'app/actions/snippets/filipino.rb'
     - 'app/actions/snippets/mandarin.rb'
+    - 'app/actions/snippets/mandarin/policy.rb'
     - 'app/actions/snippets/portuguese.rb'
 
 # Offense count: 1
