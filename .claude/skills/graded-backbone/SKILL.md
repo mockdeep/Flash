@@ -134,12 +134,20 @@ with the chapter's closing teaser line.
 
 ## Tools
 
+A backbone's config, headings and texts are written in
+`drafts/backbones/<name>/`, which git ignores; once loaded, the database
+holds the texts (see Graded Backbones in AGENTS.md). Check texts with
+`bin/rails "call[Backbones::CheckReport,<name>,<level>,<chapter>]"` (leave
+the level or chapter blank for all): it lists the words above the level by
+base form, with the lowest level that lists each. It covers Portuguese so
+far; 西游记 was checked by a scratch script.
+
 The 西游记 scripts were scratch work in `tmp/reading_levels/`, which git
 ignores, and may be gone: a fetcher, a vocabulary checker, a runner for the
 draft-check-review loop (`claude -p` through `Llm.client`, Opus for writing
 and reviewing, logs per draft, resumable by skipping existing files), and a
-source-setup script. For the next backbone, build the proven parts properly
-(actions and a rake task with specs), with these fixes:
+source-setup script. The rest is still to build properly (actions and rake
+tasks with specs), with these fixes:
 
 - story words level-only, grammar words in their own named list;
 - end every draft on a review;

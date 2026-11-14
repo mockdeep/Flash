@@ -1,0 +1,8 @@
+language: pt
+levels:
+  - { code: B1, list: Tale B1, strict: true, share: 0.3 }
+  - { code: A1, list: Tale A1, strict: true, share: 0.1 }
+recurring_words: [hospício]
+level_words:
+  A1: [louco]
+title_words: [dr]
