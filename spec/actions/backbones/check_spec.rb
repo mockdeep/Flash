@@ -8,7 +8,7 @@ RSpec.describe Backbones::Check do
   def level(code, strict)
     list = "Tale #{code}"
 
-    { "code" => code, "list" => list, "strict" => strict, "share" => 1 }
+    { "code" => code, "list" => list, "strict" => strict }
   end
 
   def backbone
@@ -23,26 +23,8 @@ RSpec.describe Backbones::Check do
     Backbone.new("tale", config, dir: nil)
   end
 
-  def list(code, *headwords)
-    word_list = WordList.find_by(name: "Tale #{code}") ||
-      create(:word_list, name: "Tale #{code}", language: "pt")
-    headwords.each do |headword|
-      entry = create(:entry, language: "pt", headword:)
-      create(:sense_membership, word_list:, sense: create(:sense, entry:))
-    end
-  end
-
-  # Each form's answer is its own lower-case form, unless given here.
   def answers(**given)
-    llm.respond do |call|
-      words =
-        JSON.parse(call.prompt).map do |item|
-          form = item["form"]
-          default = { kind: "word", lemmas: [form.downcase], alternatives: [] }
-          default.merge(id: item["id"], **given.fetch(form.to_sym, {}))
-        end
-      { words: }
-    end
+    llm.respond { lemma_answer(it, **given) }
   end
 
   def check(text, level: "A1", **given)
@@ -58,8 +40,8 @@ RSpec.describe Backbones::Check do
   end
 
   def check_only(text, code)
-    list("A1", "a", "casa")
-    list("B1", "rua")
+    tale_list("A1", "a", "casa")
+    tale_list("B1", "rua")
     lemmas = Backbones::Lemmas.new(cache_dir.join("lemmas.json"))
 
     described_class.call(backbone, backbone.level(code), text, lemmas:)
@@ -151,7 +133,7 @@ RSpec.describe Backbones::Check do
     end
 
     it "passes a reflexive verb's bare verb" do
-      list("A1", "se chamar")
+      tale_list("A1", "se chamar")
 
       expect(flagged("A chamar.")).to eq([])
     end
