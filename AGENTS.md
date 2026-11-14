@@ -319,7 +319,11 @@ app/
 │   ├── backbones/
 │   │   ├── check.rb              # A backbone text's words above its level, by base form (see Graded Backbones)
 │   │   ├── check_report.rb       # Check's findings for a backbone's texts as lines to print (through `call[…]`)
-│   │   └── lemmas.rb             # Base forms of a text's words (Sonnet), cached per form in tmp/backbones/<name>/lemmas.json
+│   │   ├── draft.rb              # Opus writes (or revises with feedback) one chapter at one level from the level above
+│   │   ├── lemmas.rb             # Base forms of a text's words (Sonnet), cached per form in tmp/backbones/<name>/lemmas.json
+│   │   ├── review.rb             # A fresh Opus reviewer's PASS / REWORK and problems for a draft
+│   │   ├── run.rb                # Writes a backbone's missing texts in order (through `call[…]`), keeping stopped drafts
+│   │   └── write.rb              # One text's loop: draft, revise until within the level, review, apply, stop on trouble
 │   ├── catalog/
 │   │   └── copy_deck.rb          # Duplicates a public deck into a user's account
 │   ├── compendium.rb             # Lookup / edit / sync namespace: TABLES (parents first), column helpers, Refused
@@ -972,11 +976,12 @@ The compendium can be reviewed directly, not only through snippets. Both tools r
 ### Graded Backbones
 
 A backbone is one literary work retold at each level of a language's word lists, so a learner climbs one story to the real book. It is written in `drafts/backbones/<name>/`, which git ignores: once a chapter is loaded, the database holds its texts and any later fix happens there. `Backbone.find(name)` reads the folder (`spec/fixtures/files/backbones/tale/` shows the layout):
-- **`backbone.yml`**: the language, the original's edition and license, and the levels top-down, each with its word list's name, whether it is `strict`, and its target length as a `share` of the original chapter. Also the story's `recurring_words` (base forms that pass at every level), `level_words` (pass at one level only) and `title_words` (pass, like the name, before a name).
+- **`backbone.yml`**: the work's title and author, the language, the original's edition and license, `notes` for the writer and reviewer, and the levels top-down, each with its word list's name, whether it is `strict`, and its `guidelines` (grammar, style, how much of the story it keeps and what its chapter titles look like; there is no length target). Also the story's `recurring_words` (base forms that pass at every level), `level_words` (pass at one level only) and `title_words` (pass, like the name, before a name).
 - **`headings.yml`**: each chapter's title per version, with its English translation; its keys give the chapters in reading order.
-- **Texts**: `original/<chapter>.txt` and `<level>/<chapter>.txt`, each the chapter's body without its heading.
+- **Texts**: `original/<chapter>.txt` and `<level>/<chapter>.txt`, each the chapter's body without its heading. A draft that stopped waits as `<level>/<chapter>.draft.txt`, with why in `<level>/<chapter>.trouble.md`.
+- **Run**: `bin/rails "call[Backbones::Run,<name>,<chapter>,<level>]"` writes every text not yet written (a blank or missing chapter or level means all of them), chapter by chapter in order and each top-down, since a level is written from the one above (the top level from the original). Each text goes through `Backbones::Write`: Opus drafts it (`Backbones::Draft`), it is revised until `Backbones::Check` finds no word above the level, then a fresh Opus reviewer (`Backbones::Review`, which sees the original too) gives PASS or REWORK with problems. The writer weighs a review's problems rather than applying them word for word. A PASS's fixes are applied and checked; a REWORK's are applied, checked and reviewed again. It stops when words are still above the level after `Write::ROUNDS` revisions, when a second review says REWORK, or when a fix brings back a word the revisions took out; the rest of that chapter waits until the stopped draft is saved as its text and the two files are deleted. A written text's heading goes into `headings.yml`, and the run ends by listing the new headings to look over. Each text's log is kept in `tmp/backbones/<name>/logs/`.
 - **Check**: `bin/rails "call[Backbones::CheckReport,<name>,<level>,<chapter>]"` lists, for every text written (a blank or missing level or chapter means all of them), what `Backbones::Check` finds: it lists each text's words above its level, by base form, with the lowest level whose list holds each. `Backbones::Lemmas` asks Sonnet for the base forms (a contraction gives each part, a verb with a pronoun the verb and the pronoun) and keeps the answers in `tmp/backbones/<name>/lemmas.json`, so each form is asked once. A word passes when its base form, the form as written, or another headword for it (a feminine-only or plural-only form, the verb behind a participle) is on a list at or below the level; names and numerals always pass. A strict level is clean only with nothing above it; at the others the list is information only.
-- Like snippet processing, it calls `Llm.client`, so it runs locally only.
+- Like snippet processing, these call `Llm.client`, so they run locally only. Specs use the fixture backbone through `tale_backbone` (`spec/support/backbones.rb`), a copy they may write to.
 
 ### Compendium Sync
 

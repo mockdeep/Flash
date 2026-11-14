@@ -5,11 +5,9 @@ module Backbones
   # text written so far, or those of the one level or chapter named. A blank
   # level or chapter means all of them, so a chapter can be named alone.
   module CheckReport
-    CACHE = Rails.root.join("tmp/backbones")
-
     def self.call(name, level = nil, chapter = nil)
       backbone = Backbone.find(name)
-      lemmas = Lemmas.new(CACHE.join(name, "lemmas.json"))
+      lemmas = Lemmas.new(backbone.cache_dir.join("lemmas.json"))
 
       texts(backbone, level, chapter).flat_map do |at, chapter_name, path|
         result = Check.call(backbone, at, path.read, lemmas:)

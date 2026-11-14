@@ -1,36 +1,14 @@
 # frozen_string_literal: true
 
 RSpec.describe Backbones::CheckReport do
-  after { FileUtils.rm_rf(cache_dir) }
-
-  def cache_dir = Rails.root.join("tmp/spec/check-report-#{Process.pid}")
-
-  def list(code, *headwords)
-    word_list = create(:word_list, name: "Tale #{code}", language: "pt")
-    headwords.each do |headword|
-      entry = create(:entry, language: "pt", headword:)
-      create(:sense_membership, word_list:, sense: create(:sense, entry:))
-    end
-  end
-
-  # Each form's answer is its own lower-case form, unless given here.
   def answers(**given)
-    llm.respond do |call|
-      words =
-        JSON.parse(call.prompt).map do |item|
-          form = item["form"]
-          default = { kind: "word", lemmas: [form.downcase], alternatives: [] }
-          default.merge(id: item["id"], **given.fetch(form.to_sym, {}))
-        end
-      { words: }
-    end
+    llm.respond { lemma_answer(it, **given) }
   end
 
   def report(*)
-    stub_const("Backbone::ROOT", file_fixture("backbones"))
-    stub_const("Backbones::CheckReport::CACHE", cache_dir)
-    list("A1", "a", "casa")
-    list("B1", "rua")
+    tale_backbone
+    tale_list("A1", "a", "casa")
+    tale_list("B1", "rua")
 
     described_class.call("tale", *)
   end

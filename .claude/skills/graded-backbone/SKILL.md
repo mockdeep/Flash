@@ -30,6 +30,11 @@ Each level is roughly two-thirds the length of the one above. For 西游记
 5 ~900, 4 ~650, 3 ~500, 2 ~350, 1 ~200. Lower levels are shorter so a
 beginner can finish the story.
 
+Later backbones (O Alienista, at A1–C2) set no length: vocabulary is the
+rule, and each level's guidelines say how much of the story it keeps (every
+beat and the asides at the top, only the events the chapter turns on at the
+bottom). The writer ignored word targets anyway.
+
 **Headings:** the original keeps its real chapter titles (回目), translated
 literally; modern to HSK 4 use 第N回 plus a short title (石猴出世); HSK 3–1 a
 shorter one within level (石猴). The chapter number links the versions.
@@ -134,24 +139,28 @@ with the chapter's closing teaser line.
 
 ## Tools
 
-A backbone's config, headings and texts are written in
+A backbone's settings, headings and texts are written in
 `drafts/backbones/<name>/`, which git ignores; once loaded, the database
-holds the texts (see Graded Backbones in AGENTS.md). Check texts with
-`bin/rails "call[Backbones::CheckReport,<name>,<level>,<chapter>]"` (leave
-the level or chapter blank for all): it lists the words above the level by
-base form, with the lowest level that lists each. It covers Portuguese so
-far; 西游记 was checked by a scratch script.
+holds the texts (see Graded Backbones in AGENTS.md). Both tools cover
+Portuguese so far; 西游记 was written with scratch scripts.
 
-The 西游记 scripts were scratch work in `tmp/reading_levels/`, which git
-ignores, and may be gone: a fetcher, a vocabulary checker, a runner for the
-draft-check-review loop (`claude -p` through `Llm.client`, Opus for writing
-and reviewing, logs per draft, resumable by skipping existing files), and a
-source-setup script. The rest is still to build properly (actions and rake
-tasks with specs), with these fixes:
+- **Check** texts with
+  `bin/rails "call[Backbones::CheckReport,<name>,<level>,<chapter>]"`
+  (leave the level or chapter blank for all): the words above the level by
+  base form, with the lowest level that lists each.
+- **Write** the missing texts with
+  `bin/rails "call[Backbones::Run,<name>,<chapter>,<level>]"`. It runs the
+  loop above for each text, top-down, and ends with the headings it wrote,
+  for the user to look over. It is long (about ten minutes a text), so run
+  it in the background or overnight; a usage-limit stop loses only the text
+  in hand.
+- **Settle a stopped draft** from its `.trouble.md`: fix the `.draft.txt`
+  (check it, and give it a fresh review if the fix is more than a word or
+  two), save it as the text, put its heading in `headings.yml`, and delete
+  both files; the next run carries on below it.
+- **Level guidelines** live in `backbone.yml`, so tighten them there when the
+  reviews keep raising the same thing, rather than fixing every draft.
 
-- story words level-only, grammar words in their own named list;
-- end every draft on a review;
-- a checker that picks the split with the fewest flags;
-- one review prompt for any chapter;
-- consider adding "a title with a meaning is glossed by its meaning" to
-  `Snippets::Mandarin::Policy` (the pipeline glossed gods' titles in pinyin).
+Still to build: loading the texts into the app as sources, and Mandarin for
+the checker (a title with a meaning should be glossed by its meaning, which
+`Snippets::Mandarin::Policy` doesn't yet say).

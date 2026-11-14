@@ -1,7 +1,10 @@
+title: O Conto
+author: Ana Autora
 language: pt
+notes: Keep the narrator's jokes.
 levels:
-  - { code: B1, list: Tale B1, strict: true, share: 0.3 }
-  - { code: A1, list: Tale A1, strict: true, share: 0.1 }
+  - { code: B1, list: Tale B1, strict: true, guidelines: Past tenses. }
+  - { code: A1, list: Tale A1, strict: true }
 recurring_words: [hospício]
 level_words:
   A1: [louco]

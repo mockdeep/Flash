@@ -12,6 +12,7 @@ end
 require "rspec/rails"
 
 require_relative "support/assets"
+require_relative "support/backbones"
 require_relative "support/capybara"
 require_relative "support/factory_bot"
 require_relative "support/helpers"
