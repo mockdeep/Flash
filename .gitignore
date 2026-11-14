@@ -13,6 +13,9 @@
 !/log/.keep
 !/tmp/.keep
 
+# Content being written before it goes into the database.
+/drafts
+
 # Ignore uploaded files in development.
 /storage/*
 !/storage/.keep

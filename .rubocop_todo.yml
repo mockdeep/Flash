@@ -51,9 +51,10 @@ I18n/GetText/DecorateString:
     - 'spec/requests/studies_controller_spec.rb'
     - 'spec/system/studies_spec.rb'
 
-# Offense count: 34
+# Offense count: 35
 I18n/RailsI18n/DecorateString:
   Exclude:
+    - 'app/actions/backbones/lemmas.rb'
     - 'app/actions/snippets/filipino.rb'
     - 'app/actions/snippets/portuguese.rb'
     - 'app/views/catalog/index.rb'

@@ -316,6 +316,10 @@ Action Cable runs on **Solid Cable**, with its `solid_cable_messages` table in t
 ```
 app/
 ├── actions/                      # Service objects (`.call` → Result); see Actions below
+│   ├── backbones/
+│   │   ├── check.rb              # A backbone text's words above its level, by base form (see Graded Backbones)
+│   │   ├── check_report.rb       # Check's findings for a backbone's texts as lines to print (through `call[…]`)
+│   │   └── lemmas.rb             # Base forms of a text's words (Sonnet), cached per form in tmp/backbones/<name>/lemmas.json
 │   ├── catalog/
 │   │   └── copy_deck.rb          # Duplicates a public deck into a user's account
 │   ├── compendium.rb             # Lookup / edit / sync namespace: TABLES (parents first), column helpers, Refused
@@ -438,6 +442,7 @@ app/
 │   ├── text_csv_instructions.rb  # CSV format help block for text decks
 │   └── word_states.rb            # An answered card's words as they now stand, for the Read tab (`word_states_controller.ts`)
 ├── domain/
+│   ├── backbone.rb               # A graded backbone's config: levels (code, list, strict, share), story and title words, chapters, text paths
 │   ├── deck_section.rb           # A section of a set of decks (a user's, or the catalog's): one per language A–Z, then Basic, then Music; `first_unmet` drives Next Deck; `card_count` (the heading's count) counts a source's decks once
 │   ├── language.rb               # What processing a snippet needs per language: sentence ends, word characters, the segmenter's form and its check, its lexicon, skip reasons, whether words are spaced, prompts (`Language::MANDARIN`, `Language::PORTUGUESE`, `Language::FILIPINO`)
 │   ├── lexicon.rb                # How a language's entries are stored, snippet language or not: readings or none, articles or none, traditional forms or none, list categories, refiner rules (`Lexicon::MANDARIN`, `PORTUGUESE`, `FILIPINO`, `GERMAN`, `SPANISH`, `ITALIAN`; a plain one for any other)
@@ -615,6 +620,9 @@ app/
         ├── table.css
         └── welcome.css
 
+drafts/                  # Git-ignored: content being written before it goes into the database
+└── backbones/           # One folder per graded backbone (see Graded Backbones)
+
 db/
 ├── seeds.rb             # Entry point (loads db/seeds/*)
 └── seeds/
@@ -625,6 +633,7 @@ lib/
 ├── route_constraints/
 │   └── admin_constraint.rb  # Routes inside `constraints AdminConstraint.new` 404 for non-admins
 └── tasks/
+    ├── call.rake            # call[Name,arg,…]: calls an action with the args splatted, printing the lines it returns
     ├── compendium.rake      # compendium:pull / compendium:push / compendium:lookup / compendium:refine (see Compendium Sync, Compendium Refiner)
     └── snippets.rake        # snippets:process / snippets:review (see Snippet Processing)
 ```
@@ -959,6 +968,15 @@ The compendium can be reviewed directly, not only through snippets. Both tools r
 - **Applying** (`Compendium::Suggestions`, through `bin/rails runner`, walked by the `.claude/skills/compendium-refine` skill): `apply(path, index)` runs a suggestion's edits in one transaction (or `edits:` in their place), naming the senses its own `add` edits make `"new 0"`, `"new 1"`…, giving an added sense its `traditional` form, and finishing a repointed token's snippet again (`Snippets::Finish`) so it can still be pushed. `dismiss(path, index)` drops one unrun. Either takes the suggestion out of its file, and the file goes with its last. A file is stale (`stale(dir)` lists them; `apply` raises `Suggestions::Stale`) once a sense of its entries changed after it was written or one of its entries is gone; applying rewrites the file's time, so its own edits leave the rest fresh.
 - **Stopping**: `LIMIT=…` caps the entries a run reviews; it also ends once every entry has been reviewed this run. Any `Llm::Error` (usually the usage limit) ends it with the batch in hand unmarked, so that batch comes first next time.
 - Marking entries reviewed is a local change, so a pull after a run refuses until it is pushed (or `FORCE=true`).
+
+### Graded Backbones
+
+A backbone is one literary work retold at each level of a language's word lists, so a learner climbs one story to the real book. It is written in `drafts/backbones/<name>/`, which git ignores: once a chapter is loaded, the database holds its texts and any later fix happens there. `Backbone.find(name)` reads the folder (`spec/fixtures/files/backbones/tale/` shows the layout):
+- **`backbone.yml`**: the language, the original's edition and license, and the levels top-down, each with its word list's name, whether it is `strict`, and its target length as a `share` of the original chapter. Also the story's `recurring_words` (base forms that pass at every level), `level_words` (pass at one level only) and `title_words` (pass, like the name, before a name).
+- **`headings.yml`**: each chapter's title per version, with its English translation; its keys give the chapters in reading order.
+- **Texts**: `original/<chapter>.txt` and `<level>/<chapter>.txt`, each the chapter's body without its heading.
+- **Check**: `bin/rails "call[Backbones::CheckReport,<name>,<level>,<chapter>]"` lists, for every text written (a blank or missing level or chapter means all of them), what `Backbones::Check` finds: it lists each text's words above its level, by base form, with the lowest level whose list holds each. `Backbones::Lemmas` asks Sonnet for the base forms (a contraction gives each part, a verb with a pronoun the verb and the pronoun) and keeps the answers in `tmp/backbones/<name>/lemmas.json`, so each form is asked once. A word passes when its base form, the form as written, or another headword for it (a feminine-only or plural-only form, the verb behind a participle) is on a list at or below the level; names and numerals always pass. A strict level is clean only with nothing above it; at the others the list is information only.
+- Like snippet processing, it calls `Llm.client`, so it runs locally only.
 
 ### Compendium Sync
 
