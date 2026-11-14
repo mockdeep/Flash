@@ -1,6 +1,10 @@
 title: O Conto
+title_translation: The Tale
 author: Ana Autora
 language: pt
+original: { url: https://example.com/conto, license: public_domain }
+retelling_license: cc_by_sa
+level_label: [Nível, Level]
 notes: Keep the narrator's jokes.
 levels:
   - { code: B1, list: Tale B1, strict: true, guidelines: Past tenses. }

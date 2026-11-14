@@ -125,9 +125,9 @@ with the chapter's closing teaser line.
 
 ## Into the app
 
-1. One source per version, one snippet per chapter (`Sources::Create`, then
-   `Snippets::Create` with heading, heading translation and body), owned by
-   the local admin. 西游记 used titles 西游记 HSK N / HSK 7–9 / 现代版 / 原著
+1. One source per version, one snippet per chapter, owned by the local
+   admin: `Backbones::Load` (see Tools) makes them from `backbone.yml` and
+   `headings.yml`. 西游记 was set up by hand and used titles 西游记 HSK N / HSK 7–9 / 现代版 / 原著
    (Latin "HSK N" gets no cards), author 吴承恩, CC BY-SA for the
    retellings, public domain plus the Wikisource link for the original.
    Titles must be unique: the Wikipedia summary became 西游记 故事大纲.
@@ -161,6 +161,12 @@ Portuguese so far; 西游记 was written with scratch scripts.
 - **Level guidelines** live in `backbone.yml`, so tighten them there when the
   reviews keep raising the same thing, rather than fixing every draft.
 
-Still to build: loading the texts into the app as sources, and Mandarin for
-the checker (a title with a meaning should be glossed by its meaning, which
-`Snippets::Mandarin::Policy` doesn't yet say).
+- **Load** the written chapters into the app with
+  `bin/rails "call[Backbones::Load,<name>,<username>]"` (the local admin):
+  a source per version and a snippet per chapter, in reading order, headed
+  by the chapter's numeral and title. Run it again as chapters are written;
+  it adds only the next ones. Once a chapter is loaded the database owns its
+  text, so fix it there, not in the drafts.
+
+Still to build: Mandarin for the checker (a title with a meaning should be
+glossed by its meaning, which `Snippets::Mandarin::Policy` doesn't yet say).

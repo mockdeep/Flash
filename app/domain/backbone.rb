@@ -19,7 +19,7 @@ class Backbone
     def initialize(guidelines: "", **) = super
   end
 
-  attr_reader :name, :title, :author, :language, :levels, :title_words, :notes
+  attr_reader :name, :levels
 
   def self.find(name, root: ROOT)
     dir = root.join(name)
@@ -29,15 +29,17 @@ class Backbone
   def initialize(name, config, dir:)
     @name = name
     @dir = dir
-    @title = config["title"]
-    @author = config["author"]
-    @language = config["language"]
+    @config = config
     @levels = config["levels"].map { Level.new(**it.symbolize_keys) }
-    @recurring_words = config.fetch("recurring_words", [])
-    @level_words = config.fetch("level_words", {})
-    @title_words = config.fetch("title_words", [])
-    @notes = config.fetch("notes", "")
   end
+
+  def title = @config["title"]
+  def author = @config["author"]
+  def language = @config["language"]
+  def notes = @config.fetch("notes", "")
+
+  # Titles that pass, like the name, before a name.
+  def title_words = @config.fetch("title_words", [])
 
   # What the writer's and reviewer's prompts name.
   def prompt_terms
@@ -63,14 +65,33 @@ class Backbone
 
   # Base forms the story needs that a level's lists don't hold.
   def story_words(level)
-    @recurring_words + @level_words.fetch(level.code, [])
+    recurring = @config.fetch("recurring_words", [])
+    recurring + @config.fetch("level_words", {}).fetch(level.code, [])
   end
 
   # Chapter names in reading order.
   def chapters = headings.keys
 
-  def text_path(level, chapter) = @dir.join(level.code, "#{chapter}.txt")
-  def original_path(chapter) = @dir.join(ORIGINAL, "#{chapter}.txt")
+  # Every version by its name: the original, then the levels top-down.
+  def versions = [ORIGINAL, *levels.map(&:code)]
+
+  def path(version, chapter) = @dir.join(version, "#{chapter}.txt")
+  def text_path(level, chapter) = path(level.code, chapter)
+  def original_path(chapter) = path(ORIGINAL, chapter)
+
+  # What a version's source in the app is made with: the original under the
+  # work's own title and edition, each level under the title and its label,
+  # with the retellings' license.
+  def source_attributes(version)
+    original = @config.fetch("original", {})
+    retelling = version != ORIGINAL
+    {
+      **source_title(version),
+      author:,
+      license: retelling ? @config["retelling_license"] : original["license"],
+      source_url: retelling ? nil : original["url"],
+    }
+  end
 
   # The text a level's chapter is written from: the level above's, or the
   # original's.
@@ -102,6 +123,17 @@ class Backbone
   end
 
   private
+
+  def source_title(version)
+    translation = @config["title_translation"]
+    return { title:, title_translation: translation } if version == ORIGINAL
+
+    label, label_translation = @config["level_label"]
+    {
+      title: "#{title} — #{label} #{version}",
+      title_translation: "#{translation} — #{label_translation} #{version}",
+    }
+  end
 
   def headings_path = @dir.join("headings.yml")
   def headings = YAML.load_file(headings_path)
