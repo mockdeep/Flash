@@ -141,9 +141,17 @@ with the chapter's closing teaser line.
 
 A backbone's settings, headings and texts are written in
 `drafts/backbones/<name>/`, which git ignores; once loaded, the database
-holds the texts (see Graded Backbones in AGENTS.md). Both tools cover
+holds the texts (see Graded Backbones in AGENTS.md). The tools cover
 Portuguese so far; 西游记 was written with scratch scripts.
 
+- **Settle the vocabulary first**, before any drafting:
+  `bin/rails "call[Backbones::Vocabulary,<name>,<level>]"` at the second
+  lowest level lists the original's most-used base forms above it. Go
+  through them with the user: a basic word the lists miss or place too high
+  is a list gap (add it or move it down, checking which sense you move);
+  a word the plot keeps returning to is a story word (`recurring_words`, or
+  `level_words` for one level); anything else the writer must avoid. Most
+  stopped drafts in O Alienista were words this would have caught.
 - **Check** texts with
   `bin/rails "call[Backbones::CheckReport,<name>,<level>,<chapter>]"`
   (leave the level or chapter blank for all): the words above the level by

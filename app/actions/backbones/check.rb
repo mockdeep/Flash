@@ -3,8 +3,9 @@
 module Backbones
   # The words of a text above its level: those whose base form no word list
   # at or below the level holds, unless the backbone's story needs them or
-  # they are a title before a name. Names and numerals always pass. At a
-  # level that isn't strict the result is only a report.
+  # they are a title before a name or part of a phrase the lists hold
+  # whole (em cima, ao redor de). Names, numerals and interjections (ah, oh)
+  # always pass. At a level that isn't strict the result is only a report.
   module Check
     WORD = /\p{L}+(?:-\p{L}+)*/
     SENTENCE_END = /(?<=[.!?:;…])\s+|\n+/
@@ -57,14 +58,50 @@ module Backbones
     # Each base form above the level, with the forms written for it.
     def self.above_level(backbone, level, words, listed)
       passes = passing(backbone, level, listed)
+      phrased = phrased(words, phrases(backbone, level, listed))
+      counted(backbone, words, phrased, passes)
+    end
+
+    def self.counted(backbone, words, phrased, passes)
       forms = Hash.new { |hash, base| hash[base] = Hash.new(0) }
 
       words.each_with_index do |word, index|
-        next if !word.word? || title?(backbone, words, index)
+        next if !word.word? || phrased.include?(index)
+        next if title?(backbone, words, index)
 
         above(word, passes).each { forms[it][word.form] += 1 }
       end
       forms
+    end
+
+    # The headwords of more than one word listed at or below the level, as
+    # their words.
+    def self.phrases(backbone, level, listed)
+      codes = backbone.up_to(level).map(&:code)
+
+      listed.filter_map do |headword, code|
+        headword.split if headword.include?(" ") && codes.include?(code)
+      end
+    end
+
+    # The places of the words that make up a listed phrase, each matched as
+    # written or by a base form, so "ao redor da" matches "ao redor de".
+    def self.phrased(words, phrases)
+      words.each_index.with_object(Set.new) do |start, phrased|
+        phrases.each do |phrase|
+          next unless phrase_at?(words, start, phrase)
+
+          phrased.merge(start...(start + phrase.size))
+        end
+      end
+    end
+
+    def self.phrase_at?(words, start, phrase)
+      span = words[start, phrase.size]
+      span.size == phrase.size &&
+        phrase.zip(span).all? do |part, word|
+          word.form.downcase == part || word.lemmas.include?(part)
+        end
     end
 
     def self.passing(backbone, level, listed)
