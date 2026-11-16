@@ -123,11 +123,10 @@ RSpec.describe Backbones::Write do
       expect(outcome.trouble).to eq("REWORK after the second review")
     end
 
-    it "stops when a fix brings back a word taken out" do
-      drafts = [draft("A rua."), draft("A casa."), draft("A rua.")]
-      outcome = write(*drafts, reviews: [rework])
+    it "revises a fix that brings back a word taken out" do
+      drafts = [draft("A rua."), draft("A casa."), draft("A rua."), draft("A.")]
 
-      expect(outcome.trouble).to eq("a fix brought back rua")
+      expect(text_of(*drafts, reviews: [rework, pass])).to eq("A.")
     end
 
     it "revises a fix's words above the level" do

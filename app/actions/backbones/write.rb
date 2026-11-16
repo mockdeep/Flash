@@ -3,10 +3,10 @@
 module Backbones
   # One chapter at one level, drafted, revised until no word is above the
   # level, then reviewed. A PASS's fixes are applied and checked; a
-  # REWORK's are applied, checked and reviewed again. It stops for a
-  # person when a second review still says REWORK, when words are above
-  # the level after ROUNDS revisions, or when a review's fix brings back a
-  # word the revisions took out.
+  # REWORK's are applied, checked and reviewed again. A fix's words above
+  # the level are revised like a draft's. It stops for a person when a
+  # second review still says REWORK, or when words are above the level
+  # after ROUNDS revisions.
   class Write
     ROUNDS = 3
     REVIEWS = 2
@@ -27,7 +27,6 @@ module Backbones
       @chapter = chapter
       @lemmas = lemmas
       @log = []
-      @removed = Set.new
     end
 
     def call
@@ -61,17 +60,15 @@ module Backbones
     def applied(draft, review)
       feedback = { problems: review.problems.map(&:to_h) }
       fixed = revise(draft, feedback, "Applied review #{review.verdict}")
-      result = check(fixed)
-      back = flagged(result) & @removed.to_a
-      return [fixed, "a fix brought back #{back.join(", ")}"] if back.any?
 
-      within_level(fixed, result)
+      within_level(fixed)
     end
 
     # The draft revised until no word is above the level, and why it stopped
     # if it never got there. A check whose only fault is forms unanswered
     # is simply made again, since they are asked again.
-    def within_level(draft, result = check(draft))
+    def within_level(draft)
+      result = check(draft)
       ROUNDS.times do
         return [draft, nil] if result.clean?
 
@@ -84,7 +81,6 @@ module Backbones
     end
 
     def simpler(draft, result)
-      @removed.merge(flagged(result))
       revise(draft, { above_level: above_level(result) }, "Revised words")
     end
 

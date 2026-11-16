@@ -108,6 +108,10 @@ RSpec.describe Backbones::Check do
       expect(flagged("Ana.", Ana: { kind: "name" })).to eq([])
     end
 
+    it "passes interjections" do
+      expect(flagged("Ah!", Ah: { kind: "interjection" })).to eq([])
+    end
+
     it "passes numerals" do
       expect(flagged("XII.", XII: { kind: "numeral" })).to eq([])
     end
@@ -130,6 +134,30 @@ RSpec.describe Backbones::Check do
 
     it "flags a title before anything else" do
       expect(flagged("A casa dr.")).to eq(["dr"])
+    end
+
+    it "passes the words of a phrase listed at the level" do
+      tale_list("A1", "em cima")
+
+      expect(flagged("A casa em cima.")).to eq([])
+    end
+
+    it "matches a phrase's words by their base forms" do
+      tale_list("A1", "ficar em cima")
+
+      expect(flagged("Fica em cima.", Fica: { lemmas: ["ficar"] })).to eq([])
+    end
+
+    it "flags the words of a phrase listed above the level" do
+      tale_list("B1", "em cima")
+
+      expect(flagged("A casa em cima.")).to eq(["cima", "em"])
+    end
+
+    it "flags words that only begin a listed phrase" do
+      tale_list("A1", "em cima")
+
+      expect(flagged("A casa em.")).to eq(["em"])
     end
 
     it "passes a reflexive verb's bare verb" do

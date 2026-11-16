@@ -8,9 +8,10 @@ module Backbones
   class Lemmas
     BATCH = 120
 
-    # A form as written, what kind of word it is (word / name / numeral, or
-    # unknown when unanswered), the base forms it is made of (a contraction
-    # gives each part), and other headwords a list may hold it under.
+    # A form as written, what kind of word it is (word / name / numeral /
+    # interjection, or unknown when unanswered), the base forms it is made of
+    # (a contraction gives each part), and other headwords a list may hold it
+    # under.
     Word = Data.define(:form, :kind, :lemmas, :alternatives)
 
     class Word
@@ -25,7 +26,8 @@ module Backbones
       written and the sentence it appears in. Answer with:
       - kind: "word"; "name" for a person's or place's name or other proper
         noun (Itaguaí, Bacamarte, Corão, Rio de Janeiro); "numeral" for a
-        Roman numeral.
+        Roman numeral; "interjection" for an exclamation that is only a
+        sound of feeling (ah, oh, ai, hum), not a word used as one (Deus!).
       - lemmas: the base form(s), lower case: verbs in the infinitive, nouns
         in the singular with no article, adjectives in the masculine
         singular, adverbs as they are. Split contractions into their parts
@@ -43,6 +45,8 @@ module Backbones
         there are none.
     TEXT
 
+    KINDS = ["word", "name", "numeral", "interjection"].freeze
+
     SCHEMA = {
       type: "object",
       additionalProperties: false,
@@ -56,7 +60,7 @@ module Backbones
             required: ["id", "kind", "lemmas", "alternatives"],
             properties: {
               id: { type: "integer" },
-              kind: { type: "string", enum: ["word", "name", "numeral"] },
+              kind: { type: "string", enum: KINDS },
               lemmas: { type: "array", items: { type: "string" } },
               alternatives: { type: "array", items: { type: "string" } },
             },
