@@ -12,8 +12,8 @@
     "@hotwired/stimulus": "^3.2.2",
     "@hotwired/turbo": "^8.0.23",
     "@hotwired/turbo-rails": "^8.0.23",
-    "@rails/actioncable": "^8.1.400",
-    "@rails/activestorage": "^8.1.400",
+    "@rails/actioncable": "^8.1.401",
+    "@rails/activestorage": "^8.1.401",
     "flash-font-hanzi-semantic": "^0.1.0",
     "lxgw-wenkai-webfont": "^1.7.0"
   },
@@ -26,10 +26,10 @@
     "@types/rails__actioncable": "^8.0.3",
     "@typescript-eslint/eslint-plugin": "^8.72.1",
     "@typescript-eslint/parser": "^8.72.1",
-    "@vitest/coverage-v8": "^5.0.5",
+    "@vitest/coverage-v8": "^5.1.0",
     "@vitest/eslint-plugin": "^1.6.28",
     "esbuild": "^0.28.2",
-    "eslint": "^10.13.0",
+    "eslint": "^10.14.0",
     "eslint-find-rules": "^5.0.0",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import": "^2.32.0",
@@ -43,7 +43,7 @@
     "stylelint-selector-bem-pattern": "^5.0.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.1",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   },
   "scripts": {
     "build": "bin/build",
