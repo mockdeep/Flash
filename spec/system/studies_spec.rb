@@ -195,6 +195,7 @@ RSpec.describe "studying a deck" do
     def type_and_pick(text, answer)
       fuzzy_input.fill_in(with: text)
       click_on(answer)
+      expect(page).to have_no_button(answer)
     end
 
     it "asks the translation of the same card once the reading is typed" do
