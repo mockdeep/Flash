@@ -79,7 +79,8 @@ module Snippets
       Return each word as `text`, exactly as written, and `headword`, the
       form it is studied under: the same word in lower case, unless it is a
       name, a title before one (D., Sr.) or a Roman numeral (século XIX),
-      which keeps its capitals. A word
+      which keeps its capitals. A name keeps them whether it is skipped or
+      gets a card ("Lisboa" → "Lisboa", "a Bíblia" → "Bíblia"). A word
       capitalised only because it starts a sentence is lower-cased ("Ela" →
       "ela"). An abbreviation's headword is the word it stands for here,
       written out with its capital: D. is "Dona" before a woman's name and
