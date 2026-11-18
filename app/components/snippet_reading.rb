@@ -49,14 +49,14 @@ module Components
     end
 
     # The popovers follow the line rather than sit in it, so its text stays
-    # just the words; each still opens beside its own word.
+    # just the words; each still opens beside the word clicked.
     def render_line(paragraph, tag, **)
-      lookups = []
-      tag(tag, **) { paragraph.tokens.each { render_token(it, lookups) } }
-      lookups.each { render(it) }
+      rendered = lookups.size
+      tag(tag, **) { paragraph.tokens.each { render_token(it) } }
+      lookups.values.drop(rendered).each { render(it) }
     end
 
-    def render_token(token, lookups)
+    def render_token(token)
       sense = senses[token["sense_id"]]
       skip = token["skip"]
       return plain(token["text"]) unless sense || skip
@@ -66,12 +66,23 @@ module Components
       # place to break: before the word, so punctuation stays at the end of
       # the line it closes.
       wbr unless language.spaces
-      id = "lookup-#{lookup_count}"
       text = written(token, sense)
       state = word_state(sense)
-      render_word(text, sense, id, state)
-      lookups << ReadingLookup.new(id:, text:, sense:, skip:, state:)
+      lookup = lookup_for(text:, sense:, skip:, state:)
+      render_word(text, sense, lookup.id, state)
     end
+
+    # A long text repeats its words, so every place that writes a word the
+    # same way shares one popover, rendered after the first line using it.
+    # The spelling counts, since a popover may show the word studied where
+    # the text writes it otherwise (D. for Dona).
+    def lookup_for(text:, sense:, skip:, state:)
+      key = [sense&.id, skip, text.downcase]
+      id = "lookup-#{lookups.size + 1}"
+      lookups[key] ||= ReadingLookup.new(id:, text:, sense:, skip:, state:)
+    end
+
+    def lookups = @lookups ||= {}
 
     # A Mandarin word is written in the deck's script, whatever the text's.
     def written(token, sense)
@@ -104,14 +115,11 @@ module Components
     end
 
     def word_state(sense)
-      return unless sense
-
-      scores.fetch(sense.id) { SkillScore.new }.state(deck.round)
+      scores.fetch(sense.id) { unseen }.state(deck.round) if sense
     end
 
-    def lookup_count
-      @lookup_count = (@lookup_count || 0) + 1
-    end
+    # Shared by every word with no score, rather than built for each.
+    def unseen = @unseen ||= SkillScore.new
 
     def senses
       @senses ||= Sense.where(id: sense_ids).index_by(&:id)
@@ -138,7 +146,7 @@ module Components
       ]
     end
 
-    def language = deck.source.language
+    def language = @language ||= deck.source.language
     def gaps? = deck.round <= GAPS_ROUND
   end
 end
