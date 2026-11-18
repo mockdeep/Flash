@@ -52,6 +52,20 @@ prompt:
   such as how reflexive verbs are written (Brazilian Portuguese chose
   *se chamar*, its spoken order, over the dictionary's *chamar-se*), and
   how names, titles and plural-only nouns appear.
+- **Inflected forms:** headwords are the lemma the variety uses (Filipino
+  chose the infinitive, *kumain*, over the root), never a tense or aspect
+  form, and never a form with a linker or contraction attached (Filipino
+  *lubhang*, *nguni't*). Agents and drafts slip these in at every level.
+- **Grammar the gloss has to carry:** where two forms of a verb share an
+  English meaning, decide how the gloss tells them apart. Filipino labels
+  every verb "(actor focus)" or "(object focus)", merged into an existing
+  bracket ("to live (reside, actor focus)"), and lets the gloss say any
+  other role ("to buy for"). Settle it before A2, since relabeling a pushed
+  list later touches every verb, including senses the book texts share.
+- **Loan spelling:** the native spelling where one is established, or the
+  source language's? Filipino chose the established Filipino spelling
+  (*restawran*, *kompyuter*), English only where none is in use, because it
+  teaches more.
 - **Check sources:** CEFR-J (A1–B2) and Octanove (C1–C2) map from English and
   work for any language. Add the language's own official lists where they
   exist (Goethe for German, the Instituto Cervantes plan for Spanish) and any
@@ -69,13 +83,17 @@ words and common verbs at A1; connectors, abstract verbs and collocations
 higher up). Lower levels are about tasks (greetings, shopping, directions);
 from B2 up they're about argument, register, nuance and reading. Mark any
 situation the descriptors don't name as "our addition". The user approves
-the list.
+the list. The descriptors are the same for every language, so once one
+language has a level's situations, the next can reuse them with its own
+content (Filipino added church and religious occasions at A2).
 
 At C1 and C2, also settle the **size and the test** with the user before
 drafting: frequency falls off fast, and published charts count words
 recognized, not words used. Brazilian Portuguese chose a recognition test at
 C2 ("a learner will meet it regularly in serious reading") and about 1,500
-meanings, leaving the long tail to the text decks.
+meanings, leaving the long tail to the text decks. Once the checks run out
+of real gaps, accept a smaller level rather than padding it to the target
+(Filipino settled near 900 at C1 and C2): most of Octanove is English-specific.
 
 ### 2. Draft
 
@@ -90,7 +108,11 @@ Before handing the draft over, clean it by script: move any article written
 into a headword into its column, put verbs in the agreed form, drop
 sum-of-parts phrases, and check against the lower lists (same word and
 article, a shared gloss word). A draft written from memory repeats
-lower-level meanings under synonyms; keep only real new meanings.
+lower-level meanings under synonyms; keep only real new meanings. When the
+draft is written in several part files, give each its own header line, so a
+reader that skips the first line doesn't lose a word. Drop a repeated row by
+removing one copy: a drop keyed on word and gloss removes every copy, and the
+word vanishes from the level.
 
 ### 3. Fresh review (background agent)
 
@@ -106,8 +128,9 @@ Tell every agent the output rules, since each has broken them: one meaning
 per gloss, short part-of-speech labels (`noun`, `verb`, `adj`, `adv`,
 `prep`, `conj`, `pron`, `det`, `interj`, `phrase`, never blank), the article
 filled in on every noun row, and drop/move rows copied exactly from the
-draft. Check the files for joined glosses (`;`) and blank parts of speech
-before merging.
+draft. Have every `fix` reason start `was <headword> "<gloss>"` so the merge
+can find the row, and allow no other double quote or pipe in a reason. Check
+the files for joined glosses (`;`) and blank parts of speech before merging.
 
 ### 4. Checks (in parallel with 3)
 
@@ -126,7 +149,11 @@ before merging.
   next level's candidates, along with the lower level's skips marked
   "not this level".
 - **Words below the level:** at higher levels these sources turn up everyday
-  words the lower lists missed. Have the mapping agent mark them `lower`.
+  words the lower lists missed. Have the mapping agent mark them `lower`,
+  naming the level at the start of the reason, so the load knows where each
+  goes.
+- **Mapping agents call synonyms "covered".** A rarer word for a meaning a
+  lower list already has is still a card at its own level; add those back.
 - **The old list or official list:** diff it against the draft and sort
   what's missing into real gaps, sum-of-parts phrases, the wrong variety,
   and not this level.
@@ -151,6 +178,10 @@ Present the rest to the user: first everything two or more sources agree on
 (for bulk approval), then single-source ones grouped by situation. Mark
 approvals in a `decision` column.
 
+Every approved move has to land somewhere: a word moved up joins the next
+level's candidates, and a word moved down is added to that list in this
+load. A move recorded only as a removal leaves the word in no list at all.
+
 ### 6. Match against the compendium
 
 A runner script builds the final rows (draft plus approved changes, each
@@ -171,6 +202,12 @@ sense yourself. The matcher ignores bracketed words, so two rows can land on
 one sense; mark one `new`, and let these decisions override any `same`
 match. A match onto a sense already in a lower list is a new meaning or a
 repeat, never a reuse.
+
+Senses that came from processed texts are glossed for the passage: a verb in
+the past or passive ("went", "be said"). The user chose a **new** sense for
+the list's form ("to go") beside it, so the reading popovers stay true to
+the text. A reused book verb takes the list's gloss, with any grammar label
+the conventions call for.
 
 ### 7. Load
 
@@ -197,7 +234,11 @@ full. Words already in a list keep their category.
 
 Dry-run first and write a category report; scan it for words without an
 article in noun categories (a sign of a missing part of speech) before
-showing the user.
+showing the user. Then list every gloss the level shares with any list,
+lower ones included. Synonyms may share one, but different meanings may not:
+a reused sense's short gloss ("that", "free", "fan") often matches a
+different word's, and both then need sharpening ("that (near you)",
+"free (no cost)", "folding fan"). Put those revisions to the user.
 
 ### 8. Push
 
@@ -218,7 +259,8 @@ Published lists: CEFR-J A1 1,164, A2 1,411, B1 2,446, B2 2,778 English
 headwords; Octanove C1 1,111, C2 1,025; Goethe's German lists about 650 (A1),
 1,300 and 2,400 words by level. Brazilian Portuguese came out at about 890,
 1,060, 1,390, 1,440, 1,030 and 1,330 meanings from A1 to C2 (~7,100 in
-all). Each level also grew the ones below it, as its checks turned up words
+all); Filipino at about 880, 1,070, 1,130, 1,030, 900 and 860 (~5,900).
+Each level also grew the ones below it, as its checks turned up words
 they had missed, so expect the lower lists to keep growing. Above A1, most
 additions come from CEFR-J or Octanove alone, so expect a long
 single-source review.
