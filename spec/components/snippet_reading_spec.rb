@@ -365,6 +365,58 @@ RSpec.describe Components::SnippetReading, type: :view do
     expect(targets).to eq(page.all("[popover]").pluck("id"))
   end
 
+  def repeated_snippet(first, second)
+    entry = create(:entry, language: "pt", headword: "casa", reading: nil)
+    sense = create(:sense, entry:, gloss: "house")
+    source = create(:source, word_list: create(:word_list, language: "pt"))
+    body = "#{first} #{second}."
+    snippet = create(:snippet, source:, body:)
+    tokens = [first, second].map { { "text" => it, "sense_id" => sense.id } }
+    create(:snippet_sentence, snippet:, tokens:, body:)
+    render_for(snippet, source:)
+  end
+
+  it "shares one popover between places that write a word alike" do
+    page = repeated_snippet("Casa", "casa")
+
+    expect(page).to have_css("[popover]", count: 1)
+  end
+
+  it "opens the shared popover from every place the word is written" do
+    page = repeated_snippet("Casa", "casa")
+
+    targets = page.all(".reading-snippet__word").pluck("popovertarget")
+    expect(targets).to eq([page.find("[popover]")[:id]] * 2)
+  end
+
+  it "keeps a popover per spelling of a word" do
+    page = repeated_snippet("casa", "cása")
+
+    expect(page).to have_css("[popover]", count: 2)
+  end
+
+  def repeated_name_snippet
+    source = create(:source, word_list: create(:word_list, language: "pt"))
+    snippet = create(:snippet, source:, body: "Inácia, Inácia.")
+    tokens = [{ "text" => "Inácia", "skip" => "name" }] * 2
+    create(:snippet_sentence, snippet:, tokens:, body: "Inácia, Inácia.")
+    render_for(snippet, source:)
+  end
+
+  it "shares one popover between places that write a skipped word alike" do
+    page = repeated_name_snippet
+
+    expect(page).to have_css("[popover]", count: 1)
+  end
+
+  it "renders a shared popover after the first line using it" do
+    word = word("我", "wǒ")
+    tokens = [word, { "text" => "。" }]
+    page = render_for(snippet_with("我。\n\n我。", tokens, tokens))
+
+    expect(page).to have_css("p + [popover] + p")
+  end
+
   it "passes the word's sense to its restudy button" do
     snippet = snippet_with("爱。", [word("爱", "ài")])
     page = render_for(snippet)
