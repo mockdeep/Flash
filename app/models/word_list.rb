@@ -27,6 +27,7 @@ class WordList < ApplicationRecord
       [code, RENAMED.fetch(code, name)]
     end
   LANGUAGES = language_pairs.sort_by(&:last).to_h.freeze
+  VISIBILITIES = ["public", "private"].freeze
 
   belongs_to :user
   has_many :sense_memberships, dependent: :destroy
@@ -37,4 +38,25 @@ class WordList < ApplicationRecord
 
   validates :name, presence: true, uniqueness: { scope: :user_id }
   validates :language, presence: true, inclusion: { in: LANGUAGES.keys }
+  validates :visibility, inclusion: { in: VISIBILITIES }
+  # Checked only on the way to public, so a list already there can still be
+  # saved when its source changes.
+  validate(:source_can_be_shown, if: :will_save_change_to_visibility?)
+
+  def publicly_visible? = visibility == "public"
+
+  private
+
+  # A public list comes with its text, so a source's needs a license that
+  # lets it be shared and a finished snippet to read.
+  def source_can_be_shown
+    return unless publicly_visible? && source
+    return if source.shareable? && source.studyable?
+
+    errors.add(
+      :visibility,
+      "can't be public until its source has a shareable license and a " \
+      "finished snippet",
+    )
+  end
 end

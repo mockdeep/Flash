@@ -14,6 +14,7 @@ module Compendium
     "senses",
     "sense_examples",
     "word_lists",
+    "word_list_links",
     "sense_memberships",
     "sources",
     "snippets",
