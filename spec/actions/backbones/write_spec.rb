@@ -26,7 +26,7 @@ RSpec.describe Backbones::Write do
     tale_list("A1", "casa", "a", "velha")
     tale_list("B1", "rua")
     answer(drafts, reviews, unanswered)
-    lemmas = Backbones::Lemmas.new(Backbone::CACHE.join("lemmas.json"))
+    lemmas = Lemmas.new(Backbone::CACHE.join("lemmas.json"))
 
     described_class.call(backbone, backbone.level("A1"), "I", lemmas:)
   end

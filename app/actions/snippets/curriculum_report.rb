@@ -15,9 +15,11 @@ module Snippets
 
     # Each cut word, with how it was cut and the sentences that cut it.
     def self.cuts(sentences, curriculum)
-      sentences.each_with_object({}) do |sentence, cuts|
+      found = curriculum.found_in_each(sentences.map(&:body))
+
+      sentences.zip(found).each_with_object({}) do |(sentence, words), cuts|
         texts = sentence.tokens.pluck("text")
-        curriculum.found_in(sentence.body).each do |word|
+        words.each do |word|
           parts = parts(texts, word)
           (cuts[word] ||= { parts:, ids: [] })[:ids] << sentence.id if parts
         end
@@ -26,10 +28,11 @@ module Snippets
 
     # The neighbouring tokens that write exactly the word, or nil when none
     # do: a token holds it, or it straddles a token's edge by chance, which
-    # is no cut.
+    # is no cut. A phrase's spaces are left out of its tokens.
     def self.parts(texts, word)
+      letters = word.delete(" ")
       (2..word.length).each do |size|
-        found = texts.each_cons(size).find { it.join == word }
+        found = texts.each_cons(size).find { it.join.delete(" ") == letters }
         return found.join(" + ") if found
       end
       nil

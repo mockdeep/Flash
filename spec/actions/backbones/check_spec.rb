@@ -42,7 +42,7 @@ RSpec.describe Backbones::Check do
   def check_only(text, code)
     tale_list("A1", "a", "casa")
     tale_list("B1", "rua")
-    lemmas = Backbones::Lemmas.new(cache_dir.join("lemmas.json"))
+    lemmas = Lemmas.new(cache_dir.join("lemmas.json"))
 
     described_class.call(backbone, backbone.level(code), text, lemmas:)
   end

@@ -27,6 +27,10 @@ module Snippets
          sa totoo lang "to tell the truth"). Split a combination whose words, each glossed on its
          own, already say what it means. When unsure, keep whole what a
          standard dictionary lists as one entry.
+         The curriculum's phrases a sentence writes are listed with it as
+         curriculum_words, as the sentence writes them; keep one whole
+         wherever it is used as that phrase, and split it where its words
+         only happen to stand together.
       6. A marker or particle is a word of its own (ang, ng, sa, si, ni,
          kay, mga, ay, na, pa, ba, din, rin, daw, raw, lang, nga, naman,
          po).

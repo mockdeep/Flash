@@ -44,6 +44,22 @@ RSpec.describe Snippets::CurriculumWords do
 
       expect(found_in("casa")).to be_empty
     end
+
+    it "finds phrases in a language written with spaces" do
+      listed("em cima", language: "pt")
+      llm.respond { lemma_answer(it) }
+      words = described_class.for(Language::PORTUGUESE)
+
+      expect(words.found_in_each(["Em cima."])).to eq([["Em cima"]])
+    end
+  end
+
+  describe "#found_in_each" do
+    it "lists each text's words" do
+      words = described_class.new(["东西", "天上"])
+
+      expect(words.found_in_each(["买东西", "天上"])).to eq([["东西"], ["天上"]])
+    end
   end
 
   describe "#found_in" do

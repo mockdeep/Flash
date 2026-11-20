@@ -7,7 +7,7 @@ module Backbones
   module CheckReport
     def self.call(name, level = nil, chapter = nil)
       backbone = Backbone.find(name)
-      lemmas = Lemmas.new(backbone.cache_dir.join("lemmas.json"))
+      lemmas = Lemmas.in(backbone.language)
 
       texts(backbone, level, chapter).flat_map do |at, chapter_name, path|
         result = Check.call(backbone, at, path.read, lemmas:)

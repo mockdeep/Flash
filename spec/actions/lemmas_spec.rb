@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Backbones::Lemmas do
+RSpec.describe Lemmas do
   after { FileUtils.rm_rf(cache_dir) }
 
   def cache_dir = Rails.root.join("tmp/spec/lemmas-#{Process.pid}")
@@ -12,7 +12,16 @@ RSpec.describe Backbones::Lemmas do
   end
 
   def word(form, kind: "word", lemmas: ["casa"], alternatives: [])
-    Backbones::Lemmas::Word.new(form:, kind:, lemmas:, alternatives:)
+    Lemmas::Word.new(form:, kind:, lemmas:, alternatives:)
+  end
+
+  describe ".in" do
+    it "keeps a language's forms in its own file" do
+      llm.answer({ words: [row(0)] })
+      described_class.in("pt").for([["casas", "As casas."]])
+
+      expect(described_class::DIR.join("pt.json")).to exist
+    end
   end
 
   describe "#for" do
@@ -40,7 +49,7 @@ RSpec.describe Backbones::Lemmas do
     end
 
     it "asks in batches" do
-      stub_const("Backbones::Lemmas::BATCH", 1)
+      stub_const("Lemmas::BATCH", 1)
       llm.answer({ words: [row(0)] }, { words: [row(0)] })
 
       lemmas.for([["casas", "As casas."], ["casa", "A casa."]])

@@ -51,10 +51,18 @@ RSpec.describe Snippets::Segment do
     sentence.reload.tokens
   end
 
-  def curriculum_word(headword)
-    list = create(:word_list, curriculum: true)
-    sense = create(:sense, entry: create(:entry, headword:))
+  def curriculum_word(headword, language: "zh")
+    list = create(:word_list, curriculum: true, language:)
+    sense = create(:sense, entry: create(:entry, headword:, language:))
     create(:sense_membership, sense:, word_list: list)
+  end
+
+  # Base forms are asked for before the sentence is segmented.
+  def answer_lemmas_then(segmentation)
+    llm.respond do |call|
+      lemmas = call.system.start_with?("You give the dictionary base form")
+      lemmas ? lemma_answer(call) : segmentation
+    end
   end
 
   def recut(tokens, *words)
@@ -300,6 +308,14 @@ RSpec.describe Snippets::Segment do
       described_class.call([create(:snippet_sentence, body: "买东西")])
 
       expect(llm.calls.sole.prompt).to include('"curriculum_words":["东西"]')
+    end
+
+    it "lists the curriculum phrases a Portuguese sentence writes" do
+      curriculum_word("em cima", language: "pt")
+      answer_lemmas_then(headword_answer("em cima"))
+      portuguese_tokens("em cima")
+
+      expect(llm.calls.last.prompt).to include('"curriculum_words":["em cima"]')
     end
 
     it "passes on what was wrong with an earlier segmentation" do

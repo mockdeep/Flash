@@ -11,7 +11,7 @@ module Backbones
   module Run
     def self.call(name, chapter = nil, level = nil)
       backbone = Backbone.find(name)
-      lemmas = Lemmas.new(backbone.cache_dir.join("lemmas.json"))
+      lemmas = Lemmas.in(backbone.language)
       chapters = chapter.presence ? [chapter] : backbone.chapters
       levels = level.presence ? [backbone.level(level)] : backbone.levels
       headings = []

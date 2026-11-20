@@ -17,7 +17,7 @@ module Backbones
     end
 
     def self.frequent(backbone, level, minimum)
-      lemmas = Lemmas.new(backbone.cache_dir.join("lemmas.json"))
+      lemmas = Lemmas.in(backbone.language)
       text = original(backbone)
       flags = Check.call(backbone, level, text, lemmas:).flags
 
