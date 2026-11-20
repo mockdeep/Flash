@@ -90,8 +90,10 @@ module Snippets
     end
 
     def self.prompt(sentences, feedback, curriculum)
+      found = curriculum.found_in_each(sentences.map(&:body))
+
       sentences.each_with_index.map do |sentence, id|
-        words = curriculum.found_in(sentence.body).presence
+        words = found[id].presence
         { id:, sentence: sentence.body, curriculum_words: words }.compact
           .merge(revision(sentence, feedback))
       end

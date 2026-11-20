@@ -48,6 +48,27 @@ RSpec.describe Snippets::CurriculumReport do
     expect(described_class.call([sentence("看", "着", "眼睛")])).to be_empty
   end
 
+  def portuguese_sentence(*texts)
+    list = create(:word_list, curriculum: true, language: "pt")
+    entry = create(:entry, headword: "em cima", language: "pt")
+    create(:sense_membership, sense: create(:sense, entry:), word_list: list)
+    llm.respond { lemma_answer(it) }
+    snippet = create(:snippet, word_list: create(:word_list, language: "pt"))
+    tokens = texts.map { { "text" => it } }
+    create(:snippet_sentence, snippet:, body: texts.join(" "), tokens:)
+  end
+
+  it "lists a curriculum phrase cut into its words" do
+    cut = portuguese_sentence("em", "cima")
+
+    expect(described_class.call([cut]))
+      .to eq(["  em cima: cut em + cima in sentence #{cut.id}"])
+  end
+
+  it "leaves out a phrase a token holds whole" do
+    expect(described_class.call([portuguese_sentence("em cima")])).to be_empty
+  end
+
   it "lists nothing for no sentences" do
     expect(described_class.call([])).to be_empty
   end

@@ -22,6 +22,10 @@ module Snippets
          each glossed on its own, already say what it means (a casa velha →
          a, casa, velha). When unsure, keep whole what a standard dictionary
          lists as one entry.
+         The curriculum's phrases a sentence writes are listed with it as
+         curriculum_words, as the sentence writes them; keep one whole
+         wherever it is used as that phrase, and split it where its words
+         only happen to stand together.
       5. A name of several words is one word (São Paulo, Rio de Janeiro),
          but a title before a name is a word of its own, studied with its
          capital (Padre, Capitão, and abbreviations such as D., Sr., Sra.
