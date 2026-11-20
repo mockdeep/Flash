@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_09_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_20_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -400,6 +400,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_000000) do
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 
+  create_table "word_list_links", force: :cascade do |t|
+    t.bigint "word_list_id", null: false
+    t.bigint "linked_word_list_id", null: false
+    t.float "strength", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["linked_word_list_id"], name: "index_word_list_links_on_linked_word_list_id"
+    t.index ["word_list_id", "linked_word_list_id"], name: "index_word_list_links_on_word_list_id_and_linked_word_list_id", unique: true
+    t.check_constraint "word_list_id < linked_word_list_id", name: "word_list_links_lower_id_first"
+  end
+
   create_table "word_lists", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "language"
@@ -407,6 +418,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_000000) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.boolean "curriculum", default: false, null: false
+    t.string "visibility", default: "private", null: false
+    t.integer "level"
+    t.float "angle"
     t.index ["user_id", "name"], name: "index_word_lists_on_user_id_and_name", unique: true
   end
 
@@ -444,5 +458,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_000000) do
   add_foreign_key "spellings", "entries", on_delete: :cascade
   add_foreign_key "study_days", "decks", on_delete: :cascade
   add_foreign_key "subscriptions", "users"
+  add_foreign_key "word_list_links", "word_lists", column: "linked_word_list_id", on_delete: :cascade
+  add_foreign_key "word_list_links", "word_lists", on_delete: :cascade
   add_foreign_key "word_lists", "users", on_delete: :cascade
 end
