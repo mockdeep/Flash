@@ -52,10 +52,16 @@ module Views
         unmet_ids = section_decks.goal_unmet_today.ids
         section_decks = section_decks.with_progress.to_a
         render_featured(section_decks, unmet_ids)
+        heats = heats_for(section_decks)
 
         section_decks.chunk_while { |a, b| same_list?(a, b) }.each do |decks|
-          render_rail_card(card_deck(decks, unmet_ids))
+          deck = card_deck(decks, unmet_ids)
+          render_rail_card(deck, heat: heats[deck.word_list_id])
         end
+      end
+
+      def heats_for(section_decks)
+        Heat.for(current_user, section_decks.filter_map(&:word_list_id).uniq)
       end
 
       def same_list?(deck, other)
@@ -96,7 +102,7 @@ module Views
         div(class: "rail-divider")
       end
 
-      def render_rail_card(deck, featured_label: nil)
+      def render_rail_card(deck, featured_label: nil, heat: nil)
         classes = ["rail-card", ("rail-card--featured" if featured_label)]
 
         div(class: classes.compact.join(" ")) do
@@ -104,7 +110,7 @@ module Views
           div(class: "rail-type") { deck.type_label }
           render_rail_title(deck, featured: featured_label.present?)
           render(Components::RoundProgress.new(deck:))
-          render_rail_meta(deck, deck.remaining_count)
+          render_rail_meta(deck, deck.remaining_count, heat)
         end
       end
 
@@ -125,8 +131,13 @@ module Views
         end
       end
 
-      def render_rail_meta(deck, remaining)
-        div(class: "rail-meta") { render_remaining(deck, remaining) }
+      # Heat covers the card's whole list, so a source's card shows it for
+      # the source, whichever section it opens.
+      def render_rail_meta(deck, remaining, heat)
+        div(class: "rail-meta") do
+          render_remaining(deck, remaining)
+          span(class: "rail-heat") { "#{heat.percent}% known" } if heat
+        end
       end
 
       def render_remaining(deck, remaining)
