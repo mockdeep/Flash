@@ -199,7 +199,7 @@ end
 - `card.css` - Generic `.card` container pattern
 - `catalog.css` - Public deck catalog (rail-card extras: owner, card count, Try) + preview (`.catalog-show-*` reused by the share-link preview at `/shared/:token`)
 - `custom.css` - Scratch space for ad-hoc overrides
-- `decks.css` - Deck listing, deck form, and deck-show page (`.deck-show-*` action row, scrolling cards box and delete box; `.deck-share-url` link row). The deck-show header and meta line reuse `catalog.css`'s `.catalog-show-*` classes
+- `decks.css` - Deck listing, deck form, and deck-show page (`.deck-show-*` action row, scrolling cards box and delete box; `.deck-share-url` link row; `.rail-heat` on a language card). The deck-show header and meta line reuse `catalog.css`'s `.catalog-show-*` classes
 - `demo-banner.css` - Demo-mode banner
 - `dialog.css` - Modal dialog component styles (`.dialog`, `.dialog__header`, etc.)
 - `edit-card.css` - Edit card trigger button and form layout within the dialog (also the study-goal dialog's three goal-mode forms, toggled with `:has()`)
@@ -450,6 +450,7 @@ app/
 ├── domain/
 │   ├── backbone.rb               # A graded backbone's config: levels (code, list, strict, guidelines), story and title words, chapters, headings, text paths, each version's source attributes
 │   ├── deck_section.rb           # A section of a set of decks (a user's, or the catalog's): one per language A–Z, then Basic, then Music; `first_unmet` drives Next Deck; `card_count` (the heading's count) counts a source's decks once
+│   ├── heat.rb                   # How much of a word list a learner knows: `Heat.for(user, word_list_ids)` gives each list's entries and the share known (an entry's weakest reading streak, up to 3), from one query
 │   ├── language.rb               # What processing a snippet needs per language: sentence ends, word characters, the segmenter's form and its check, its lexicon, skip reasons, whether words are spaced, prompts (`Language::MANDARIN`, `Language::PORTUGUESE`, `Language::FILIPINO`)
 │   ├── lexicon.rb                # How a language's entries are stored, snippet language or not: readings or none, articles or none, traditional forms or none, list categories, refiner rules (`Lexicon::MANDARIN`, `PORTUGUESE`, `FILIPINO`, `GERMAN`, `SPANISH`, `ITALIAN`; a plain one for any other)
 │   ├── lexicon/
@@ -542,7 +543,7 @@ app/
 │   │   ├── index.rb          # Public decks in `DeckSection` rails, each name linking to its preview (mic badge for music decks, 📖 for decks with shareable texts); Try This Deck for visitors and guests
 │   │   └── show.rb           # Deck preview + texts + copy action, or try + log in for visitors and guests (mic badge in header)
 │   ├── decks/
-│   │   ├── index.rb          # Decks in `DeckSection` rails (each language, Basic, Music); each features its first unmet-goal deck, else its most recently studied. A source's decks share one card, named for the source, opening its first unmet-goal section deck, else its last studied, else its first
+│   │   ├── index.rb          # Decks in `DeckSection` rails (each language, Basic, Music); each features its first unmet-goal deck, else its most recently studied. A source's decks share one card, named for the source, opening its first unmet-goal section deck, else its last studied, else its first. Each language card shows its list's heat ("62% known", `Heat`), a source's for the whole source
 │   │   ├── new.rb            # Three-way deck-type radio + language select
 │   │   ├── show.rb           # Header + meta (cards / round / language / catalog), Study + share / catalog / replace actions, scrolling cards table, delete box
 │   │   └── replacements/

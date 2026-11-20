@@ -102,6 +102,25 @@ RSpec.describe DecksController do
       expect(rendered).to have_text("1 of 1 left")
     end
 
+    it "shows how much of a language deck's list is known" do
+      create(:language_card, correct_streak: 3)
+      login_as(default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".rail-heat", text: "100% known")
+    end
+
+    it "shows no heat on a deck without a word list" do
+      deck = create(:deck)
+      create(:basic_card, deck:)
+      login_as(default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_no_css(".rail-heat")
+    end
+
     it "labels each deck with its type" do
       login_as(default_user)
       create(:deck, user: default_user)
