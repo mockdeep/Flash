@@ -54,6 +54,27 @@ RSpec.describe Backbones::Load do
         .to eq("The Tale — Level B1")
     end
 
+    it "puts a level's source on its level list's band" do
+      tale_list("B1")
+      WordList.find_by!(name: "Tale B1").update!(curriculum: true, level: 3)
+      load(headed(tale_backbone, "B1", "I"))
+
+      expect(source("O Conto — Nível B1").word_list.level).to eq(3)
+    end
+
+    it "puts the original one past the language's top level" do
+      create(:word_list, language: "pt", curriculum: true, level: 6)
+      load
+
+      expect(source.word_list.level).to eq(7)
+    end
+
+    it "gives a source no band while its level list has none" do
+      load(headed(tale_backbone, "B1", "I"))
+
+      expect(source("O Conto — Nível B1").word_list.level).to be_nil
+    end
+
     it "gives a level's source the retellings' license" do
       load(headed(tale_backbone, "B1", "I"))
 

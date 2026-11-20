@@ -7,7 +7,8 @@ module Backbones
   # are in the order they were added, so a version's chapters go in strictly
   # in reading order: after the ones it already holds, and only while each
   # next one is written with its heading. It can run again as more chapters
-  # are written. Returns a line per version.
+  # are written. A new source's list takes its version's band on the
+  # reading map. Returns a line per version.
   module Load
     class Failed < StandardError; end
 
@@ -24,7 +25,7 @@ module Backbones
       ready = ready(backbone, version, source&.snippets&.count || 0)
       return "#{attributes[:title]}: nothing to add" if ready.empty?
 
-      source ||= create_source(backbone, user, attributes)
+      source ||= create_source(backbone, user, version)
       ready.each { add(backbone, source, version, it) }
       "#{source.title}: added #{ready.join(", ")}"
     end
@@ -38,10 +39,23 @@ module Backbones
       end
     end
 
-    def self.create_source(backbone, user, attributes)
-      result =
-        Sources::Create.call(user:, language: backbone.language, **attributes)
-      saved(result)
+    def self.create_source(backbone, user, version)
+      attributes = backbone.source_attributes(version)
+      language = backbone.language
+      source = saved(Sources::Create.call(user:, language:, **attributes))
+      source.word_list.update!(level: map_level(backbone, version))
+      source
+    end
+
+    # A version's band on the reading map is its level list's, and the
+    # original's is one past the language's top level; none until those
+    # lists have levels.
+    def self.map_level(backbone, version)
+      language = backbone.language
+      lists = WordList.where(language:, curriculum: true)
+      return lists.maximum(:level)&.succ if version == Backbone::ORIGINAL
+
+      lists.find_by(name: backbone.level(version).list)&.level
     end
 
     def self.add(backbone, source, version, chapter)
