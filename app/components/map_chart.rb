@@ -76,34 +76,41 @@ module Components
     end
 
     def render_chip(chip)
-      button(type: "button", class: "reading-map__chip", style: spot(chip)) do
+      render_spot(chip, ["reading-map__chip"]) do
         span(class: "reading-map__name") { chip_label(chip.word_list) }
         render_heat(chip)
       end
     end
 
     def render_node(node)
-      data = { reading_map_target: ("start" if node == chart.start) }
-      look = { class: node_class(node.word_list), style: spot(node) }
-
-      button(type: "button", data:, **look) do
+      render_spot(node, node_classes(node.word_list)) do
         render_heat(node)
         span(class: "reading-map__name") { node.word_list.name }
       end
     end
 
+    # A chip or node as a button, marked once the learner has a deck for
+    # it, and as the one the map opens on.
+    def render_spot(node, classes, &)
+      classes += ["reading-map__started"] if node.started?
+      data = { reading_map_target: ("start" if node == chart.start) }
+
+      button(type: "button", class: classes, style: spot(node), data:, &)
+    end
+
     def render_heat(node)
       span(class: "reading-map__heat") { "#{node.heat.percent}%" }
+      span(class: "reading-map__tick") { "✓" } if node.met?
     end
 
     # A source is a circle and a list with no text a square; a private one
     # is drawn hollow.
-    def node_class(list)
+    def node_classes(list)
       [
         "reading-map__node",
         ("reading-map__node--list" unless list.source),
         ("reading-map__node--private" unless list.publicly_visible?),
-      ].compact.join(" ")
+      ].compact
     end
 
     # Where the node sits, as shares of the canvas's width and height, and

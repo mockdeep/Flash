@@ -130,3 +130,28 @@
   padding: 0 0.25rem;
   border-width: 2px;
 }
+
+.reading-map__started .reading-map__heat {
+  border-color: var(--color-primary-darker);
+  border-width: 6px;
+}
+
+.reading-map__started .reading-map__name {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.reading-map__tick {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-success-dark);
+}
+
+.reading-map__node .reading-map__tick {
+  position: absolute;
+  top: -6px;
+  left: calc(50% + 14px);
+  padding: 0 3px;
+  background: var(--color-success-bg);
+  border: 2px solid var(--color-success-border);
+}

@@ -2,7 +2,7 @@
 
 RSpec.describe ReadingMap::Spacing do
   def node(angle)
-    ReadingMap::Chart::Node.new(
+    ReadingMap::Node.new(
       word_list: build_stubbed(:word_list), ring: 1, angle:, heat: nil,
     )
   end
