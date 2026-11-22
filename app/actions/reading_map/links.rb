@@ -27,7 +27,7 @@ module ReadingMap
     end
 
     def self.link(language)
-      words = words(language)
+      words = words(language, WordList.where(visibility: "public"))
       lists = WordList.where(id: words.keys).order(:id).to_a
       matches = uncovered(lists.index_with { strongest(it, lists, words) })
 
@@ -35,10 +35,10 @@ module ReadingMap
       [*lines, save(language, matches)]
     end
 
-    # Each public list's less-common senses, by its id; a list with none
-    # is left out.
-    def self.words(language)
-      lists = WordList.where(language:, curriculum: false, visibility: "public")
+    # The less-common senses of each of the language's lists that isn't a
+    # level list, by its id; a list with none is left out.
+    def self.words(language, lists = WordList.all)
+      lists = lists.where(language:, curriculum: false)
       pairs = SenseMembership.joins(sense: :entry).where(word_list: lists)
         .where.not("#{HEADWORD} IN (?)", common(language))
         .pluck(:word_list_id, :sense_id)
