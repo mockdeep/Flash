@@ -353,6 +353,7 @@ app/
 │   │   └── create_checkout.rb    # Creates a Creem checkout session
 │   ├── reading_map/
 │   │   ├── levels.rb             # Gives each word list with no `level` its band: the lowest level whose lists hold 80% of its words (through `call[…]`)
+│   │   ├── links.rb              # Works out a language's `WordListLink`s: each public list joined to the three lists on its band or further out it shares the most less-common words with (through `call[…]`)
 │   │   └── list_words.rb         # A list's words as a level list may hold them: names left out, base forms added where `Lemmas` knows the language
 │   ├── sources/
 │   │   ├── create.rb             # Saves a source + its front matter + the word_list named after it
@@ -1003,6 +1004,14 @@ The reading map (not built yet) puts each word list on a band, its `level`. A la
 - **Backbones**: story words put a low version far above its level by this rule, so `Backbones::Load` gives a new version's list its level list's `level`, and the original's one past the language's top level (none while those lists have no level).
 - A language with no level lists is left alone, and so is one where a `curriculum` list has no level yet, which the run reports.
 - Levels are compendium data: they reach production through `compendium:push`.
+
+### Reading Map Links
+
+`bin/rails "call[ReadingMap::Links,<language code>]"` (a blank code means every language with a public list) works out the map's lines, the language's `WordListLink`s, and prints each list with its matches ("西游记 HSK 3: 西游记 HSK 4 59%, 西游记 HSK 5 39%, 西游记 HSK 6 27%"), then what the run changed:
+- **Which lists**: public ones (`visibility`) that aren't level lists.
+- **Strength**: the senses two lists both hold out of those either holds, leaving out every word whose headword is on the language's two lowest levels (`Links::COMMON_LEVELS`), which every text shares. Counting out of either list, not the smaller one, is what ties a backbone version to its neighbours and not to the lowest version.
+- **Which lines**: each list's three strongest matches (`Links::PER_LIST`) among the lists on its band or further out; a language with no level lists is one band. There is no least strength, but lists that share nothing aren't joined.
+- **Saving**: a run replaces the language's links, keeping the row of a pair that still stands (its strength updated if it changed), so a push carries only what changed. Run it after `ReadingMap::Levels`, since the bands decide which way a line points.
 
 ### Compendium Sync
 
