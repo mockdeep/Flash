@@ -7,7 +7,10 @@ module ReadingMap
   # strength is the senses both hold out of those either holds, leaving out
   # every word of the lowest COMMON_LEVELS levels, which all texts share.
   # There is no least strength, so a faint line shows where texts are
-  # missing; lists that share nothing get none. Each run replaces the
+  # missing; lists that share nothing get none. A match two stronger ones
+  # already join through a third list is left out (a backbone's first
+  # version to its third, with the second between), so the lines of a
+  # chain don't run along each other. Each run replaces the
   # language's links, keeping the row of a pair that still stands. Returns a
   # line per list with its matches, then what changed. A blank language
   # means every one with a public list.
@@ -26,7 +29,7 @@ module ReadingMap
     def self.link(language)
       words = words(language)
       lists = WordList.where(id: words.keys).order(:id).to_a
-      matches = lists.index_with { strongest(it, lists, words) }
+      matches = uncovered(lists.index_with { strongest(it, lists, words) })
 
       lines = matches.map { |list, found| line(list, found) }
       [*lines, save(language, matches)]
@@ -61,6 +64,26 @@ module ReadingMap
 
       matches.select { |_, strength| strength.positive? }
         .max_by(PER_LIST) { |other, strength| [strength, -other.id] }
+    end
+
+    # The matches without any that two stronger ones already join through
+    # a third list.
+    def self.uncovered(matches)
+      pairs = pairs(matches)
+
+      matches.to_h do |list, found|
+        kept = found.reject { |other, at| covered?(pairs, list, other, at) }
+        [list, kept]
+      end
+    end
+
+    def self.covered?(pairs, list, other, strength)
+      stronger = pairs.select { |_, at| at > strength }.keys
+
+      stronger.flatten.uniq.any? do |via|
+        stronger.include?([list.id, via].sort) &&
+          stronger.include?([via, other.id].sort)
+      end
     end
 
     # A language with no level lists has one band.
