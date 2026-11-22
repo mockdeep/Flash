@@ -51,6 +51,9 @@ application.register("music-study", MusicStudyController);
 import RailController from "./rail_controller";
 application.register("rail", RailController);
 
+import ReadingMapController from "./reading_map_controller";
+application.register("reading-map", ReadingMapController);
+
 import TimezoneController from "./timezone_controller";
 application.register("timezone", TimezoneController);
 

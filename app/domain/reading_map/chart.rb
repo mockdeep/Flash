@@ -10,7 +10,7 @@ module ReadingMap
   class Chart
     # Where chips sit: the end of the half ring.
     CHIP_ANGLE = 180.0
-    # The drawing's size: twice as wide as high, the centre at the middle
+    # The drawing's size: twice as wide as high, the center at the middle
     # of its flat lower edge.
     WIDTH = 100.0
     # A node's room along its ring, in the drawing's units. A ring further
@@ -46,6 +46,14 @@ module ReadingMap
 
     def nodes
       @nodes ||= spaced(placed.map { node(it, ring(it), it.angle) })
+    end
+
+    # Where the map opens: the innermost node of the center spoke, if any
+    # node is up the center.
+    def start
+      spoke = nodes.select { it.angle == Layout::CENTER }
+
+      spoke.min_by { [it.ring, it.word_list.id] }
     end
 
     # Each line between two nodes on the map, with its strength.

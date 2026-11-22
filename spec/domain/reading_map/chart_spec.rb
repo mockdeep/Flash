@@ -205,6 +205,27 @@ RSpec.describe ReadingMap::Chart do
     end
   end
 
+  describe "#start" do
+    it "is the node up the center" do
+      list = placed_list
+
+      expect(chart.start.word_list).to eq(list)
+    end
+
+    it "is the innermost of the nodes up the center" do
+      [1, 2].each { level_list(it) }
+      lists = [placed_list(level: 2), placed_list(level: 1)]
+
+      expect(chart.start.word_list).to eq(lists.last)
+    end
+
+    it "is nothing with no node up the center" do
+      placed_list(angle: 40)
+
+      expect(chart.start).to be_nil
+    end
+  end
+
   describe "#links" do
     it "gives each line between two lists on the map" do
       lists = [placed_list, placed_list]
@@ -229,7 +250,7 @@ RSpec.describe ReadingMap::Chart do
   end
 
   describe "#point" do
-    it "puts the middle of the one ring's centre halfway up" do
+    it "puts the middle of the one ring's center halfway up" do
       expect(chart.point(1, 90.0)).to eq([50.0, 25.0])
     end
 

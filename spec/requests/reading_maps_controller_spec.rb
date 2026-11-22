@@ -107,6 +107,53 @@ RSpec.describe ReadingMapsController do
       expect(rendered).to have_css(".reading-map__node--private")
     end
 
+    it "marks the node the map opens on" do
+      login_admin
+      list_on_map(name: "Story")
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered)
+        .to have_css("[data-reading-map-target='start']", text: "Story")
+    end
+
+    it "marks no node off center as the one the map opens on" do
+      login_admin
+      list_on_map(angle: 40)
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered).to have_no_css("[data-reading-map-target='start']")
+    end
+
+    it "has a button to zoom in, on the + key" do
+      login_admin
+      list_on_map
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered.find_button("Zoom in")["data-hotkey"]).to eq("+")
+    end
+
+    it "has a button to zoom out" do
+      login_admin
+      list_on_map
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered.find_button("Zoom out")["data-action"])
+        .to eq("reading-map#zoomOut")
+    end
+
+    it "has a button to recenter the map" do
+      login_admin
+      list_on_map
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered).to have_button("Recenter")
+    end
+
     it "shows a level's chip without what the level names share" do
       login_admin
       level_list(1, "Tale A1")

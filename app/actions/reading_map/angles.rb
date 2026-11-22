@@ -6,7 +6,7 @@ module ReadingMap
   # private list then sits at the angle of the NEAR public lists it shares
   # the most less-common words with, the closer ones counting for more, and
   # moves nothing else; one that shares nothing with them goes in the
-  # centre. With no public list to go by, the private ones are spread
+  # center. With no public list to go by, the private ones are spread
   # evenly in the order they were made. A list with no less-common words
   # gets no angle. Run it after Links. Returns a line per list, by angle,
   # then how many moved. A blank language means every one with such lists.
@@ -54,7 +54,7 @@ module ReadingMap
     def self.beside(list, angles, words)
       near = nearest(list, angles.keys, words)
       total = near.sum(&:last)
-      return Layout::CENTRE if total.zero?
+      return Layout::CENTER if total.zero?
 
       near.sum { |other, strength| angles[other] * strength } / total
     end
@@ -69,7 +69,7 @@ module ReadingMap
     end
 
     def self.spread(lists)
-      return lists.index_with { Layout::CENTRE } if lists.one?
+      return lists.index_with { Layout::CENTER } if lists.one?
 
       step = (ENDS.last - ENDS.first) / (lists.size - 1)
       lists.each_with_index.to_h do |list, index|

@@ -2,7 +2,7 @@
 
 module ReadingMap
   # Moves the nodes of one ring apart until each has its room, in degrees.
-  # The node nearest the centre stays where it is, so a backbone's spoke
+  # The node nearest the center stays where it is, so a backbone's spoke
   # keeps its line, and the others move outward from it in turn, each side
   # keeping its order. Nothing is stored: the layout's angles say where a
   # list belongs, and this only makes room when they are drawn.
@@ -14,23 +14,23 @@ module ReadingMap
     def self.call(nodes, room:)
       taken = []
 
-      from_centre(nodes).map do |node|
+      from_center(nodes).map do |node|
         angle = free_angle(node.angle, taken, room)
         taken << angle
         node.with(angle:)
       end
     end
 
-    def self.from_centre(nodes)
+    def self.from_center(nodes)
       nodes.sort_by do |node|
-        [(node.angle - Layout::CENTRE).abs, node.word_list.id]
+        [(node.angle - Layout::CENTER).abs, node.word_list.id]
       end
     end
 
     # The nearest angle on the node's own side that is clear of those
-    # taken; one at the centre goes to the higher side.
+    # taken; one at the center goes to the higher side.
     def self.free_angle(angle, taken, room)
-      side = angle < Layout::CENTRE ? -1 : 1
+      side = angle < Layout::CENTER ? -1 : 1
       crowding = taken.select { (it - angle).abs < room - SLACK }
       return angle if crowding.empty?
 
