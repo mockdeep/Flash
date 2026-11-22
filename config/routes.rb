@@ -48,6 +48,9 @@ Rails.application.routes.draw do
 
   post "webhooks/creem", to: "webhooks/creem#create"
 
+  # A language's reading map, by the language's name: /mandarin/decks.
+  get ":section/decks", to: "reading_maps#show", as: :reading_map
+
   constraints AdminConstraint.new do
     mount MissionControl::Jobs::Engine, at: "jobs"
   end

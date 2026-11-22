@@ -1,0 +1,119 @@
+.reading-map {
+  margin-top: 1.5rem;
+  overflow: auto;
+  background: var(--color-background-elevated);
+  border: 4px solid var(--color-border);
+}
+
+.reading-map__canvas {
+  position: relative;
+  width: 100%;
+  min-width: 1400px;
+  aspect-ratio: 2 / 1;
+  margin: 2rem 0 3.5rem;
+}
+
+.reading-map__drawing {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.reading-map__line {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.reading-map__link {
+  opacity: calc(0.3 + var(--strength));
+  stroke: var(--color-secondary);
+  stroke-width: calc(2px + (var(--strength) * 8px));
+  vector-effect: non-scaling-stroke;
+}
+
+.reading-map__rings,
+.reading-map__ring {
+  list-style: none;
+}
+
+.reading-map__node,
+.reading-map__chip {
+  position: absolute;
+  top: calc(var(--down) * 1%);
+  left: calc(var(--across) * 1%);
+  display: flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  color: var(--color-text);
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+.reading-map__node {
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 7.5rem;
+  transform: translate(-50%, -22px);
+}
+
+.reading-map__heat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: color-mix(
+    in srgb,
+    var(--color-accent) calc(var(--heat) * 1%),
+    var(--color-background-elevated)
+  );
+  border: 3px solid var(--color-primary-dark);
+}
+
+.reading-map__node .reading-map__heat {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.reading-map__node--list .reading-map__heat {
+  border-radius: 0;
+}
+
+.reading-map__node--private .reading-map__heat {
+  border-color: var(--color-border-dark);
+  border-style: dashed;
+}
+
+.reading-map__name {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+  background: var(--color-background-elevated);
+}
+
+.reading-map__node--private .reading-map__name {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.reading-map__chip {
+  gap: 0.35rem;
+  padding: 0.2rem 0.4rem;
+  white-space: nowrap;
+  background: var(--color-background-subtle);
+  border: 3px solid var(--color-border-medium);
+  transform: translate(-50%, 0.4rem);
+}
+
+.reading-map__chip .reading-map__heat {
+  padding: 0 0.25rem;
+  border-width: 2px;
+}
