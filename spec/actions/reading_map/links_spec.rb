@@ -89,21 +89,38 @@ RSpec.describe ReadingMap::Links do
         .to include("Inner: Outer 100%", "Outer: no links")
     end
 
-    # Lists further out holding the first four, three, two and one of the
-    # words.
-    def shrinking_lists(words)
-      [4, 3, 2, 1].each do |size|
-        list_of(*words.first(size), name: "Has #{size}", level: 2)
-      end
+    # Lists further out that each share words with the text and none with
+    # each other.
+    def lists_apart
+      list_of("一", "二", "三", name: "A", level: 2)
+      list_of("四", "五", name: "B", level: 2)
+      list_of("六", name: "C", level: 2)
+      list_of("七", "八", name: "D", level: 2)
     end
 
     it "keeps a list's three strongest matches" do
-      words = ["一", "二", "三", "四"]
-      list_of(*words, name: "Text", level: 1)
-      shrinking_lists(words)
+      list_of("一", "二", "三", "四", "五", "六", "七", name: "Text", level: 1)
+      lists_apart
 
       expect(described_class.call("zh").first)
-        .to eq("Text: Has 4 100%, Has 3 75%, Has 2 50%")
+        .to eq("Text: A 43%, B 29%, C 14%")
+    end
+
+    it "leaves out a match two stronger ones join through a third list" do
+      list_of("一", "二", "三", name: "First", level: 1)
+      list_of("一", "二", "三", "四", name: "Second", level: 2)
+      list_of("一", "二", "三", "四", "五", "六", name: "Third", level: 3)
+
+      expect(described_class.call("zh").first).to eq("First: Second 75%")
+    end
+
+    it "keeps a match no stronger pair of lines covers" do
+      list_of("一", "二", name: "First", level: 1)
+      list_of("一", "三", "四", name: "Second", level: 2)
+      list_of("二", "五", "六", "七", name: "Third", level: 3)
+
+      expect(described_class.call("zh").first)
+        .to eq("First: Second 25%, Third 20%")
     end
 
     it "joins lists in a language with no levels" do

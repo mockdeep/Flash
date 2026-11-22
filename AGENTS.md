@@ -1010,7 +1010,7 @@ The reading map (not built yet) puts each word list on a band, its `level`. A la
 `bin/rails "call[ReadingMap::Links,<language code>]"` (a blank code means every language with a public list) works out the map's lines, the language's `WordListLink`s, and prints each list with its matches ("西游记 HSK 3: 西游记 HSK 4 59%, 西游记 HSK 5 39%, 西游记 HSK 6 27%"), then what the run changed:
 - **Which lists**: public ones (`visibility`) that aren't level lists.
 - **Strength**: the senses two lists both hold out of those either holds, leaving out every word whose headword is on the language's two lowest levels (`Links::COMMON_LEVELS`), which every text shares. Counting out of either list, not the smaller one, is what ties a backbone version to its neighbours and not to the lowest version.
-- **Which lines**: each list's three strongest matches (`Links::PER_LIST`) among the lists on its band or further out; a language with no level lists is one band. There is no least strength, but lists that share nothing aren't joined.
+- **Which lines**: each list's three strongest matches (`Links::PER_LIST`) among the lists on its band or further out; a language with no level lists is one band. There is no least strength, but lists that share nothing aren't joined. A match that two stronger lines already join through a third list is left out (西游记 HSK 1 to HSK 3, with HSK 2 between), so a backbone is a chain of single steps and no line runs along another.
 - **Saving**: a run replaces the language's links, keeping the row of a pair that still stands (its strength updated if it changed), so a push carries only what changed. Run it after `ReadingMap::Levels`, since the bands decide which way a line points.
 
 ### Compendium Sync
