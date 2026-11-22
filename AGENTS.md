@@ -207,6 +207,7 @@ end
 - `layout.css` - Header, footer, navigation
 - `music-study.css` - Mic-driven music study UI
 - `price-display.css` - `.price-display` component
+- `reading-map.css` - A language's reading map (`.reading-map`: the scrolling box, its canvas, the drawing's ring lines and links, nodes, chips and heat)
 - `pricing.css` - Pricing page
 - `subscription.css` - Subscription page
 - `table.css` - Generic `.table` pattern (catalog preview, deck cards); `.table__actions` lines up a cell's buttons
@@ -417,6 +418,7 @@ app/
 │   ├── card_front.rb             # Study card-front box + kebab menu; renders the reading gloss inside it
 │   ├── card_menu.rb              # Card-front kebab menu (study text sizes; on Mandarin decks fonts and characters)
 │   ├── card_preview.rb           # 5-card preview block (shared by catalog and share preview)
+│   ├── map_chart.rb              # A language's reading map: rings as a list of chip and node buttons placed by CSS, over a drawing of the ring lines and links
 │   ├── guide_card.rb             # Still, unclickable study card for the guide page (front, choices or typed answer)
 │   ├── guide_example.rb          # Captioned figure around a guide picture
 │   ├── guide_goals.rb            # Guide #goals section: the three goal modes, milestone buttons
@@ -465,6 +467,9 @@ app/
 │   │   ├── german.rb             # German's list categories and refiner rules (Mandarin's, Portuguese's and Filipino's live with their prompts in `Snippets`)
 │   │   ├── italian.rb            # Italian's, likewise
 │   │   └── spanish.rb            # Spanish's, likewise
+│   ├── reading_map/
+│   │   ├── chart.rb              # What a learner's map shows for a language: rings, chips, the nodes they can see (with heat), links, and where each is drawn
+│   │   └── spacing.rb            # Moves a ring's nodes apart until each has room, the one nearest the centre staying put
 │   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
 │   └── music_study.rb            # MusicStudy < Study; windows cards into note sequences
 ├── helpers/
@@ -491,6 +496,7 @@ app/
 │   ├── milestones_controller.rb       # Updates a deck's study goal
 │   ├── misses_controller.rb           # Read-tab miss: a new word's first click, or Restudy on a done word
 │   ├── pages_controller.rb            # guide / pricing / privacy / terms
+│   ├── reading_maps_controller.rb     # A language's reading map at /<language>/decks (admin)
 │   ├── replacements_controller.rb     # Re-import a deck's cards (Decks::Replace)
 │   ├── sessions_controller.rb         # Login / logout
 │   ├── shares_controller.rb           # Owner toggle (via :deck_id) + public preview/copy/try (via :token)
@@ -562,6 +568,8 @@ app/
 │   │   ├── pricing.rb
 │   │   ├── privacy.rb
 │   │   └── terms.rb
+│   ├── reading_maps/
+│   │   └── show.rb           # A language's reading map (`Components::MapChart`)
 │   ├── sessions/
 │   │   └── new.rb
 │   ├── shares/
@@ -632,6 +640,7 @@ app/
         ├── music-study.css
         ├── price-display.css
         ├── pricing.css
+        ├── reading-map.css
         ├── subscription.css
         ├── table.css
         └── welcome.css
@@ -1022,6 +1031,15 @@ The reading map (not built yet) puts each word list on a band, its `level`. A la
 - **Sides**: a group keeps the side its lists' stored angles are on, so a run never flips the map and a small change moves little. A group with none takes the side of the group it is most linked to, or else the emptier side (the lower angles first).
 - **Private lists** are placed afterwards and move nothing else: each at the angle of the three public lists it shares the most less-common words with, closer ones counting for more, or up the centre when it shares nothing with any. With no public list in the language, the private ones are spread evenly from 10 to 170 in the order they were made.
 - Nothing here keeps two lists from landing on one spot; that waits for the map page.
+
+### Reading Map Page
+
+`/<language>/decks` (`/mandarin/decks`; `ReadingMapsController#show`, admins only for now, 404 for a name that is no language with word lists) shows a language's reading map, read-only: nothing on it can be started yet.
+- **`ReadingMap::Chart`** (`app/domain/reading_map/chart.rb`) gathers it for a user and a language. Rings count outward from 1: one per level, then one past the top level for lists beyond it or with no level yet; a language with no level lists has one ring. A **chip** is a level list, at the 180-degree end of its ring. A **node** is any other list with an angle that the user can see: a public list, a source they own or were let read, or a list they have a deck for; a source's list only once it has a studyable snippet. Each carries its `Heat`. `#links` are the `WordListLink`s between two nodes on the map.
+- **Between the lines**: a node sits in the middle of its ring's space, so the lines drawn (one at each level's outer edge) are the borders between rings. `Chart#point` gives a spot in the drawing's units (100 wide, 50 high, the centre at the middle of the lower edge).
+- **Room** (`ReadingMap::Spacing`): when the page is drawn, the nodes of a ring are moved apart until each has `Chart::ROOM` units along the ring (at most `MOST_ROOM` degrees, so a few fit on a short ring). The one nearest the centre stays, so a backbone's spoke keeps its line, and the rest move away from the centre in turn. Nothing is stored, and nothing stops a crowded ring from running past its ends.
+- **Markup** (`Components::MapChart`): an `<ol>` of rings, inner to outer, each holding its chip and its nodes (lowest angle first) as buttons. A button's `style` carries `--across` and `--down` (shares of the canvas) and `--heat`, and `reading-map.css` places and colours it. A source is a circle, a list with no text a square, a private one dashed. A chip shows its list's name without the words every level list's name starts with ("A1", "Level 1"). The ring lines and links are one SVG behind the buttons, `aria-hidden`.
+- The map sits in a box that scrolls both ways (`.reading-map`), its canvas at least 1400px wide.
 
 ### Compendium Sync
 
