@@ -21,17 +21,26 @@ module Components
     end
 
     def view_template
-      div(class: "reading-map") do
-        div(class: "reading-map__canvas") do
-          render_drawing
-          ol(class: "reading-map__rings") do
-            (1..chart.rings).each { |ring| render_ring(ring) }
-          end
+      div(data: { controller: "reading-map" }) do
+        render(Components::MapControls.new)
+        div(class: "reading-map", data: { reading_map_target: "box" }) do
+          render_canvas
         end
       end
     end
 
     private
+
+    def render_canvas
+      data = { reading_map_target: "canvas" }
+
+      div(class: "reading-map__canvas", data:) do
+        render_drawing
+        ol(class: "reading-map__rings") do
+          (1..chart.rings).each { |ring| render_ring(ring) }
+        end
+      end
+    end
 
     def render_drawing
       svg(**DRAWING) do |drawing|
@@ -42,9 +51,9 @@ module Components
 
     def render_line(drawing, line)
       radius = chart.radius(line)
-      centre = WIDTH / 2
-      path = "M #{centre - radius} #{centre} " \
-             "A #{radius} #{radius} 0 0 1 #{centre + radius} #{centre}"
+      center = WIDTH / 2
+      path = "M #{center - radius} #{center} " \
+             "A #{radius} #{radius} 0 0 1 #{center + radius} #{center}"
 
       drawing.path(class: "reading-map__line", d: path)
     end
@@ -74,9 +83,10 @@ module Components
     end
 
     def render_node(node)
-      list = node.word_list
+      data = { reading_map_target: ("start" if node == chart.start) }
+      look = { class: node_class(node.word_list), style: spot(node) }
 
-      button(type: "button", class: node_class(list), style: spot(node)) do
+      button(type: "button", data:, **look) do
         render_heat(node)
         span(class: "reading-map__name") { node.word_list.name }
       end

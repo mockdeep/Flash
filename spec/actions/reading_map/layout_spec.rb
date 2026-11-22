@@ -32,7 +32,7 @@ RSpec.describe ReadingMap::Layout do
       expect(described_class.call([], [])).to be_empty
     end
 
-    it "puts a lone list up the centre" do
+    it "puts a lone list up the center" do
       list = create(:word_list)
 
       expect(described_class.call([list], [])).to eq(list => 90.0)
@@ -44,13 +44,13 @@ RSpec.describe ReadingMap::Layout do
       expect(angles_of(spoke, spoke, links)).to eq([90.0, 90.0, 90.0])
     end
 
-    it "puts the group with the most lists up the centre" do
+    it "puts the group with the most lists up the center" do
       spoke, alone, links = backbone_and(nil)
 
       expect(angles_of(spoke, alone + spoke, links)).to eq([90.0, 90.0, 90.0])
     end
 
-    it "puts the first of two groups of a size up the centre" do
+    it "puts the first of two groups of a size up the center" do
       pair = lists(2)
 
       expect(described_class.call(pair, [])[pair.first]).to eq(90.0)
@@ -63,13 +63,13 @@ RSpec.describe ReadingMap::Layout do
       expect(described_class.call(pair, links)[pair.last]).not_to eq(90.0)
     end
 
-    it "puts the group closest to the centre group nearest it" do
+    it "puts the group closest to the center group nearest it" do
       spoke, alone, links = backbone_and(0.1)
 
       expect(angles_of(alone, spoke + alone, links)).to eq([70.0])
     end
 
-    it "puts a group with no link to the centre group furthest out" do
+    it "puts a group with no link to the center group furthest out" do
       spoke, alone, links = backbone_and(nil)
 
       expect(angles_of(alone, spoke + alone, links)).to eq([10.0])
@@ -95,7 +95,7 @@ RSpec.describe ReadingMap::Layout do
       expect(angles_of(alone, spoke + alone, links)).to eq([110.0])
     end
 
-    it "places a group stored in the centre afresh" do
+    it "places a group stored in the center afresh" do
       spoke, alone, links = backbone_and(0.1)
       alone.first.update!(angle: 90)
 

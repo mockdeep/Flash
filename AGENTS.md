@@ -281,6 +281,8 @@ link_to("My Link", some_path, data:)
 - `[` / `]` - Decrease / increase study text size (card-front kebab menu)
 - `e` - Open the edit-card dialog during study
 - `Ctrl+Enter` - Save the edit-card dialog
+- `+` / `-` - Zoom the reading map in / out
+- `c` - Recenter the reading map
 
 **Hint styles:**
 - `.hotkey-hint` - Prominent hint (amber background, bordered, used on buttons like "Press Space")
@@ -354,7 +356,7 @@ app/
 │   │   └── create_checkout.rb    # Creates a Creem checkout session
 │   ├── reading_map/
 │   │   ├── angles.rb             # Gives each list that isn't a level list its `angle`: public lists by `Layout`, private ones beside the public lists they share the most words with (through `call[…]`)
-│   │   ├── layout.rb             # Public lists' angles from their links: strongly linked lists share one, the biggest group up the centre, the rest to either side by how close they are to it
+│   │   ├── layout.rb             # Public lists' angles from their links: strongly linked lists share one, the biggest group up the center, the rest to either side by how close they are to it
 │   │   ├── levels.rb             # Gives each word list with no `level` its band: the lowest level whose lists hold 80% of its words (through `call[…]`)
 │   │   ├── links.rb              # Works out a language's `WordListLink`s: each public list joined to the three lists on its band or further out it shares the most less-common words with (through `call[…]`)
 │   │   └── list_words.rb         # A list's words as a level list may hold them: names left out, base forms added where `Lemmas` knows the language
@@ -418,6 +420,7 @@ app/
 │   ├── card_front.rb             # Study card-front box + kebab menu; renders the reading gloss inside it
 │   ├── card_menu.rb              # Card-front kebab menu (study text sizes; on Mandarin decks fonts and characters)
 │   ├── card_preview.rb           # 5-card preview block (shared by catalog and share preview)
+│   ├── map_controls.rb           # The reading map's Zoom out / Zoom in / Recenter buttons and their hotkeys
 │   ├── map_chart.rb              # A language's reading map: rings as a list of chip and node buttons placed by CSS, over a drawing of the ring lines and links
 │   ├── guide_card.rb             # Still, unclickable study card for the guide page (front, choices or typed answer)
 │   ├── guide_example.rb          # Captioned figure around a guide picture
@@ -469,7 +472,7 @@ app/
 │   │   └── spanish.rb            # Spanish's, likewise
 │   ├── reading_map/
 │   │   ├── chart.rb              # What a learner's map shows for a language: rings, chips, the nodes they can see (with heat), links, and where each is drawn
-│   │   └── spacing.rb            # Moves a ring's nodes apart until each has room, the one nearest the centre staying put
+│   │   └── spacing.rb            # Moves a ring's nodes apart until each has room, the one nearest the center staying put
 │   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
 │   └── music_study.rb            # MusicStudy < Study; windows cards into note sequences
 ├── helpers/
@@ -614,6 +617,7 @@ app/
 │   │   ├── mobile_nav_controller.ts
 │   │   ├── music_study_controller.ts # Mic capture + RAF loop + sequence-state-machine glue
 │   │   ├── music_study_helpers.ts    # Helpers for music_study_controller
+│   │   ├── reading_map_controller.ts # Reading map: zoom steps that keep the middle steady, and scrolling to the starting node on load and on Recenter
 │   │   ├── text_size_controller.ts   # Study text-size kebab menu (persists to localStorage)
 │   │   ├── timezone_controller.ts    # Sets the browser time zone on a hidden field
 │   │   └── word_states_controller.ts # Marks Read-tab words with the states an answer sent
@@ -1026,20 +1030,20 @@ The reading map (not built yet) puts each word list on a band, its `level`. A la
 
 ### Reading Map Angles
 
-`bin/rails "call[ReadingMap::Angles,<language code>]"` (a blank code means every language) gives each list that isn't a level list its `angle` on the map's half ring, in degrees from 0 at one end through 90 up the centre to 180, rounded to a tenth, and prints each list by its angle, then how many moved. Run it after `ReadingMap::Links`. A list with no less-common words (as Links counts them) gets none.
-- **Public lists** (`ReadingMap::Layout`): lists joined by a strong link (`Layout::STRONG`, 20%) make a group and share an angle, so a backbone's versions run outward as one spoke. The group with the most lists goes up the centre (90). Every other group sits to one side, nearer the centre the more strongly its lists are linked to the centre group's: 20 degrees off for the closest, out to 80 for one with no link to it.
+`bin/rails "call[ReadingMap::Angles,<language code>]"` (a blank code means every language) gives each list that isn't a level list its `angle` on the map's half ring, in degrees from 0 at one end through 90 up the center to 180, rounded to a tenth, and prints each list by its angle, then how many moved. Run it after `ReadingMap::Links`. A list with no less-common words (as Links counts them) gets none.
+- **Public lists** (`ReadingMap::Layout`): lists joined by a strong link (`Layout::STRONG`, 20%) make a group and share an angle, so a backbone's versions run outward as one spoke. The group with the most lists goes up the center (90). Every other group sits to one side, nearer the center the more strongly its lists are linked to the center group's: 20 degrees off for the closest, out to 80 for one with no link to it.
 - **Sides**: a group keeps the side its lists' stored angles are on, so a run never flips the map and a small change moves little. A group with none takes the side of the group it is most linked to, or else the emptier side (the lower angles first).
-- **Private lists** are placed afterwards and move nothing else: each at the angle of the three public lists it shares the most less-common words with, closer ones counting for more, or up the centre when it shares nothing with any. With no public list in the language, the private ones are spread evenly from 10 to 170 in the order they were made.
+- **Private lists** are placed afterwards and move nothing else: each at the angle of the three public lists it shares the most less-common words with, closer ones counting for more, or up the center when it shares nothing with any. With no public list in the language, the private ones are spread evenly from 10 to 170 in the order they were made.
 - Nothing here keeps two lists from landing on one spot; that waits for the map page.
 
 ### Reading Map Page
 
 `/<language>/decks` (`/mandarin/decks`; `ReadingMapsController#show`, admins only for now, 404 for a name that is no language with word lists) shows a language's reading map, read-only: nothing on it can be started yet.
 - **`ReadingMap::Chart`** (`app/domain/reading_map/chart.rb`) gathers it for a user and a language. Rings count outward from 1: one per level, then one past the top level for lists beyond it or with no level yet; a language with no level lists has one ring. A **chip** is a level list, at the 180-degree end of its ring. A **node** is any other list with an angle that the user can see: a public list, a source they own or were let read, or a list they have a deck for; a source's list only once it has a studyable snippet. Each carries its `Heat`. `#links` are the `WordListLink`s between two nodes on the map.
-- **Between the lines**: a node sits in the middle of its ring's space, so the lines drawn (one at each level's outer edge) are the borders between rings. `Chart#point` gives a spot in the drawing's units (100 wide, 50 high, the centre at the middle of the lower edge).
-- **Room** (`ReadingMap::Spacing`): when the page is drawn, the nodes of a ring are moved apart until each has `Chart::ROOM` units along the ring (at most `MOST_ROOM` degrees, so a few fit on a short ring). The one nearest the centre stays, so a backbone's spoke keeps its line, and the rest move away from the centre in turn. Nothing is stored, and nothing stops a crowded ring from running past its ends.
+- **Between the lines**: a node sits in the middle of its ring's space, so the lines drawn (one at each level's outer edge) are the borders between rings. `Chart#point` gives a spot in the drawing's units (100 wide, 50 high, the center at the middle of the lower edge).
+- **Room** (`ReadingMap::Spacing`): when the page is drawn, the nodes of a ring are moved apart until each has `Chart::ROOM` units along the ring (at most `MOST_ROOM` degrees, so a few fit on a short ring). The one nearest the center stays, so a backbone's spoke keeps its line, and the rest move away from the center in turn. Nothing is stored, and nothing stops a crowded ring from running past its ends.
 - **Markup** (`Components::MapChart`): an `<ol>` of rings, inner to outer, each holding its chip and its nodes (lowest angle first) as buttons. A button's `style` carries `--across` and `--down` (shares of the canvas) and `--heat`, and `reading-map.css` places and colours it. A source is a circle, a list with no text a square, a private one dashed. A chip shows its list's name without the words every level list's name starts with ("A1", "Level 1"). The ring lines and links are one SVG behind the buttons, `aria-hidden`.
-- The map sits in a box that scrolls both ways (`.reading-map`), its canvas at least 1400px wide.
+- **Moving around** (`reading_map_controller.ts`, around the controls and the map): the map sits in a box that scrolls both ways (`.reading-map`, at most 80% of the window high), which is how it pans. `Components::MapControls` has Zoom out, Zoom in and Recenter buttons. Zooming steps the canvas's `--zoom` (0.75, 1, 1.5, 2.25 times 1400px wide) and keeps the spot in the middle of the box there; nodes and labels keep their size, so zooming in spreads them out. The map opens with `Chart#start` in the middle of the box (the innermost node up the center, marked as the controller's `start` target; the middle of the map without one), and Recenter scrolls back to it, gliding unless the viewer asked for reduced motion (`scroll-behavior` in CSS).
 
 ### Compendium Sync
 

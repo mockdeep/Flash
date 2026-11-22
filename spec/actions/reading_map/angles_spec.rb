@@ -52,7 +52,7 @@ RSpec.describe ReadingMap::Angles do
       expect(angle_of(list_of("猴子", "山"))).to eq(42.0)
     end
 
-    it "puts a private list that shares nothing in the centre" do
+    it "puts a private list that shares nothing in the center" do
       public_list("猴子")
       public_list("山")
 
@@ -66,7 +66,7 @@ RSpec.describe ReadingMap::Angles do
       expect(lists.map { it.reload.angle }).to eq([10.0, 90.0, 170.0])
     end
 
-    it "puts a lone private list in the centre" do
+    it "puts a lone private list in the center" do
       expect(angle_of(list_of("猴子"))).to eq(90.0)
     end
 

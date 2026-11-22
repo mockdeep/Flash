@@ -15,7 +15,7 @@ RSpec.describe ReadingMap::Spacing do
     expect(spaced(90, 70, 110)).to eq([90, 70, 110])
   end
 
-  it "moves a crowding node away from the centre" do
+  it "moves a crowding node away from the center" do
     expect(spaced(90, 85)).to eq([90, 80])
   end
 
@@ -23,11 +23,11 @@ RSpec.describe ReadingMap::Spacing do
     expect(spaced(90, 95)).to eq([90, 100])
   end
 
-  it "moves a second node at the centre to the higher side" do
+  it "moves a second node at the center to the higher side" do
     expect(spaced(90, 90)).to eq([90, 100])
   end
 
-  it "keeps the node nearest the centre where it is" do
+  it "keeps the node nearest the center where it is" do
     expect(spaced(60, 65)).to eq([65, 55])
   end
 
