@@ -26,6 +26,26 @@ module Snippets
          curriculum_words, as the sentence writes them; keep one whole
          wherever it is used as that phrase, and split it where its words
          only happen to stand together.
+         Most listed phrases are used as the phrase nearly every time
+         they appear, so keep one whole unless the sentence plainly uses
+         its words apart. Two need care:
+         - "o que" is whole wherever English says "what" (sabe o que
+           faz, perguntou o que ela tinha, foi o que ele disse). Split it
+           only after the word it points back to (tudo o que ele fez,
+           isso o que) or where it means "which" after a comma.
+         - "do que" is whole as "than" after a comparison (maior do que,
+           mais do que, melhor do que). Split it where it is "de" plus
+           "o que", "of what" (depois do que aconteceu, o fim do que
+           dizia).
+         Where a fixed phrase ends in a preposition and the text fuses
+         that preposition with the next word, the fused word goes with
+         the phrase and the whole is one word, studied as written (por
+         causa dessa "because of that", quanto aos "as for the", por
+         falar na "speaking of the"). Do this only where the words
+         before the fused one do not carry the phrase's meaning alone
+         (por causa, quanto). Where they do, the fused word stays a word
+         of its own (depois do almoço → depois, do; antes desse, diante
+         dela, perto da).
       5. A name of several words is one word (São Paulo, Rio de Janeiro),
          but a title before a name is a word of its own, studied with its
          capital (Padre, Capitão, and abbreviations such as D., Sr., Sra.
@@ -86,9 +106,14 @@ module Snippets
       which keeps its capitals. A name keeps them whether it is skipped or
       gets a card ("Lisboa" → "Lisboa", "a Bíblia" → "Bíblia"). A word
       capitalised only because it starts a sentence is lower-cased ("Ela" →
-      "ela"). An abbreviation's headword is the word it stands for here,
-      written out with its capital: D. is "Dona" before a woman's name and
-      "Dom" before a man's, Sr. is "Senhor", Dr. is "Doutor" or "Doutora".
+      "ela"). A common noun the text capitalizes because it stands for an
+      institution or an office is not a name, and is lower-cased like any
+      other word ("a Câmara" → "câmara", "a Igreja" → "igreja", "o
+      Governo" → "governo"). A name has no ordinary lower-case word behind
+      it, or is the title of one particular work ("Bíblia"). An
+      abbreviation's headword is the word it stands for here, written out
+      with its capital: D. is "Dona" before a woman's name and "Dom" before
+      a man's, Sr. is "Senhor", Dr. is "Doutor" or "Doutora".
       Otherwise the headword differs from the text in letter case alone.
 
       Some words get no card; mark each, kept whole as one word:
@@ -175,7 +200,9 @@ module Snippets
         singular)
       - the headword is not the word in lower case, or lower-cases a name
         or a title before one, or does not write out the word an
-        abbreviation stands for here (D. before a woman's name is "Dona")
+        abbreviation stands for here (D. before a woman's name is "Dona");
+        a common noun capitalized for an institution, such as Câmara or
+        Igreja, is not a name and is lower-cased
       - the article breaks the article rules below: a noun without one, one
         that does not fit this form, or one on a word or name that takes
         none
