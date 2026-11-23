@@ -89,6 +89,33 @@ RSpec.describe DeckSection do
     end
   end
 
+  describe ".open_to" do
+    def open_sections = described_class.open_to(default_user)
+
+    it "has a section for each language the user can see a list in" do
+      create(:word_list, visibility: "public", language: "pt")
+
+      expect(open_sections.map(&:name)).to eq(["Portuguese", "Basic", "Music"])
+    end
+
+    it "has Basic and Music for a user with no decks" do
+      expect(open_sections.map(&:name)).to eq(["Basic", "Music"])
+    end
+
+    it "holds the user's decks of the section" do
+      create(:music_deck)
+      deck = create(:deck)
+
+      expect(open_sections.first.decks).to eq([deck])
+    end
+
+    it "leaves another user's decks out" do
+      create(:deck, user: create(:user))
+
+      expect(open_sections.first.decks).to be_empty
+    end
+  end
+
   describe "#language" do
     it "is a language section's language" do
       create(:reading_deck, language: "pt")

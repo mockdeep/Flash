@@ -5,6 +5,38 @@
   padding: 2rem 1.5rem 4rem;
 }
 
+.section-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid var(--color-border);
+}
+
+.section-selector__link,
+.section-selector__link:visited {
+  padding: 0.4rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  background: var(--color-background-elevated);
+  border: 3px solid var(--color-border);
+}
+
+.section-selector__link:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-dark);
+}
+
+.section-selector__link[aria-current="page"] {
+  color: var(--color-background-elevated);
+  background: var(--color-primary);
+  border-color: var(--color-primary-dark);
+}
+
 .decks-header {
   display: flex;
   align-items: center;

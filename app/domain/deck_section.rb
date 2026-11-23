@@ -13,6 +13,17 @@ class DeckSection
     language_sections(decks, sources) + family_sections(decks)
   end
 
+  # Every section a user can open: each language they can see a list in,
+  # A-Z, then Basic and Music, whether or not they hold decks there.
+  def self.open_to(user)
+    decks = user.decks
+    languages = WordList.visible_to(user).distinct.pluck(:language)
+    sections = languages.map { language_section(it, decks, Source.none) }
+
+    sections.sort_by(&:name) +
+      FAMILIES.map { |type, name| new(name:, decks: decks.where(type:)) }
+  end
+
   def self.language_sections(decks, sources)
     lists = WordList.where(id: decks.select(:word_list_id))
       .or(WordList.where(id: sources.select(:word_list_id)))

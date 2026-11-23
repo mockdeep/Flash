@@ -3,17 +3,9 @@
 module Views
   module Decks
     class Index < Views::Base
-      include Phlex::Rails::Helpers::TimeAgoInWords
-
       def view_template
         div(class: "decks-container") do
-          div(class: "decks-header") do
-            h1(class: "decks-title") { "Your Decks" }
-            div(class: "decks-header-actions") do
-              link_to("Browse Catalog", catalog_index_path, class: button_class(:ghost))
-              link_to("+ Create New Deck", new_deck_path, class: button_class(:primary))
-            end
-          end
+          render_header
 
           if current_user.decks.none?
             render_empty_state
@@ -24,6 +16,16 @@ module Views
       end
 
       private
+
+      def render_header
+        div(class: "decks-header") do
+          h1(class: "decks-title") { "Your Decks" }
+          div(class: "decks-header-actions") do
+            link_to("Browse Catalog", catalog_index_path, class: button_class(:ghost))
+            link_to("+ Create New Deck", new_deck_path, class: button_class(:primary))
+          end
+        end
+      end
 
       def render_empty_state
         div(class: "empty-state") do
@@ -38,118 +40,7 @@ module Views
 
       def render_deck_sections
         DeckSection.for(current_user.decks).each do |deck_section|
-          render(Components::DeckRail.new(deck_section:)) do
-            render_rail(deck_section)
-          end
-        end
-      end
-
-      # The featured deck repeats at the head of the rail; the copy in its
-      # natural slot stays put so the list order never shifts underneath the
-      # reader. The decks load once, since counting their cards is the
-      # page's heaviest query.
-      def render_rail(deck_section)
-        section_decks = deck_section.decks.ordered
-        unmet_ids = section_decks.goal_unmet_today.ids
-        section_decks = section_decks.with_progress.to_a
-        render_featured(section_decks, deck_section.first_unmet)
-        heats = heats_for(section_decks)
-
-        section_decks.chunk_while { |a, b| same_list?(a, b) }.each do |decks|
-          deck = card_deck(decks, unmet_ids)
-          render_rail_card(deck, heat: heats[deck.word_list_id])
-        end
-      end
-
-      def heats_for(section_decks)
-        Heat.for(current_user, section_decks.filter_map(&:word_list_id).uniq)
-      end
-
-      def same_list?(deck, other)
-        deck.word_list_id.present? && deck.word_list_id == other.word_list_id
-      end
-
-      # A source's decks (one per section) share a card, which opens the
-      # same deck Next Deck would, else the one last studied.
-      def card_deck(decks, unmet_ids)
-        decks.find { unmet_ids.include?(it.id) } ||
-          last_studied(decks) ||
-          decks.first
-      end
-
-      def last_studied(decks)
-        decks.select(&:last_studied_at).max_by(&:last_studied_at)
-      end
-
-      # The deck the milestone's Next Deck would pick here, so the two
-      # agree; shown from the decks loaded with their card counts.
-      def render_featured(section_decks, next_deck)
-        unmet = section_decks.find { it.id == next_deck&.id }
-        return render_featured_card(unmet, "→ Up next") if unmet
-
-        recent = last_studied(section_decks)
-        return if recent.nil?
-
-        ago = time_ago_in_words(recent.last_studied_at)
-        render_featured_card(recent, "↻ Last studied #{ago} ago")
-      end
-
-      def render_featured_card(deck, label)
-        render_rail_card(deck, featured_label: label)
-        div(class: "rail-divider")
-      end
-
-      def render_rail_card(deck, featured_label: nil, heat: nil)
-        classes = ["rail-card", ("rail-card--featured" if featured_label)]
-
-        div(class: classes.compact.join(" ")) do
-          div(class: "featured-label") { featured_label } if featured_label
-          div(class: "rail-type") { deck.type_label }
-          render_rail_title(deck, featured: featured_label.present?)
-          render(Components::RoundProgress.new(deck:))
-          render_rail_meta(deck, deck.remaining_count, heat)
-        end
-      end
-
-      # A source's card is named for the source, whichever section it opens;
-      # the featured card names the section.
-      def render_rail_title(deck, featured:)
-        name, name_translation =
-          if deck.snippet && !featured
-            [deck.word_list.name, deck.source.title_translation]
-          else
-            [deck.name, deck.name_translation]
-          end
-
-        h3(class: "rail-title") do
-          link_to(name, deck_study_path(deck))
-          catalog_badge if deck.publicly_visible?
-          translation(name_translation)
-        end
-      end
-
-      # Heat covers the card's whole list, so a source's card shows it for
-      # the source, whichever section it opens.
-      def render_rail_meta(deck, remaining, heat)
-        div(class: "rail-meta") do
-          render_remaining(deck, remaining)
-          span(class: "rail-heat") { "#{heat.percent}% known" } if heat
-        end
-      end
-
-      def render_remaining(deck, remaining)
-        total = deck.cards_count
-        if total.zero?
-          span(class: "rail-remaining rail-remaining--empty") { "No cards yet" }
-        elsif remaining.zero?
-          span(class: "rail-remaining rail-remaining--done") do
-            "All #{total} done ✓"
-          end
-        else
-          span(class: "rail-remaining") do
-            plain(remaining)
-            span(class: "rail-remaining__total") { " of #{total} left" }
-          end
+          render(Components::SectionRail.new(deck_section:))
         end
       end
     end

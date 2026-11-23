@@ -225,7 +225,7 @@ end
 **Two content models, one card table.** Basic and Music decks are **flat**: the card owns its content (`front`, `back`, `category`, `reading`, `example_front`, `example_back`) and its progress counters directly, with `card_distractors` rows for decoys. Language decks still keep content in a shared, neutral **word list** of items and pairings — `LanguageCard` overrides the column readers to go through its `item`. `Deck#flat_cards?` is the switch between them. The language side is slated to leave the item layer too, at which point the item machinery goes away entirely.
 
 **Core Models:**
-- `User` - Authentication. Has `username` (unique, `/\A[a-zA-Z0-9_.]+\z/` — letters, digits, `_`, `.`), `role` (`"user"` / `"admin"` / `"guest"`), `study_goal`, `time_zone`. `has_many :word_lists`, `has_many :sources` (through word_lists), `has_many :decks` (**direct** — every deck carries `user_id`), `has_one :subscription`.
+- `User` - Authentication. Has `decks_section` (the section page last viewed, e.g. `"mandarin"`), `username` (unique, `/\A[a-zA-Z0-9_.]+\z/` — letters, digits, `_`, `.`), `role` (`"user"` / `"admin"` / `"guest"`), `study_goal`, `time_zone`. `has_many :word_lists`, `has_many :sources` (through word_lists), `has_many :decks` (**direct** — every deck carries `user_id`), `has_one :subscription`.
 - `WordList` - A selection of language study content, reusable across decks. `belongs_to :user`, `has_many :items`, `has_many :decks`, `has_one :source` (and its `snippets`). `name` unique per user. Requires a `language` code. Not STI: Basic and Music left this layer for flat cards, so every word list is language content, and the compendium distinguishes kinds (HSK level, chapter, curated) by column rather than by class. `curriculum` (boolean) marks a list whose words a text keeps whole (the seven `Mandarin HSK3.0 Level N` lists; see `Snippets::CurriculumWords`). For the reading map (not built yet; nothing reads these) it has a `visibility` (`"private"` by default, or `"public"`; `#publicly_visible?`), a `level` (its band; see Reading Map Levels) and an `angle` (see Reading Map Angles). A list with a source can be made public only once the source's license is `shareable?` and it has a finished snippet; the rule is checked when `visibility` changes, so a public list stays valid whatever becomes of its source.
 - `WordListLink` - A line on the reading map between two word lists (`word_list`, `linked_word_list`) with its `strength`. A pair is stored once, the lower list id first (a check constraint), and goes with either list. In the compendium snapshot, so it syncs.
 - `Item` - One neutral term. Has `side` (`"Front"` / `"Back"`), `text`, and (Front-side) `category`, `reading`, `example`, `paired_example`. Belongs to a word list; unique on `[word_list_id, side, text]`. Front↔back meaning is expressed through `Pairing`; distractor candidates through `ItemDistractor`. `#glosses` returns the paired Back texts in authored order.
@@ -445,6 +445,8 @@ app/
 │   ├── practice_label.rb         # "Practice — streaks won't change" above the card while practicing
 │   ├── music_csv_instructions.rb # CSV format help block for music decks
 │   ├── replace_cards_dialog.rb   # Confirm dialog for re-importing a deck's cards
+│   ├── section_rail.rb           # A `DeckSection`'s decks as a rail of cards: the featured deck, then every deck, a source's sections sharing a card, heat on language cards
+│   ├── section_selector.rb       # Links between section pages: each language the user can study, then Basic and Music
 │   ├── session_milestone.rb      # Study milestone prompt (daily goal reached; Next Deck / Reset All Goals)
 │   ├── session_progress.rb       # Study session progress bar
 │   ├── study_answers.rb          # Study answer area per presentation mode (buttons / fuzzy find, reading stage)
@@ -506,8 +508,8 @@ app/
 │   ├── milestones_controller.rb       # Updates a deck's study goal
 │   ├── misses_controller.rb           # Read-tab miss: a new word's first click, or Restudy on a done word
 │   ├── pages_controller.rb            # guide / pricing / privacy / terms
-│   ├── reading_maps_controller.rb     # A language's reading map at /<language>/decks (admin)
 │   ├── replacements_controller.rb     # Re-import a deck's cards (Decks::Replace)
+│   ├── section_decks_controller.rb    # A section's page at /<section>/decks: a language's reading map, or the user's Basic or Music decks (admin)
 │   ├── sessions_controller.rb         # Login / logout
 │   ├── shares_controller.rb           # Owner toggle (via :deck_id) + public preview/copy/try (via :token)
 │   ├── snippets_controller.rb         # Snippet new / create under a source (admin)
@@ -569,7 +571,7 @@ app/
 │   │   ├── index.rb          # Public decks in `DeckSection` rails, each name linking to its preview (mic badge for music decks, 📖 for decks with shareable texts); Try This Deck for visitors and guests
 │   │   └── show.rb           # Deck preview + texts + copy action, or try + log in for visitors and guests (mic badge in header)
 │   ├── decks/
-│   │   ├── index.rb          # Decks in `DeckSection` rails (each language, Basic, Music); each features the deck Next Deck would pick there (`DeckSection#first_unmet`), else its most recently studied. A source's decks share one card, named for the source, opening its first unmet-goal section deck, else its last studied, else its first. Each language card shows its list's heat ("62% known", `Heat`), a source's for the whole source
+│   │   ├── index.rb          # Decks in `DeckSection` rails (each language, Basic, Music; `Components::SectionRail`); each features the deck Next Deck would pick there (`DeckSection#first_unmet`), else its most recently studied. A source's decks share one card, named for the source, opening its first unmet-goal section deck, else its last studied, else its first. Each language card shows its list's heat ("62% known", `Heat`), a source's for the whole source
 │   │   ├── new.rb            # Three-way deck-type radio + language select
 │   │   ├── show.rb           # Header + meta (cards / round / language / catalog), Study + share / catalog / replace actions, scrolling cards table, delete box
 │   │   └── replacements/
@@ -579,8 +581,9 @@ app/
 │   │   ├── pricing.rb
 │   │   ├── privacy.rb
 │   │   └── terms.rb
-│   ├── reading_maps/
-│   │   └── show.rb           # A language's reading map (`Components::MapChart`)
+│   ├── section_decks/
+│   │   ├── map.rb            # A language's page: the section selector over its reading map (`Components::MapChart`)
+│   │   └── rail.rb           # The Basic or Music page: the selector, Create New Deck, and the user's decks of that kind as a rail
 │   ├── sessions/
 │   │   └── new.rb
 │   ├── shares/
@@ -1046,7 +1049,7 @@ The reading map (not built yet) puts each word list on a band, its `level`. A la
 
 ### Reading Map Page
 
-`/<language>/decks` (`/mandarin/decks`; `ReadingMapsController#show`, admins only for now, 404 for a name that is no language with word lists) shows a language's reading map, read-only: nothing on it can be started yet.
+`/<section>/decks` (`SectionDecksController#show`, admins only for now) is a section's page. The sections are `DeckSection.open_to(user)`: each language the user can see a list in (`WordList.visible_to`), A–Z by name, then Basic and Music, which are always there. A section's address is its name (`DeckSection#anchor`: `/mandarin/decks`, `/basic/decks`); any other name is a 404. Every page starts with `Components::SectionSelector`, a link per section with the one being viewed marked `aria-current`, and viewing a page saves its section on the user (`users.decks_section`). Basic and Music (`Views::SectionDecks::Rail`) show Create New Deck and the user's decks of that kind as a rail (`Components::SectionRail`, which the decks page also uses). A language (`Views::SectionDecks::Map`) shows its reading map:
 - **`ReadingMap::Chart`** (`app/domain/reading_map/chart.rb`) gathers it for a user and a language. Rings count outward from 1: one per level, then one past the top level for lists beyond it or with no level yet; a language with no level lists has one ring. A **chip** is a level list, at the 180-degree end of its ring. A **node** is any other list with an angle that the user can see (`WordList.visible_to`): a public list, a source they own or were let read, or a list they have a deck for; a source's list only once it has a studyable snippet. Each (`ReadingMap::Node`) carries its `Heat` and the user's decks over its list. `#links` are the `WordListLink`s between two nodes on the map.
 - **Started marks**: a chip or node the user has a deck for is `started?` (a source's section decks all count) and drawn with a bold outline (`.reading-map__started`). It gets a tick (`met?`) once none of its decks is short of today's goal, counted as Next Deck counts it (`Deck.goal_unmet_today`, less decks `waiting_for_tomorrow?`), so a deck waiting for tomorrow or with no goal never holds the tick back, and a node whose decks all have no goal never gets one.
 - **Popovers** (`Components::MapPopover`): each chip and node button opens a native popover (`popovertarget`, placed under the button by CSS anchor positioning where supported) with the list's name (and a source's title translation), "62% known · 38 new words" from its `Heat` (`new_words`: entries not yet known in full), the nodes its lines lead to, and a button. **Leads to** (`Chart#leads`, `ReadingMap::Lines`) lists the nodes joined to it on its ring or further out, each with what studying this node would gain there (`ReadingMap::Gains`: the share of the other list's entries the learner doesn't know in full and this list teaches, which is every sense the other holds for the entry; one query for every line, both ways). **Start** POSTs to `WordListDecksController#create` (`/word_lists/:word_list_id/deck`, admins only for now, and only for a list `WordList.visible_to` the user), which finds or creates the deck for a source's first section (`User#deck_starting`) or for the whole of a list with no source, and opens its study page. **Continue**, once the node is started, links to `Node#continue_deck`: the first of its decks short of today's goal, in the source's order, else the one last studied, else the first.
