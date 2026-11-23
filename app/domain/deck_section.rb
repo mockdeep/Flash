@@ -4,7 +4,7 @@
 # what the decks are: one per language A-Z, then Basic, then Music. Built
 # from the decks given, and on the catalog the sources listed there, so no
 # section is ever empty.
-DeckSection = Data.define(:name, :decks, :sources)
+DeckSection = Data.define(:name, :decks, :sources, :language)
 
 class DeckSection
   FAMILIES = { "BasicDeck" => "Basic", "MusicDeck" => "Music" }.freeze
@@ -25,6 +25,7 @@ class DeckSection
     in_language = WordList.where(language:)
     new(
       name: WordList::LANGUAGES[language],
+      language:,
       decks: decks.where(word_list: in_language),
       sources: sources.where(word_list: in_language),
     )
@@ -37,7 +38,7 @@ class DeckSection
     end
   end
 
-  def initialize(name:, decks:, sources: Source.none) = super
+  def initialize(name:, decks:, sources: Source.none, language: nil) = super
 
   def anchor = name.parameterize
 
@@ -47,9 +48,14 @@ class DeckSection
       decks.distinct.count(:word_list_id) + sources.count
   end
 
-  # The first deck in page order still short of today's goal, and not
-  # waiting for tomorrow.
+  def holds?(deck) = decks.exists?(id: deck)
+
+  # The deck to study next here: one still short of today's goal and not
+  # waiting for tomorrow. A language's follows its reading map; Basic's
+  # are taken by name.
   def first_unmet
+    return ReadingMap::Started.new(decks:, language:).next_deck if language
+
     decks.goal_unmet_today.ordered.find { !it.waiting_for_tomorrow? }
   end
 end

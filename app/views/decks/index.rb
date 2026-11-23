@@ -39,7 +39,7 @@ module Views
       def render_deck_sections
         DeckSection.for(current_user.decks).each do |deck_section|
           render(Components::DeckRail.new(deck_section:)) do
-            render_rail(deck_section.decks.ordered)
+            render_rail(deck_section)
           end
         end
       end
@@ -48,10 +48,11 @@ module Views
       # natural slot stays put so the list order never shifts underneath the
       # reader. The decks load once, since counting their cards is the
       # page's heaviest query.
-      def render_rail(section_decks)
+      def render_rail(deck_section)
+        section_decks = deck_section.decks.ordered
         unmet_ids = section_decks.goal_unmet_today.ids
         section_decks = section_decks.with_progress.to_a
-        render_featured(section_decks, unmet_ids)
+        render_featured(section_decks, deck_section.first_unmet)
         heats = heats_for(section_decks)
 
         section_decks.chunk_while { |a, b| same_list?(a, b) }.each do |decks|
@@ -80,10 +81,10 @@ module Views
         decks.select(&:last_studied_at).max_by(&:last_studied_at)
       end
 
-      # Same order as DeckSection#first_unmet, so the milestone's Next Deck
-      # and the featured deck agree.
-      def render_featured(section_decks, unmet_ids)
-        unmet = section_decks.find { up_next?(it, unmet_ids) }
+      # The deck the milestone's Next Deck would pick here, so the two
+      # agree; shown from the decks loaded with their card counts.
+      def render_featured(section_decks, next_deck)
+        unmet = section_decks.find { it.id == next_deck&.id }
         return render_featured_card(unmet, "→ Up next") if unmet
 
         recent = last_studied(section_decks)
@@ -91,10 +92,6 @@ module Views
 
         ago = time_ago_in_words(recent.last_studied_at)
         render_featured_card(recent, "↻ Last studied #{ago} ago")
-      end
-
-      def up_next?(deck, unmet_ids)
-        unmet_ids.include?(deck.id) && !deck.waiting_for_tomorrow?
       end
 
       def render_featured_card(deck, label)

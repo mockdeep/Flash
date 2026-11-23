@@ -89,12 +89,65 @@ RSpec.describe DeckSection do
     end
   end
 
+  describe "#language" do
+    it "is a language section's language" do
+      create(:reading_deck, language: "pt")
+
+      expect(described_class.for(default_user.decks).sole.language).to eq("pt")
+    end
+
+    it "is nothing for Basic" do
+      create(:deck)
+
+      expect(described_class.for(default_user.decks).sole.language).to be_nil
+    end
+  end
+
+  describe "#holds?" do
+    it "is true of a deck in the section" do
+      deck = create(:deck)
+
+      expect(described_class.for(default_user.decks).sole.holds?(deck))
+        .to be(true)
+    end
+
+    it "is false of a deck in another section" do
+      create(:deck)
+      deck = create(:music_deck)
+
+      expect(described_class.for(default_user.decks).first.holds?(deck))
+        .to be(false)
+    end
+
+    it "is false of no deck" do
+      create(:deck)
+
+      expect(described_class.for(default_user.decks).sole.holds?(nil))
+        .to be(false)
+    end
+  end
+
   describe "#first_unmet" do
     it "returns the first deck by name still under today's goal" do
       create(:deck, name: "Zebra")
       deck = create(:deck, name: "Alpha")
 
       section = described_class.for(default_user.decks).first
+      expect(section.first_unmet).to eq(deck)
+    end
+
+    def level_deck(level, name)
+      word_list = create(:word_list, level:, name:)
+
+      create(:reading_deck, word_list:)
+    end
+
+    it "follows the reading map in a language" do
+      [1, 2].each { create(:word_list, curriculum: true, level: it) }
+      level_deck(2, "Alpha")
+      deck = level_deck(1, "Zebra")
+
+      section = described_class.for(default_user.decks).sole
       expect(section.first_unmet).to eq(deck)
     end
   end

@@ -162,9 +162,11 @@ RSpec.describe User do
   end
 
   describe "#next_unmet_deck" do
-    def met_goal_deck(**)
-      deck = create(:deck, study_goal: 1, **)
-      deck.study_days.create!(studied_on: Date.current, completed_count: 1)
+    def met_goal_deck(**) = met_goal(create(:deck, **))
+
+    def met_goal(deck)
+      count = deck.study_goal
+      deck.study_days.create!(studied_on: Date.current, completed_count: count)
       deck
     end
 
@@ -201,6 +203,37 @@ RSpec.describe User do
       met_goal_deck
 
       expect(default_user.next_unmet_deck).to be_nil
+    end
+
+    it "starts in the section of the deck just studied" do
+      create(:reading_deck)
+      studied = met_goal_deck(name: "Alpha")
+      deck = create(:deck, name: "Zebra")
+
+      expect(default_user.next_unmet_deck(after: studied)).to eq(deck)
+    end
+
+    it "moves on to the section after the one just studied" do
+      create(:reading_deck, language: "zh")
+      studied = met_goal(create(:reading_deck, language: "pt"))
+      deck = create(:deck)
+
+      expect(default_user.next_unmet_deck(after: studied)).to eq(deck)
+    end
+
+    it "goes round to the first section after the last" do
+      deck = create(:reading_deck)
+      studied = met_goal_deck
+
+      expect(default_user.next_unmet_deck(after: studied)).to eq(deck)
+    end
+
+    it "starts from the first section after a deck in none" do
+      deck = create(:reading_deck)
+      create(:deck)
+
+      expect(default_user.next_unmet_deck(after: create(:music_deck)))
+        .to eq(deck)
     end
   end
 

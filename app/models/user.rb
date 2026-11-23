@@ -51,8 +51,14 @@ class User < ApplicationRecord
     role == "guest"
   end
 
-  def next_unmet_deck
-    DeckSection.for(decks).lazy.filter_map(&:first_unmet).first
+  # The deck Next Deck opens: the pick of the section the deck just
+  # studied is in, then of each section after it in turn, round to the
+  # start.
+  def next_unmet_deck(after: nil)
+    sections = DeckSection.for(decks)
+    current = sections.index { it.holds?(after) } || 0
+
+    sections.rotate(current).lazy.filter_map(&:first_unmet).first
   end
 
   def reading_deck_over(word_list, snippet:)
