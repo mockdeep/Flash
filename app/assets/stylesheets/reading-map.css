@@ -155,3 +155,49 @@
   background: var(--color-success-bg);
   border: 2px solid var(--color-success-border);
 }
+
+.reading-map__popover {
+  max-width: min(22rem, 90vw);
+  padding: var(--spacing-md);
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--color-text);
+  background: var(--color-background-elevated);
+  border: 3px solid var(--color-border-medium);
+  border-radius: 0;
+  box-shadow:
+    5px 5px 0 -2px var(--color-background),
+    5px 5px 0 0 var(--color-border-medium);
+}
+
+@supports (position-area: bottom) {
+  .reading-map__popover {
+    margin-top: var(--spacing-xs);
+    position-area: bottom span-right;
+    position-try-fallbacks: flip-block, flip-inline;
+  }
+}
+
+.reading-map__popover-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.reading-map__numbers,
+.reading-map__leads-label {
+  margin-top: var(--spacing-xs);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.reading-map__leads {
+  padding-left: 1.2rem;
+}
+
+.reading-map__numbers,
+.reading-map__leads {
+  margin-bottom: var(--spacing-sm);
+}

@@ -65,17 +65,7 @@ module ReadingMap
       (innermost.presence || started).max_by(&:last_studied)
     end
 
-    # Each line between two nodes on the map, with its strength.
-    def links
-      on_map = nodes.index_by(&:word_list)
-      joining = WordListLink.where(word_list: on_map.keys)
-        .where(linked_word_list: on_map.keys)
-
-      joining.map do |link|
-        ends = on_map.values_at(link.word_list, link.linked_word_list)
-        [*ends, link.strength]
-      end
-    end
+    delegate :links, :leads, to: :joining
 
     # A spot's place in the drawing, across and down from its top left.
     def point(ring, angle)
@@ -100,16 +90,17 @@ module ReadingMap
 
     def node(list, ring, angle)
       decks = decks_by_list.fetch(list.id, [])
-      unmet = decks.any? { unmet_ids.include?(it.id) }
+      unmet_decks = decks.select { unmet_ids.include?(it.id) }
       heat = heats[list.id]
 
-      Node.new(word_list: list, ring:, angle:, heat:, decks:, unmet:)
+      Node.new(word_list: list, ring:, angle:, heat:, decks:, unmet_decks:)
     end
 
     # The learner's decks over the lists on the map, by list.
     def decks_by_list
       @decks_by_list ||=
-        @user.decks.where(word_list: visible).group_by(&:word_list_id)
+        @user.decks.where(word_list: visible).order(:snippet_id, :id)
+          .group_by(&:word_list_id)
     end
 
     # Unmet as Next Deck counts it: a deck waiting for tomorrow isn't.
@@ -117,6 +108,8 @@ module ReadingMap
       @unmet_ids ||= @user.decks.goal_unmet_today.where(word_list: visible)
         .reject(&:waiting_for_tomorrow?).map(&:id)
     end
+
+    def joining = @joining ||= Lines.new(user: @user, nodes:)
 
     def heats
       @heats ||= Heat.for(@user, visible.select(:id))
@@ -143,26 +136,7 @@ module ReadingMap
       levels.index(list.level)&.succ || rings
     end
 
-    # Public lists, the learner's own or shared sources, and any list they
-    # have a deck for. A source's list shows only once it has a snippet to
-    # read.
-    def visible
-      lists = WordList.where(visibility: "public")
-        .or(WordList.where(id: readable_sources.select(:word_list_id)))
-        .or(WordList.where(id: @user.decks.select(:word_list_id)))
-
-      lists.where(language:).where.not(id: unread.select(:word_list_id))
-    end
-
-    def readable_sources
-      shared = @user.source_readers.select(:source_id)
-
-      Source.where(word_list: @user.word_lists).or(Source.where(id: shared))
-    end
-
-    def unread
-      Source.where.not(id: Snippet.studyable.select(:source_id))
-    end
+    def visible = WordList.visible_to(@user).where(language:)
 
     def spaced(nodes)
       nodes.group_by(&:ring).flat_map do |ring, on_ring|

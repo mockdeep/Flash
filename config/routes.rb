@@ -41,6 +41,10 @@ Rails.application.routes.draw do
     resource :listing, only: [:create, :destroy], controller: "source_listings"
   end
 
+  resources :word_lists, only: [] do
+    resource :deck, only: [:create], controller: "word_list_decks"
+  end
+
   get "guide", to: "pages#guide"
   get "pricing", to: "pages#pricing"
   get "privacy", to: "pages#privacy"

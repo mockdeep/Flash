@@ -17,6 +17,11 @@ RSpec.describe ReadingMapsController do
     list_on_map(curriculum: true, level:, angle: nil, name:)
   end
 
+  def source_on_map(**)
+    source = create(:source, word_list: list_on_map, **)
+    create(:snippet, :finished, source:)
+  end
+
   def linked_lists
     word_list = list_on_map
     linked_word_list = list_on_map
@@ -199,6 +204,83 @@ RSpec.describe ReadingMapsController do
 
       expect(rendered)
         .to have_css(".reading-map__chip[data-reading-map-target='start']")
+    end
+
+    it "opens a list's popover from its button" do
+      login_admin
+      list = list_on_map
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered.find(".reading-map__node")[:popovertarget])
+        .to eq("map-list-#{list.id}")
+    end
+
+    it "names the list in its popover" do
+      login_admin
+      list_on_map(name: "Story")
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered).to have_css(".reading-map__popover h2", text: "Story")
+    end
+
+    it "translates a source's title in its popover" do
+      login_admin
+      source_on_map(title_translation: "Spring")
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered)
+        .to have_css(".reading-map__popover .translation", text: "Spring")
+    end
+
+    it "says how much of a list is known and how many words are new" do
+      login_admin
+      list_on_map
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered)
+        .to have_css(".reading-map__numbers", text: "0% known · 1 new word")
+    end
+
+    it "says where a list's line leads and what it gains there" do
+      login_admin
+      linked_lists.linked_word_list.update!(name: "Further")
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered)
+        .to have_css(".reading-map__leads", text: "Further · 0% of its words")
+    end
+
+    it "leaves out where a list leads when it has no lines" do
+      login_admin
+      list_on_map
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered).to have_no_css(".reading-map__leads")
+    end
+
+    it "offers to start a list the learner has no deck for" do
+      login_admin
+      list = list_on_map
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered.find("form:has(button)", text: "Start")[:action])
+        .to eq(word_list_deck_path(list))
+    end
+
+    it "offers to continue a list the learner has a deck for" do
+      admin = login_admin
+      deck = create(:reading_deck, word_list: list_on_map, user: admin)
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered).to have_link("Continue", href: deck_study_path(deck))
     end
 
     it "shows a level's chip without what the level names share" do
