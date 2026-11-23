@@ -111,9 +111,9 @@ Lint/NumberConversion:
 # Configuration parameters: AllowedMethods, AllowedPatterns, CountRepeatedAttributes, Max.
 Metrics/AbcSize:
   Exclude:
+    - 'app/components/section_rail.rb'
     - 'app/domain/study.rb'
     - 'app/views/accounts/new.rb'
-    - 'app/views/decks/index.rb'
     - 'app/views/decks/new.rb'
     - 'app/views/decks/show.rb'
     - 'app/views/layouts/application.rb'
@@ -149,10 +149,10 @@ Metrics/BlockLength:
 # Configuration parameters: CountComments, Max, CountAsOne.
 Metrics/ClassLength:
   Exclude:
+    - 'app/components/section_rail.rb'
     - 'app/domain/study.rb'
     - 'app/models/deck.rb'
     - 'app/views/cards/edit_form.rb'
-    - 'app/views/decks/index.rb'
     - 'app/views/decks/show.rb'
     - 'app/views/layouts/application.rb'
     - 'app/views/pages/pricing.rb'
@@ -166,11 +166,11 @@ Metrics/ClassLength:
 Metrics/MethodLength:
   Exclude:
     - 'app/actions/creem/create_checkout.rb'
+    - 'app/components/section_rail.rb'
     - 'app/controllers/subscriptions_controller.rb'
     - 'app/domain/study.rb'
     - 'app/views/accounts/new.rb'
     - 'app/views/accounts/show.rb'
-    - 'app/views/decks/index.rb'
     - 'app/views/decks/new.rb'
     - 'app/views/decks/show.rb'
     - 'app/views/layouts/application.rb'

@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe ReadingMapsController do
+RSpec.describe SectionDecksController do
   def login_admin
     create(:user, :admin).tap { |admin| login_as(admin) }
   end
@@ -34,7 +34,7 @@ RSpec.describe ReadingMapsController do
       login_as(default_user)
       list_on_map
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(response).to have_http_status(:not_found)
     end
@@ -42,25 +42,117 @@ RSpec.describe ReadingMapsController do
     it "is not found for a language with no word lists" do
       login_admin
 
-      get(reading_map_path("klingon"))
+      get(section_decks_path("klingon"))
 
       expect(response).to have_http_status(:not_found)
     end
 
-    it "is headed by the language's name" do
+    it "marks the language as the section being viewed" do
       login_admin
       list_on_map
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
-      expect(rendered).to have_css("h1", text: "Mandarin")
+      expect(rendered.find(".section-selector [aria-current='page']").text)
+        .to eq("Mandarin")
+    end
+
+    it "links to each language the user can study, A to Z" do
+      login_admin
+      ["pt", "zh", "fil"].each { list_on_map(language: it) }
+
+      get(section_decks_path("mandarin"))
+
+      expect(rendered.all(".section-selector a").map(&:text).first(3))
+        .to eq(["Filipino", "Mandarin", "Portuguese"])
+    end
+
+    it "links to Basic and Music after the languages" do
+      login_admin
+      list_on_map
+
+      get(section_decks_path("mandarin"))
+
+      expect(rendered.all(".section-selector a").map(&:text))
+        .to eq(["Mandarin", "Basic", "Music"])
+    end
+
+    it "links a section to its page" do
+      login_admin
+      list_on_map
+
+      get(section_decks_path("mandarin"))
+
+      expect(rendered).to have_link("Basic", href: section_decks_path("basic"))
+    end
+
+    it "leaves out a language the user can see no list in" do
+      login_admin
+      list_on_map
+      create(:word_list, language: "pt")
+
+      get(section_decks_path("mandarin"))
+
+      expect(rendered).to have_no_link("Portuguese")
+    end
+
+    it "remembers the section viewed" do
+      admin = login_admin
+      list_on_map
+
+      get(section_decks_path("mandarin"))
+
+      expect(admin.reload.decks_section).to eq("mandarin")
+    end
+
+    it "shows the user's Basic decks as a rail" do
+      admin = login_admin
+      create(:deck, user: admin, name: "Capitals")
+
+      get(section_decks_path("basic"))
+
+      expect(rendered).to have_css(".rail-title", text: "Capitals")
+    end
+
+    it "leaves other kinds of deck off the Basic page" do
+      admin = login_admin
+      create(:music_deck, user: admin, name: "Scales")
+
+      get(section_decks_path("basic"))
+
+      expect(rendered).to have_no_text("Scales")
+    end
+
+    it "shows the user's Music decks on the Music page" do
+      admin = login_admin
+      create(:music_deck, user: admin, name: "Scales")
+
+      get(section_decks_path("music"))
+
+      expect(rendered).to have_css(".rail-title", text: "Scales")
+    end
+
+    it "says when the user has no decks of a kind" do
+      login_admin
+
+      get(section_decks_path("music"))
+
+      expect(rendered).to have_text("No Music decks yet.")
+    end
+
+    it "offers to create a deck on the Basic page" do
+      login_admin
+
+      get(section_decks_path("basic"))
+
+      expect(rendered).to have_link("+ Create New Deck", href: new_deck_path)
     end
 
     it "shows a list as a button" do
       login_admin
       list_on_map(name: "Story")
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_button("Story")
     end
@@ -69,7 +161,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list_on_map
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_css(".reading-map__node", text: "0%")
     end
@@ -78,7 +170,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list_on_map
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered.find(".reading-map__node")[:style])
         .to eq("--across: 50.0; --down: 50.0; --heat: 0")
@@ -88,7 +180,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list_on_map
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_css(".reading-map__node--list")
     end
@@ -97,7 +189,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       create(:snippet, :finished, word_list: list_on_map)
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_no_css(".reading-map__node--list")
     end
@@ -107,7 +199,7 @@ RSpec.describe ReadingMapsController do
       list = list_on_map(visibility: "private", user: admin)
       create(:snippet, :finished, word_list: list)
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_css(".reading-map__node--private")
     end
@@ -116,7 +208,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list_on_map(name: "Story")
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered)
         .to have_css("[data-reading-map-target='start']", text: "Story")
@@ -126,7 +218,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list_on_map(angle: 40)
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_no_css("[data-reading-map-target='start']")
     end
@@ -135,7 +227,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list_on_map
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered.find_button("Zoom in")["data-hotkey"]).to eq("+")
     end
@@ -144,7 +236,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list_on_map
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered.find_button("Zoom out")["data-action"])
         .to eq("reading-map#zoomOut")
@@ -154,7 +246,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list_on_map
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_button("Recenter")
     end
@@ -163,7 +255,7 @@ RSpec.describe ReadingMapsController do
       admin = login_admin
       create(:reading_deck, word_list: list_on_map, user: admin)
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_css(".reading-map__node.reading-map__started")
     end
@@ -172,7 +264,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list_on_map
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_no_css(".reading-map__started")
     end
@@ -182,7 +274,7 @@ RSpec.describe ReadingMapsController do
       deck = create(:reading_deck, word_list: list_on_map, user: admin)
       deck.study_days.create!(studied_on: Date.current, completed_count: 50)
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_css(".reading-map__tick", text: "✓")
     end
@@ -191,7 +283,7 @@ RSpec.describe ReadingMapsController do
       admin = login_admin
       create(:reading_deck, word_list: list_on_map, user: admin)
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_no_css(".reading-map__tick")
     end
@@ -200,7 +292,7 @@ RSpec.describe ReadingMapsController do
       admin = login_admin
       create(:reading_deck, word_list: level_list(1, "Tale A1"), user: admin)
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered)
         .to have_css(".reading-map__chip[data-reading-map-target='start']")
@@ -210,7 +302,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list = list_on_map
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered.find(".reading-map__node")[:popovertarget])
         .to eq("map-list-#{list.id}")
@@ -220,7 +312,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list_on_map(name: "Story")
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_css(".reading-map__popover h2", text: "Story")
     end
@@ -229,7 +321,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       source_on_map(title_translation: "Spring")
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered)
         .to have_css(".reading-map__popover .translation", text: "Spring")
@@ -239,7 +331,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list_on_map
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered)
         .to have_css(".reading-map__numbers", text: "0% known · 1 new word")
@@ -249,7 +341,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       linked_lists.linked_word_list.update!(name: "Further")
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered)
         .to have_css(".reading-map__leads", text: "Further · 0% of its words")
@@ -259,7 +351,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list_on_map
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_no_css(".reading-map__leads")
     end
@@ -268,7 +360,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       list = list_on_map
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered.find("form:has(button)", text: "Start")[:action])
         .to eq(word_list_deck_path(list))
@@ -278,7 +370,7 @@ RSpec.describe ReadingMapsController do
       admin = login_admin
       deck = create(:reading_deck, word_list: list_on_map, user: admin)
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_link("Continue", href: deck_study_path(deck))
     end
@@ -288,7 +380,7 @@ RSpec.describe ReadingMapsController do
       level_list(1, "Tale A1")
       level_list(2, "Tale A2")
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_css(".reading-map__chip", text: "A2")
     end
@@ -298,7 +390,7 @@ RSpec.describe ReadingMapsController do
       level_list(1, "HSK Level 1")
       level_list(2, "HSK Level 2")
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_css(".reading-map__chip", text: "Level 2")
     end
@@ -308,7 +400,7 @@ RSpec.describe ReadingMapsController do
       level_list(1, "Tale A1")
       level_list(2, "Tale A2")
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered).to have_css(".reading-map__line", count: 2)
     end
@@ -317,7 +409,7 @@ RSpec.describe ReadingMapsController do
       login_admin
       linked_lists
 
-      get(reading_map_path("mandarin"))
+      get(section_decks_path("mandarin"))
 
       expect(rendered.find(".reading-map__link")[:style])
         .to eq("--strength: 0.5")
