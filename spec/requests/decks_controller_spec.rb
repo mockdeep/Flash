@@ -56,6 +56,25 @@ RSpec.describe DecksController do
       expect(rendered).to have_css("h2", text: "Portuguese")
     end
 
+    it "links a language's rail to its reading map" do
+      login_as(default_user)
+      create(:reading_deck, language: "pt")
+
+      get(decks_path)
+
+      expect(rendered)
+        .to have_link("Map", href: section_decks_path("portuguese"))
+    end
+
+    it "links no map from the Basic rail" do
+      login_as(default_user)
+      create(:deck)
+
+      get(decks_path)
+
+      expect(rendered).to have_no_link("Map")
+    end
+
     it "groups basic decks under Basic" do
       login_as(default_user)
       create(:deck)

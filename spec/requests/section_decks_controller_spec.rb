@@ -30,13 +30,39 @@ RSpec.describe SectionDecksController do
   end
 
   describe "#show" do
-    it "is not found for a member" do
+    it "shows a member the map" do
       login_as(default_user)
+      list_on_map(name: "Story")
+
+      get(section_decks_path("mandarin"))
+
+      expect(rendered).to have_button("Story")
+    end
+
+    it "sends a visitor to log in" do
       list_on_map
 
       get(section_decks_path("mandarin"))
 
-      expect(response).to have_http_status(:not_found)
+      expect(response).to redirect_to(new_session_path)
+    end
+
+    it "sends a guest to log in" do
+      login_as(create(:user, role: "guest"))
+      list_on_map
+
+      get(section_decks_path("mandarin"))
+
+      expect(response).to redirect_to(new_session_path)
+    end
+
+    it "links back to the decks page" do
+      login_admin
+      list_on_map
+
+      get(section_decks_path("mandarin"))
+
+      expect(rendered).to have_link("All decks", href: decks_path)
     end
 
     it "is not found for a language with no word lists" do
@@ -63,7 +89,7 @@ RSpec.describe SectionDecksController do
 
       get(section_decks_path("mandarin"))
 
-      expect(rendered.all(".section-selector a").map(&:text).first(3))
+      expect(rendered.all(".section-selector a").map(&:text)[1..3])
         .to eq(["Filipino", "Mandarin", "Portuguese"])
     end
 
@@ -73,7 +99,7 @@ RSpec.describe SectionDecksController do
 
       get(section_decks_path("mandarin"))
 
-      expect(rendered.all(".section-selector a").map(&:text))
+      expect(rendered.all(".section-selector a").map(&:text).last(3))
         .to eq(["Mandarin", "Basic", "Music"])
     end
 

@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 module Components
-  # The links between section pages: each language the user can study,
-  # then Basic and Music, the one being viewed marked as current.
+  # The links between section pages: back to the decks page, then each
+  # language the user can study, then Basic and Music, the one being viewed
+  # marked as current.
   class SectionSelector < Components::Base
     attr_accessor :sections, :current
 
@@ -14,6 +15,7 @@ module Components
 
     def view_template
       nav(class: "section-selector", aria: { label: "Sections" }) do
+        link_to("All decks", decks_path, class: "section-selector__link")
         sections.each { render_link(it) }
       end
     end
