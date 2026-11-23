@@ -193,6 +193,20 @@ RSpec.describe DecksController do
       expect(rendered).to featured_title("Apple")
     end
 
+    def level_deck(name, level)
+      create(:reading_deck, word_list: create(:word_list, level:, name:))
+    end
+
+    it "features the deck the reading map puts next in a language" do
+      login_as(default_user)
+      [1, 2].each { create(:word_list, curriculum: true, level: it) }
+      { "A" => 2, "B" => 1 }.each { |name, level| level_deck(name, level) }
+
+      get(decks_path)
+
+      expect(rendered).to featured_title("B")
+    end
+
     it "labels a featured deck with an unmet goal as up next" do
       login_as(default_user)
       create(:deck, user: default_user)

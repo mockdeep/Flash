@@ -57,17 +57,4 @@ RSpec.describe ReadingMap::Node do
       expect(node(decks:).continue_deck).to eq(decks.first)
     end
   end
-
-  describe "#last_studied" do
-    it "is when its latest deck was studied" do
-      times = [2, 3].map { Time.zone.local(2026, 1, it) }
-      decks = times.map { deck(last_studied_at: it) }
-
-      expect(node(decks:).last_studied).to eq(times.last)
-    end
-
-    it "is long ago for decks never studied" do
-      expect(node(decks: [deck]).last_studied).to eq(described_class::NEVER)
-    end
-  end
 end

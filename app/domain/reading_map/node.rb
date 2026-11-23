@@ -7,8 +7,6 @@ module ReadingMap
   Node = Data.define(:word_list, :ring, :angle, :heat, :decks, :unmet_decks)
 
   class Node
-    NEVER = Time.zone.at(0)
-
     def initialize(decks: [], unmet_decks: [], **) = super
 
     def started? = decks.any?
@@ -18,8 +16,6 @@ module ReadingMap
     # Every goal met today. A deck with no goal has none to meet, so a
     # node whose decks all have no goal never counts.
     def met? = !unmet? && decks.any? { !it.no_goal? }
-
-    def last_studied = decks.filter_map(&:last_studied_at).max || NEVER
 
     # The deck Continue opens: the first short of today's goal, else the
     # one last studied, else the first.

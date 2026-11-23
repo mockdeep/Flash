@@ -41,7 +41,7 @@ module Components
     end
 
     def next_deck_link
-      next_deck = @deck.user.next_unmet_deck
+      next_deck = @deck.user.next_unmet_deck(after: @deck)
       render(Components::NextDeckLink.new(deck: next_deck)) if next_deck
     end
 

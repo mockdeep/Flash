@@ -30,19 +30,18 @@ module ReadingMap
 
     # Lines are drawn at the outer edge of each level's ring, and of the
     # one ring of a language with no levels.
-    def lines = [levels.size, 1].max
+    def lines = [ring_set.levels.size, 1].max
 
-    def rings = levels.any? ? levels.size + 1 : 1
+    def rings = ring_set.count
 
     def chips
       @chips ||=
-        level_lists.select { visible.ids.include?(it.id) }.map do |list|
-          node(list, levels.index(list.level) + 1, CHIP_ANGLE)
-        end
+        ring_set.level_lists.select { visible.ids.include?(it.id) }
+          .map { node(it, CHIP_ANGLE) }
     end
 
     def nodes
-      @nodes ||= spaced(placed.map { node(it, ring(it), it.angle) })
+      @nodes ||= spaced(placed.map { node(it, it.angle) })
     end
 
     # Where the map opens and Recenter returns to: the learner's next
@@ -54,15 +53,11 @@ module ReadingMap
       next_node || spoke.min_by { [it.ring, it.word_list.id] }
     end
 
-    # Among the started chips and nodes short of today's goal, the one on
-    # the innermost ring, then the most recently studied; with every goal
-    # met, the most recently studied.
+    # The chip or node of the list that comes next (`Started#next_list`).
     def next_node
-      started = [*chips, *nodes].select(&:started?)
-      unmet = started.select(&:unmet?)
-      innermost = unmet.select { it.ring == unmet.map(&:ring).min }
+      list = started.next_list
 
-      (innermost.presence || started).max_by(&:last_studied)
+      [*chips, *nodes].find { it.word_list == list }
     end
 
     delegate :links, :leads, to: :joining
@@ -88,26 +83,26 @@ module ReadingMap
 
     def room(ring) = [ROOM / middle(ring) * 180 / Math::PI, MOST_ROOM].min
 
-    def node(list, ring, angle)
-      decks = decks_by_list.fetch(list.id, [])
-      unmet_decks = decks.select { unmet_ids.include?(it.id) }
-      heat = heats[list.id]
-
-      Node.new(word_list: list, ring:, angle:, heat:, decks:, unmet_decks:)
+    def node(list, angle)
+      Node.new(
+        word_list: list,
+        ring: ring_set.of(list),
+        angle:,
+        heat: heats[list.id],
+        decks: started.decks(list.id),
+        unmet_decks: started.unmet_decks(list.id),
+      )
     end
 
-    # The learner's decks over the lists on the map, by list.
-    def decks_by_list
-      @decks_by_list ||=
-        @user.decks.where(word_list: visible).order(:snippet_id, :id)
-          .group_by(&:word_list_id)
+    def started
+      @started ||=
+        begin
+          decks = @user.decks.where(word_list: WordList.where(language:))
+          Started.new(decks:, language:)
+        end
     end
 
-    # Unmet as Next Deck counts it: a deck waiting for tomorrow isn't.
-    def unmet_ids
-      @unmet_ids ||= @user.decks.goal_unmet_today.where(word_list: visible)
-        .reject(&:waiting_for_tomorrow?).map(&:id)
-    end
+    def ring_set = @ring_set ||= Rings.new(language)
 
     def joining = @joining ||= Lines.new(user: @user, nodes:)
 
@@ -115,25 +110,10 @@ module ReadingMap
       @heats ||= Heat.for(@user, visible.select(:id))
     end
 
-    def levels = @levels ||= level_lists.map(&:level).uniq
-
-    def level_lists
-      @level_lists ||= WordList.where(language:, curriculum: true)
-        .where.not(level: nil).order(:level, :id).to_a
-    end
-
     # The lists with a place: every one but the level lists, once the
     # layout has given it an angle.
     def placed
       visible.where(curriculum: false).where.not(angle: nil).order(:id)
-    end
-
-    # A list with no level in a language that has them hasn't been placed
-    # on a ring yet, so it waits past the last.
-    def ring(list)
-      return 1 if levels.empty?
-
-      levels.index(list.level)&.succ || rings
     end
 
     def visible = WordList.visible_to(@user).where(language:)
