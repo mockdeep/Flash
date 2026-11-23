@@ -10,12 +10,19 @@ RSpec.describe WordListDecksController do
   def public_list = create(:word_list, visibility: "public")
 
   describe "#create" do
-    it "is not found for a member" do
+    it "starts a list for a member" do
       login_as(default_user)
+      list = public_list
 
+      post(word_list_deck_path(list))
+
+      expect(default_user.decks.sole.word_list).to eq(list)
+    end
+
+    it "sends a visitor to log in" do
       post(word_list_deck_path(public_list))
 
-      expect(response).to have_http_status(:not_found)
+      expect(response).to redirect_to(new_session_path)
     end
 
     it "is not found for a list the user can't see" do

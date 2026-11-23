@@ -3,18 +3,20 @@
 module Components
   # A `DeckSection` as a heading over a sideways-scrolling rail, with arrows
   # the `rail` controller shows while there is more to scroll to. The block
-  # fills the rail with cards.
+  # fills the rail with cards. Given a `map_path`, the heading links to the
+  # section's reading map.
   class DeckRail < Components::Base
     SECTION_ATTRIBUTES = {
       class: "deck-section",
       data: { controller: "rail", action: "resize@window->rail#syncArrows" },
     }.freeze
 
-    attr_accessor :deck_section
+    attr_accessor :deck_section, :map_path
 
-    def initialize(deck_section:)
+    def initialize(deck_section:, map_path: nil)
       super()
       self.deck_section = deck_section
+      self.map_path = map_path
     end
 
     def view_template(&)
@@ -38,6 +40,7 @@ module Components
         span(class: "section-meta") do
           pluralize(deck_section.card_count, "deck")
         end
+        link_to("Map", map_path, class: "section-map-link") if map_path
       end
     end
 

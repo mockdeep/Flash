@@ -15,10 +15,15 @@ module Components
     end
 
     def view_template
-      render(Components::DeckRail.new(deck_section:)) { render_rail }
+      render(Components::DeckRail.new(deck_section:, map_path:)) { render_rail }
     end
 
     private
+
+    # A language has a reading map; Basic and Music don't.
+    def map_path
+      section_decks_path(deck_section.anchor) if deck_section.language
+    end
 
     # The featured deck repeats at the head of the rail; the copy in its
     # natural slot stays put so the list order never shifts underneath the

@@ -4,8 +4,6 @@
 # source's first section, or for the whole of a list with no source, and
 # opens its study page.
 class WordListDecksController < ApplicationController
-  before_action(:require_admin)
-
   def create
     lists = WordList.visible_to(current_user)
     word_list = lists.find(params.expect(:word_list_id))

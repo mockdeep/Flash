@@ -4,8 +4,6 @@
 # (/mandarin/decks), or the user's own Basic or Music decks. The section
 # viewed is remembered on the user.
 class SectionDecksController < ApplicationController
-  before_action(:require_admin)
-
   def show
     sections = DeckSection.open_to(current_user)
     section = sections.find { it.anchor == params.expect(:section) } ||
