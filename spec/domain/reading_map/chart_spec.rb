@@ -205,6 +205,64 @@ RSpec.describe ReadingMap::Chart do
     end
   end
 
+  # The learner's deck over a list on the map.
+  def started(word_list = placed_list, **)
+    create(:reading_deck, word_list:, **)
+  end
+
+  def met_goal(deck)
+    count = deck.study_goal
+    deck.study_days.create!(studied_on: Date.current, completed_count: count)
+  end
+
+  describe "a started node" do
+    it "carries the learner's decks over its list" do
+      deck = create(:reading_deck, word_list: placed_list)
+
+      expect(chart.nodes.sole.decks).to eq([deck])
+    end
+
+    it "carries a source's section decks together" do
+      list = source_list
+      snippets = [list.snippets.sole, create(:snippet, word_list: list)]
+      decks = snippets.map { started(list, snippet: it) }
+
+      expect(chart.nodes.sole.decks).to match_array(decks)
+    end
+
+    it "leaves out another learner's deck" do
+      create(:reading_deck, word_list: placed_list, user: create(:user))
+
+      expect(chart.nodes.sole).not_to be_started
+    end
+
+    it "is unmet while a deck is short of today's goal" do
+      create(:reading_deck, word_list: placed_list)
+
+      expect(chart.nodes.sole).to be_unmet
+    end
+
+    it "is met once its deck reaches today's goal" do
+      met_goal(create(:reading_deck, word_list: placed_list))
+
+      expect(chart.nodes.sole).to be_met
+    end
+
+    it "is not unmet while its deck waits for tomorrow" do
+      sense = started(round: 2).word_list.senses.sole
+      today = { correct_streak: 1, last_correct_at: Time.current }
+      create(:skill_score, sense:, **today)
+
+      expect(chart.nodes.sole).not_to be_unmet
+    end
+
+    it "marks a started chip too" do
+      create(:reading_deck, word_list: level_list(1))
+
+      expect(chart.chips.sole).to be_started
+    end
+  end
+
   describe "#start" do
     it "is the node up the center" do
       list = placed_list
@@ -223,6 +281,47 @@ RSpec.describe ReadingMap::Chart do
       placed_list(angle: 40)
 
       expect(chart.start).to be_nil
+    end
+
+    it "is a started node ahead of the node up the center" do
+      placed_list
+      deck = create(:reading_deck, word_list: placed_list(angle: 40))
+
+      expect(chart.start.word_list).to eq(deck.word_list)
+    end
+
+    it "is the innermost started node short of today's goal" do
+      [1, 2].each { level_list(it) }
+      decks = [2, 1].map { started(placed_list(level: it)) }
+
+      expect(chart.start.word_list).to eq(decks.last.word_list)
+    end
+
+    it "is the most recently studied of those on one ring" do
+      decks = [1, 2].map { started(last_studied_at: it.days.ago) }
+
+      expect(chart.start.word_list).to eq(decks.first.word_list)
+    end
+
+    it "passes over a node whose goal is met for one still short" do
+      [1, 2].each { level_list(it) }
+      decks = [1, 2].map { started(placed_list(level: it)) }
+      met_goal(decks.first)
+
+      expect(chart.start.word_list).to eq(decks.last.word_list)
+    end
+
+    it "is the most recently studied node once every goal is met" do
+      decks = [2, 1].map { started(last_studied_at: it.days.ago) }
+      decks.each { met_goal(it) }
+
+      expect(chart.start.word_list).to eq(decks.last.word_list)
+    end
+
+    it "may be a level's chip" do
+      create(:reading_deck, word_list: level_list(1))
+
+      expect(chart.start).to eq(chart.chips.sole)
     end
   end
 

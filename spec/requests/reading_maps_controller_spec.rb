@@ -154,6 +154,53 @@ RSpec.describe ReadingMapsController do
       expect(rendered).to have_button("Recenter")
     end
 
+    it "marks a list the learner has a deck for" do
+      admin = login_admin
+      create(:reading_deck, word_list: list_on_map, user: admin)
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered).to have_css(".reading-map__node.reading-map__started")
+    end
+
+    it "leaves a list with no deck unmarked" do
+      login_admin
+      list_on_map
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered).to have_no_css(".reading-map__started")
+    end
+
+    it "ticks a list whose goal is met today" do
+      admin = login_admin
+      deck = create(:reading_deck, word_list: list_on_map, user: admin)
+      deck.study_days.create!(studied_on: Date.current, completed_count: 50)
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered).to have_css(".reading-map__tick", text: "✓")
+    end
+
+    it "leaves a list still short of its goal unticked" do
+      admin = login_admin
+      create(:reading_deck, word_list: list_on_map, user: admin)
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered).to have_no_css(".reading-map__tick")
+    end
+
+    it "opens on a started chip" do
+      admin = login_admin
+      create(:reading_deck, word_list: level_list(1, "Tale A1"), user: admin)
+
+      get(reading_map_path("mandarin"))
+
+      expect(rendered)
+        .to have_css(".reading-map__chip[data-reading-map-target='start']")
+    end
+
     it "shows a level's chip without what the level names share" do
       login_admin
       level_list(1, "Tale A1")

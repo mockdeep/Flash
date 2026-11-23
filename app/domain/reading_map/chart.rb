@@ -19,9 +19,6 @@ module ReadingMap
     ROOM = 9.0
     MOST_ROOM = 60.0
 
-    # A list on the map: its ring, its angle there and the learner's heat.
-    Node = Data.define(:word_list, :ring, :angle, :heat)
-
     attr_reader :language
 
     def initialize(user:, language:)
@@ -48,12 +45,24 @@ module ReadingMap
       @nodes ||= spaced(placed.map { node(it, ring(it), it.angle) })
     end
 
-    # Where the map opens: the innermost node of the center spoke, if any
-    # node is up the center.
+    # Where the map opens and Recenter returns to: the learner's next
+    # node, or with nothing started the innermost node up the center, if
+    # any node is.
     def start
       spoke = nodes.select { it.angle == Layout::CENTER }
 
-      spoke.min_by { [it.ring, it.word_list.id] }
+      next_node || spoke.min_by { [it.ring, it.word_list.id] }
+    end
+
+    # Among the started chips and nodes short of today's goal, the one on
+    # the innermost ring, then the most recently studied; with every goal
+    # met, the most recently studied.
+    def next_node
+      started = [*chips, *nodes].select(&:started?)
+      unmet = started.select(&:unmet?)
+      innermost = unmet.select { it.ring == unmet.map(&:ring).min }
+
+      (innermost.presence || started).max_by(&:last_studied)
     end
 
     # Each line between two nodes on the map, with its strength.
@@ -90,7 +99,23 @@ module ReadingMap
     def room(ring) = [ROOM / middle(ring) * 180 / Math::PI, MOST_ROOM].min
 
     def node(list, ring, angle)
-      Node.new(word_list: list, ring:, angle:, heat: heats[list.id])
+      decks = decks_by_list.fetch(list.id, [])
+      unmet = decks.any? { unmet_ids.include?(it.id) }
+      heat = heats[list.id]
+
+      Node.new(word_list: list, ring:, angle:, heat:, decks:, unmet:)
+    end
+
+    # The learner's decks over the lists on the map, by list.
+    def decks_by_list
+      @decks_by_list ||=
+        @user.decks.where(word_list: visible).group_by(&:word_list_id)
+    end
+
+    # Unmet as Next Deck counts it: a deck waiting for tomorrow isn't.
+    def unmet_ids
+      @unmet_ids ||= @user.decks.goal_unmet_today.where(word_list: visible)
+        .reject(&:waiting_for_tomorrow?).map(&:id)
     end
 
     def heats
