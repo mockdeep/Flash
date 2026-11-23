@@ -421,6 +421,8 @@ app/
 │   ├── card_menu.rb              # Card-front kebab menu (study text sizes; on Mandarin decks fonts and characters)
 │   ├── card_preview.rb           # 5-card preview block (shared by catalog and share preview)
 │   ├── map_controls.rb           # The reading map's Zoom out / Zoom in / Recenter buttons and their hotkeys
+│   ├── map_drawing.rb            # The reading map's SVG: ring lines and the lines between nodes
+│   ├── map_popover.rb            # A chip's or node's popover: name, known and new words, where it leads, Start or Continue
 │   ├── map_chart.rb              # A language's reading map: rings as a list of chip and node buttons placed by CSS, over a drawing of the ring lines and links
 │   ├── guide_card.rb             # Still, unclickable study card for the guide page (front, choices or typed answer)
 │   ├── guide_example.rb          # Captioned figure around a guide picture
@@ -463,7 +465,7 @@ app/
 ├── domain/
 │   ├── backbone.rb               # A graded backbone's config: levels (code, list, strict, guidelines), story and title words, chapters, headings, text paths, each version's source attributes
 │   ├── deck_section.rb           # A section of a set of decks (a user's, or the catalog's): one per language A–Z, then Basic, then Music; `first_unmet` drives Next Deck; `card_count` (the heading's count) counts a source's decks once
-│   ├── heat.rb                   # How much of a word list a learner knows: `Heat.for(user, word_list_ids)` gives each list's entries and the share known (an entry's weakest reading streak, up to 3), from one query
+│   ├── heat.rb                   # How much of a word list a learner knows: `Heat.for(user, word_list_ids)` gives each list's entries, the share known (an entry's weakest reading streak, up to 3) and its `new_words`, from one query
 │   ├── language.rb               # What processing a snippet needs per language: sentence ends, word characters, the segmenter's form and its check, its lexicon, skip reasons, whether words are spaced, prompts (`Language::MANDARIN`, `Language::PORTUGUESE`, `Language::FILIPINO`)
 │   ├── lexicon.rb                # How a language's entries are stored, snippet language or not: readings or none, articles or none, traditional forms or none, list categories, refiner rules (`Lexicon::MANDARIN`, `PORTUGUESE`, `FILIPINO`, `GERMAN`, `SPANISH`, `ITALIAN`; a plain one for any other)
 │   ├── lexicon/
@@ -472,6 +474,8 @@ app/
 │   │   └── spanish.rb            # Spanish's, likewise
 │   ├── reading_map/
 │   │   ├── chart.rb              # What a learner's map shows for a language: rings, chips, the nodes they can see (with heat), links, and where each is drawn
+│   │   ├── gains.rb              # What studying one list gains a learner in another, for many pairs in one query
+│   │   ├── lines.rb              # The links between a map's nodes, and where each node's lines lead
 │   │   ├── node.rb               # A list on the map: ring, angle, heat and the learner's decks (`started?`, `unmet?`, `met?`, `last_studied`)
 │   │   └── spacing.rb            # Moves a ring's nodes apart until each has room, the one nearest the center staying put
 │   ├── study.rb                  # Study engine; `Study.for(deck:)` dispatches by deck type
@@ -512,6 +516,7 @@ app/
 │   ├── studies_controller.rb          # Study show/update; dispatches text vs music views
 │   ├── study_goal_resets_controller.rb # Reset today's count on all decks, go to the first deck
 │   ├── subscriptions_controller.rb    # Creem subscription show / create / destroy
+│   ├── word_list_decks_controller.rb  # Start a list from the reading map: find or create the user's deck over it (admin)
 │   ├── webhooks/
 │   │   └── creem_controller.rb        # Creem webhook receiver
 │   └── welcome_controller.rb          # Landing page
@@ -1040,8 +1045,9 @@ The reading map (not built yet) puts each word list on a band, its `level`. A la
 ### Reading Map Page
 
 `/<language>/decks` (`/mandarin/decks`; `ReadingMapsController#show`, admins only for now, 404 for a name that is no language with word lists) shows a language's reading map, read-only: nothing on it can be started yet.
-- **`ReadingMap::Chart`** (`app/domain/reading_map/chart.rb`) gathers it for a user and a language. Rings count outward from 1: one per level, then one past the top level for lists beyond it or with no level yet; a language with no level lists has one ring. A **chip** is a level list, at the 180-degree end of its ring. A **node** is any other list with an angle that the user can see: a public list, a source they own or were let read, or a list they have a deck for; a source's list only once it has a studyable snippet. Each (`ReadingMap::Node`) carries its `Heat` and the user's decks over its list. `#links` are the `WordListLink`s between two nodes on the map.
+- **`ReadingMap::Chart`** (`app/domain/reading_map/chart.rb`) gathers it for a user and a language. Rings count outward from 1: one per level, then one past the top level for lists beyond it or with no level yet; a language with no level lists has one ring. A **chip** is a level list, at the 180-degree end of its ring. A **node** is any other list with an angle that the user can see (`WordList.visible_to`): a public list, a source they own or were let read, or a list they have a deck for; a source's list only once it has a studyable snippet. Each (`ReadingMap::Node`) carries its `Heat` and the user's decks over its list. `#links` are the `WordListLink`s between two nodes on the map.
 - **Started marks**: a chip or node the user has a deck for is `started?` (a source's section decks all count) and drawn with a bold outline (`.reading-map__started`). It gets a tick (`met?`) once none of its decks is short of today's goal, counted as Next Deck counts it (`Deck.goal_unmet_today`, less decks `waiting_for_tomorrow?`), so a deck waiting for tomorrow or with no goal never holds the tick back, and a node whose decks all have no goal never gets one.
+- **Popovers** (`Components::MapPopover`): each chip and node button opens a native popover (`popovertarget`, placed under the button by CSS anchor positioning where supported) with the list's name (and a source's title translation), "62% known · 38 new words" from its `Heat` (`new_words`: entries not yet known in full), the nodes its lines lead to, and a button. **Leads to** (`Chart#leads`, `ReadingMap::Lines`) lists the nodes joined to it on its ring or further out, each with what studying this node would gain there (`ReadingMap::Gains`: the share of the other list's entries the learner doesn't know in full and this list teaches, which is every sense the other holds for the entry; one query for every line, both ways). **Start** POSTs to `WordListDecksController#create` (`/word_lists/:word_list_id/deck`, admins only for now, and only for a list `WordList.visible_to` the user), which finds or creates the deck for a source's first section (`User#deck_starting`) or for the whole of a list with no source, and opens its study page. **Continue**, once the node is started, links to `Node#continue_deck`: the first of its decks short of today's goal, in the source's order, else the one last studied, else the first.
 - **Next node** (`Chart#next_node`): among the started chips and nodes with an unmet deck, the one on the innermost ring, then the most recently studied; with every goal met, the most recently studied.
 - **Between the lines**: a node sits in the middle of its ring's space, so the lines drawn (one at each level's outer edge) are the borders between rings. `Chart#point` gives a spot in the drawing's units (100 wide, 50 high, the center at the middle of the lower edge).
 - **Room** (`ReadingMap::Spacing`): when the page is drawn, the nodes of a ring are moved apart until each has `Chart::ROOM` units along the ring (at most `MOST_ROOM` degrees, so a few fit on a short ring). The one nearest the center stays, so a backbone's spoke keeps its line, and the rest move away from the center in turn. Nothing is stored, and nothing stops a crowded ring from running past its ends.

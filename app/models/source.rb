@@ -39,6 +39,17 @@ class Source < ApplicationRecord
             format: { with: %r{\Ahttps?://\S+\z}, allow_blank: true }
   validate(:supported_language)
 
+  # The sources a user owns or was let read.
+  def self.held_by(user)
+    where(word_list: user.word_lists)
+      .or(where(id: user.source_readers.select(:source_id)))
+  end
+
+  # Those with no snippet to read yet.
+  def self.without_text
+    where.not(id: Snippet.studyable.select(:source_id))
+  end
+
   def language = Language.for(word_list.language)
   def listed? = listing.present?
 

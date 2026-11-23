@@ -43,6 +43,16 @@ class WordList < ApplicationRecord
   # saved when its source changes.
   validate(:source_can_be_shown, if: :will_save_change_to_visibility?)
 
+  # The lists a learner's reading map shows: public ones, sources they
+  # own or were let read, and any list they have a deck for. A source's
+  # list shows only once it has a snippet to read.
+  def self.visible_to(user)
+    where(visibility: "public")
+      .or(where(id: Source.held_by(user).select(:word_list_id)))
+      .or(where(id: user.decks.select(:word_list_id)))
+      .where.not(id: Source.without_text.select(:word_list_id))
+  end
+
   def publicly_visible? = visibility == "public"
 
   private

@@ -348,6 +348,52 @@ RSpec.describe ReadingMap::Chart do
     end
   end
 
+  describe "#leads" do
+    def linked_nodes(*levels)
+      [1, 2].each { level_list(it) }
+      link(levels.map { placed_list(level: it) })
+      chart.nodes.sort_by { it.word_list.id }
+    end
+
+    it "gives the node a node's line leads outward to" do
+      inner, outer = linked_nodes(1, 2)
+
+      expect(chart.leads(inner).sole.first).to eq(outer)
+    end
+
+    it "gives nothing for a node whose line leads inward" do
+      _, outer = linked_nodes(1, 2)
+
+      expect(chart.leads(outer)).to be_empty
+    end
+
+    it "leads both ways between nodes on one ring" do
+      nodes = linked_nodes(2, 2)
+
+      expect(nodes.map { chart.leads(it).sole.first }).to eq(nodes.reverse)
+    end
+
+    it "leads outward from the higher of the two lists" do
+      outer, inner = linked_nodes(2, 1)
+
+      expect(chart.leads(inner).sole.first).to eq(outer)
+    end
+
+    it "gives nothing for a node no line touches" do
+      linked_nodes(1, 2)
+      apart = placed_list(level: 1, angle: 40)
+
+      expect(chart.leads(chart.nodes.find { it.word_list == apart }))
+        .to be_empty
+    end
+
+    it "gives what studying the node would gain there" do
+      inner, = linked_nodes(1, 2)
+
+      expect(chart.leads(inner).sole.last.total).to eq(1)
+    end
+  end
+
   describe "#point" do
     it "puts the middle of the one ring's center halfway up" do
       expect(chart.point(1, 90.0)).to eq([50.0, 25.0])

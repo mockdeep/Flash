@@ -100,6 +100,22 @@ RSpec.describe Heat do
     end
   end
 
+  describe "#new_words" do
+    it "counts the words not yet known in full" do
+      deck = create(:reading_deck)
+      [3, 2, 0].each { create(:language_card, deck:, correct_streak: it) }
+
+      expect(heat_of(deck).new_words).to eq(2)
+    end
+
+    it "counts every word of a list with no scores" do
+      deck = create(:reading_deck)
+      create_list(:language_card, 2, deck:)
+
+      expect(heat_of(deck).new_words).to eq(2)
+    end
+  end
+
   describe "#percent" do
     it "gives the share known as a whole number" do
       expect(described_class.new(total: 2, steps: 3).percent).to eq(50)

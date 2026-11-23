@@ -23,7 +23,9 @@ RSpec.describe ReadingMap::Node do
     end
 
     it "is false while a deck is short of its goal" do
-      expect(node(decks: [deck], unmet: true)).not_to be_met
+      decks = [deck]
+
+      expect(node(decks:, unmet_decks: decks)).not_to be_met
     end
 
     it "is false when every deck has no goal" do
@@ -32,6 +34,27 @@ RSpec.describe ReadingMap::Node do
 
     it "is false with no deck" do
       expect(node).not_to be_met
+    end
+  end
+
+  describe "#continue_deck" do
+    it "is the first deck short of today's goal" do
+      decks = [deck, deck, deck]
+
+      expect(node(decks:, unmet_decks: decks.last(2)).continue_deck)
+        .to eq(decks.second)
+    end
+
+    it "is the deck last studied once every goal is met" do
+      decks = [deck, deck(last_studied_at: 1.day.ago), deck]
+
+      expect(node(decks:).continue_deck).to eq(decks.second)
+    end
+
+    it "is the first deck when none has been studied" do
+      decks = [deck, deck]
+
+      expect(node(decks:).continue_deck).to eq(decks.first)
     end
   end
 

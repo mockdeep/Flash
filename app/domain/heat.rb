@@ -5,7 +5,7 @@
 # reading streaks on the senses the list holds for it, up to FULL: a third
 # of a word at a streak of 1, a whole word at 3 or more. Words learned in
 # any deck count.
-Heat = Data.define(:total, :steps)
+Heat = Data.define(:total, :steps, :learned)
 
 class Heat
   FULL = 3
@@ -18,14 +18,23 @@ class Heat
     LEAST(MIN(COALESCE(skill_scores.correct_streak, 0)), #{FULL}) AS streak
   SQL
 
+  # A list's entries, their streaks added up, and those known in full.
+  COUNTS = [
+    Arel.sql("COUNT(*)"),
+    Arel.sql("SUM(streak)"),
+    Arel.sql("COUNT(*) FILTER (WHERE streak >= #{FULL})"),
+  ].freeze
+
   # Each list's heat by its id, from one query; a list with no words has
   # none.
   def self.for(user, word_list_ids)
     counts = SenseMembership.from(entries(user, word_list_ids), :entries)
       .group(:word_list_id)
-      .pluck(:word_list_id, Arel.sql("COUNT(*)"), Arel.sql("SUM(streak)"))
+      .pluck(:word_list_id, *COUNTS)
 
-    counts.to_h { |id, total, steps| [id, new(total:, steps:)] }
+    counts.to_h do |id, total, steps, learned|
+      [id, new(total:, steps:, learned:)]
+    end
   end
 
   def self.entries(user, word_list_ids)
@@ -37,7 +46,12 @@ class Heat
       .select(ENTRY_COLUMNS)
   end
 
+  def initialize(learned: 0, **) = super
+
   def known = steps.fdiv(FULL)
+
+  # Words not yet known in full: the cards still to learn.
+  def new_words = total - learned
 
   # Rounded down, so only a list known in full reads 100.
   def percent = (steps * 100) / (total * FULL)

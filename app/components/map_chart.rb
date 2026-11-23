@@ -6,13 +6,6 @@ module Components
   # from the spot given to each. The ring lines and the lines between nodes
   # are a drawing behind them, hidden from screen readers.
   class MapChart < Components::Base
-    WIDTH = ::ReadingMap::Chart::WIDTH
-    DRAWING = {
-      class: "reading-map__drawing",
-      viewBox: "0 0 #{WIDTH} #{WIDTH / 2}",
-      aria_hidden: "true",
-    }.freeze
-
     attr_accessor :chart
 
     def initialize(chart:)
@@ -35,35 +28,11 @@ module Components
       data = { reading_map_target: "canvas" }
 
       div(class: "reading-map__canvas", data:) do
-        render_drawing
+        render(Components::MapDrawing.new(chart:))
         ol(class: "reading-map__rings") do
           (1..chart.rings).each { |ring| render_ring(ring) }
         end
       end
-    end
-
-    def render_drawing
-      svg(**DRAWING) do |drawing|
-        (1..chart.lines).each { |line| render_line(drawing, line) }
-        chart.links.each { |*ends, at| render_link(drawing, ends, at) }
-      end
-    end
-
-    def render_line(drawing, line)
-      radius = chart.radius(line)
-      center = WIDTH / 2
-      path = "M #{center - radius} #{center} " \
-             "A #{radius} #{radius} 0 0 1 #{center + radius} #{center}"
-
-      drawing.path(class: "reading-map__line", d: path)
-    end
-
-    def render_link(drawing, ends, strength)
-      from, to = ends.map { chart.point(it.ring, it.angle) }
-      spots = { x1: from.first, y1: from.last, x2: to.first, y2: to.last }
-      style = "--strength: #{strength}"
-
-      drawing.line(class: "reading-map__link", style:, **spots)
     end
 
     # A ring's chip, then its nodes from the lowest angle to the highest.
@@ -89,13 +58,16 @@ module Components
       end
     end
 
-    # A chip or node as a button, marked once the learner has a deck for
-    # it, and as the one the map opens on.
+    # A chip or node as a button that opens its popover, marked once the
+    # learner has a deck for it, and as the one the map opens on.
     def render_spot(node, classes, &)
       classes += ["reading-map__started"] if node.started?
       data = { reading_map_target: ("start" if node == chart.start) }
+      id = "map-list-#{node.word_list.id}"
+      look = { class: classes, style: spot(node) }
 
-      button(type: "button", class: classes, style: spot(node), data:, &)
+      button(type: "button", popovertarget: id, data:, **look, &)
+      render(Components::MapPopover.new(id:, node:, leads: chart.leads(node)))
     end
 
     def render_heat(node)
