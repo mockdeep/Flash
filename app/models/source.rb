@@ -18,6 +18,13 @@ class Source < ApplicationRecord
            -> { order(:id) },
            dependent: :destroy,
            inverse_of: :source
+  # Loaded for every source in a list at once.
+  has_many :studyable_snippets,
+           -> { studyable },
+           class_name: "Snippet",
+           inverse_of: false,
+           dependent: nil,
+           fully_load: true
   has_many :readers, class_name: "SourceReader", dependent: :delete_all
   has_one :listing, class_name: "SourceListing", dependent: :delete
   # Its title and author as sentences of their own, so their words are
@@ -86,7 +93,7 @@ class Source < ApplicationRecord
   end
 
   # Its list only gains senses as snippets are finished.
-  def studyable? = snippets.any? { |snippet| snippet.status == :finished }
+  def studyable? = studyable_snippets.any?
 
   private
 

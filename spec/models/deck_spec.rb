@@ -477,6 +477,12 @@ RSpec.describe Deck do
     end
   end
 
+  def create_shared_snippet_deck
+    snippet = create(:snippet, :finished)
+    snippet.source.update!(license: "public_domain")
+    create(:reading_deck, word_list: snippet.word_list, snippet:)
+  end
+
   describe "#shares_texts?" do
     it "is true with a finished snippet others may read" do
       deck = create(:reading_deck)
@@ -490,6 +496,29 @@ RSpec.describe Deck do
     it "is false when no finished snippet may be shared" do
       deck = create(:reading_deck)
       create(:snippet, :finished, word_list: deck.word_list)
+
+      expect(deck.shares_texts?).to be(false)
+    end
+
+    it "is false on a deck with no source" do
+      deck = create(:deck)
+
+      expect(deck.shares_texts?).to be(false)
+    end
+
+    it "loads a snippet deck's own snippet for every deck at once" do
+      2.times { create_shared_snippet_deck }
+      first, second = ReadingDeck.order(:id).to_a
+      first.shares_texts?
+
+      expect { second.shares_texts? }.not_to make_database_queries
+    end
+
+    it "is false when a snippet deck's own snippet isn't studyable" do
+      word_list = create(:snippet, :finished).word_list
+      word_list.source.update!(license: "public_domain")
+      own = create(:snippet, word_list:)
+      deck = create(:reading_deck, word_list:, snippet: own)
 
       expect(deck.shares_texts?).to be(false)
     end
