@@ -5,7 +5,9 @@ RSpec.describe Lemmas do
 
   def cache_dir = Rails.root.join("tmp/spec/lemmas-#{Process.pid}")
 
-  def lemmas = described_class.new(cache_dir.join("cache/lemmas.json"))
+  def lemmas
+    described_class.new(cache_dir.join("cache/lemmas.json"), language: "pt")
+  end
 
   def row(id, kind: "word", lemmas: ["casa"], alternatives: [])
     { id:, kind:, lemmas:, alternatives: }
@@ -21,6 +23,13 @@ RSpec.describe Lemmas do
       described_class.in("pt").for([["casas", "As casas."]])
 
       expect(described_class::DIR.join("pt.json")).to exist
+    end
+
+    it "asks with the language's own prompt" do
+      llm.answer({ words: [row(0)] })
+      described_class.in("fil").for([["bahay", "Ang bahay."]])
+
+      expect(llm.calls.sole.system).to include("Filipino")
     end
   end
 

@@ -54,6 +54,17 @@ RSpec.describe Backbone do
       expect(bare.notes).to eq("")
     end
 
+    it "matches words as written unless the config says by family" do
+      expect(bare.families?).to be(false)
+    end
+
+    it "matches words by family when the config says so" do
+      config = { "levels" => [], "families" => true }
+      backbone = described_class.new("tale", config, dir: nil)
+
+      expect(backbone.families?).to be(true)
+    end
+
     it "gives a level no guidelines unless the config gives some" do
       expect(bare.levels.first.guidelines).to eq("")
     end

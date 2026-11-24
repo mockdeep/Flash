@@ -34,6 +34,7 @@ RSpec.describe Snippets::CurriculumPhrases do
     end
 
     it "finds a phrase as written in a language with no base forms" do
+      stub_const("Lemmas::LANGUAGES", ["pt"])
       listed("para sa", language: "fil")
       phrases = described_class.for(Language::FILIPINO)
 
@@ -42,6 +43,7 @@ RSpec.describe Snippets::CurriculumPhrases do
     end
 
     it "asks for no base forms in a language that has none" do
+      stub_const("Lemmas::LANGUAGES", ["pt"])
       listed("para sa", language: "fil")
       described_class.for(Language::FILIPINO).found_in_each(["Para sa iyo."])
 

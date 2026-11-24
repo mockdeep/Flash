@@ -142,7 +142,7 @@ with the chapter's closing teaser line.
 A backbone's settings, headings and texts are written in
 `drafts/backbones/<name>/`, which git ignores; once loaded, the database
 holds the texts (see Graded Backbones in AGENTS.md). The tools cover
-Portuguese so far; 西游记 was written with scratch scripts.
+Portuguese and Filipino so far; 西游记 was written with scratch scripts.
 
 - **Settle the vocabulary first**, before any drafting:
   `bin/rails "call[Backbones::Vocabulary,<name>,<level>]"` at the second

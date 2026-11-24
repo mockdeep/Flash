@@ -38,6 +38,10 @@ class Backbone
   def language = @config["language"]
   def notes = @config.fetch("notes", "")
 
+  # Whether a text's word passes when a list holds another word of its
+  # family (a verb of the same root), not only the word itself.
+  def families? = @config.fetch("families", false)
+
   # Titles that pass, like the name, before a name.
   def title_words = @config.fetch("title_words", [])
 

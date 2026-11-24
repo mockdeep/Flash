@@ -11,9 +11,10 @@ RSpec.describe Backbones::Check do
     { "code" => code, "list" => list, "strict" => strict }
   end
 
-  def backbone
+  def backbone(families: false)
     config = {
       "language" => "pt",
+      "families" => families,
       "levels" => [level("B1", false), level("A1", true)],
       "recurring_words" => ["hospício"],
       "level_words" => { "A1" => ["louco"] },
@@ -27,10 +28,10 @@ RSpec.describe Backbones::Check do
     llm.respond { lemma_answer(it, **given) }
   end
 
-  def check(text, level: "A1", **given)
+  def check(text, level: "A1", families: false, **given)
     answers(**given)
 
-    check_only(text, level)
+    check_only(text, level, families:)
   end
 
   def check_unanswered(text)
@@ -39,12 +40,13 @@ RSpec.describe Backbones::Check do
     check_only(text, "A1")
   end
 
-  def check_only(text, code)
+  def check_only(text, code, families: false)
     tale_list("A1", "a", "casa")
     tale_list("B1", "rua")
-    lemmas = Lemmas.new(cache_dir.join("lemmas.json"))
+    lemmas = Lemmas.new(cache_dir.join("lemmas.json"), language: "pt")
+    tale = backbone(families:)
 
-    described_class.call(backbone, backbone.level(code), text, lemmas:)
+    described_class.call(tale, tale.level(code), text, lemmas:)
   end
 
   def flagged(...) = check(...).flags.map(&:base)
@@ -134,6 +136,33 @@ RSpec.describe Backbones::Check do
 
     it "flags a title before anything else" do
       expect(flagged("A casa dr.")).to eq(["dr"])
+    end
+
+    it "flags a word that only shares a listed word's other headword" do
+      given = { casa: { alternatives: ["cas"] } }
+      found = flagged("Casar.", Casar: { alternatives: ["cas"] }, **given)
+
+      expect(found).to eq(["casar"])
+    end
+
+    it "passes it when the backbone matches by family" do
+      given = { casa: { alternatives: ["cas"] }, families: true }
+      found = flagged("Casar.", Casar: { alternatives: ["cas"] }, **given)
+
+      expect(found).to eq([])
+    end
+
+    it "holds a family to its word's level" do
+      given = { rua: { alternatives: ["ru"] }, families: true }
+      found = flagged("Ruar.", Ruar: { alternatives: ["ru"] }, **given)
+
+      expect(found).to eq(["ruar"])
+    end
+
+    it "asks nothing about the lists unless it matches by family" do
+      check("A casa.")
+
+      expect(llm.calls.size).to eq(1)
     end
 
     it "passes the words of a phrase listed at the level" do

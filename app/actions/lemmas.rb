@@ -8,8 +8,8 @@
 class Lemmas
   BATCH = 120
   DIR = Rails.root.join("tmp/lemmas")
-  # The languages the prompt below can answer for.
-  LANGUAGES = ["pt"].freeze
+  # The languages it can answer for.
+  LANGUAGES = Prompts::BY_LANGUAGE.keys.freeze
 
   # A form as written, what kind of word it is (word / name / numeral /
   # interjection, or unknown when unanswered), the base forms it is made of
@@ -22,31 +22,6 @@ class Lemmas
     def name? = kind == "name"
     def unknown? = kind == "unknown"
   end
-
-  SYSTEM = <<~TEXT
-    You give the dictionary base form of Brazilian Portuguese words, as a
-    learner's dictionary lists them. For each item you get a word form as
-    written and the sentence it appears in. Answer with:
-    - kind: "word"; "name" for a person's or place's name or other proper
-      noun (Itaguaí, Bacamarte, Corão, Rio de Janeiro); "numeral" for a
-      Roman numeral; "interjection" for an exclamation that is only a
-      sound of feeling (ah, oh, ai, hum), not a word used as one (Deus!).
-    - lemmas: the base form(s), lower case: verbs in the infinitive, nouns
-      in the singular with no article, adjectives in the masculine
-      singular, adverbs as they are. Split contractions into their parts
-      (do → de, o; pelo → por, o; num → em, um; dali → de, ali; dele → de,
-      ele) and verb + pronoun forms into the verb and the pronoun
-      (disse-lhe → dizer, lhe; defendeu-a → defender, a; instalou-se →
-      instalar, se). A superlative in -íssimo gives its adjective. A
-      diminutive or augmentative gives its own form unless it is just a
-      size. A hyphenated compound noun (pobre-diabo) stays whole. Names get
-      their own form as the lemma.
-    - alternatives: other headwords a dictionary might list the same word
-      under, lower case: a feminine-only or plural-only form (grávida,
-      juntos), the verb behind a participle used as an adjective (enganado
-      → enganar), the feminine noun for a female person (viúva). Empty when
-      there are none.
-  TEXT
 
   KINDS = ["word", "name", "numeral", "interjection"].freeze
 
@@ -72,17 +47,13 @@ class Lemmas
     },
   }.freeze
 
-  QUESTION = {
-    list: "words",
-    model: Llm::SONNET,
-    system: SYSTEM,
-    schema: SCHEMA,
-  }.freeze
+  QUESTION = { list: "words", model: Llm::SONNET, schema: SCHEMA }.freeze
 
-  def self.in(language) = new(DIR.join("#{language}.json"))
+  def self.in(language) = new(DIR.join("#{language}.json"), language:)
 
-  def initialize(path)
+  def initialize(path, language:)
     @path = path
+    @system = Prompts::BY_LANGUAGE[language]
     @known = File.exist?(path) ? JSON.parse(File.read(path)) : {}
   end
 
@@ -101,7 +72,8 @@ class Lemmas
       occurrences.each_with_index.map do |(form, sentence), id|
         { id:, form:, sentence: }
       end
-    rows = Llm::AskEach.call(occurrences, prompt:, **QUESTION)
+    question = { prompt:, system: @system, **QUESTION }
+    rows = Llm::AskEach.call(occurrences, **question)
     occurrences.each_with_index do |(form, _), id|
       remember(form, rows[id]) if rows[id]
     end
