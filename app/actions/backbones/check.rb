@@ -5,7 +5,10 @@ module Backbones
   # at or below the level holds, unless the backbone's story needs them or
   # they are a title before a name or part of a phrase the lists hold
   # whole (em cima, ao redor de). Names, numerals and interjections (ah, oh)
-  # always pass. At a level that isn't strict the result is only a report.
+  # always pass. Where the backbone matches by family, a listed word also
+  # counts under its other headwords, so a form of its root passes (bigyan
+  # beside magbigay). At a level that isn't strict the result is only a
+  # report.
   module Check
     WORD = /\p{L}+(?:-\p{L}+)*/
     SENTENCE_END = /(?<=[.!?:;…])\s+|\n+/
@@ -22,7 +25,7 @@ module Backbones
 
     def self.call(backbone, level, text, lemmas:)
       words = lemmas.for(occurrences(text))
-      listed = listed(backbone)
+      listed = listed(backbone, lemmas)
       forms = above_level(backbone, level, words, listed)
 
       Result.new(
@@ -41,10 +44,20 @@ module Backbones
 
     # The lowest level each headword is listed at, by its lower-case form;
     # a reflexive verb counts under its bare verb too.
-    def self.listed(backbone)
+    def self.listed(backbone, lemmas)
       backbone.levels.reverse.each_with_object({}) do |level, listed|
-        headwords(level).each { listed[it] ||= level.code }
+        headwords = headwords(level)
+        headwords += families(headwords, lemmas) if backbone.families?
+        headwords.each { listed[it] ||= level.code }
       end
+    end
+
+    # The other headwords for each single word a list holds, its root among
+    # them where the language's base forms give one.
+    def self.families(headwords, lemmas)
+      words = headwords.reject { it.include?(" ") }.uniq
+
+      lemmas.for(words.map { [it, it] }).flat_map(&:alternatives)
     end
 
     def self.headwords(level)
