@@ -223,6 +223,14 @@ RSpec.describe Source do
 
       expect(snippet.source).not_to be_studyable
     end
+
+    it "loads for every source in a list at once" do
+      create_list(:snippet, 2, :finished)
+      first, second = described_class.order(:id).to_a
+      first.studyable?
+
+      expect { second.studyable? }.not_to make_database_queries
+    end
   end
 
   describe "#license_name" do

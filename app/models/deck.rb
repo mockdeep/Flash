@@ -81,6 +81,17 @@ class Deck < ApplicationRecord
   has_many :cards, dependent: :delete_all
   has_one :source, through: :word_list
   has_many :snippets, through: :source
+  # For the catalog's texts badge, loaded for every deck in a rail at once.
+  has_many :studyable_snippets,
+           -> { studyable },
+           through: :source,
+           source: :snippets,
+           fully_load: true
+  belongs_to :studyable_snippet,
+             -> { studyable },
+             class_name: "Snippet",
+             foreign_key: :snippet_id,
+             inverse_of: false
   has_many :study_days, dependent: :delete_all
   has_one :todays_study_day,
           -> { where(studied_on: Date.current) },
@@ -182,7 +193,11 @@ class Deck < ApplicationRecord
     (snippet ? [snippet] : snippets).select { it.status == :finished }
   end
 
-  def shares_texts? = finished_snippets.any? && source.shareable?
+  def shares_texts?
+    return false unless source&.shareable?
+
+    snippet_id ? studyable_snippet.present? : studyable_snippets.any?
+  end
 
   # A streak climbs once a day, so a card answered correctly today waits for
   # tomorrow; practice studies just those cards.
