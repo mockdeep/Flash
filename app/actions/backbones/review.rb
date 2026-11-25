@@ -38,7 +38,10 @@ module Backbones
 
       Give a verdict, PASS or REWORK, and real problems only, each with the
       quote, its category, why it is a problem (in English) and a
-      replacement as simple as the text around it.
+      replacement as simple as the text around it. Keep the replacement to
+      words and forms no harder than the draft's own, and to the grammar
+      the guidelines allow: where the right word may be above the level,
+      say so and give a wording within it.
     TEXT
 
     SCHEMA = {
