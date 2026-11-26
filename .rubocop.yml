@@ -40,7 +40,6 @@ Metrics/BlockLength:
   AllowedMethods:
     - describe
   Exclude:
-    - Guardfile
     - db/schema.rb
     - config/environments/development.rb
 Rails/FilePath: { EnforcedStyle: slashes }
@@ -55,7 +54,6 @@ RSpec/MultipleMemoizedHelpers:
   AllowSubject: false
   Exclude:
     - spec/linters/rubocop/**/*.rb
-Style/ArrayFirstLast: { Exclude: [Guardfile] }
 Style/MethodCallWithArgsParentheses:
   AllowedMethods:
     - attr_accessor
@@ -102,7 +100,6 @@ Style/MethodCallWithArgsParentheses:
     - 'config/puma.rb'
     - 'config/routes.rb'
     - db/**/*.rb
-    - Guardfile
     - Gemfile
 Style/MixinUsage: { Exclude: ['bin/**/*'] }
 Style/NumericLiterals: { Exclude: [db/schema.rb] }
