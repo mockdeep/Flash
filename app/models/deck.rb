@@ -37,17 +37,22 @@ class Deck < ApplicationRecord
   # deck's, only those its snippet uses), each scored by the weakest of the
   # owner's skill_scores on the entry's senses, and a guest's deck stops at
   # the first GUEST_CARD_LIMIT of them in list order. Only reading decks
-  # exist, so the skill is fixed here until 4.7.
+  # exist, so the skill is fixed here until 4.7. Senses are looked up one
+  # by one (OFFSET 0 keeps the planner from flattening it), since otherwise
+  # it reads every sense in the compendium for each deck.
   LANGUAGE_ENTRIES = <<~SQL.squish
     SELECT MIN(COALESCE(skill_scores.correct_streak, 0)) AS correct_streak,
       ROW_NUMBER() OVER (ORDER BY MIN(sense_memberships.position)) AS list_row
     FROM sense_memberships
-    JOIN senses ON senses.id = sense_memberships.sense_id
+    JOIN LATERAL (
+      SELECT senses.id, senses.entry_id FROM senses
+      WHERE senses.id = sense_memberships.sense_id OFFSET 0
+    ) senses ON TRUE
     LEFT JOIN skill_scores ON skill_scores.sense_id = senses.id
       AND skill_scores.user_id = decks.user_id
       AND skill_scores.skill = 'reading'
     WHERE sense_memberships.word_list_id = decks.word_list_id
-      AND (decks.snippet_id IS NULL OR senses.id IN
+      AND (decks.snippet_id IS NULL OR sense_memberships.sense_id IN
         (#{SNIPPET_SENSES}))
     GROUP BY senses.entry_id
   SQL
