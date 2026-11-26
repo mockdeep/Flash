@@ -496,7 +496,7 @@ app/
 │   └── callable_job.rb           # Runs `SomeAction.call` async (e.g. demo guest-user cleanup)
 ├── controllers/
 │   ├── application_controller.rb
-│   ├── accounts_controller.rb         # Account create / show / update / destroy
+│   ├── accounts_controller.rb         # Account create / show / update / remove / destroy
 │   ├── cards_controller.rb            # Single-card edit / destroy (turbo streams; via ProjectsCards)
 │   ├── catalog_controller.rb          # Public catalog browse / preview / copy / try (the demo)
 │   ├── catalog_listings_controller.rb # Publish / unpublish a deck to the catalog
@@ -566,6 +566,7 @@ app/
 │   │   └── service-worker.js        # PWA service worker (served at /service-worker)
 │   ├── accounts/
 │   │   ├── new.rb
+│   │   ├── remove.rb         # Delete-account confirmation (Permanently Delete Account / Cancel)
 │   │   └── show.rb
 │   ├── cards/
 │   │   └── edit_form.rb      # In-dialog card edit form (front / back / reading / category / example)
@@ -702,6 +703,10 @@ end
 ```
 
 Controllers call actions and branch on `result.success?`.
+
+### Remove Routes
+
+`config/initializers/removable_resources.rb` adds a `remove` action to `resources` and `resource` routes, next to the standard ones (`GET /posts/:id/remove` → `posts#remove`, helper `remove_post_path`). It shows a confirmation page before `destroy`, the way `new` pairs with `create` and `edit` with `update`. It works with `only:` and `except:` like any other action, so a resource listed with `only:` gets it only when `:remove` is named. API-only resources don't get it. Account deletion uses it: the account page's "Delete Account" links to `Views::Accounts::Remove`, whose button sends the `DELETE`. The patch relies on private Rails routing code; `spec/routing/removable_resources_spec.rb` fails if a Rails upgrade breaks it.
 
 ### Card writers
 

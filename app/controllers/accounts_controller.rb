@@ -35,6 +35,10 @@ class AccountsController < ApplicationController
     end
   end
 
+  def remove
+    render(Views::Accounts::Remove.new(user: current_user))
+  end
+
   def destroy
     current_user.destroy!
     log_out

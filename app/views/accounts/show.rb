@@ -18,7 +18,11 @@ module Views
           end
 
           render_form
-          button_to("Delete Account", account_path, method: :delete)
+          link_to(
+            "Delete Account",
+            remove_account_path,
+            class: button_class(:danger),
+          )
         end
       end
 

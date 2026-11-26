@@ -6,7 +6,7 @@ Rails.application.routes.draw do
 
   root to: "welcome#index"
 
-  resource :account, only: [:new, :create, :show, :update, :destroy]
+  resource :account, only: [:new, :create, :show, :update, :remove, :destroy]
   resources :catalog_sources, path: "catalog/sources", only: [:show] do
     post :copy, on: :member
     post :try, on: :member
