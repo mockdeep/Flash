@@ -38,9 +38,6 @@ end
 
 group :development do
   gem "brakeman", require: false
-  gem "guard", require: false
-  gem "guard-rspec", require: false
-  gem "guard-rubocop", require: false
   gem "rspec_junit_formatter", require: false
   gem "rubocop", require: false
   gem "rubocop-capybara", require: false
