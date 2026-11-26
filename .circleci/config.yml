@@ -151,7 +151,7 @@ jobs:
             echo "bundle exec rspec -s <seed-from-failed-build> $TEST_FILES"
             echo "********************************************************"
 
-            xvfb-run -a bundle exec rspec \
+            bundle exec rspec \
               --format progress \
               --format RspecJunitFormatter \
               --out /tmp/test-results/system/rspec.xml \
