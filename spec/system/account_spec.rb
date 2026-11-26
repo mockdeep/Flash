@@ -32,21 +32,21 @@ RSpec.describe "user account" do
   end
 
   it "allows a user to sign up for an account" do
-    sign_up_with(email: "demo@lmkw.io")
+    sign_up_with(email: "demo@example.com")
 
     expect(page).to have_flash(:success, "Account created")
     expect(page).to have_text("demo_user")
   end
 
   it "allows a user to edit their email" do
-    sign_up_with(email: "demo@lmkw.io")
-    update_account_with(email: "demo2@lmkw.io")
+    sign_up_with(email: "demo@example.com")
+    update_account_with(email: "demo2@example.com")
 
     expect(page).to have_text("demo_user")
   end
 
   it "allows a user to delete their account" do
-    sign_up_with(email: "demo@lmkw.io")
+    sign_up_with(email: "demo@example.com")
 
     delete_account
 
