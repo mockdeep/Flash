@@ -893,10 +893,6 @@ body {
   display: none;
 }
 
-:where(.reading-snippets--gaps.reading-snippets--spaced) :is(p, h2, h3) {
-  word-spacing: 0.5em;
-}
-
 .reading-snippet + .reading-snippet {
   margin-top: 2rem;
   padding-top: 1rem;
@@ -910,15 +906,6 @@ body {
 .reading-snippet p {
   font-size: var(--reading-font-size, 20px);
   line-height: 1.8;
-}
-
-.reading-snippets--gaps ruby {
-  margin-inline: 0.35em;
-  white-space: nowrap;
-}
-
-.reading-snippets--spaced ruby {
-  margin-inline: 0;
 }
 
 .reading-snippets--readings :is(p, h2, h3) {

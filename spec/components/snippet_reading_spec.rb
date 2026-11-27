@@ -231,18 +231,6 @@ RSpec.describe Components::SnippetReading, type: :view do
     expect(page).to have_css("p", exact_text: "我爱。")
   end
 
-  it "spaces the words up to round 2" do
-    page = render_for(love_snippet, round: 2)
-
-    expect(page).to have_css(".reading-snippets--gaps")
-  end
-
-  it "runs the words together above round 2" do
-    page = render_for(love_snippet, round: 3)
-
-    expect(page).to have_no_css(".reading-snippets--gaps")
-  end
-
   it "keeps the spaces of a text written with them" do
     page = portuguese_snippet(round: 3)
 
@@ -253,12 +241,6 @@ RSpec.describe Components::SnippetReading, type: :view do
     page = portuguese_snippet
 
     expect(page).to have_no_css(".reading-snippets--readings")
-  end
-
-  it "widens the spaces of a text written with them" do
-    page = portuguese_snippet
-
-    expect(page).to have_css(".reading-snippets--spaced")
   end
 
   it "marks no breaks in a text written with spaces" do

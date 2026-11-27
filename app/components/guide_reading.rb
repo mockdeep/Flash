@@ -2,11 +2,7 @@
 
 module Components
   class GuideReading < Components::Base
-    TEXT_CLASSES = [
-      "reading-snippets",
-      "reading-snippets--readings",
-      "reading-snippets--gaps",
-    ].freeze
+    TEXT_CLASSES = ["reading-snippets", "reading-snippets--readings"].freeze
 
     def view_template
       section(id: "reading", class: "guide__section") do
@@ -59,7 +55,6 @@ module Components
         li { "Grey words are ones you haven't studied yet" }
         li { "A word shows its reading above it until you get it right" }
         lookup_note
-        spacing_note
       end
     end
 
@@ -68,15 +63,6 @@ module Components
         <<~TEXT
           Tap a word to see what it means. If it's a green word you've
           forgotten, press Restudy to bring it back when you study.
-        TEXT
-      end
-    end
-
-    def spacing_note
-      li do
-        <<~TEXT
-          In rounds 1 and 2, words are spaced apart to help you see where each
-          one starts. From round 3, the text reads normally.
         TEXT
       end
     end
