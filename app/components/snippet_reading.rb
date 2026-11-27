@@ -2,17 +2,14 @@
 
 module Components
   # The Read tab: a deck's source, then its snippets word by word, laid out
-  # as written, with gaps between words up to round 2. Each word is grey
-  # until studied, green once done at the deck's round, and has its reading
-  # over it while its streak is zero. Mandarin is written in the deck's
-  # script. Clicking a word shows its reading (or
-  # a noun's article) and gloss in a popover. The first click on a new word
-  # records it as seen, and a done word's popover offers to restudy it. A
-  # word the segmenter skipped has no card, so its popover says why and
-  # clicking it records nothing.
+  # as written. Each word is grey until studied, green once done at the
+  # deck's round, and has its reading over it while its streak is zero.
+  # Mandarin is written in the deck's script. Clicking a word shows its
+  # reading (or a noun's article) and gloss in a popover. The first click on
+  # a new word records it as seen, and a done word's popover offers to
+  # restudy it. A word the segmenter skipped has no card, so its popover
+  # says why and clicking it records nothing.
   class SnippetReading < Components::Base
-    GAPS_ROUND = 2
-
     attr_accessor :snippets, :deck
 
     def initialize(snippets:, deck:)
@@ -141,12 +138,9 @@ module Components
       [
         "reading-snippets",
         ("reading-snippets--readings" if language.readings),
-        ("reading-snippets--gaps" if gaps?),
-        ("reading-snippets--spaced" if language.spaces),
       ]
     end
 
     def language = @language ||= deck.source.language
-    def gaps? = deck.round <= GAPS_ROUND
   end
 end
