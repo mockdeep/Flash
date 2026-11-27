@@ -9,22 +9,45 @@ class Snippet < ApplicationRecord
   MAX_BODY = 80_000
   TOKEN_SENSE_IDS =
     Arel.sql("CAST(jsonb_array_elements(tokens) ->> 'sense_id' AS bigint)")
+  # A token in its line, with the sentence it belongs to and its index
+  # there; what falls between tokens belongs to none.
+  Piece =
+    Data.define(:token, :sentence_id, :index) do
+      def self.gap(text)
+        new(token: { "text" => text }, sentence_id: nil, index: nil)
+      end
+
+      def text = token["text"]
+    end
+
   # One line of the body as written, with the sentences it splits into.
   Paragraph =
     Data.define(:text, :sentences) do
-      # The sentences' tokens, with what the text has between them as tokens
+      def tokens = pieces.map(&:token)
+
+      # The sentences' tokens, with what the text has between them as pieces
       # of their own: tokens hold no spaces, and the segmenter may leave
       # punctuation out. A token not found as written is kept where it falls.
-      def tokens
+      def pieces
         rest = text
-        tokens =
-          sentences.flat_map(&:tokens).flat_map do |token|
-            at = rest.index(token["text"]) or next [token]
+        found =
+          placed.flat_map do |piece|
+            at = rest.index(piece.text) or next [piece]
             gap = rest[0...at]
-            rest = rest[(at + token["text"].size)..]
-            [{ "text" => gap }, token]
+            rest = rest[(at + piece.text.size)..]
+            [Piece.gap(gap), piece]
           end
-        [*tokens, { "text" => rest }].reject { it["text"].empty? }
+        [*found, Piece.gap(rest)].reject { it.text.empty? }
+      end
+
+      private
+
+      def placed
+        sentences.flat_map do |sentence|
+          sentence.tokens.each_with_index.map do |token, index|
+            Piece.new(token:, sentence_id: sentence.id, index:)
+          end
+        end
       end
     end
 

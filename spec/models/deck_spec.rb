@@ -497,6 +497,23 @@ RSpec.describe Deck do
     end
   end
 
+  describe "#readable_snippets" do
+    it "holds the owner's own finished snippets" do
+      deck = create(:reading_deck)
+      finished = create(:snippet, :finished, word_list: deck.word_list)
+
+      expect(deck.readable_snippets).to eq([finished])
+    end
+
+    it "leaves out a snippet the owner may not read" do
+      word_list = create(:word_list, user: create(:user))
+      snippet = create(:snippet, :finished, word_list:)
+      deck = create(:reading_deck, word_list:, snippet:)
+
+      expect(deck.readable_snippets).to be_empty
+    end
+  end
+
   def create_shared_snippet_deck
     snippet = create(:snippet, :finished)
     snippet.source.update!(license: "public_domain")

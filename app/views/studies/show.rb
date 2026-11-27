@@ -66,7 +66,7 @@ module Views
             end
           end
 
-          render(Components::SnippetReading.new(snippets:, deck:)) if reading?
+          render_reading if reading?
           render_text_size_hotkeys
         end
       end
@@ -94,14 +94,16 @@ module Views
       # Turbo keeps only the study frame from a frame request, so the text
       # is left out of it.
       def reading?
-        !turbo_frame_request? && snippets.any?
+        !turbo_frame_request? && pages.any?
       end
 
-      def snippets
-        @snippets ||=
-          deck.finished_snippets.select do |snippet|
-            snippet.source.readable_by?(current_user)
-          end
+      def pages = @pages ||= ReadingPages.for(deck)
+
+      # The page the reader left off on, if the deck's text holds it.
+      def render_reading
+        place = current_user.reading_places.find_by(source: deck.source)
+        page = pages.at(place&.snippet_sentence_id, place&.token_index)
+        render(Components::SnippetReading.new(deck:, pages:, page:))
       end
     end
   end

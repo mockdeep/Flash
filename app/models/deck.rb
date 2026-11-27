@@ -209,6 +209,11 @@ class Deck < ApplicationRecord
     (snippet ? [snippet] : snippets).select { it.status == :finished }
   end
 
+  # What the Read tab shows the deck's owner.
+  def readable_snippets
+    finished_snippets.select { it.source.readable_by?(user) }
+  end
+
   def shares_texts?
     return false unless source&.shareable?
 

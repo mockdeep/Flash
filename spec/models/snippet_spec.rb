@@ -129,6 +129,24 @@ RSpec.describe Snippet do
         .to eq(["J.R. Ward", "J. R. Ward"])
     end
 
+    def paragraph_pieces(text, *texts)
+      tokens = texts.map { { "text" => it } }
+      sentence = build(:snippet_sentence, id: 7, tokens:)
+      Snippet::Paragraph.new(text:, sentences: [sentence]).pieces
+    end
+
+    it "places each token in its sentence" do
+      pieces = paragraph_pieces("我爱", "我", "爱")
+
+      expect(pieces.map { [it.sentence_id, it.index] }).to eq([[7, 0], [7, 1]])
+    end
+
+    it "places what falls between tokens in no sentence" do
+      pieces = paragraph_pieces("de repente parou", "de repente", "parou")
+
+      expect(pieces.map(&:sentence_id)).to eq([7, nil, 7])
+    end
+
     it "leaves out the heading's sentence" do
       snippet = create(:snippet, heading: "习俗", body: "我爱你。")
       sentences = sentences_of(snippet, "习俗", "我爱你。")

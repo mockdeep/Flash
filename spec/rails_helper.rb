@@ -20,6 +20,7 @@ require_relative "support/lemmas"
 require_relative "support/llm"
 require_relative "support/matchers"
 require_relative "support/mocks"
+require_relative "support/reading_pages"
 require_relative "support/shoulda_matchers"
 require_relative "support/webmock"
 
