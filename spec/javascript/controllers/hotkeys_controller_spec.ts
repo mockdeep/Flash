@@ -1,7 +1,7 @@
-import {describe, expect, it, vi} from "vitest";
-import {bootStimulus, getController} from "support/stimulus";
+import { describe, expect, it, vi } from "vitest";
+import { bootStimulus, getController } from "support/stimulus";
 import HotkeysController from "controllers/hotkeys_controller";
-import {ensure} from "helpers/ensure";
+import { ensure } from "helpers/ensure";
 
 function setupDOM(): void {
   document.body.innerHTML = `
@@ -73,7 +73,7 @@ it("clicks the target for the pressed key", async () => {
   await setupController();
   const clickSpy = vi.spyOn(button(), "click");
 
-  controller().handleKeydown(new KeyboardEvent("keydown", {key: "a"}));
+  controller().handleKeydown(new KeyboardEvent("keydown", { key: "a" }));
 
   expect(clickSpy).toHaveBeenCalledWith();
 });
@@ -82,7 +82,7 @@ it("does nothing if there is no target for the pressed key", async () => {
   await setupController();
   const clickSpy = vi.spyOn(button(), "click");
 
-  controller().handleKeydown(new KeyboardEvent("keydown", {key: "b"}));
+  controller().handleKeydown(new KeyboardEvent("keydown", { key: "b" }));
 
   expect(clickSpy).not.toHaveBeenCalled();
 });
@@ -93,7 +93,7 @@ it("clicks the space target when Enter is pressed", async () => {
   const clickSpy = vi.spyOn(button(), "click");
   const ctrl = getController(element(), "hotkeys", HotkeysController);
 
-  ctrl.handleKeydown(new KeyboardEvent("keydown", {key: "Enter"}));
+  ctrl.handleKeydown(new KeyboardEvent("keydown", { key: "Enter" }));
 
   expect(clickSpy).toHaveBeenCalledWith();
 });
@@ -103,8 +103,8 @@ it("ignores keypresses originating from <input> elements", async () => {
   const clickSpy = vi.spyOn(button(), "click");
   const field = document.createElement("input");
   element().appendChild(field);
-  const event = new KeyboardEvent("keydown", {bubbles: true, key: "a"});
-  Object.defineProperty(event, "target", {value: field});
+  const event = new KeyboardEvent("keydown", { bubbles: true, key: "a" });
+  Object.defineProperty(event, "target", { value: field });
 
   controller().handleKeydown(event);
 
@@ -117,8 +117,8 @@ it("handles keypresses originating from radio inputs", async () => {
   const field = document.createElement("input");
   field.type = "radio";
   element().appendChild(field);
-  const event = new KeyboardEvent("keydown", {bubbles: true, key: "a"});
-  Object.defineProperty(event, "target", {value: field});
+  const event = new KeyboardEvent("keydown", { bubbles: true, key: "a" });
+  Object.defineProperty(event, "target", { value: field });
 
   controller().handleKeydown(event);
 
@@ -130,8 +130,8 @@ it("ignores keypresses originating from <textarea> elements", async () => {
   const clickSpy = vi.spyOn(button(), "click");
   const field = document.createElement("textarea");
   element().appendChild(field);
-  const event = new KeyboardEvent("keydown", {bubbles: true, key: "a"});
-  Object.defineProperty(event, "target", {value: field});
+  const event = new KeyboardEvent("keydown", { bubbles: true, key: "a" });
+  Object.defineProperty(event, "target", { value: field });
 
   controller().handleKeydown(event);
 
@@ -143,8 +143,8 @@ it("ignores keypresses originating from <select> elements", async () => {
   const clickSpy = vi.spyOn(button(), "click");
   const field = document.createElement("select");
   element().appendChild(field);
-  const event = new KeyboardEvent("keydown", {bubbles: true, key: "a"});
-  Object.defineProperty(event, "target", {value: field});
+  const event = new KeyboardEvent("keydown", { bubbles: true, key: "a" });
+  Object.defineProperty(event, "target", { value: field });
 
   controller().handleKeydown(event);
 
@@ -156,7 +156,7 @@ it("ignores hotkeys for elements outside an open dialog", async () => {
   const clickSpy = vi.spyOn(button(), "click");
   appendOpenDialog();
 
-  controller().handleKeydown(new KeyboardEvent("keydown", {key: "a"}));
+  controller().handleKeydown(new KeyboardEvent("keydown", { key: "a" }));
 
   expect(clickSpy).not.toHaveBeenCalled();
 });
@@ -165,12 +165,12 @@ it("allows hotkeys for elements inside an open dialog", async () => {
   await setupController();
   const dialog = appendOpenDialog();
   const dialogButton = document.createElement("button");
-  Object.assign(dialogButton.dataset, {hotkey: "b", hotkeysTarget: "click"});
+  Object.assign(dialogButton.dataset, { hotkey: "b", hotkeysTarget: "click" });
   dialog.appendChild(dialogButton);
   controller().clickTargetConnected(dialogButton);
   const clickSpy = vi.spyOn(dialogButton, "click");
 
-  controller().handleKeydown(new KeyboardEvent("keydown", {key: "b"}));
+  controller().handleKeydown(new KeyboardEvent("keydown", { key: "b" }));
 
   expect(clickSpy).toHaveBeenCalledWith();
 });
@@ -180,7 +180,7 @@ it("ignores hotkeys for elements in a hidden section", async () => {
   const clickSpy = vi.spyOn(button(), "click");
   element().style.display = "none";
 
-  controller().handleKeydown(new KeyboardEvent("keydown", {key: "a"}));
+  controller().handleKeydown(new KeyboardEvent("keydown", { key: "a" }));
 
   expect(clickSpy).not.toHaveBeenCalled();
 });
@@ -190,7 +190,7 @@ it("allows hotkeys for elements that are hidden themselves", async () => {
   const clickSpy = vi.spyOn(button(), "click");
   button().hidden = true;
 
-  controller().handleKeydown(new KeyboardEvent("keydown", {key: "a"}));
+  controller().handleKeydown(new KeyboardEvent("keydown", { key: "a" }));
 
   expect(clickSpy).toHaveBeenCalledWith();
 });
@@ -206,7 +206,7 @@ describe("ctrl-modified hotkeys", () => {
     await setupController();
     setHotkey("ctrl+Enter");
     const clickSpy = vi.spyOn(button(), "click");
-    const event = new KeyboardEvent("keydown", {ctrlKey: true, key: "Enter"});
+    const event = new KeyboardEvent("keydown", { ctrlKey: true, key: "Enter" });
 
     controller().handleKeydown(event);
 
@@ -228,7 +228,7 @@ describe("ctrl-modified hotkeys", () => {
     await setupController();
     setHotkey("ctrl+Enter");
     const clickSpy = vi.spyOn(button(), "click");
-    const event = new KeyboardEvent("keydown", {key: "Enter"});
+    const event = new KeyboardEvent("keydown", { key: "Enter" });
 
     controller().handleKeydown(event);
 

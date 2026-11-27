@@ -4,7 +4,7 @@
  * ./bin/rails generate stimulus controllerName
  */
 
-import {application} from "./application";
+import { application } from "./application";
 
 import AutoAdvanceController from "./auto_advance_controller";
 application.register("auto-advance", AutoAdvanceController);
