@@ -20,7 +20,9 @@ module Snippets
       4. A hyphenated word is one word: a repeated root (tuwang-tuwa,
          kaisa-isang, kaiba-iba), a prefix before a vowel (nag-iisip,
          mag-alaga) or a compound (bahay-kubo). A repeated word is one word
-         with or without its hyphen ("isa isa", "buklat buklatin").
+         with or without its hyphen ("isa isa", "buklat buklatin"), and so
+         is a word doubled around "na" for emphasis (takot na takot,
+         galit na galit, tulog na tulog).
       5. A fixed phrase is one word when its meaning cannot be worked out
          from its words (para sa "for", dahil sa "because of", kung saan
          "where", na lang "just", pa lang "just", buti na lang "thankfully",
@@ -83,6 +85,11 @@ module Snippets
         niya "his, her").
       - Give the subject only when the form fixes it and English would lose
         it: kami "we (not you)", tayo "we (including you)".
+      - A plural "you" (kayo, ninyo, inyo, kayong, ninyong) said to one
+        person out of respect, as to a king, an elder or with po, is
+        polite, not plural: kayo "you (polite)", ninyo "your (polite)",
+        sa inyo "you (polite, after sa)". Said to several people it stays
+        plural: "you (plural)".
       - A pronoun after a noun it owns is possessive: "bayad mo" has mo
         "your", "teacher namin" has namin "our (not your)", "president
         natin" has natin "our (including you)".
@@ -92,6 +99,8 @@ module Snippets
         tumalon "to jump".
       - Gloss a word with a joined linker or shortened "at" or "ay" by the
         whole (isang "a, one", kaya't "and so", siya'y "he is, she is").
+      - Gloss a word doubled for emphasis by its stronger meaning: takot na
+        takot "very afraid", tulog na tulog "fast asleep".
       - Gloss a marker or particle by the English word doing the same job
         here (sa "to", "at" or "in"; ng "of"; kay "to (a person)"; din
         "also"; lang "only"; pa "still" or "yet"; na "already"). Where
@@ -164,7 +173,10 @@ module Snippets
         its id as sense_id. Prefer this whenever a listed sense fits: a sense
         fits when its gloss could stand in for the word in an English
         rendering of this sentence. In "Nasa bahay na siya" the na is
-        "already", so a sense "(linker)" does not fit.
+        "already", so a sense "(linker)" does not fit. In "Gumising ang
+        hari" the king woke up, so a sense "to wake up" does not fit: one
+        actor-focus form (gumising, umalis, kumain) is both "to …" and the
+        completed action, and the sentence decides which.
       - "new": no listed sense covers this occurrence. Return a gloss under
         the gloss rules below, and no reading or article. When two
         occurrences are the same word in the same new meaning, give them
