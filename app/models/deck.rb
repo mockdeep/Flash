@@ -78,6 +78,22 @@ class Deck < ApplicationRecord
     ELSE language_progress.done
     END AS done_count
   SQL
+  # A list's entries, counted without anyone's progress, for the catalog.
+  ENTRY_COUNT_FROM = <<~SQL.squish
+    SELECT COUNT(DISTINCT senses.entry_id) FROM sense_memberships
+    JOIN senses ON senses.id = sense_memberships.sense_id
+  SQL
+  ENTRY_COUNT_COLUMNS = <<~SQL.squish
+    decks.*,
+    CASE WHEN decks.word_list_id IS NULL THEN
+      (SELECT COUNT(*) FROM cards WHERE cards.deck_id = decks.id)
+    ELSE
+      (#{ENTRY_COUNT_FROM}
+        WHERE sense_memberships.word_list_id = decks.word_list_id
+        AND (decks.snippet_id IS NULL OR sense_memberships.sense_id IN
+          (#{SNIPPET_SENSES})))
+    END AS cards_count
+  SQL
 
   belongs_to :word_list
   belongs_to :user
@@ -86,12 +102,6 @@ class Deck < ApplicationRecord
   has_many :cards, dependent: :delete_all
   has_one :source, through: :word_list
   has_many :snippets, through: :source
-  # For the catalog's texts badge, loaded for every deck in a rail at once.
-  has_many :studyable_snippets,
-           -> { studyable },
-           through: :source,
-           source: :snippets,
-           fully_load: true
   belongs_to :studyable_snippet,
              -> { studyable },
              class_name: "Snippet",
@@ -162,6 +172,7 @@ class Deck < ApplicationRecord
   scope :publicly_visible, -> { where(visibility: "public") }
   scope :with_progress,
         -> { joins(:user).joins(language_progress).select(PROGRESS_COLUMNS) }
+  scope :with_entry_counts, -> { select(ENTRY_COUNT_COLUMNS) }
 
   def music? = false
 
@@ -201,7 +212,7 @@ class Deck < ApplicationRecord
   def shares_texts?
     return false unless source&.shareable?
 
-    snippet_id ? studyable_snippet.present? : studyable_snippets.any?
+    snippet_id ? studyable_snippet.present? : source.studyable?
   end
 
   # A streak climbs once a day, so a card answered correctly today waits for
