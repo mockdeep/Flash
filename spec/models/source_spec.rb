@@ -203,6 +203,35 @@ RSpec.describe Source do
 
       expect(source.preview_deck.user).to eq(source.word_list.user)
     end
+
+    it "knows its source without a query" do
+      source = create(:source)
+      deck = source.preview_deck
+
+      expect { deck.source }.not_to make_database_queries
+    end
+  end
+
+  # A source whose list holds one entry, glossed twice.
+  def source_with_one_entry
+    deck = create(:reading_deck)
+    create(:language_card, deck:, back: "he; him")
+    create(:source, word_list: deck.word_list)
+  end
+
+  describe ".with_entry_counts" do
+    it "selects each source's list entries as its card count" do
+      source = source_with_one_entry
+      loaded = described_class.with_entry_counts.find(source.id)
+
+      expect(loaded.attributes).to include("cards_count" => 1)
+    end
+  end
+
+  describe "#cards_count" do
+    it "counts the preview deck's cards when none were selected" do
+      expect(source_with_one_entry.cards_count).to eq(1)
+    end
   end
 
   it "takes its listing with it" do

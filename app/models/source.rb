@@ -13,6 +13,12 @@ class Source < ApplicationRecord
     },
   }.freeze
 
+  ENTRY_COUNT_COLUMN = <<~SQL.squish
+    (#{Deck::ENTRY_COUNT_FROM}
+      WHERE sense_memberships.word_list_id = sources.word_list_id)
+    AS cards_count
+  SQL
+
   belongs_to :word_list
   has_many :snippets,
            -> { order(:id) },
@@ -36,6 +42,8 @@ class Source < ApplicationRecord
            inverse_of: :source
 
   scope :listed, -> { joins(:listing) }
+  scope :with_entry_counts,
+        -> { select("sources.*", Arel.sql(ENTRY_COUNT_COLUMN)) }
   scope :traditional, -> { where(script: "traditional") }
 
   validates :word_list, :title, presence: true
@@ -68,7 +76,12 @@ class Source < ApplicationRecord
 
   # An unsaved deck over the whole list, which the catalog shows the source
   # through: its cards, its count and its texts.
-  def preview_deck = ReadingDeck.new(user: word_list.user, word_list:)
+  def preview_deck
+    ReadingDeck.new(user: word_list.user, word_list:)
+      .tap { it.association(:source).target = self }
+  end
+
+  def cards_count = self[:cards_count] || preview_deck.cards_count
   def license_name = LICENSES[license][:name]
   def license_url = LICENSES[license][:url]
   def shareable? = LICENSES[license].fetch(:shareable, false)

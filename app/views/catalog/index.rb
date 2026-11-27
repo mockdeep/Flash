@@ -63,8 +63,9 @@ module Views
       # Public decks and listed sources, by name; a source shows through its
       # preview deck.
       def rail_entries(deck_section)
-        decks = deck_section.decks.ordered.map { [it, nil] }
-        sources = deck_section.sources.map { [it.preview_deck, it] }
+        decks = deck_section.decks.ordered.with_entry_counts.map { [it, nil] }
+        sources =
+          deck_section.sources.with_entry_counts.map { [it.preview_deck, it] }
         (decks + sources).sort_by { |deck, _| deck.name }
       end
 

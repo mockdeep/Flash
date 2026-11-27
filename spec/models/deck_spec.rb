@@ -322,6 +322,22 @@ RSpec.describe Deck do
     deck
   end
 
+  # One entry below the round, then one at it, in list order.
+  def language_deck
+    deck = create(:reading_deck, round: 1)
+    create(:language_card, deck:)
+    create(:language_card, :done, deck:, back: "he; him")
+    deck
+  end
+
+  # A deck over a snippet that uses only the given card's word.
+  def snippet_deck_using(card)
+    snippet = create(:snippet, word_list: card.deck.word_list)
+    sense_id = Integer(card.id.split("-").first)
+    create(:snippet_sentence, snippet:, tokens: [{ "sense_id" => sense_id }])
+    create(:reading_deck, word_list: snippet.word_list, snippet:)
+  end
+
   describe ".with_progress" do
     it "selects each deck's card and done counts alongside its columns" do
       loaded = described_class.with_progress.find(round_two_deck.id)
@@ -334,25 +350,9 @@ RSpec.describe Deck do
       described_class.with_progress.find(deck.id).attributes
     end
 
-    # One entry below the round, then one at it, in list order.
-    def language_deck
-      deck = create(:reading_deck, round: 1)
-      create(:language_card, deck:)
-      create(:language_card, :done, deck:, back: "he; him")
-      deck
-    end
-
     it "counts a language deck's entries and those at the round" do
       expect(progress_of(language_deck))
         .to include("cards_count" => 2, "done_count" => 1)
-    end
-
-    # A deck over a snippet that uses only the given card's word.
-    def snippet_deck_using(card)
-      snippet = create(:snippet, word_list: card.deck.word_list)
-      sense_id = Integer(card.id.split("-").first)
-      create(:snippet_sentence, snippet:, tokens: [{ "sense_id" => sense_id }])
-      create(:reading_deck, word_list: snippet.word_list, snippet:)
     end
 
     it "counts only the entries a snippet deck's snippet uses" do
@@ -373,6 +373,26 @@ RSpec.describe Deck do
 
       expect(progress_of(deck))
         .to include("cards_count" => 1, "done_count" => 0)
+    end
+  end
+
+  describe ".with_entry_counts" do
+    def entry_count_of(deck)
+      described_class.with_entry_counts.find(deck.id).attributes
+    end
+
+    it "counts a flat deck's cards" do
+      expect(entry_count_of(round_two_deck)).to include("cards_count" => 2)
+    end
+
+    it "counts a language deck's entries" do
+      expect(entry_count_of(language_deck)).to include("cards_count" => 2)
+    end
+
+    it "counts only the entries a snippet deck's snippet uses" do
+      snippet_deck = snippet_deck_using(language_deck.cards_in_order.last)
+
+      expect(entry_count_of(snippet_deck)).to include("cards_count" => 1)
     end
   end
 

@@ -39,7 +39,7 @@ module Components
           supporter_badge if deck.user.supporter?
         end
         span(class: "catalog-rail-count") do
-          pluralize(deck.cards_count, "card")
+          pluralize((source || deck).cards_count, "card")
         end
       end
     end
