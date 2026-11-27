@@ -1,13 +1,13 @@
-import {Controller} from "@hotwired/stimulus";
+import { Controller } from "@hotwired/stimulus";
 
-import {ensure} from "helpers/ensure";
+import { ensure } from "helpers/ensure";
 
 const CTRL_PREFIX = "ctrl+";
 const ALT_PREFIX = "alt+";
 
 function resolveEvent(event: KeyboardEvent): string {
   const hasCtrl = event.ctrlKey || event.metaKey;
-  let {key} = event;
+  let { key } = event;
 
   if (!hasCtrl && !event.altKey && key === "Enter") { key = " "; }
   if (event.altKey) { key = ALT_PREFIX + key; }
@@ -63,12 +63,12 @@ export default class extends Controller {
   indexedClickTargets = new Map<string, HTMLElement>();
 
   clickTargetConnected(element: HTMLElement): void {
-    const {hotkey} = element.dataset;
+    const { hotkey } = element.dataset;
     this.indexedClickTargets.set(ensure(hotkey), element);
   }
 
   clickTargetDisconnected(element: HTMLElement): void {
-    const {hotkey} = element.dataset;
+    const { hotkey } = element.dataset;
     this.indexedClickTargets.delete(ensure(hotkey));
   }
 

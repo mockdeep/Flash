@@ -1,5 +1,5 @@
-import {describe, expect, it} from "vitest";
-import {ensure} from "helpers/ensure";
+import { describe, expect, it } from "vitest";
+import { ensure } from "helpers/ensure";
 
 describe(ensure, () => {
   it("throws an error when the passed value is null", () => {
@@ -26,7 +26,7 @@ describe(ensure, () => {
     expect(ensure("blah")).toBe("blah");
     expect(ensure(0)).toBe(0);
 
-    const obj = {bloo: "blah"};
+    const obj = { bloo: "blah" };
 
     expect(ensure(obj)).toBe(obj);
   });

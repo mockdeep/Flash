@@ -6,4 +6,4 @@ function ensure<T>(value: T | null | undefined): T {
   return value;
 }
 
-export {ensure};
+export { ensure };

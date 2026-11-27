@@ -4,7 +4,7 @@ import vitest from "@vitest/eslint-plugin";
 import js from "@eslint/js";
 import stylistic from "@stylistic/eslint-plugin";
 import tseslint from "typescript-eslint";
-import {defineConfig} from "eslint/config";
+import { defineConfig } from "eslint/config";
 import perfectionist from "eslint-plugin-perfectionist";
 import eslintTodo from "./.eslint_todo";
 
@@ -43,22 +43,18 @@ export default defineConfig([
       vitest,
     },
     rules: {
-      "@stylistic/array-element-newline": ["error", "consistent"],
-      "@stylistic/brace-style": ["error", "1tbs", {allowSingleLine: true}],
+      "@stylistic/brace-style": ["error", "1tbs", { allowSingleLine: true }],
       "@stylistic/comma-dangle": ["error", "always-multiline"],
-      "@stylistic/function-call-argument-newline": ["error", "consistent"],
       "@stylistic/indent": ["error", 2],
-      "@stylistic/max-len": ["error", 80, {ignoreUrls: true}],
-      "@stylistic/object-property-newline":
-        ["error", {allowAllPropertiesOnSameLine: true}],
+      "@stylistic/max-len": ["error", 80, { ignoreUrls: true }],
       "@stylistic/padded-blocks": ["error", "never"],
-      "@stylistic/quote-props": ["error", "as-needed", {keywords: true}],
+      "@stylistic/quote-props": ["error", "as-needed", { keywords: true }],
       "@stylistic/space-before-function-paren":
-        ["error", {anonymous: "always", named: "never"}],
+        ["error", { anonymous: "always", named: "never" }],
       "@typescript-eslint/consistent-indexed-object-style":
         ["error", "index-signature"],
       "@typescript-eslint/consistent-type-assertions":
-        ["error", {assertionStyle: "never"}],
+        ["error", { assertionStyle: "never" }],
       "@typescript-eslint/explicit-member-accessibility": "off",
       "@typescript-eslint/method-signature-style": ["error", "method"],
       "@typescript-eslint/naming-convention": "off",
@@ -66,20 +62,20 @@ export default defineConfig([
       "@typescript-eslint/prefer-readonly-parameter-types": "off",
       "arrow-body-style": ["error", "always"],
       "func-style": ["error", "declaration"],
-      "max-len": ["error", 84, {ignoreUrls: true}],
-      "no-duplicate-imports": ["error", {allowSeparateTypeImports: true}],
+      "max-len": ["error", 84, { ignoreUrls: true }],
+      "no-duplicate-imports": ["error", { allowSeparateTypeImports: true }],
       "no-inline-comments": "off",
       "no-magic-numbers": "off",
       "no-undefined": "off",
       "no-void": ["error", {allowAsStatement: true}],
       "one-var": ["error", "never"],
       "perfectionist/sort-objects":
-        ["error", {ignoreCase: true, order: "asc", type: "natural"}],
+        ["error", { ignoreCase: true, order: "asc", type: "natural" }],
       "sort-imports":
-        ["error", {ignoreCase: true, ignoreDeclarationSort: true}],
+        ["error", { ignoreCase: true, ignoreDeclarationSort: true }],
       "sort-keys": "off",
       "vitest/consistent-test-it":
-        ["error", {fn: "it", withinDescribe: "it"}],
+        ["error", { fn: "it", withinDescribe: "it" }],
       "vitest/prefer-expect-assertions": "off",
       "vitest/prefer-to-be-falsy": "off",
       "vitest/prefer-to-be-truthy": "off",
