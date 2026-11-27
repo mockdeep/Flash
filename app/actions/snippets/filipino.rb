@@ -26,8 +26,12 @@ module Snippets
       5. A fixed phrase is one word when its meaning cannot be worked out
          from its words (para sa "for", dahil sa "because of", kung saan
          "where", na lang "just", pa lang "just", buti na lang "thankfully",
-         sa totoo lang "to tell the truth"). Split a combination whose words, each glossed on its
-         own, already say what it means. When unsure, keep whole what a
+         sa totoo lang "to tell the truth", tungkol sa "about", para kay
+         "for (a person)", dahil kay "because of (a person)", noon din
+         "right then", ngayon din "right now", hindi nagtagal "before long",
+         noong unang panahon "once upon a time"). Split a combination whose
+         words, each glossed on its own, already say what it means ("mula
+         sa" is "mula" "from" and "sa"). When unsure, keep whole what a
          standard dictionary lists as one entry.
          The curriculum's phrases a sentence writes are listed with it as
          curriculum_words, as the sentence writes them; keep one whole
@@ -109,6 +113,14 @@ module Snippets
         "(question particle)", po "(polite)", ay "(links subject and
         predicate)", na "(linker)" where it joins a word to what describes
         it.
+      - Gloss naman by its job here: "as for" where it brings in a new
+        person ("Si Don Juan naman ang bunso"), "in turn" where someone takes
+        their turn ("Nagsalita naman si Leonora"), "(emphasis)" where it only
+        softens or stresses ("Sayang naman"), and "though" only for a
+        contrast.
+      - Gloss ni or ng before the one who says, wants or knows as "by":
+        "sabi ni Don Juan", "gusto ni Don Pedro", "hindi alam ng hari". Before
+        an owner it stays "of".
       - Gloss a word with an accent by the meaning that accent gives it:
         bukás "open" but búkas "tomorrow".
       - A name is glossed by its usual English name (Maynila "Manila"), with
