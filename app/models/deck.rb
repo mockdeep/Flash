@@ -80,9 +80,6 @@ class Deck < ApplicationRecord
     END AS cards_count
   SQL
 
-  # Dropped once this is deployed.
-  self.ignored_columns += ["snippet_id"]
-
   belongs_to :word_list
   belongs_to :user
   belongs_to :source_deck, class_name: "Deck"
