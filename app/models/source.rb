@@ -32,6 +32,7 @@ class Source < ApplicationRecord
            dependent: nil,
            fully_load: true
   has_many :readers, class_name: "SourceReader", dependent: :delete_all
+  has_many :reading_places, dependent: :delete_all
   has_one :listing, class_name: "SourceListing", dependent: :delete
   # Its title and author as sentences of their own, so their words are
   # studied too.

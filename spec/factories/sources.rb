@@ -14,4 +14,11 @@ FactoryBot.define do
     source
     user
   end
+
+  factory(:reading_place) do
+    user
+    snippet_sentence
+    source { snippet_sentence.source }
+    token_index { 0 }
+  end
 end

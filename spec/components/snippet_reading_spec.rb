@@ -1,11 +1,19 @@
 # frozen_string_literal: true
 
 RSpec.describe Components::SnippetReading, type: :view do
-  def render_for(*snippets, source: create(:source), **deck_attributes)
+  # With no snippet, the page holds just the source.
+  def render_for(
+    *snippets,
+    source: create(:source),
+    number: 1,
+    **deck_attributes
+  )
     word_list = source.word_list
     snippet = create(:snippet, source:)
     deck = create(:reading_deck, word_list:, snippet:, **deck_attributes)
-    Capybara.string(view.render(described_class.new(snippets:, deck:)))
+    pages = ReadingPages.new(snippets:, language: source.language)
+    page = pages.page(number) || ReadingPages::Page.new(number: 1, lines: [])
+    Capybara.string(view.render(described_class.new(pages:, page:, deck:)))
   end
 
   def render_text(...)
@@ -92,25 +100,88 @@ RSpec.describe Components::SnippetReading, type: :view do
     expect(page).to have_css(author, text: "鲁迅")
   end
 
-  it "leaves out the heading's translation, its words being looked up" do
-    snippet = build(:snippet, heading: "第一", heading_translation: "First")
-    page = render_for(snippet)
-
-    expect(page).to have_no_css("h3 .translation")
-  end
-
-  it "shows each snippet's heading in order" do
-    page = render_for(*["第一", "第二"].map { build(:snippet, heading: it) })
-
-    expect(texts_of(page, ".reading-snippet h3")).to eq(["第一", "第二"])
-  end
-
   def headed_snippet
     snippet = snippet_with("爱。", [word("爱", "ài")])
     snippet.update!(heading: "春节", heading_translation: "Spring")
     tokens = [word("春节", "chūnjié")]
     create(:snippet_sentence, snippet:, role: "heading", body: "春节", tokens:)
     snippet
+  end
+
+  it "leaves out the heading's translation, its words being looked up" do
+    page = render_for(headed_snippet)
+
+    expect(page).to have_no_css("h3 .translation")
+  end
+
+  def two_snippets
+    [
+      snippet_with("我。", [word("我", "wǒ"), { "text" => "。" }]),
+      snippet_with("你。", [word("你", "nǐ"), { "text" => "。" }]),
+    ]
+  end
+
+  it "shows only the page's own snippet" do
+    page = render_text(*two_snippets, number: 2, round: 3)
+
+    expect(texts_of(page, ".reading-snippet p")).to eq(["你。"])
+  end
+
+  it "shows the source on the first page only" do
+    source = create(:source, title: "春节")
+    page = render_for(*two_snippets, number: 2, source:)
+
+    expect(page).to have_no_css("h2", text: "春节")
+  end
+
+  it "counts the pages" do
+    page = render_for(*two_snippets)
+
+    expect(page).to have_css(".reading-pages__count", text: "Page 1 of 2")
+  end
+
+  it "links to the next page" do
+    page = render_for(*two_snippets)
+
+    expect(page).to have_link("Next →")
+  end
+
+  it "turns to the next page from its first token" do
+    snippets = two_snippets
+    page = render_for(*snippets)
+
+    href = /sentence=#{snippets.last.sentences.first.id}&token=0/
+    expect(page).to have_link("Next →", href:)
+  end
+
+  it "turns to the next page with the right arrow" do
+    page = render_for(*two_snippets)
+
+    expect(page).to have_css("a[data-hotkey='ArrowRight']", text: "Next →")
+  end
+
+  it "has no way back from the first page" do
+    page = render_for(*two_snippets)
+
+    expect(page).to have_no_link("← Back")
+  end
+
+  it "links back from a later page" do
+    page = render_for(*two_snippets, number: 2)
+
+    expect(page).to have_link("← Back")
+  end
+
+  it "has no way on from the last page" do
+    page = render_for(*two_snippets, number: 2)
+
+    expect(page).to have_no_link("Next →")
+  end
+
+  it "turns pages inside the reading frame" do
+    page = render_for(*two_snippets)
+
+    expect(page).to have_css("turbo-frame#reading .reading-pages")
   end
 
   it "marks each word of the heading apart" do

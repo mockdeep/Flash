@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 module Components
-  # The Read tab: a deck's source, then its snippets word by word, laid out
-  # as written. Each word is grey until studied, green once done at the
+  # The Read tab: one page of a deck's text word by word, laid out as
+  # written, in a frame its Back and Next links (and the arrow keys) turn;
+  # the first page opens with the source. Each word is grey until studied,
+  # green once done at the
   # deck's round, and has its reading over it while its streak is zero.
   # Mandarin is written in the deck's script. Clicking a word shows its
   # reading (or a noun's article) and gloss in a popover. The first click on
@@ -10,46 +12,48 @@ module Components
   # restudy it. A word the segmenter skipped has no card, so its popover
   # says why and clicking it records nothing.
   class SnippetReading < Components::Base
-    attr_accessor :snippets, :deck
+    attr_accessor :pages, :page, :deck
 
-    def initialize(snippets:, deck:)
+    def initialize(pages:, page:, deck:)
       super()
-      self.snippets = snippets
+      self.pages = pages
+      self.page = page
       self.deck = deck
     end
 
+    # A turned page opens at its top.
     def view_template
-      div(class: classes, data:) do
-        render_source
-        snippets.each { |snippet| render_snippet(snippet) }
+      frame = { autoscroll: true, data: { autoscroll_block: "start" } }
+      turbo_frame_tag("reading", **frame) do
+        div(class: classes, data:) { render_page }
       end
     end
 
     private
 
+    def render_page
+      render_source if page.first?
+      section(class: "reading-snippet") do
+        page.lines.each { render_line(it.tokens, it.tag) }
+      end
+      render(ReadingPageLinks.new(deck:, pages:, page:))
+    end
+
     def render_source
       source = deck.source
-      render_line(source.title_paragraph, :h2)
+      render_line(source.title_paragraph.tokens, :h2)
       author = source.author_paragraph
       if author.text.present?
-        render_line(author, :p, class: "reading-snippets__author")
+        render_line(author.tokens, :p, class: "reading-snippets__author")
       end
       p(class: "reading-snippets__credit") { render(SourceCredit.new(source:)) }
     end
 
-    def render_snippet(snippet)
-      section(class: "reading-snippet") do
-        heading = snippet.heading_paragraph
-        render_line(heading, :h3) if heading.text.present?
-        snippet.paragraphs.each { |paragraph| render_line(paragraph, :p) }
-      end
-    end
-
     # The popovers follow the line rather than sit in it, so its text stays
     # just the words; each still opens beside the word clicked.
-    def render_line(paragraph, tag, **)
+    def render_line(tokens, tag, **)
       rendered = lookups.size
-      tag(tag, **) { paragraph.tokens.each { render_token(it) } }
+      tag(tag, **) { tokens.each { render_token(it) } }
       lookups.values.drop(rendered).each { render(it) }
     end
 
@@ -58,10 +62,9 @@ module Components
       skip = token["skip"]
       return plain(token["text"]) unless sense || skip
 
-      # While gapped, the CSS keeps a word on one line, which also stops
-      # Chrome breaking between words written without spaces, so mark the
-      # place to break: before the word, so punctuation stays at the end of
-      # the line it closes.
+      # Chrome won't break between words written without spaces, each its
+      # own button, so mark the place to break: before the word, so
+      # punctuation stays at the end of the line it closes.
       wbr unless language.spaces
       text = written(token, sense)
       state = word_state(sense)
@@ -128,8 +131,12 @@ module Components
     end
 
     def sense_ids
-      sentences = [*deck.source.front_matter, *snippets.flat_map(&:sentences)]
-      sentences.flat_map(&:tokens).pluck("sense_id")
+      [*front_matter_tokens, *page.tokens].pluck("sense_id").compact
+    end
+
+    # The source's title and author open the first page only.
+    def front_matter_tokens
+      page.first? ? deck.source.front_matter.flat_map(&:tokens) : []
     end
 
     def data = { controller: "miss", miss_url_value: deck_misses_path(deck) }

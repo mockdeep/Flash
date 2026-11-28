@@ -19,6 +19,7 @@ Rails.application.routes.draw do
   resources :decks, only: [:new, :create, :index, :show, :destroy] do
     resources :misses, only: [:create]
     resource :milestone, only: [:update]
+    resource :reading, only: [:show]
     resource :catalog_listing, only: [:create, :destroy], controller: "catalog_listings"
     resource :replacement, only: [:new, :create], controller: "replacements"
     resource :script, only: [:update], controller: "deck_scripts"

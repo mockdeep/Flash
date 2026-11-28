@@ -634,6 +634,32 @@ RSpec.describe StudiesController do
         expect(rendered).to have_no_field("Read")
       end
 
+      it "opens the text on its first page" do
+        deck, = two_page_deck
+
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_css(".reading-snippet p", text: "我")
+      end
+
+      it "opens the text where the reader left off" do
+        deck, sentence = two_page_deck
+        create(:reading_place, user: deck.user, snippet_sentence: sentence)
+
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_css(".reading-snippet p", text: "你")
+      end
+
+      it "opens on the first page at someone else's place" do
+        deck, sentence = two_page_deck
+        create(:reading_place, snippet_sentence: sentence)
+
+        get(deck_study_path(deck))
+
+        expect(rendered).to have_css(".reading-snippet p", text: "我")
+      end
+
       it "leaves the text out of a study frame request" do
         deck = own_deck
         finished_snippet(deck.word_list)

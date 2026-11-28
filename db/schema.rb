@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_23_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_27_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -82,6 +82,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_23_000000) do
     t.string "article"
     t.datetime "reviewed_at"
     t.index ["language", "headword", "reading", "article"], name: "index_entries_on_language_and_headword_and_reading_and_article", unique: true, nulls_not_distinct: true
+  end
+
+  create_table "reading_places", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "source_id", null: false
+    t.bigint "snippet_sentence_id", null: false
+    t.integer "token_index", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["snippet_sentence_id"], name: "index_reading_places_on_snippet_sentence_id"
+    t.index ["source_id"], name: "index_reading_places_on_source_id"
+    t.index ["user_id", "source_id"], name: "index_reading_places_on_user_id_and_source_id", unique: true
   end
 
   create_table "sense_distractors", force: :cascade do |t|
@@ -432,6 +444,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_23_000000) do
   add_foreign_key "decks", "snippets"
   add_foreign_key "decks", "users", on_delete: :cascade
   add_foreign_key "decks", "word_lists"
+  add_foreign_key "reading_places", "snippet_sentences", on_delete: :cascade
+  add_foreign_key "reading_places", "sources", on_delete: :cascade
+  add_foreign_key "reading_places", "users", on_delete: :cascade
   add_foreign_key "sense_distractors", "senses", column: "distractor_sense_id", on_delete: :cascade
   add_foreign_key "sense_distractors", "senses", on_delete: :cascade
   add_foreign_key "sense_distractors", "users", on_delete: :cascade

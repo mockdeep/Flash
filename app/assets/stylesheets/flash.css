@@ -893,10 +893,24 @@ body {
   display: none;
 }
 
-.reading-snippet + .reading-snippet {
+.reading-pages {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--spacing-md);
+  align-items: center;
   margin-top: 2rem;
   padding-top: 1rem;
   border-top: 3px solid var(--color-border);
+}
+
+.reading-pages__link:last-child {
+  justify-self: end;
+}
+
+.reading-pages__count {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 14px;
 }
 
 .study-page[data-size="s"]  { --reading-font-size: 16px; }
