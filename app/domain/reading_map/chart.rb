@@ -89,8 +89,8 @@ module ReadingMap
         ring: ring_set.of(list),
         angle:,
         heat: heats[list.id],
-        decks: started.decks(list.id),
-        unmet_decks: started.unmet_decks(list.id),
+        deck: started.deck(list.id),
+        unmet: started.unmet?(list.id),
       )
     end
 

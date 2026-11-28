@@ -14,37 +14,37 @@ module ReadingMap
       @rings = Rings.new(language)
     end
 
-    # The learner's decks over a list.
-    def decks(list_id) = by_list.fetch(list_id, [])
+    # The learner's deck over a list, if they have started it.
+    def deck(list_id) = by_list[list_id]
 
-    # Those short of today's goal as Next Deck counts it: a deck waiting
-    # for tomorrow isn't.
-    def unmet_decks(list_id)
-      @unmet_decks ||= {}
-      @unmet_decks[list_id] ||= decks(list_id).select { unmet?(it) }
+    # Whether the deck over a list is short of today's goal as Next Deck
+    # counts it: a deck with nothing to study today isn't.
+    def unmet?(list_id)
+      @unmet ||= {}
+      @unmet.fetch(list_id) do
+        deck = deck(list_id)
+        @unmet[list_id] =
+          short_ids.include?(deck&.id) && !deck.nothing_to_study?
+      end
     end
 
-    # The deck Next Deck opens: the next list's first unmet one, or none
-    # once every goal is met.
+    # The deck Next Deck opens: the next list's, or none once every goal is
+    # met.
     def next_deck
-      in_order.lazy.filter_map { unmet_decks(it.id).first }.first
+      list = in_order.find { unmet?(it.id) }
+      deck(list.id) if list
     end
 
     # The list of the next node; with every goal met, the most recently
     # studied.
     def next_list
-      in_order.find { unmet_decks(it.id).any? } || recent_first.first
+      in_order.find { unmet?(it.id) } || recent_first.first
     end
 
     private
 
-    def unmet?(deck)
-      short_ids.include?(deck.id) && !deck.nothing_to_study?
-    end
-
     def by_list
-      @by_list ||= @decks.where.not(word_list_id: nil)
-        .reorder(:id).group_by(&:word_list_id)
+      @by_list ||= @decks.where.not(word_list_id: nil).index_by(&:word_list_id)
     end
 
     def short_ids = @short_ids ||= @decks.goal_unmet_today.ids.to_set
@@ -69,8 +69,6 @@ module ReadingMap
       end
     end
 
-    def last_studied(list)
-      decks(list.id).filter_map(&:last_studied_at).max || NEVER
-    end
+    def last_studied(list) = deck(list.id).last_studied_at || NEVER
   end
 end
