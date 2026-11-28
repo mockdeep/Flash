@@ -839,9 +839,17 @@ body {
   grid-template-columns: 1fr auto 1fr;
   gap: var(--spacing-md);
   align-items: center;
+  position: sticky;
+  bottom: 0;
   margin-top: 2rem;
-  padding-top: 1rem;
+  padding-block: 1rem;
+  background: var(--color-background);
   border-top: 3px solid var(--color-border);
+}
+
+.reading-pages__link {
+  justify-self: start;
+  min-width: 7rem;
 }
 
 .reading-pages__link:last-child {
@@ -852,6 +860,7 @@ body {
   color: var(--color-text-muted);
   font-family: var(--font-mono);
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .study-page[data-size="s"]  { --reading-font-size: 16px; }
@@ -1298,6 +1307,14 @@ body {
 
   .study-frame {
     scroll-margin-top: 80px;
+  }
+
+  .reading-pages {
+    gap: 0.5rem;
+  }
+
+  .reading-pages__link {
+    min-width: 6.25rem;
   }
 
   .session-progress {
