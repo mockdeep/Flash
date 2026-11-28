@@ -24,22 +24,22 @@ module Components
 
     def goal_kinds
       goal("No goal", <<~TEXT)
-        Study as much as you like. Flash counts the cards you finish each
+        Study as much as you like. Flash counts your right answers each
         day.
       TEXT
       goal("Daily goal", <<~TEXT)
-        Pick how many cards to finish each day, and Flash shows your progress
-        toward it.
+        Pick how many right answers to aim for each day, and Flash shows your
+        progress toward it.
       TEXT
       target_goal
     end
 
     def target_goal
       goal("Target date", <<~TEXT)
-        Pick a round to finish and a date to finish it by. Flash works out how
-        many cards you need each day to get there. Do extra today, and
-        tomorrow's goal goes down. If you miss the date, Flash asks you to
-        pick a new one.
+        Pick a date to finish the deck by, or for a deck made from a text, a
+        chapter to get up to. Flash works out how many right answers you need
+        each day to get there. Do extra today, and tomorrow's goal goes
+        down. If you miss the date, Flash asks you to pick a new one.
       TEXT
     end
 

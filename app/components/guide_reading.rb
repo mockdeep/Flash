@@ -51,7 +51,7 @@ module Components
 
     def render_notes
       ul do
-        li { "Green words are done for this round" }
+        li { "Green words are finished" }
         li { "Grey words are ones you haven't studied yet" }
         li { "A word shows its reading above it until you get it right" }
         lookup_note

@@ -107,9 +107,6 @@ class Deck < ApplicationRecord
     END AS cards_count
   SQL
 
-  # Round targets gave way to target dates; dropped once this is deployed.
-  self.ignored_columns += ["target_round"]
-
   belongs_to :word_list
   belongs_to :user
   # A target date's last chapter; none means the whole deck.

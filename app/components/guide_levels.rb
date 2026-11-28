@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
 module Components
-  class GuideRounds < Components::Base
+  class GuideLevels < Components::Base
     def view_template
-      section(id: "rounds", class: "guide__section") do
-        h2 { "Rounds: from recognizing to remembering" }
+      section(id: "levels", class: "guide__section") do
+        h2 { "Levels: from recognizing to remembering" }
         render_intro
         div(class: "guide__examples") do
-          round_one
-          round_two
-          round_three
+          level_one
+          level_two
+          level_three
         end
         render_notes
       end
@@ -20,35 +20,33 @@ module Components
     def render_intro
       p do
         <<~TEXT
-          A deck is studied in rounds. To finish a round, you get every card
-          right a number of times in a row, each on a different day: once in
-          round 1, twice in round 2, three times in round 3. A wrong answer
-          starts that card's count over. When every card is done, the deck
-          moves to the next round.
+          Each card climbs three levels. A right answer moves it up one level,
+          once a day, and a wrong answer sends it back to level 1. Once you've
+          answered it right at level 3, the card is finished.
         TEXT
       end
-      p { "Here's one card, 花 (flower), as it changes from round to round." }
+      p { "Here's one card, 花 (flower), as it changes from level to level." }
     end
 
-    def round_one
+    def level_one
       example(
-        "Round 1: pick the meaning",
+        "Level 1: pick the meaning",
         hint: "Press 1-5 to answer",
         choices: ["tree", "flower", "grass", "to eat", "red"],
       )
     end
 
-    def round_two
+    def level_two
       example(
-        "Round 2: pick the reading, then the meaning",
+        "Level 2: pick the reading, then the meaning",
         hint: "Pick the reading",
         choices: ["huà", "hǎo", "huā", "huǒ", "hē"],
       )
     end
 
-    def round_three
+    def level_three
       example(
-        "Round 3: type the reading, then the meaning",
+        "Level 3: type the reading, then the meaning",
         hint: "Type the reading",
         typed: "hua",
         choices: ["huā", "huà"],
@@ -63,9 +61,20 @@ module Components
 
     def render_notes
       ul do
+        order_note
         typing_note
         readings_note
-        window_note
+        bar_note
+      end
+    end
+
+    def order_note
+      li do
+        <<~TEXT
+          Each day starts with the cards closest to finished: level 3 first,
+          then level 2, then level 1 and new cards. In a deck made from a
+          text, cards come in the order the text uses their words.
+        TEXT
       end
     end
 
@@ -89,11 +98,11 @@ module Components
       end
     end
 
-    def window_note
+    def bar_note
       li do
         <<~TEXT
-          Each round brings more cards into play at once, and the bar at the
-          top of the study page shows how far through the round you are.
+          The bar at the top of the study page shows how many of the deck's
+          cards are finished and how many sit at each level.
         TEXT
       end
     end
