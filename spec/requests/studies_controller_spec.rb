@@ -62,6 +62,15 @@ RSpec.describe StudiesController do
       expect(rendered).to have_css(".study-level", text: "Level 2")
     end
 
+    it "shows how far into its text study has reached" do
+      deck, second = two_page_deck
+      sense_id = second.tokens.first["sense_id"]
+      create(:skill_score, sense_id:, view_count: 1)
+      get(deck_study_path(deck.tap { create(:language_card, deck: it) }))
+
+      expect(rendered).to have_text("Studying up to page 2")
+    end
+
     it "says when every card is finished" do
       card = create(:basic_card, :done)
       get(deck_study_path(card.deck))
