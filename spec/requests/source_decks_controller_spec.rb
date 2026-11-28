@@ -30,14 +30,6 @@ RSpec.describe SourceDecksController do
         .to have_attributes(type: "ReadingDeck", word_list: source.word_list)
     end
 
-    it "makes the deck over the whole source" do
-      source = admin_source
-
-      post(source_deck_path(source))
-
-      expect(source.word_list.user.decks.last.snippet).to be_nil
-    end
-
     it "reuses the deck the admin already has over the list" do
       source = admin_source
       word_list = source.word_list

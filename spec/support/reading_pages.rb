@@ -13,7 +13,7 @@ module Helpers
           one_word_sentence(snippet, word, position)
         end
       word_list = snippet.word_list
-      [create(:reading_deck, word_list:, snippet:), sentences.last]
+      [create(:reading_deck, word_list:), sentences.last]
     end
 
     def one_word_sentence(snippet, word, position)

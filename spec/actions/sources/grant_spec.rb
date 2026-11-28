@@ -30,18 +30,9 @@ RSpec.describe Sources::Grant do
         .to have_attributes(type: "ReadingDeck", word_list: source.word_list)
     end
 
-    it "makes the user's deck over the whole source" do
-      snippet = create(:snippet, :finished)
-      user = create(:user, username: "reader")
-
-      described_class.call(source: snippet.source, username: "reader")
-
-      expect(user.decks.sole.snippet).to be_nil
-    end
-
     it "keeps the deck the user already has over the list" do
       source = studyable_source
-      deck = create(:user).deck_starting(source)
+      deck = create(:user).reading_deck_over(source.word_list)
       username = deck.user.username
 
       expect { described_class.call(source:, username:) }

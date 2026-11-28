@@ -9,8 +9,7 @@ RSpec.describe Components::SnippetReading, type: :view do
     **deck_attributes
   )
     word_list = source.word_list
-    snippet = create(:snippet, source:)
-    deck = create(:reading_deck, word_list:, snippet:, **deck_attributes)
+    deck = create(:reading_deck, word_list:, **deck_attributes)
     pages = ReadingPages.new(snippets:, language: source.language)
     page = pages.page(number) || ReadingPages::Page.new(number: 1, lines: [])
     Capybara.string(view.render(described_class.new(pages:, page:, deck:)))

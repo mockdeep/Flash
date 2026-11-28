@@ -41,8 +41,8 @@ RSpec.describe Deck do
       expect(deck.errors[:word_list]).to be_present
     end
 
-    def deck_sharing(existing, user:, snippet: existing.snippet)
-      build(:reading_deck, word_list: existing.word_list, user:, snippet:)
+    def deck_sharing(existing, user:)
+      build(:reading_deck, word_list: existing.word_list, user:)
     end
 
     # Copies reference the source word_list, so adding the same catalog deck
@@ -57,42 +57,10 @@ RSpec.describe Deck do
         .to include("This deck is already in your decks")
     end
 
-    it "allows a deck for each snippet of the word_list" do
-      existing = create(:reading_deck)
-      snippet = create(:snippet, word_list: existing.word_list)
-
-      expect(deck_sharing(existing, user: existing.user, snippet:).valid?)
-        .to be(true)
-    end
-
-    def snippet_deck
-      snippet = create(:snippet)
-      create(:reading_deck, word_list: snippet.word_list, snippet:)
-    end
-
-    it "rejects a second deck for the same snippet" do
-      existing = snippet_deck
-      deck = deck_sharing(existing, user: existing.user)
-
-      deck.valid?
-
-      expect(deck.errors[:base])
-        .to include("This deck is already in your decks")
-    end
-
     it "may cover a source's whole word_list" do
       source = create(:source)
 
       expect(build(:reading_deck, word_list: source.word_list)).to be_valid
-    end
-
-    it "rejects a snippet from another word_list" do
-      deck = build(:reading_deck, snippet: create(:snippet))
-
-      deck.valid?
-
-      expect(deck.errors[:snippet])
-        .to include("must be from the deck's word list")
     end
 
     it "allows another user a deck over the same word_list" do
@@ -211,24 +179,6 @@ RSpec.describe Deck do
 
       expect(described_class.ordered).to eq([alpha, zebra])
     end
-
-    # The last section's deck is made first, so deck order can't pass for
-    # source order.
-    def section_decks
-      word_list = create(:word_list)
-      snippets = create_list(:snippet, 2, word_list:)
-      decks =
-        snippets.reverse.map do |snippet|
-          create(:reading_deck, word_list:, snippet:)
-        end
-      decks.reverse
-    end
-
-    it "puts a source's section decks in source order" do
-      sections = section_decks
-
-      expect(described_class.ordered).to eq(sections)
-    end
   end
 
   describe ".goal_unmet_today" do
@@ -327,14 +277,6 @@ RSpec.describe Deck do
     deck
   end
 
-  # A deck over a snippet that uses only the given card's word.
-  def snippet_deck_using(card)
-    snippet = create(:snippet, word_list: card.deck.word_list)
-    sense_id = Integer(card.id.split("-").first)
-    create(:snippet_sentence, snippet:, tokens: [{ "sense_id" => sense_id }])
-    create(:reading_deck, word_list: snippet.word_list, snippet:)
-  end
-
   describe ".with_progress" do
     it "selects each deck's card and done counts alongside its columns" do
       loaded = described_class.with_progress.find(round_two_deck.id)
@@ -350,13 +292,6 @@ RSpec.describe Deck do
     it "counts a language deck's entries and those at the round" do
       expect(progress_of(language_deck))
         .to include("cards_count" => 2, "done_count" => 1)
-    end
-
-    it "counts only the entries a snippet deck's snippet uses" do
-      snippet_deck = snippet_deck_using(language_deck.cards_in_order.last)
-
-      expect(progress_of(snippet_deck))
-        .to include("cards_count" => 1, "done_count" => 1)
     end
 
     def guest_deck_over(source)
@@ -384,12 +319,6 @@ RSpec.describe Deck do
 
     it "counts a language deck's entries" do
       expect(entry_count_of(language_deck)).to include("cards_count" => 2)
-    end
-
-    it "counts only the entries a snippet deck's snippet uses" do
-      snippet_deck = snippet_deck_using(language_deck.cards_in_order.last)
-
-      expect(entry_count_of(snippet_deck)).to include("cards_count" => 1)
     end
   end
 
@@ -485,12 +414,12 @@ RSpec.describe Deck do
       expect(deck.finished_snippets).to eq([finished])
     end
 
-    it "is a snippet deck's own snippet" do
-      own = create(:snippet, :finished)
-      create(:snippet, :finished, word_list: own.word_list)
-      deck = create(:reading_deck, word_list: own.word_list, snippet: own)
+    it "holds every finished snippet of the source" do
+      first = create(:snippet, :finished)
+      second = create(:snippet, :finished, word_list: first.word_list)
+      deck = create(:reading_deck, word_list: first.word_list)
 
-      expect(deck.finished_snippets).to eq([own])
+      expect(deck.finished_snippets).to eq([first, second])
     end
   end
 
@@ -504,17 +433,17 @@ RSpec.describe Deck do
 
     it "leaves out a snippet the owner may not read" do
       word_list = create(:word_list, user: create(:user))
-      snippet = create(:snippet, :finished, word_list:)
-      deck = create(:reading_deck, word_list:, snippet:)
+      create(:snippet, :finished, word_list:)
+      deck = create(:reading_deck, word_list:)
 
       expect(deck.readable_snippets).to be_empty
     end
   end
 
-  def create_shared_snippet_deck
+  def create_shared_source_deck
     snippet = create(:snippet, :finished)
     snippet.source.update!(license: "public_domain")
-    create(:reading_deck, word_list: snippet.word_list, snippet:)
+    create(:reading_deck, word_list: snippet.word_list)
   end
 
   describe "#shares_texts?" do
@@ -540,19 +469,18 @@ RSpec.describe Deck do
       expect(deck.shares_texts?).to be(false)
     end
 
-    it "loads a snippet deck's own snippet for every deck at once" do
-      2.times { create_shared_snippet_deck }
+    it "loads each source's studyable snippets for every deck at once" do
+      2.times { create_shared_source_deck }
       first, second = ReadingDeck.order(:id).to_a
       first.shares_texts?
 
       expect { second.shares_texts? }.not_to make_database_queries
     end
 
-    it "is false when a snippet deck's own snippet isn't studyable" do
-      word_list = create(:snippet, :finished).word_list
+    it "is false when no snippet of a shareable source is studyable" do
+      word_list = create(:snippet).word_list
       word_list.source.update!(license: "public_domain")
-      own = create(:snippet, word_list:)
-      deck = create(:reading_deck, word_list:, snippet: own)
+      deck = create(:reading_deck, word_list:)
 
       expect(deck.shares_texts?).to be(false)
     end

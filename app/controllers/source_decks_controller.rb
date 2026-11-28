@@ -7,7 +7,7 @@ class SourceDecksController < ApplicationController
 
   def create
     source = current_user.sources.find(params.expect(:source_id))
-    deck = current_user.deck_starting(source)
+    deck = current_user.reading_deck_over(source.word_list)
 
     redirect_to(deck_study_path(deck))
   end

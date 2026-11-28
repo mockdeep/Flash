@@ -2,8 +2,7 @@
 
 module ReadingMap
   # A list on the map: its ring, its angle there, the learner's heat, and
-  # their decks over it (a source's, one per section they have started, in
-  # the source's order), with those still short of today's goal.
+  # their decks over it, with those still short of today's goal.
   Node = Data.define(:word_list, :ring, :angle, :heat, :decks, :unmet_decks)
 
   class Node

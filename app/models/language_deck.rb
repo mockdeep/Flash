@@ -34,11 +34,9 @@ class LanguageDeck < Deck
     Deck.model_name
   end
 
-  delegate :language, to: :word_list
+  delegate :language, :name, to: :word_list
 
   validates :script, inclusion: { in: SCRIPTS }
-
-  def name = [word_list.name, snippet&.label].compact.join(" · ")
 
   def mandarin? = language == "zh"
 
@@ -118,7 +116,6 @@ class LanguageDeck < Deck
     Entry.joins(senses: :sense_memberships)
       .joins(self.class.sanitize_sql_array([SCORES_JOIN, { user_id:, skill: }]))
       .where(sense_memberships: { word_list_id: })
-      .merge(studied_senses)
       .group("entries.id", shown_form)
       .select(ENTRY_COLUMNS, shown_form.as("form"))
   end

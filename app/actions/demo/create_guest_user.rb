@@ -27,7 +27,7 @@ module Demo
       end
 
       def deck_for(guest, deck:, source:)
-        return guest.deck_starting(source) if source
+        return guest.reading_deck_over(source.word_list) if source
 
         Catalog::CopyDeck.call(user: guest, deck:).record
       end

@@ -35,7 +35,7 @@ RSpec.describe ReadingsController do
 
     it "moves the reader's place on" do
       deck, sentence = reader_deck
-      snippet_sentence = deck.snippet.sentences.first
+      snippet_sentence = deck.snippets.first.sentences.first
       place = create(:reading_place, user: default_user, snippet_sentence:)
 
       expect { turn_to(deck, sentence) }

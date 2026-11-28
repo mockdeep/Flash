@@ -83,10 +83,6 @@ module Views
         end
 
         h1 { with_translation(deck.name, deck.name_translation) }
-
-        return if demo || turbo_frame_request?
-
-        render(Components::SectionPicker.new(deck:))
       end
 
       def goal_reached? = !deck.no_goal? && completed >= study_goal

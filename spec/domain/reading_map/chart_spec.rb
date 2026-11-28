@@ -222,14 +222,6 @@ RSpec.describe ReadingMap::Chart do
       expect(chart.nodes.sole.decks).to eq([deck])
     end
 
-    it "carries a source's section decks together" do
-      list = source_list
-      snippets = [list.snippets.sole, create(:snippet, word_list: list)]
-      decks = snippets.map { started(list, snippet: it) }
-
-      expect(chart.nodes.sole.decks).to match_array(decks)
-    end
-
     it "leaves out another learner's deck" do
       create(:reading_deck, word_list: placed_list, user: create(:user))
 

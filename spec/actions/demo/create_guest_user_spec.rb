@@ -13,7 +13,8 @@ RSpec.describe Demo::CreateGuestUser do
       snippet = create(:snippet, :finished)
       result = described_class.call(source: snippet.source, time_zone: "UTC")
 
-      expect(result.deck).to have_attributes(user: result.user, snippet: nil)
+      word_list = snippet.word_list
+      expect(result.deck).to have_attributes(user: result.user, word_list:)
     end
 
     it "creates a persisted guest user" do

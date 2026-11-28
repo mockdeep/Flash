@@ -14,8 +14,7 @@ module ReadingMap
       @rings = Rings.new(language)
     end
 
-    # The learner's decks over a list; a source's, one per section they
-    # have started, in the source's order.
+    # The learner's decks over a list.
     def decks(list_id) = by_list.fetch(list_id, [])
 
     # Those short of today's goal as Next Deck counts it: a deck waiting
@@ -45,7 +44,7 @@ module ReadingMap
 
     def by_list
       @by_list ||= @decks.where.not(word_list_id: nil)
-        .reorder(:snippet_id, :id).group_by(&:word_list_id)
+        .reorder(:id).group_by(&:word_list_id)
     end
 
     def short_ids = @short_ids ||= @decks.goal_unmet_today.ids.to_set
