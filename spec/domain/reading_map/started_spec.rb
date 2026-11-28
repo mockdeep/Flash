@@ -28,43 +28,47 @@ RSpec.describe ReadingMap::Started do
     end
   end
 
-  describe "#decks" do
-    it "gives the learner's decks over a list" do
+  describe "#deck" do
+    it "gives the learner's deck over a list" do
       deck = deck_over
 
-      expect(started.decks(deck.word_list_id)).to eq([deck])
+      expect(started.deck(deck.word_list_id)).to eq(deck)
     end
 
     it "gives none for a list the learner hasn't started" do
-      expect(started.decks(create(:word_list).id)).to be_empty
+      expect(started.deck(create(:word_list).id)).to be_nil
     end
   end
 
-  describe "#unmet_decks" do
-    it "gives a deck short of today's goal" do
+  describe "#unmet?" do
+    it "is true for a deck short of today's goal" do
       deck = deck_over
 
-      expect(started.unmet_decks(deck.word_list_id)).to eq([deck])
+      expect(started.unmet?(deck.word_list_id)).to be(true)
     end
 
-    it "leaves out a deck that has met its goal" do
+    it "is false for a deck that has met its goal" do
       deck = deck_over
       met_goal(deck)
 
-      expect(started.unmet_decks(deck.word_list_id)).to be_empty
+      expect(started.unmet?(deck.word_list_id)).to be(false)
     end
 
-    it "leaves out a deck waiting for tomorrow" do
+    it "is false for a deck waiting for tomorrow" do
       deck = deck_over
       waiting_for_tomorrow(deck)
 
-      expect(started.unmet_decks(deck.word_list_id)).to be_empty
+      expect(started.unmet?(deck.word_list_id)).to be(false)
     end
 
-    it "leaves out a deck with no goal" do
+    it "is false for a deck with no goal" do
       deck = deck_over({ goal_mode: "none" })
 
-      expect(started.unmet_decks(deck.word_list_id)).to be_empty
+      expect(started.unmet?(deck.word_list_id)).to be(false)
+    end
+
+    it "is false for a list the learner hasn't started" do
+      expect(started.unmet?(create(:word_list).id)).to be(false)
     end
   end
 

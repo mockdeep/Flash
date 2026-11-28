@@ -52,7 +52,7 @@ module Components
       look = button_class(:compact, :primary)
       return render_start(look) unless node.started?
 
-      link_to("Continue", deck_study_path(node.continue_deck), class: look)
+      link_to("Continue", deck_study_path(node.deck), class: look)
     end
 
     def render_start(look)

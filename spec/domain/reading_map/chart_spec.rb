@@ -216,10 +216,10 @@ RSpec.describe ReadingMap::Chart do
   end
 
   describe "a started node" do
-    it "carries the learner's decks over its list" do
+    it "carries the learner's deck over its list" do
       deck = create(:reading_deck, word_list: placed_list)
 
-      expect(chart.nodes.sole.decks).to eq([deck])
+      expect(chart.nodes.sole.deck).to eq(deck)
     end
 
     it "leaves out another learner's deck" do
