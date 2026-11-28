@@ -11,12 +11,15 @@ class MilestonesController < ApplicationController
   private
 
   def milestone_params
-    params.expect(deck: [:goal_mode, :study_goal, :target_date])
+    params.expect(
+      deck: [:goal_mode, :study_goal, :target_date, :target_snippet_id],
+    )
   end
 
   def recalculate?(deck)
     params[:recalculate].present? ||
       deck.saved_change_to_goal_mode? ||
-      deck.saved_change_to_target_date?
+      deck.saved_change_to_target_date? ||
+      deck.saved_change_to_target_snippet_id?
   end
 end

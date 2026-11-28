@@ -24,6 +24,8 @@ class Deck < ApplicationRecord
     false => "COALESCE(MAX(skill_scores.last_correct_at) < ?, TRUE)",
   }.freeze
   Progress = Data.define(:total, :done, :level1, :level2, :level3)
+  # The steps rows have left to finish: a word at level 2 has two.
+  STEPS_LEFT = Arel.sql("SUM(GREATEST(#{LEVELS} - rows.correct_streak, 0))")
   # Mirrors #finish_streak.
   FINISH_STREAK =
     "CASE WHEN decks.type = 'MusicDeck' THEN decks.round ELSE #{LEVELS} END"
@@ -105,8 +107,13 @@ class Deck < ApplicationRecord
     END AS cards_count
   SQL
 
+  # Round targets gave way to target dates; dropped once this is deployed.
+  self.ignored_columns += ["target_round"]
+
   belongs_to :word_list
   belongs_to :user
+  # A target date's last chapter; none means the whole deck.
+  belongs_to :target_snippet, class_name: "Snippet"
   belongs_to :source_deck, class_name: "Deck"
   has_many :cards, dependent: :delete_all
   has_one :source, through: :word_list
@@ -160,6 +167,10 @@ class Deck < ApplicationRecord
   validates :word_list, presence: true, unless: :flat_cards?
   validates :word_list, absence: true, if: :flat_cards?
   validate(:one_deck_per_word_list, unless: :flat_cards?)
+  validate(
+    :target_snippet_of_source,
+    if: :will_save_change_to_target_snippet_id?,
+  )
 
   scope :ordered, -> { left_joins(:word_list).order(NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
@@ -191,6 +202,7 @@ class Deck < ApplicationRecord
 
   def reload(*)
     @progress = nil
+    @target_work_left = nil
     super
   end
 
@@ -235,21 +247,28 @@ class Deck < ApplicationRecord
 
   def all_done? = progress.done == progress.total
 
-  def not_done_count(streak) = cards.not_done(streak).count
-
   def target_mode? = goal_mode == "target"
 
   def no_goal? = goal_mode == "none"
 
-  def target_active? = target_mode? && !all_done?
+  def target_active? = target_mode? && target_work_left.positive?
 
   def target_missed? = target_active? && target_date < Date.current
 
-  def target_reached? = target_mode? && all_done?
+  def target_reached? = target_mode? && target_work_left.zero?
 
-  # The steps left to finish the deck (a word at level 2 has two to go),
-  # spread over the days left including today. A passed date puts
-  # everything left on today.
+  # The steps left to finish the target.
+  def target_work_left
+    @target_work_left ||=
+      Deck.unscoped.from(target_rows, :rows).pick(STEPS_LEFT) || 0
+  end
+
+  # What a target date aims to finish: the deck, or its text up to a
+  # chapter.
+  def target_label = target_snippet&.label || "the deck"
+
+  # The steps left to finish the target, spread over the days left
+  # including today. A passed date puts everything left on today.
   def target_goal
     return unless target_active?
 
@@ -332,9 +351,17 @@ class Deck < ApplicationRecord
 
   def clear_target
     self.target_date = nil
+    self.target_snippet = nil
   end
 
-  def target_work_left = (1..LEVELS).sum { not_done_count(it) }
+  # The rows a target date covers; LanguageDeck narrows them to a chapter.
+  def target_rows = progress_rows
+
+  def target_snippet_of_source
+    return if target_snippet.nil? || target_snippet.source == source
+
+    errors.add(:target_snippet, "must be from the deck's text")
+  end
 
   def days_after_today = (Date.tomorrow..target_date).count
 

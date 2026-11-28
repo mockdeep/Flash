@@ -14,7 +14,10 @@ module Components
       if @deck.target_missed?
         render_prompt(missed_text) { dialog_button("Pick a new date") }
       elsif @deck.target_reached?
-        render_prompt(reached_text) { daily_goal_button }
+        render_prompt(reached_text) do
+          dialog_button("Set next target") unless @deck.all_done?
+          daily_goal_button
+        end
       end
     end
 
@@ -31,11 +34,11 @@ module Components
 
     def missed_text
       date = @deck.target_date.strftime("%b %-d")
-      "You didn't finish the deck by #{date}, so today's goal covers " \
-        "everything left."
+      "You didn't get through #{@deck.target_label} by #{date}, so " \
+        "today's goal covers everything left."
     end
 
-    def reached_text = "You finished the deck on time! 🎉"
+    def reached_text = "You got through #{@deck.target_label} on time! 🎉"
 
     def dialog_button(text)
       button(

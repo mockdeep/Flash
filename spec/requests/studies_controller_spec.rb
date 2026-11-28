@@ -198,6 +198,33 @@ RSpec.describe StudiesController do
       expect(rendered).to have_text("0 / 50 completed")
     end
 
+    context "when a deck over a text has a chapter target" do
+      # The first chapter's word is finished, the second's new.
+      def chapter_target_deck
+        deck, chapters = chapter_deck(Deck::LEVELS, 0)
+        target = { target_date: Date.current, target_snippet: chapters.first }
+        deck.tap { it.update!(goal_mode: "target", **target) }
+      end
+
+      it "offers each chapter to get up to" do
+        get(deck_study_path(chapter_target_deck))
+
+        expect(rendered).to have_css("option", text: "Up to II", visible: :all)
+      end
+
+      it "congratulates the learner once the chapter is done" do
+        get(deck_study_path(chapter_target_deck))
+
+        expect(rendered).to have_text("You got through I on time!")
+      end
+
+      it "offers the next target while the deck is unfinished" do
+        get(deck_study_path(chapter_target_deck))
+
+        expect(rendered).to have_button("Set next target")
+      end
+    end
+
     context "when the deck has a target date" do
       # Two cards a step from finished, so today's goal is 2.
       def target_deck
@@ -221,7 +248,7 @@ RSpec.describe StudiesController do
       it "says when the target date was missed" do
         get(deck_study_path(missed_deck))
 
-        expect(rendered).to have_text("You didn't finish the deck by")
+        expect(rendered).to have_text("You didn't get through the deck by")
       end
 
       it "prompts for a new date once the target date has passed" do
@@ -239,7 +266,7 @@ RSpec.describe StudiesController do
       it "congratulates the learner once the deck is finished" do
         get(deck_study_path(reached_deck))
 
-        expect(rendered).to have_text("You finished the deck on time!")
+        expect(rendered).to have_text("You got through the deck on time!")
       end
 
       it "lets the learner go back to a daily goal once it's finished" do

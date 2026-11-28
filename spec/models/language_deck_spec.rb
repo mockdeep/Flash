@@ -180,13 +180,18 @@ RSpec.describe LanguageDeck do
     end
   end
 
-  describe "#not_done_count" do
-    it "counts the entries whose weakest sense is below the given round" do
-      deck = create(:reading_deck, round: 1)
-      create(:language_card, deck:, correct_streak: 1)
-      create(:language_card, deck:, correct_streak: 2)
+  describe "#target_work_left" do
+    it "counts the steps every entry has left" do
+      deck, = chapter_deck(0, 0)
 
-      expect(deck.not_done_count(2)).to eq(1)
+      expect(deck.target_work_left).to eq(6)
+    end
+
+    it "counts only the words up to a target chapter" do
+      deck, chapters = chapter_deck(0, 0)
+      deck.target_snippet = chapters.first
+
+      expect(deck.target_work_left).to eq(3)
     end
   end
 

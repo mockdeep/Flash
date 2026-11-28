@@ -60,10 +60,6 @@ class LanguageDeck < Deck
     cards_from(pool.limit(limit))
   end
 
-  def not_done_count(streak)
-    rows(entries.having("#{STREAK} < ?", streak)).count
-  end
-
   def backs(except: nil, category: nil)
     scope = category ? holding(senses_filed(category)) : rows(entries)
     scope = scope.where.not(card_id: except.id) if except
@@ -136,6 +132,13 @@ class LanguageDeck < Deck
   end
 
   def progress_rows = entries
+
+  # A chapter target covers the words its source uses up to that chapter.
+  def target_rows
+    return entries unless target_snippet
+
+    entries.where(senses: { id: target_snippet.sense_ids_through })
+  end
 
   def cards_from(scope) = scope.map { |entry| LanguageCard.new(self, entry) }
 
