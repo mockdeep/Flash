@@ -36,7 +36,7 @@ RSpec.describe Components::SnippetReading, type: :view do
     snippet
   end
 
-  def portuguese_snippet(round: 1, article: nil)
+  def portuguese_snippet(article: nil)
     source = create(:source, word_list: create(:word_list, language: "pt"))
     entry =
       create(:entry, language: "pt", headword: "casa", reading: nil, article:)
@@ -44,7 +44,7 @@ RSpec.describe Components::SnippetReading, type: :view do
     snippet = create(:snippet, source:, body: "A casa.")
     tokens = [{ "text" => "A" }, { "text" => "casa", "sense_id" => sense.id }]
     create(:snippet_sentence, snippet:, tokens:, body: "A casa.")
-    render_for(snippet, round:, source:)
+    render_for(snippet, source:)
   end
 
   def body_snippet(script:, traditional: "體")
@@ -121,7 +121,7 @@ RSpec.describe Components::SnippetReading, type: :view do
   end
 
   it "shows only the page's own snippet" do
-    page = render_text(*two_snippets, number: 2, round: 3)
+    page = render_text(*two_snippets, number: 2)
 
     expect(texts_of(page, ".reading-snippet p")).to eq(["你。"])
   end
@@ -190,7 +190,7 @@ RSpec.describe Components::SnippetReading, type: :view do
   end
 
   it "keeps the heading's words out of the body" do
-    page = render_text(headed_snippet, round: 3)
+    page = render_text(headed_snippet)
 
     expect(texts_of(page, ".reading-snippet p:not([class])")).to eq(["爱。"])
   end
@@ -220,21 +220,21 @@ RSpec.describe Components::SnippetReading, type: :view do
   end
 
   it "shows each line of the body as its own paragraph" do
-    page = render_text(two_line_snippet, round: 3)
+    page = render_text(two_line_snippet)
 
     paragraphs = texts_of(page, ".reading-snippet p:not([class])")
 
     expect(paragraphs).to eq(["我。", "你。他。"])
   end
 
-  def render_scored(round: 1, **score)
+  def render_scored(**score)
     snippet = snippet_with("爱。", [word("爱", "ài")])
     create(:skill_score, sense: Sense.sole, **score) if score.any?
-    render_for(snippet, round:)
+    render_for(snippet)
   end
 
-  it "gives each word its reading at any round" do
-    page = render_for(love_snippet, round: 3)
+  it "gives each word its reading" do
+    page = render_for(love_snippet)
 
     expect(texts_of(page, "rt")).to eq(["wǒ", "ài"])
   end
@@ -257,26 +257,26 @@ RSpec.describe Components::SnippetReading, type: :view do
     expect(page).to have_css(".reading-snippet__word--missed")
   end
 
-  it "marks a word whose streak reaches the deck's round as done" do
-    page = render_scored(round: 2, view_count: 2, correct_streak: 2)
+  it "marks a finished word as done" do
+    page = render_scored(view_count: 3, correct_streak: 3)
 
     expect(page).to have_css(".reading-snippet__word--done")
   end
 
   it "marks a done word's popover done" do
-    page = render_scored(round: 2, view_count: 2, correct_streak: 2)
+    page = render_scored(view_count: 3, correct_streak: 3)
 
     expect(page).to have_css("[popover].reading-snippet__lookup--done")
   end
 
   it "leaves the popover of a word part way there not done" do
-    page = render_scored(round: 2, view_count: 2, correct_streak: 1)
+    page = render_scored(view_count: 2, correct_streak: 1)
 
     expect(page).to have_no_css(".reading-snippet__lookup--done")
   end
 
-  it "leaves a word short of the deck's round unmarked" do
-    page = render_scored(round: 2, view_count: 1, correct_streak: 1)
+  it "leaves a word short of finished unmarked" do
+    page = render_scored(view_count: 1, correct_streak: 1)
 
     word = page.find(".reading-snippet__word")
     expect(word[:class]).to eq("reading-snippet__word")
@@ -290,19 +290,19 @@ RSpec.describe Components::SnippetReading, type: :view do
   end
 
   it "marks each word apart" do
-    page = render_text(love_snippet, round: 2)
+    page = render_text(love_snippet)
 
     expect(texts_of(page, "ruby")).to eq(["我", "爱"])
   end
 
   it "leaves punctuation out of the words" do
-    page = render_text(love_snippet, round: 3)
+    page = render_text(love_snippet)
 
     expect(page).to have_css("p", exact_text: "我爱。")
   end
 
   it "keeps the spaces of a text written with them" do
-    page = portuguese_snippet(round: 3)
+    page = portuguese_snippet
 
     expect(page).to have_css("p", exact_text: "A casa.")
   end

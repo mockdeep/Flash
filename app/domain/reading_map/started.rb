@@ -39,7 +39,7 @@ module ReadingMap
     private
 
     def unmet?(deck)
-      short_ids.include?(deck.id) && !deck.waiting_for_tomorrow?
+      short_ids.include?(deck.id) && !deck.nothing_to_study?
     end
 
     def by_list

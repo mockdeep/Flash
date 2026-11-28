@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-# The cards a deck completed in the current batch on one day in its owner's
-# time zone. A deck with a round target saves the day's goal here when the
-# row is made. Recalculating works the goal out again and starts a new
+# The right answers a deck had in the current batch on one day in its
+# owner's time zone. A deck with a target date saves the day's goal here
+# when the row is made. Recalculating works the goal out again and starts a new
 # batch, counting again from zero. Keeping going also starts a new batch, but
-# one sized to lower tomorrow's goal by one card.
+# one sized to lower tomorrow's goal by one step.
 class StudyDay < ApplicationRecord
   belongs_to :deck
 
@@ -18,7 +18,9 @@ class StudyDay < ApplicationRecord
     end
   end
 
-  def study_goal = (goal if deck.target_active?) || deck.study_goal
+  # Mirrored by Deck::GOAL_UNMET. A target finished today keeps the goal it
+  # opened the day with; a target day after that has none.
+  def study_goal = (goal if deck.target_mode?) || deck.study_goal
 
   def record_completion! = increment!(:completed_count)
 

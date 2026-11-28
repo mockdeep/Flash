@@ -162,7 +162,14 @@ RSpec.describe User do
   end
 
   describe "#next_unmet_deck" do
-    def met_goal_deck(**) = met_goal(create(:deck, **))
+    def met_goal_deck(**) = met_goal(carded(:deck, **))
+
+    # A deck with a card to study.
+    def carded(factory, **)
+      deck = create(factory, **)
+      create(factory == :deck ? :basic_card : :language_card, deck:)
+      deck
+    end
 
     def met_goal(deck)
       count = deck.study_goal
@@ -171,30 +178,30 @@ RSpec.describe User do
     end
 
     it "returns the first deck in decks-page order that is under its goal" do
-      create(:deck, name: "Alpha")
-      deck = create(:reading_deck, name: "Zebra")
+      carded(:deck, name: "Alpha")
+      deck = carded(:reading_deck, name: "Zebra")
 
       expect(default_user.next_unmet_deck).to eq(deck)
     end
 
     it "skips decks that met their goal today" do
       met_goal_deck(name: "Alpha")
-      deck = create(:deck, name: "Zebra")
+      deck = carded(:deck, name: "Zebra")
 
       expect(default_user.next_unmet_deck).to eq(deck)
     end
 
     it "skips decks waiting for tomorrow" do
-      waiting = create(:deck, name: "Alpha", round: 2)
+      waiting = create(:deck, name: "Alpha")
       create(:basic_card, :correct_today, deck: waiting)
-      deck = create(:deck, name: "Zebra")
+      deck = carded(:deck, name: "Zebra")
 
       expect(default_user.next_unmet_deck).to eq(deck)
     end
 
     it "skips music decks" do
       create(:music_deck, name: "Alpha")
-      deck = create(:deck, name: "Zebra")
+      deck = carded(:deck, name: "Zebra")
 
       expect(default_user.next_unmet_deck).to eq(deck)
     end
@@ -206,31 +213,31 @@ RSpec.describe User do
     end
 
     it "starts in the section of the deck just studied" do
-      create(:reading_deck)
+      carded(:reading_deck)
       studied = met_goal_deck(name: "Alpha")
-      deck = create(:deck, name: "Zebra")
+      deck = carded(:deck, name: "Zebra")
 
       expect(default_user.next_unmet_deck(after: studied)).to eq(deck)
     end
 
     it "moves on to the section after the one just studied" do
-      create(:reading_deck, language: "zh")
-      studied = met_goal(create(:reading_deck, language: "pt"))
-      deck = create(:deck)
+      carded(:reading_deck, language: "zh")
+      studied = met_goal(carded(:reading_deck, language: "pt"))
+      deck = carded(:deck)
 
       expect(default_user.next_unmet_deck(after: studied)).to eq(deck)
     end
 
     it "goes round to the first section after the last" do
-      deck = create(:reading_deck)
+      deck = carded(:reading_deck)
       studied = met_goal_deck
 
       expect(default_user.next_unmet_deck(after: studied)).to eq(deck)
     end
 
     it "starts from the first section after a deck in none" do
-      deck = create(:reading_deck)
-      create(:deck)
+      deck = carded(:reading_deck)
+      carded(:deck)
 
       expect(default_user.next_unmet_deck(after: create(:music_deck)))
         .to eq(deck)

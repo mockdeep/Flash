@@ -171,38 +171,37 @@ RSpec.describe LanguageCard do
     end
 
     it "builds on a score the sense already carries" do
-      deck = create(:reading_deck, round: 4)
-      card = create(:language_card, deck:, correct_streak: 3)
+      card = create(:language_card, correct_streak: 1)
 
       card.record_correct!
 
-      expect(counters).to eq([[1, 4, 1]])
+      expect(counters).to eq([[1, 2, 1]])
     end
 
-    it "stops a sense's streak at the deck's round" do
+    it "stops a sense's streak at finished" do
       card = create(:language_card, back: "he; him")
       sense = sense_of(card, "he")
-      create(:skill_score, user: card.deck.user, sense:, correct_streak: 1)
+      create(:skill_score, user: card.deck.user, sense:, correct_streak: 3)
 
       card.record_correct!
 
-      expect(SkillScore.pluck(:correct_streak)).to eq([1, 1])
+      expect(SkillScore.pluck(:correct_streak)).to contain_exactly(3, 1)
     end
 
-    it "leaves a streak already past the deck's round" do
-      card = create(:language_card, correct_streak: 3)
+    it "leaves a streak already past finished" do
+      card = create(:language_card, correct_streak: 4)
 
       card.record_correct!
 
-      expect(SkillScore.sole.correct_streak).to eq(3)
+      expect(SkillScore.sole.correct_streak).to eq(4)
     end
 
-    it "still counts the answer on a sense at the deck's round" do
-      card = create(:language_card, correct_streak: 1, view_count: 1)
+    it "still counts the answer on a finished sense" do
+      card = create(:language_card, correct_streak: 3, view_count: 1)
 
       card.record_correct!
 
-      expect(counters).to eq([[1, 1, 2]])
+      expect(counters).to eq([[1, 3, 2]])
     end
 
     it "advances its own streak" do

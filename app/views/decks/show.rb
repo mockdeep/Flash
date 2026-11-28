@@ -56,7 +56,7 @@ module Views
       def meta_items
         [
           pluralize(deck.cards_count, "card"),
-          "Round #{deck.round}",
+          ("Round #{deck.round}" if deck.music?),
           WordList::LANGUAGES[deck.language],
           deck.publicly_visible? ? "In catalog" : "Private",
         ].compact

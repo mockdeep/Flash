@@ -21,7 +21,7 @@ module Components
     private
 
     def state(sense_id)
-      scores.fetch(sense_id) { SkillScore.new }.state(deck.round)
+      scores.fetch(sense_id) { SkillScore.new }.state
     end
 
     def scores

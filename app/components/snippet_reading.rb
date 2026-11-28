@@ -4,8 +4,8 @@ module Components
   # The Read tab: one page of a deck's text word by word, laid out as
   # written, in a frame its Back and Next links (and the arrow keys) turn;
   # the first page opens with the source. Each word is grey until studied,
-  # green once done at the
-  # deck's round, and has its reading over it while its streak is zero.
+  # green once finished, and has its reading over it while its streak is
+  # zero.
   # Mandarin is written in the deck's script. Clicking a word shows its
   # reading (or a noun's article) and gloss in a popover. The first click on
   # a new word records it as seen, and a done word's popover offers to
@@ -115,7 +115,7 @@ module Components
     end
 
     def word_state(sense)
-      scores.fetch(sense.id) { unseen }.state(deck.round) if sense
+      scores.fetch(sense.id) { unseen }.state if sense
     end
 
     # Shared by every word with no score, rather than built for each.

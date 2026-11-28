@@ -57,12 +57,12 @@ class DeckSection
 
   def holds?(deck) = decks.exists?(id: deck)
 
-  # The deck to study next here: one still short of today's goal and not
-  # waiting for tomorrow. A language's follows its reading map; Basic's
+  # The deck to study next here: one still short of today's goal with a
+  # card left to study today. A language's follows its reading map; Basic's
   # are taken by name.
   def first_unmet
     return ReadingMap::Started.new(decks:, language:).next_deck if language
 
-    decks.goal_unmet_today.ordered.find { !it.waiting_for_tomorrow? }
+    decks.goal_unmet_today.ordered.find { !it.nothing_to_study? }
   end
 end

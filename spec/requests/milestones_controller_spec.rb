@@ -5,15 +5,15 @@ RSpec.describe MilestonesController do
     patch(deck_milestone_path(deck), params:)
   end
 
+  # Two cards a step from finished, so a target for today has a goal of 2.
   def target_deck(*traits)
     deck = create(:deck, *traits)
-    create_list(:basic_card, 2, deck:)
+    create_list(:basic_card, 2, deck:, correct_streak: Deck::LEVELS - 1)
     deck
   end
 
   def target_params
-    target = { goal_mode: "target", target_round: 1, target_date: Date.current }
-    { deck: target }
+    { deck: { goal_mode: "target", target_date: Date.current } }
   end
 
   describe "#update" do
@@ -39,7 +39,7 @@ RSpec.describe MilestonesController do
       deck = target_deck
 
       expect { update_milestone(deck, **target_params) }
-        .to change_record(deck, :target_round).to(1)
+        .to change_record(deck, :target_date).to(Date.current)
     end
 
     it "saves today's goal from a new target" do

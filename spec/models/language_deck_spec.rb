@@ -60,6 +60,14 @@ RSpec.describe LanguageDeck do
   end
 
   describe "#study_pool" do
+    it "puts the highest level first" do
+      deck = create(:reading_deck)
+      create(:language_card, deck:, front: "低")
+      create(:language_card, deck:, front: "高", correct_streak: 2)
+
+      expect(deck.study_pool(limit: 5).map(&:front)).to eq(["高", "低"])
+    end
+
     it "takes the entries below the round, in list order" do
       deck = create(:reading_deck, round: 1)
       create(:language_card, :done, deck:, back: "one")
@@ -163,22 +171,12 @@ RSpec.describe LanguageDeck do
     end
   end
 
-  describe "#catch_up_round!" do
-    it "moves on to the round after the weakest entry's streak" do
-      deck = create(:reading_deck, round: 1)
-      create(:language_card, deck:, correct_streak: 2)
-      create(:language_card, deck:, correct_streak: 4)
-      deck.catch_up_round!
+  describe "#level_count" do
+    it "counts the seen entries at a level" do
+      deck = create(:reading_deck)
+      create(:language_card, deck:, correct_streak: 1, view_count: 1)
 
-      expect(deck.reload.round).to eq(3)
-    end
-
-    it "keeps the round while an entry sits below it" do
-      deck = create(:reading_deck, round: 2)
-      create(:language_card, deck:, correct_streak: 1)
-      deck.catch_up_round!
-
-      expect(deck.reload.round).to eq(2)
+      expect(deck.level_count(2)).to eq(1)
     end
   end
 

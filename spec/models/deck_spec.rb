@@ -98,7 +98,7 @@ RSpec.describe Deck do
   end
 
   def target_attributes
-    { goal_mode: "target", target_round: 1, target_date: Date.current }
+    { goal_mode: "target", target_date: Date.current }
   end
 
   describe "#goal_mode" do
@@ -115,32 +115,7 @@ RSpec.describe Deck do
       deck = create(:deck, **target_attributes)
 
       expect { deck.update!(goal_mode: "session") }
-        .to change_record(deck, :target_round).to(nil)
-    end
-  end
-
-  describe "#target_round" do
-    it "is required in target mode" do
-      expect(described_class.new(goal_mode: "target"))
-        .to validate_presence_of(:target_round)
-    end
-
-    it "must not be below the deck's round when set" do
-      deck = create(:deck, round: 2)
-
-      expect(deck.update(target_attributes)).to be(false)
-    end
-
-    it "must be a whole number" do
-      deck = create(:deck)
-
-      expect(deck.update(**target_attributes, target_round: 1.5)).to be(false)
-    end
-
-    it "lets the deck move on past it" do
-      deck = create(:deck, **target_attributes)
-
-      expect(deck.update(round: 2)).to be(true)
+        .to change_record(deck, :target_date).to(nil)
     end
   end
 
@@ -240,9 +215,9 @@ RSpec.describe Deck do
       expect(unmet_decks).not_to include(deck)
     end
 
-    it "compares against the daily goal once a target is reached" do
-      deck = target_deck_at_its_goal
-      deck.update!(round: 2)
+    it "compares against the daily goal on a target day with no goal" do
+      deck = create(:deck, :with_target, study_goal: 3)
+      deck.study_days.create!(studied_on: Date.current, completed_count: 2)
 
       expect(unmet_decks).to include(deck)
     end
@@ -262,14 +237,19 @@ RSpec.describe Deck do
     end
   end
 
-  def round_two_deck
-    deck = create(:deck, round: 2)
-    create(:basic_card, deck:, correct_streak: 2)
-    create(:basic_card, deck:, correct_streak: 1)
+  # A card at each level, one finished and one never seen.
+  def level_deck
+    deck = create(:deck)
+    create(:basic_card, deck:, correct_streak: 3, view_count: 3)
+    [2, 1].each do |streak|
+      create(:basic_card, deck:, correct_streak: streak, view_count: streak)
+    end
+    create(:basic_card, deck:, view_count: 1)
+    create(:basic_card, deck:)
     deck
   end
 
-  # One entry below the round, then one at it, in list order.
+  # One entry still to finish, then a finished one, in list order.
   def language_deck
     deck = create(:reading_deck, round: 1)
     create(:language_card, deck:)
@@ -278,20 +258,38 @@ RSpec.describe Deck do
   end
 
   describe ".with_progress" do
-    it "selects each deck's card and done counts alongside its columns" do
-      loaded = described_class.with_progress.find(round_two_deck.id)
-
-      expect(loaded.attributes)
-        .to include("cards_count" => 2, "done_count" => 1)
-    end
-
     def progress_of(deck)
       described_class.with_progress.find(deck.id).attributes
     end
 
-    it "counts a language deck's entries and those at the round" do
+    it "selects each deck's card and done counts alongside its columns" do
+      expect(progress_of(level_deck))
+        .to include("cards_count" => 5, "done_count" => 1)
+    end
+
+    it "counts a deck's cards at each level" do
+      expect(progress_of(level_deck)).to include(
+        "level1_count" => 1, "level2_count" => 1, "level3_count" => 1,
+      )
+    end
+
+    it "counts a language deck's entries and those finished" do
       expect(progress_of(language_deck))
         .to include("cards_count" => 2, "done_count" => 1)
+    end
+
+    it "counts a language deck's entries at each level" do
+      deck = create(:reading_deck)
+      create(:language_card, deck:, correct_streak: 2, view_count: 2)
+
+      expect(progress_of(deck)).to include("level3_count" => 1)
+    end
+
+    it "finishes a music deck's cards at its round" do
+      deck = create(:music_deck, round: 2)
+      create(:music_card, deck:, correct_streak: 2)
+
+      expect(progress_of(deck)).to include("done_count" => 1)
     end
 
     def guest_deck_over(source)
@@ -314,7 +312,7 @@ RSpec.describe Deck do
     end
 
     it "counts a flat deck's cards" do
-      expect(entry_count_of(round_two_deck)).to include("cards_count" => 2)
+      expect(entry_count_of(level_deck)).to include("cards_count" => 5)
     end
 
     it "counts a language deck's entries" do
@@ -336,32 +334,51 @@ RSpec.describe Deck do
 
   describe "#cards_count" do
     it "counts the cards when none were selected" do
-      expect(round_two_deck.cards_count).to eq(2)
+      expect(level_deck.cards_count).to eq(5)
     end
   end
 
   describe "#done_count" do
-    it "counts cards at or above the round when none were selected" do
-      expect(round_two_deck.done_count).to eq(1)
+    it "counts finished cards when none were selected" do
+      expect(level_deck.done_count).to eq(1)
     end
 
     it "shares one query with cards_count and all_done?" do
-      deck = round_two_deck.tap(&:cards_count)
+      deck = level_deck.tap(&:cards_count)
 
       expect { deck.done_count && deck.all_done? }.not_to make_database_queries
     end
 
-    it "counts again once the round changes" do
-      deck = round_two_deck.tap(&:done_count)
-      deck.round = 3
+    it "counts a music deck again once its round changes" do
+      deck = create(:music_deck, round: 1)
+      create(:music_card, deck:, correct_streak: 1)
+      deck.tap(&:done_count).round = 2
 
       expect(deck.done_count).to eq(0)
     end
   end
 
+  describe "#level_count" do
+    it "counts seen cards at a level when none were selected" do
+      expect(level_deck.level_count(1)).to eq(1)
+    end
+
+    it "reads the count the rail selected" do
+      loaded = described_class.with_progress.find(level_deck.id)
+
+      expect { loaded.level_count(3) }.not_to make_database_queries
+    end
+  end
+
+  describe "#new_count" do
+    it "counts the cards never seen" do
+      expect(level_deck.new_count).to eq(1)
+    end
+  end
+
   describe "#reload" do
     it "forgets the counts" do
-      deck = create(:deck, round: 1).tap(&:done_count)
+      deck = create(:deck).tap(&:done_count)
       create(:basic_card, :done, deck:)
 
       expect(deck.reload.done_count).to eq(1)
@@ -369,10 +386,10 @@ RSpec.describe Deck do
   end
 
   describe "#remaining_count" do
-    it "is the cards still below the round" do
-      loaded = described_class.with_progress.find(round_two_deck.id)
+    it "is the cards not finished" do
+      loaded = described_class.with_progress.find(level_deck.id)
 
-      expect(loaded.remaining_count).to eq(1)
+      expect(loaded.remaining_count).to eq(4)
     end
   end
 
@@ -502,12 +519,20 @@ RSpec.describe Deck do
   end
 
   describe "#study_pool" do
-    it "takes the first cards below the round, in deck order" do
-      deck = create(:deck, round: 1)
+    it "takes the first unfinished cards, in deck order" do
+      deck = create(:deck)
       create(:basic_card, :done, deck:)
       cards = create_list(:basic_card, 3, deck:)
 
       expect(deck.study_pool(limit: 2)).to eq(cards.first(2))
+    end
+
+    it "puts the highest level first" do
+      deck = create(:deck)
+      low = create(:basic_card, deck:)
+      high = create(:basic_card, deck:, correct_streak: 2)
+
+      expect(deck.study_pool(limit: 5)).to eq([high, low])
     end
 
     it "leaves out cards answered correctly today" do
@@ -557,59 +582,48 @@ RSpec.describe Deck do
       expect(deck.waiting_for_tomorrow?).to be(false)
     end
 
-    it "is false when every card is done at the round" do
-      deck = create(:deck, round: 1)
-      create(:basic_card, :correct_today, deck:)
+    it "is false when every card is finished" do
+      deck = create(:deck)
+      create(:basic_card, :done, deck:, last_correct_at: Time.current)
 
       expect(deck.waiting_for_tomorrow?).to be(false)
     end
   end
 
   describe "#all_done?" do
-    it "is true when every card has reached the round" do
-      deck = create(:deck, round: 2)
-      create(:basic_card, deck:, correct_streak: 2)
+    it "is true when every card is finished" do
+      deck = create(:deck)
+      create(:basic_card, deck:, correct_streak: Deck::LEVELS)
 
       expect(deck.all_done?).to be(true)
     end
 
-    it "is false while a card sits below the round" do
-      deck = create(:deck, round: 2)
-      create(:basic_card, deck:, correct_streak: 1)
+    it "is false while a card is unfinished" do
+      deck = create(:deck)
+      create(:basic_card, deck:, correct_streak: 2)
 
       expect(deck.all_done?).to be(false)
     end
   end
 
-  describe "#catch_up_round!" do
-    it "moves on to the round after the lowest streak when all are done" do
-      deck = create(:deck, round: 1)
-      create(:basic_card, deck:, correct_streak: 2)
-      create(:basic_card, deck:, correct_streak: 3)
-      deck.catch_up_round!
+  describe "#nothing_to_study?" do
+    it "is true once every card is finished" do
+      deck = create(:deck)
+      create(:basic_card, :done, deck:)
 
-      expect(deck.reload.round).to eq(3)
+      expect(deck.nothing_to_study?).to be(true)
     end
 
-    it "keeps the round while a card sits below it" do
-      deck = create(:deck, round: 2)
-      create(:basic_card, deck:, correct_streak: 1)
-      create(:basic_card, deck:, correct_streak: 3)
-      deck.catch_up_round!
+    it "is false while a card is left to study today" do
+      deck = create(:deck)
+      create(:basic_card, deck:)
 
-      expect(deck.reload.round).to eq(2)
-    end
-
-    it "keeps the round of a deck without cards" do
-      deck = create(:deck, round: 2)
-      deck.catch_up_round!
-
-      expect(deck.reload.round).to eq(2)
+      expect(deck.nothing_to_study?).to be(false)
     end
   end
 
   describe "#not_done_count" do
-    it "counts the cards whose streak is below the given round" do
+    it "counts the cards whose streak is below the given one" do
       deck = create(:deck)
       create(:basic_card, deck:, correct_streak: 1)
       create(:basic_card, deck:, correct_streak: 2)
@@ -628,45 +642,42 @@ RSpec.describe Deck do
     end
   end
 
+  # A target deck with one card, finished or not.
+  def target_deck(finished:, target_date: Date.current)
+    deck = create(:deck, :with_target)
+    travel_to(target_date) { deck.update!(target_date:) }
+    streak = finished ? Deck::LEVELS : 0
+    create(:basic_card, deck:, correct_streak: streak)
+    deck
+  end
+
   describe "#target_active?" do
     it "is false without a target" do
       expect(described_class.new.target_active?).to be(false)
     end
 
-    it "is true while the target round is unfinished" do
-      deck = described_class.new(goal_mode: "target", round: 2, target_round: 2)
-
-      expect(deck.target_active?).to be(true)
+    it "is true while the deck is unfinished" do
+      expect(target_deck(finished: false).target_active?).to be(true)
     end
 
-    it "is false once the deck has passed the target round" do
-      deck = described_class.new(goal_mode: "target", round: 3, target_round: 2)
-
-      expect(deck.target_active?).to be(false)
+    it "is false once the deck is finished" do
+      expect(target_deck(finished: true).target_active?).to be(false)
     end
   end
 
   describe "#target_missed?" do
-    def target_deck(round:, target_date:)
-      described_class.new(
-        goal_mode: "target", round:, target_round: 2, target_date:,
-      )
-    end
-
-    it "is true once the date passes with the round unfinished" do
-      deck = target_deck(round: 2, target_date: Date.yesterday)
+    it "is true once the date passes with the deck unfinished" do
+      deck = target_deck(finished: false, target_date: Date.yesterday)
 
       expect(deck.target_missed?).to be(true)
     end
 
     it "is false on the target date itself" do
-      deck = target_deck(round: 2, target_date: Date.current)
-
-      expect(deck.target_missed?).to be(false)
+      expect(target_deck(finished: false).target_missed?).to be(false)
     end
 
-    it "is false when the target round was finished" do
-      deck = target_deck(round: 3, target_date: Date.yesterday)
+    it "is false when the deck was finished" do
+      deck = target_deck(finished: true, target_date: Date.yesterday)
 
       expect(deck.target_missed?).to be(false)
     end
@@ -677,16 +688,12 @@ RSpec.describe Deck do
   end
 
   describe "#target_reached?" do
-    it "is true once the deck has passed the target round" do
-      deck = described_class.new(goal_mode: "target", round: 3, target_round: 2)
-
-      expect(deck.target_reached?).to be(true)
+    it "is true once the deck is finished" do
+      expect(target_deck(finished: true).target_reached?).to be(true)
     end
 
-    it "is false while the target round is unfinished" do
-      deck = described_class.new(goal_mode: "target", round: 2, target_round: 2)
-
-      expect(deck.target_reached?).to be(false)
+    it "is false while the deck is unfinished" do
+      expect(target_deck(finished: false).target_reached?).to be(false)
     end
 
     it "is false without a target" do
@@ -696,9 +703,9 @@ RSpec.describe Deck do
 
   describe "#target_goal" do
     def target_deck(target_date:)
-      deck = create(:deck, :with_target, target_round: 2, target_date:)
-      create_list(:basic_card, 3, deck:, correct_streak: 0)
-      create(:basic_card, deck:, correct_streak: 1)
+      deck = create(:deck, :with_target, target_date:)
+      create_list(:basic_card, 2, deck:, correct_streak: 0)
+      create(:basic_card, deck:, correct_streak: 2)
       deck
     end
 
@@ -707,7 +714,7 @@ RSpec.describe Deck do
     end
 
     it "spreads the work left over the days left, including today" do
-      # 3 cards left at round 1, plus 4 at round 2, over 2 days.
+      # 3 steps for each card at level 1, plus 1 at level 3, over 2 days.
       deck = target_deck(target_date: Date.tomorrow)
 
       expect(deck.target_goal).to eq(4)
@@ -729,9 +736,9 @@ RSpec.describe Deck do
 
   describe "#next_target_goal" do
     def target_deck(target_date:)
-      deck = create(:deck, :with_target, target_round: 2, target_date:)
-      create_list(:basic_card, 3, deck:, correct_streak: 0)
-      create(:basic_card, deck:, correct_streak: 1)
+      deck = create(:deck, :with_target, target_date:)
+      create_list(:basic_card, 2, deck:, correct_streak: 0)
+      create(:basic_card, deck:, correct_streak: 2)
       deck
     end
 
@@ -740,7 +747,7 @@ RSpec.describe Deck do
     end
 
     it "spreads the work left over the days after today" do
-      # 3 cards left at round 1, plus 4 at round 2, over 2 days.
+      # 3 steps for each card at level 1, plus 1 at level 3, over 2 days.
       deck = target_deck(target_date: 2.days.from_now.to_date)
 
       expect(deck.next_target_goal).to eq(4)
@@ -762,9 +769,9 @@ RSpec.describe Deck do
 
   describe "#cards_to_lower_goal" do
     def target_deck(target_date:)
-      deck = create(:deck, :with_target, target_round: 2, target_date:)
-      create_list(:basic_card, 3, deck:, correct_streak: 0)
-      create(:basic_card, deck:, correct_streak: 1)
+      deck = create(:deck, :with_target, target_date:)
+      create_list(:basic_card, 2, deck:, correct_streak: 0)
+      create(:basic_card, deck:, correct_streak: 2)
       deck
     end
 
@@ -773,7 +780,7 @@ RSpec.describe Deck do
     end
 
     it "is a card for each day after today" do
-      # 7 left over 4 days is 2 a day; 4 more brings it to 1 a day.
+      # 7 steps left over 4 days is 2 a day; 4 more brings it to 1 a day.
       deck = target_deck(target_date: 4.days.from_now.to_date)
 
       expect(deck.cards_to_lower_goal).to eq(4)

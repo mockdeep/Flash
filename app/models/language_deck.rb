@@ -50,16 +50,18 @@ class LanguageDeck < Deck
   end
 
   # A card waits for tomorrow once any of its senses was answered correctly
-  # today, in this deck or another; practice studies just those cards.
+  # today, in this deck or another; practice studies just those cards. The
+  # highest level comes first, each level in list order.
   def study_pool(limit:, practice: false)
-    pool = entries.having("#{STREAK} < ?", round).order(LIST_ORDER)
+    pool = entries.having("#{STREAK} < ?", finish_streak)
+      .order(Arel.sql("#{STREAK} DESC"), LIST_ORDER)
     today = Date.current.beginning_of_day
     pool = pool.having(SENSES_CORRECT_TODAY[practice], today)
     cards_from(pool.limit(limit))
   end
 
-  def not_done_count(at_round)
-    rows(entries.having("#{STREAK} < ?", at_round)).count
+  def not_done_count(streak)
+    rows(entries.having("#{STREAK} < ?", streak)).count
   end
 
   def backs(except: nil, category: nil)
@@ -133,7 +135,7 @@ class LanguageDeck < Deck
     rows(scope).where("entries.sense_ids && ARRAY(?)", senses.select(:id))
   end
 
-  def count_progress = rows(entries).pick(*progress_counts)
+  def progress_rows = entries
 
   def cards_from(scope) = scope.map { |entry| LanguageCard.new(self, entry) }
 

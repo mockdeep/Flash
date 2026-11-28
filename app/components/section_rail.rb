@@ -72,7 +72,7 @@ module Components
         div(class: "featured-label") { featured_label } if featured_label
         div(class: "rail-type") { deck.type_label }
         render_rail_title(deck)
-        render(Components::RoundProgress.new(deck:))
+        render(progress_for(deck))
         render_rail_meta(deck, deck.remaining_count, heat)
       end
     end
@@ -83,6 +83,11 @@ module Components
         catalog_badge if deck.publicly_visible?
         translation(deck.name_translation)
       end
+    end
+
+    def progress_for(deck)
+      klass = deck.music? ? Components::RoundProgress : Components::LevelProgress
+      klass.new(deck:)
     end
 
     def render_rail_meta(deck, remaining, heat)

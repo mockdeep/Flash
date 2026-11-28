@@ -5,10 +5,13 @@ RSpec.describe "studying a deck" do
     find("input[data-fuzzy-find-target='input']")
   end
 
+  # Level 3 cards, asked by typing.
   def visit_fuzzy_deck(*card_attrs)
-    deck = create(:deck, user: default_user, round: Study::FUZZY_FIND_ROUND)
+    deck = create(:deck, user: default_user)
     card_attrs = [{}] if card_attrs.empty?
-    card_attrs.each { |attrs| create(:basic_card, deck:, **attrs) }
+    card_attrs.each do |attrs|
+      create(:basic_card, deck:, correct_streak: 2, **attrs)
+    end
     sign_in(default_user)
     visit(deck_study_path(deck))
   end
@@ -21,7 +24,7 @@ RSpec.describe "studying a deck" do
   end
 
   def reach_milestone
-    deck = create(:deck, user: default_user, study_goal: 1, round: 1)
+    deck = create(:deck, user: default_user, study_goal: 1)
     create_list(:basic_card, 2, deck:, back: "Paris", correct_streak: 0)
     sign_in(default_user)
     visit(deck_study_path(deck))
@@ -74,7 +77,6 @@ RSpec.describe "studying a deck" do
 
   context "with example sentences on a card" do
     def visit_card_with_example
-      default_deck.update!(round: 2)
       create(
         :basic_card,
         deck: default_deck,
@@ -130,7 +132,6 @@ RSpec.describe "studying a deck" do
   end
 
   it "does not render an example toggle when the card has no example" do
-    default_deck.update!(round: 2)
     create(:basic_card, deck: default_deck, back: "Paris")
     answer_first_card("Paris")
 
@@ -143,7 +144,7 @@ RSpec.describe "studying a deck" do
     click_on(answer)
   end
 
-  context "when the deck is at the fuzzy find round" do
+  context "when a card is at level 3" do
     it "hides the multiple choice keyboard hint" do
       visit_fuzzy_deck
 
@@ -183,14 +184,18 @@ RSpec.describe "studying a deck" do
     end
   end
 
-  context "when a card has a reading at the fuzzy find round" do
-    def visit_fuzzy_reading_deck
-      deck = create(:deck, user: default_user, round: Study::FUZZY_FIND_ROUND)
-      create(:basic_card, deck:, front: "两", back: "two", reading: "liǎng")
-      create(:basic_card, :done, deck:, back: "three", reading: "sān")
-      sign_in(default_user)
-      visit(deck_study_path(deck))
-    end
+  # A card with a reading at the given streak, beside a finished one.
+  def visit_reading_card(correct_streak:)
+    deck = create(:deck, user: default_user)
+    two = { front: "两", back: "two", reading: "liǎng" }
+    create(:basic_card, deck:, correct_streak:, **two)
+    create(:basic_card, :done, deck:, back: "three", reading: "sān")
+    sign_in(default_user)
+    visit(deck_study_path(deck))
+  end
+
+  context "when a card has a reading at level 3" do
+    def visit_fuzzy_reading_deck = visit_reading_card(correct_streak: 2)
 
     def type_and_pick(text, answer)
       fuzzy_input.fill_in(with: text)
@@ -214,14 +219,8 @@ RSpec.describe "studying a deck" do
     end
   end
 
-  context "when the deck is at the reading round" do
-    def visit_reading_deck
-      deck = create(:deck, user: default_user, round: Study::READING_ROUND)
-      create(:basic_card, deck:, front: "两", back: "two", reading: "liǎng")
-      create(:basic_card, :done, deck:, back: "three", reading: "sān")
-      sign_in(default_user)
-      visit(deck_study_path(deck))
-    end
+  context "when a card has a reading at level 2" do
+    def visit_reading_deck = visit_reading_card(correct_streak: 1)
 
     it "asks the translation of the same card once the reading is picked" do
       visit_reading_deck

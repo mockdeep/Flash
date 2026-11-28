@@ -78,7 +78,7 @@ class MusicStudy < Study
       question: cards.first.front,
       selected_answer: answer,
       possible_answers: [],
-      card_completed: cards.first.done?,
+      counted: cards.first.done?,
       round_completed:,
     )
   end

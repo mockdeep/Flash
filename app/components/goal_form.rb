@@ -2,13 +2,13 @@
 
 module Components
   # One of the study-goal dialog's forms: no goal ("none"), a hand-set daily
-  # goal ("session"), or a round target ("target"). Each is a whole form with
+  # goal ("session"), or a target date ("target"). Each is a whole form with
   # its own goal_mode, so the dialog can show one and hide the rest with CSS
   # alone.
   class GoalForm < Components::Base
     HINTS = {
       "none" => <<~TEXT,
-        Study as much as you like. The study page counts the cards you finish
+        Study as much as you like. The study page counts your right answers
         today.
       TEXT
       "session" => <<~TEXT,
@@ -16,8 +16,8 @@ module Components
         close you are.
       TEXT
       "target" => <<~TEXT,
-        Pick a round to finish and a date to finish it by. Each day's goal is
-        worked out for you.
+        Pick a date to finish the deck by. Each day's goal is worked out for
+        you.
       TEXT
     }.freeze
 

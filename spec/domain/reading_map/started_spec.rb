@@ -7,9 +7,11 @@ RSpec.describe ReadingMap::Started do
     levels.each { create(:word_list, curriculum: true, level: it) }
   end
 
-  # The learner's deck over a new list with these attributes.
+  # The learner's deck over a new list with these attributes, with a card
+  # to study.
   def deck_over(deck = {}, **list)
-    create(:reading_deck, word_list: create(:word_list, **list), **deck)
+    deck = create(:reading_deck, word_list: create(:word_list, **list), **deck)
+    deck.tap { create(:language_card, deck:) }
   end
 
   def met_goal(deck)
@@ -17,11 +19,13 @@ RSpec.describe ReadingMap::Started do
     deck.study_days.create!(studied_on: Date.current, completed_count: count)
   end
 
+  # Its words all answered right today.
   def waiting_for_tomorrow(deck)
-    deck.update!(round: 2)
-    sense = create(:sense_membership, word_list: deck.word_list).sense
-    today = { correct_streak: 1, last_correct_at: Time.current }
-    create(:skill_score, sense:, **today)
+    user = deck.user
+    deck.word_list.senses.each do |sense|
+      SkillScore.find_or_initialize_by(user:, sense:, skill: "reading")
+        .update!(correct_streak: 1, last_correct_at: Time.current)
+    end
   end
 
   describe "#decks" do

@@ -40,7 +40,7 @@ RSpec.describe StudyDay do
 
     it "saves the target's goal on a new row" do
       deck = create(:deck, :with_target)
-      create_list(:basic_card, 2, deck:)
+      create_list(:basic_card, 2, deck:, correct_streak: Deck::LEVELS - 1)
 
       expect(deck.study_days.today.goal).to eq(2)
     end
@@ -62,10 +62,9 @@ RSpec.describe StudyDay do
       expect(study_day.study_goal).to eq(5)
     end
 
-    it "ignores the saved goal once the target round is finished" do
+    it "falls back to the daily goal on a target day with no saved goal" do
       deck = create(:deck, :with_target, study_goal: 30)
-      deck.update!(round: 2)
-      study_day = described_class.new(deck:, goal: 5)
+      study_day = described_class.new(deck:)
 
       expect(study_day.study_goal).to eq(30)
     end
@@ -89,7 +88,7 @@ RSpec.describe StudyDay do
   describe "#recalculate!" do
     def recalculated_day
       deck = create(:deck, :with_target)
-      create_list(:basic_card, 2, deck:)
+      create_list(:basic_card, 2, deck:, correct_streak: Deck::LEVELS - 1)
       study_day = deck.study_days.create!(
         studied_on: Date.current, goal: 5, completed_count: 3,
       )

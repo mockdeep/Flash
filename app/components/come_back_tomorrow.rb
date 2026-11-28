@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Components
-  # Shown when every card left in the round was answered correctly today.
+  # Shown when every card left to finish was answered correctly today.
   class ComeBackTomorrow < Components::Base
     def initialize(deck:, demo:)
       super()
@@ -23,8 +23,8 @@ module Components
       h2(class: "accent-box__heading") { "That's all for today" }
       p(class: "accent-box__text") do
         <<~TEXT
-          A card can move forward only once a day, and every card left in
-          this round has already had its turn today. Come back tomorrow!
+          A card can move up a level only once a day, and every card left
+          to finish has already had its turn today. Come back tomorrow!
         TEXT
       end
     end

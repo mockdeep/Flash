@@ -7,6 +7,11 @@ RSpec.describe StudyGoalResetsController do
     deck
   end
 
+  # Met today's goal, with a card to study once the goals are reset.
+  def carded_deck(factory, card, **)
+    met_goal_deck(factory, **).tap { create(card, deck: it) }
+  end
+
   def yesterday_study_day
     study_days = create(:deck).study_days
     study_days.create!(studied_on: Date.yesterday, completed_count: 5)
@@ -53,8 +58,8 @@ RSpec.describe StudyGoalResetsController do
 
     it "redirects to the first deck in decks-page order" do
       login_as(default_user)
-      met_goal_deck(name: "Alpha")
-      deck = met_goal_deck(:reading_deck, name: "Zebra")
+      carded_deck(:deck, :basic_card, name: "Alpha")
+      deck = carded_deck(:reading_deck, :language_card, name: "Zebra")
 
       post(study_goal_reset_path)
 

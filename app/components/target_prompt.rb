@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 module Components
-  # A note under the study progress bar when a round target needs the
-  # learner's attention: its date passed, or its round was finished. Its
-  # buttons open the goal dialog, so it renders inside SessionProgress.
+  # A note under the study progress bar when a target date needs the
+  # learner's attention: it passed, or the deck was finished. Its buttons
+  # open the goal dialog, so it renders inside SessionProgress.
   class TargetPrompt < Components::Base
     def initialize(deck:)
       super()
@@ -14,10 +14,7 @@ module Components
       if @deck.target_missed?
         render_prompt(missed_text) { dialog_button("Pick a new date") }
       elsif @deck.target_reached?
-        render_prompt(reached_text) do
-          dialog_button("Set next target")
-          not_now_button
-        end
+        render_prompt(reached_text) { daily_goal_button }
       end
     end
 
@@ -34,11 +31,11 @@ module Components
 
     def missed_text
       date = @deck.target_date.strftime("%b %-d")
-      "You didn't finish round #{@deck.target_round} by #{date}, so " \
-        "today's goal covers everything left."
+      "You didn't finish the deck by #{date}, so today's goal covers " \
+        "everything left."
     end
 
-    def reached_text = "You finished round #{@deck.target_round}! 🎉"
+    def reached_text = "You finished the deck on time! 🎉"
 
     def dialog_button(text)
       button(
@@ -48,9 +45,9 @@ module Components
       ) { text }
     end
 
-    def not_now_button
+    def daily_goal_button
       button_to(
-        "Not now",
+        "Back to a daily goal",
         deck_milestone_path(@deck),
         method: :patch,
         params: { deck: { goal_mode: "session" } },

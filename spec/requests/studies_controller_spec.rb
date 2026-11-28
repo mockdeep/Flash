@@ -21,7 +21,7 @@ RSpec.describe StudiesController do
   end
 
   def waiting_deck
-    deck = create(:deck, round: 2, name: "Alpha")
+    deck = create(:deck, name: "Alpha")
     create(:basic_card, :correct_today, deck:, back: "Paris")
     deck
   end
@@ -47,20 +47,26 @@ RSpec.describe StudiesController do
       expect(rendered).to have_text("completed")
     end
 
-    it "shows filled segments for completed rounds" do
-      deck = create(:deck, round: 3)
-      create(:basic_card, deck:)
+    it "shows the deck's words by level" do
+      deck = create(:deck)
+      create(:basic_card, deck:, correct_streak: 1, view_count: 1)
       get(deck_study_path(deck))
 
-      expect(rendered).to have_css(".round-fill--done", count: 2)
+      expect(rendered).to have_css(".level-bar__level2")
     end
 
-    it "moves a deck whose cards are all done on to a round with work left" do
-      deck = create(:deck, round: 1)
-      create(:basic_card, deck:, correct_streak: 2)
-      get(deck_study_path(deck))
+    it "shows the card's level" do
+      card = create(:basic_card, correct_streak: 1)
+      get(deck_study_path(card.deck))
 
-      expect(deck.reload.round).to eq(3)
+      expect(rendered).to have_css(".study-level", text: "Level 2")
+    end
+
+    it "says when every card is finished" do
+      card = create(:basic_card, :done)
+      get(deck_study_path(card.deck))
+
+      expect(rendered).to have_text("Deck finished")
     end
 
     it "shows a homograph's reading under the prompt" do
@@ -192,10 +198,11 @@ RSpec.describe StudiesController do
       expect(rendered).to have_text("0 / 50 completed")
     end
 
-    context "when the deck has a round target" do
+    context "when the deck has a target date" do
+      # Two cards a step from finished, so today's goal is 2.
       def target_deck
         deck = create(:deck, :with_target)
-        create_list(:basic_card, 2, deck:)
+        create_list(:basic_card, 2, deck:, correct_streak: Deck::LEVELS - 1)
         deck
       end
 
@@ -214,7 +221,7 @@ RSpec.describe StudiesController do
       it "says when the target date was missed" do
         get(deck_study_path(missed_deck))
 
-        expect(rendered).to have_text("You didn't finish round 1 by")
+        expect(rendered).to have_text("You didn't finish the deck by")
       end
 
       it "prompts for a new date once the target date has passed" do
@@ -225,29 +232,23 @@ RSpec.describe StudiesController do
 
       def reached_deck
         deck = target_deck
-        deck.update!(round: 2)
+        deck.cards.each { it.update!(correct_streak: Deck::LEVELS) }
         deck
       end
 
-      it "congratulates the learner once the target round is finished" do
+      it "congratulates the learner once the deck is finished" do
         get(deck_study_path(reached_deck))
 
-        expect(rendered).to have_text("You finished round 1!")
-      end
-
-      it "offers to set the next target once the round is finished" do
-        get(deck_study_path(reached_deck))
-
-        expect(rendered).to have_button("Set next target")
+        expect(rendered).to have_text("You finished the deck on time!")
       end
 
       it "lets the learner go back to a daily goal once it's finished" do
         get(deck_study_path(reached_deck))
 
-        expect(rendered).to have_button("Not now")
+        expect(rendered).to have_button("Back to a daily goal")
       end
 
-      it "switches back to a daily goal from Not now" do
+      it "switches back to a daily goal from the prompt" do
         get(deck_study_path(reached_deck))
         selector = ".target-prompt__actions " \
                    "input[name='deck[goal_mode]'][value=session]"
@@ -370,7 +371,7 @@ RSpec.describe StudiesController do
 
       it "links to the next deck under its goal" do
         deck = waiting_deck
-        next_deck = create(:deck, name: "Zebra")
+        next_deck = create(:basic_card, deck: create(:deck, name: "Zebra")).deck
         get(deck_study_path(deck))
 
         expect(rendered)
@@ -422,7 +423,7 @@ RSpec.describe StudiesController do
 
       it "sends practice with a typed answer" do
         deck = waiting_deck
-        deck.update!(round: 3)
+        deck.cards.sole.update!(correct_streak: Deck::LEVELS - 1)
         get(deck_study_path(deck, practice: true))
 
         expect(rendered)
@@ -457,7 +458,7 @@ RSpec.describe StudiesController do
       end
 
       it "links to the next deck under its goal" do
-        next_deck = create(:deck)
+        next_deck = create(:basic_card, deck: create(:deck)).deck
         get(deck_study_path(complete_milestone_goal))
 
         expect(rendered)
@@ -483,10 +484,11 @@ RSpec.describe StudiesController do
       end
     end
 
-    context "when returning after reaching a round target's milestone" do
+    context "when returning after reaching a target date's milestone" do
+      # Four cards a step from finished: two a day over the two days left.
       def met_target_deck
         deck = create(:deck, :with_target, target_date: 2.days.from_now.to_date)
-        create_list(:basic_card, 4, deck:)
+        create_list(:basic_card, 4, deck:, correct_streak: Deck::LEVELS - 1)
         deck.study_days.create!(
           studied_on: Date.current, goal: 1, completed_count: 1,
         )
@@ -868,34 +870,20 @@ RSpec.describe StudiesController do
         .to change_record(card.deck, :last_studied_at).from(nil)
     end
 
-    it "shows round complete screen when last card is answered" do
-      card = create(:basic_card, back: "Paris", correct_streak: 0)
+    it "counts a right answer toward the day's goal" do
+      card = create(:basic_card, back: "Paris")
+      create(:basic_card, deck: card.deck)
       submit_answer(card:, answer: "Paris")
 
-      expect(rendered).to have_css("h2", text: "Round 1 Complete!")
+      expect(rendered).to have_text("1 / 50 completed")
     end
 
-    it "shows the earned segment on the round complete screen" do
-      card = create(:basic_card, back: "Paris", correct_streak: 0)
-      submit_answer(card:, answer: "Paris")
-
-      expect(rendered).to have_css(".round-fill--done", count: 1)
-    end
-
-    it "continues to the next round with a whole page" do
-      card = create(:basic_card, back: "Paris", correct_streak: 0)
-      submit_answer(card:, answer: "Paris")
-
-      link = "a[data-turbo-frame='_top']"
-      expect(rendered).to have_css(link, text: "Continue to Round 2")
-    end
-
-    it "advances deck round when last card is completed" do
+    it "leaves the deck's round alone" do
       deck = create(:deck)
-      card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
+      card = create(:basic_card, deck:, back: "Paris")
 
       expect { submit_answer(card:, answer: "Paris") }
-        .to change_record(deck, :round).from(1).to(2)
+        .not_to change_record(deck, :round)
     end
 
     context "when answer is correct" do
@@ -929,25 +917,16 @@ RSpec.describe StudiesController do
         expect(rendered).to have_css(".answer-faded", text: "London")
       end
 
-      it "does not show streak pips at round 1" do
+      it "shows how far the card is toward finished" do
         card = create(:basic_card, back: "Paris", correct_streak: 0)
         create(:basic_card, deck: card.deck)
         submit_answer(card:, answer: "Paris")
 
-        expect(rendered).to have_no_css(".answer-streak")
-      end
-
-      it "shows streak progress at round 2" do
-        deck = create(:deck, round: 2)
-        card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
-        create(:basic_card, deck:)
-        submit_answer(card:, answer: "Paris")
-
-        expect(rendered).to have_css(".answer-streak", text: "1/2")
+        expect(rendered).to have_css(".answer-streak", text: "1/3")
       end
 
       it "fills one pip per correct answer in a row" do
-        deck = create(:deck, round: 2)
+        deck = create(:deck)
         card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
         create(:basic_card, deck:)
         submit_answer(card:, answer: "Paris")
@@ -955,13 +934,13 @@ RSpec.describe StudiesController do
         expect(rendered).to have_css(".streak-pip--filled", count: 1)
       end
 
-      it "shows all pips filled when the card clears" do
-        deck = create(:deck, round: 2)
-        card = create(:basic_card, deck:, back: "Paris", correct_streak: 1)
+      it "shows all pips filled when the card is finished" do
+        deck = create(:deck)
+        card = create(:basic_card, deck:, back: "Paris", correct_streak: 2)
         create(:basic_card, deck:, correct_streak: 0)
         submit_answer(card:, answer: "Paris")
 
-        expect(rendered).to have_css(".streak-pip--filled", count: 2)
+        expect(rendered).to have_css(".streak-pip--filled", count: 3)
       end
     end
 
@@ -1170,9 +1149,9 @@ RSpec.describe StudiesController do
   end
 
   describe "reading stage" do
+    # A level 2 card, whose reading is asked first.
     def reading_card(**attrs)
-      deck = create(:deck, round: 2)
-      create(:basic_card, deck:, reading: "liǎng", **attrs)
+      create(:basic_card, reading: "liǎng", correct_streak: 1, **attrs)
     end
 
     def submit_reading(card:, answer:)
@@ -1185,7 +1164,7 @@ RSpec.describe StudiesController do
       patch(deck_study_path(card.deck), params: { answer: answer_params })
     end
 
-    it "asks for the reading first at round 2" do
+    it "asks for the reading first at level 2" do
       card = reading_card
       get(deck_study_path(card.deck))
 
@@ -1199,17 +1178,15 @@ RSpec.describe StudiesController do
       expect(rendered).to have_css(".answer-button", text: "liǎng")
     end
 
-    it "asks for the reading by typing at the fuzzy find round" do
-      card = reading_card
-      card.deck.update!(round: Study::FUZZY_FIND_ROUND)
+    it "asks for the reading by typing at level 3" do
+      card = reading_card(correct_streak: Study::FUZZY_FIND_LEVEL - 1)
       get(deck_study_path(card.deck))
 
       expect(rendered).to have_text("Type the reading")
     end
 
     it "submits the typed reading as the reading stage" do
-      card = reading_card
-      card.deck.update!(round: Study::FUZZY_FIND_ROUND)
+      card = reading_card(correct_streak: Study::FUZZY_FIND_LEVEL - 1)
       get(deck_study_path(card.deck))
 
       expect(rendered)

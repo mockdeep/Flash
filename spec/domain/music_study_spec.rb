@@ -144,11 +144,11 @@ RSpec.describe MusicStudy do
       expect(result.correct_answer).to eq("C4,E4,G4")
     end
 
-    it "reports card_completed when the anchor crosses the threshold" do
+    it "counts the answer once the anchor crosses the threshold" do
       deck = make_deck(["C4", "E4", "G4"], round: 1)
       result = submit_window(described_class.new(deck:), answer: "C4")
 
-      expect(result.card_completed?).to be(true)
+      expect(result.counted?).to be(true)
     end
   end
 
