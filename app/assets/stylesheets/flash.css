@@ -825,6 +825,10 @@ body {
   outline-offset: 2px;
 }
 
+.reading-snippets {
+  scroll-margin-top: 6rem;
+}
+
 .content-container:has(.study-tabs__input[value="read"]:checked) .study-frame,
 .content-container:has(.study-tabs__input[value="study"]:checked) .reading-snippets {
   display: none;
