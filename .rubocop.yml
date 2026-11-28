@@ -54,6 +54,7 @@ RSpec/MultipleMemoizedHelpers:
   AllowSubject: false
   Exclude:
     - spec/linters/rubocop/**/*.rb
+Style/HashSyntax: { EnforcedShorthandSyntax: always }
 Style/MethodCallWithArgsParentheses:
   AllowedMethods:
     - attr_accessor
