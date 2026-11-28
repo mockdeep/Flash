@@ -23,6 +23,7 @@ module Views
               Components::SessionProgress.new(deck:, completed:, study_goal:),
             )
             render(Components::PracticeLabel.new) if result.practice?
+            render(Components::StudyLevel.new(deck:, level: result.level))
 
             render_card_result
             unless deck.flat_cards?

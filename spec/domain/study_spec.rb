@@ -663,6 +663,14 @@ RSpec.describe Study do
         .answer_reading(card_id: card.id, answer:)
     end
 
+    it "keeps the level the card was asked at after a miss" do
+      card = reading_card
+
+      result = answer_reading(card:, answer: "liàng")
+
+      expect(result.level).to eq(2)
+    end
+
     context "when the reading is correct" do
       it "returns reading_passed true" do
         card = reading_card
@@ -794,6 +802,24 @@ RSpec.describe Study do
   end
 
   describe "#answer_card" do
+    it "keeps the level the card was asked at after a right answer" do
+      card = create(:basic_card, back: "Paris", correct_streak: 1)
+      study = described_class.new(deck: card.deck)
+
+      result = study.answer_card(card_id: card.id, answer: "Paris")
+
+      expect(result.level).to eq(2)
+    end
+
+    it "keeps the level the card was asked at after a miss" do
+      card = create(:basic_card, back: "Paris", correct_streak: 1)
+      study = described_class.new(deck: card.deck)
+
+      result = study.answer_card(card_id: card.id, answer: "London")
+
+      expect(result.level).to eq(2)
+    end
+
     context "when answer is correct" do
       it "increments view count" do
         deck = create(:deck)

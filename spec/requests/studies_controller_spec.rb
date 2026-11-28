@@ -834,6 +834,14 @@ RSpec.describe StudiesController do
       expect(rendered).to have_text("1 / 50 completed")
     end
 
+    it "shows the level the card was asked at" do
+      card = create(:basic_card, back: "Paris", correct_streak: 1)
+      create(:basic_card, deck: card.deck)
+      submit_answer(card:, answer: "Paris")
+
+      expect(rendered).to have_css(".study-level", text: "Level 2")
+    end
+
     it "offers the edit button on a flat-card deck" do
       card = create(:basic_card, back: "Paris")
       submit_answer(card:, answer: "London")
