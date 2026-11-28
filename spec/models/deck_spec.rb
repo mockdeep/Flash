@@ -80,13 +80,10 @@ RSpec.describe Deck do
         .to include("This deck is already in your decks")
     end
 
-    it "needs a snippet over a source's word_list" do
+    it "may cover a source's whole word_list" do
       source = create(:source)
-      deck = build(:reading_deck, word_list: source.word_list)
 
-      deck.valid?
-
-      expect(deck.errors[:snippet]).to include("can't be blank")
+      expect(build(:reading_deck, word_list: source.word_list)).to be_valid
     end
 
     it "rejects a snippet from another word_list" do

@@ -30,20 +30,18 @@ RSpec.describe SourceDecksController do
         .to have_attributes(type: "ReadingDeck", word_list: source.word_list)
     end
 
-    it "starts the deck at the source's first section" do
+    it "makes the deck over the whole source" do
       source = admin_source
 
       post(source_deck_path(source))
 
-      expect(source.word_list.user.decks.last.snippet)
-        .to eq(source.first_section)
+      expect(source.word_list.user.decks.last.snippet).to be_nil
     end
 
     it "reuses the deck the admin already has over the list" do
       source = admin_source
       word_list = source.word_list
-      snippet = source.first_section
-      create(:reading_deck, user: word_list.user, word_list:, snippet:)
+      create(:reading_deck, user: word_list.user, word_list:)
 
       expect { post(source_deck_path(source)) }.not_to change(Deck, :count)
     end

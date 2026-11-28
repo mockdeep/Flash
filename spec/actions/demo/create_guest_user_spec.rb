@@ -9,11 +9,11 @@ RSpec.describe Demo::CreateGuestUser do
       deck
     end
 
-    it "starts a guest trying a source at its first section" do
+    it "starts a guest trying a source on the whole source" do
       snippet = create(:snippet, :finished)
       result = described_class.call(source: snippet.source, time_zone: "UTC")
 
-      expect(result.deck).to have_attributes(user: result.user, snippet:)
+      expect(result.deck).to have_attributes(user: result.user, snippet: nil)
     end
 
     it "creates a persisted guest user" do

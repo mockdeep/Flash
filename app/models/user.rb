@@ -67,9 +67,9 @@ class User < ApplicationRecord
       .find_or_create_by!(type: "ReadingDeck", word_list:, snippet:)
   end
 
-  # This user's deck for a source's first section, made if need be.
+  # This user's deck over a whole source, made if need be.
   def deck_starting(source)
-    reading_deck_over(source.word_list, snippet: source.first_section)
+    reading_deck_over(source.word_list, snippet: nil)
   end
 
   # This user's deck for a catalog or shared deck: the deck itself, a copy of

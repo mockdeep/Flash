@@ -61,13 +61,13 @@ RSpec.describe CatalogSourcesController do
   end
 
   describe "#copy" do
-    it "makes the member's deck for the first section" do
+    it "makes the member's deck over the whole source" do
       login_as(default_user)
       source = listed_source
 
       post(copy_catalog_source_path(source))
 
-      expect(default_user.decks.last.snippet).to eq(source.first_section)
+      expect(default_user.decks.last.snippet).to be_nil
     end
 
     it "goes to the member's decks" do
@@ -84,12 +84,13 @@ RSpec.describe CatalogSourcesController do
       post(try_catalog_source_path(source), params: { time_zone: "UTC" })
     end
 
-    it "starts a guest at the first section" do
+    it "starts a guest on the whole source" do
       source = listed_source
 
       try_source(source)
 
-      expect(Deck.last).to have_attributes(snippet: source.first_section)
+      word_list = source.word_list
+      expect(Deck.last).to have_attributes(word_list:, snippet: nil)
     end
 
     it "opens the guest's deck" do

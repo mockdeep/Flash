@@ -72,9 +72,6 @@ class Source < ApplicationRecord
   # A text mixing the two stays simplified, so its spellings prove nothing.
   def traditional? = language.traditional && script == "traditional"
 
-  # Where a learner adding the source starts.
-  def first_section = snippets.studyable.first
-
   # An unsaved deck over the whole list, which the catalog shows the source
   # through: its cards, its count and its texts.
   def preview_deck

@@ -49,4 +49,12 @@ RSpec.describe Components::SectionPicker, type: :view do
 
     expect(view.render(described_class.new(deck:))).to be_empty
   end
+
+  it "renders nothing for a deck over the whole source" do
+    first = create(:snippet, :finished)
+    create(:snippet, :finished, word_list: first.word_list)
+    deck = create(:reading_deck, word_list: first.word_list)
+
+    expect(view.render(described_class.new(deck:))).to be_empty
+  end
 end

@@ -42,13 +42,13 @@ RSpec.describe WordListDecksController do
       expect(admin.decks.sole).to have_attributes(word_list: list, snippet: nil)
     end
 
-    it "makes a deck for a source's first section" do
+    it "makes a deck over a source's whole list" do
       admin = login_admin
       snippet = create(:snippet, :finished, word_list: public_list)
 
       post(word_list_deck_path(snippet.word_list))
 
-      expect(admin.decks.sole.snippet).to eq(snippet)
+      expect(admin.decks.sole.snippet).to be_nil
     end
 
     it "opens the deck's study page" do
