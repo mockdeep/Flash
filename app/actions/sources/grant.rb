@@ -11,7 +11,7 @@ module Sources
       reader = source.readers.find_or_initialize_by(user:)
       SourceReader.transaction do
         reader.save!
-        user.deck_starting(source)
+        user.reading_deck_over(source.word_list)
       end
 
       Result.new(success: true, record: reader)

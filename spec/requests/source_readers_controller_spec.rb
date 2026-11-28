@@ -108,7 +108,7 @@ RSpec.describe SourceReadersController do
 
     it "keeps the reader's deck" do
       reader = create(:source_reader, source: admin_source)
-      deck = reader.user.deck_starting(reader.source)
+      deck = reader.user.reading_deck_over(reader.source.word_list)
 
       delete(source_reader_path(reader.source, reader))
 

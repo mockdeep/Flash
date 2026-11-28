@@ -9,35 +9,7 @@ RSpec.describe LanguageDeck do
     end
   end
 
-  # Cards go in through a deck over the whole list; a snippet deck only
-  # shows the ones its snippet uses.
-  def snippet_deck_of(deck, *cards, **)
-    snippet = create(:snippet, word_list: deck.word_list, **)
-    create(:snippet_sentence, snippet:, tokens: tokens_for(cards))
-    create(:reading_deck, word_list: deck.word_list, snippet:)
-  end
-
-  def tokens_for(cards)
-    cards.map do |card|
-      { "text" => card.front, "sense_id" => Integer(card.id.split("-").first) }
-    end
-  end
-
   describe "#name" do
-    it "names a snippet deck for its heading" do
-      deck = create(:reading_deck, name: "Vampiro")
-
-      expect(snippet_deck_of(deck, heading: "Parte Um").name)
-        .to eq("Vampiro · Parte Um")
-    end
-
-    it "names a snippet deck without a heading for its place" do
-      deck = create(:reading_deck, name: "Vampiro")
-      create(:snippet, word_list: deck.word_list)
-
-      expect(snippet_deck_of(deck).name).to eq("Vampiro · 2")
-    end
-
     it "reads through the word_list" do
       deck = create(:reading_deck, name: "HSK 1")
 
@@ -152,37 +124,6 @@ RSpec.describe LanguageDeck do
 
       expect(deck.study_pool(limit: 5).map(&:view_count)).to eq([0])
     end
-
-    it "keeps a snippet deck to the words its snippet uses" do
-      deck = create(:reading_deck)
-      used = create(:language_card, deck:, front: "爱")
-      create(:language_card, deck:, front: "你")
-      snippet_deck = snippet_deck_of(deck, used)
-
-      expect(snippet_deck.study_pool(limit: 10).map(&:front)).to eq(["爱"])
-    end
-
-    def titled(deck, front)
-      card = create(:language_card, deck:, front:)
-      snippet_deck = snippet_deck_of(deck)
-      source = snippet_deck.snippet.source
-      create(:front_matter, source:, tokens: tokens_for([card]))
-      snippet_deck
-    end
-
-    it "gives a snippet deck its source's title and author" do
-      snippet_deck = titled(create(:reading_deck), "春节")
-
-      expect(snippet_deck.study_pool(limit: 10).map(&:front)).to eq(["春节"])
-    end
-
-    it "leaves out another snippet's words" do
-      deck = create(:reading_deck)
-      snippet_deck_of(deck, create(:language_card, deck:, front: "爱"))
-      second = snippet_deck_of(deck, create(:language_card, deck:, front: "你"))
-
-      expect(second.study_pool(limit: 10).map(&:front)).to eq(["你"])
-    end
   end
 
   def sense_of(card, gloss)
@@ -207,18 +148,18 @@ RSpec.describe LanguageDeck do
   end
 
   describe "#name_translation" do
-    it "adds a snippet's heading translation to its source's" do
+    it "is its source's title translation" do
       deck = create(:reading_deck)
       create(:source, word_list: deck.word_list, title_translation: "Vampire")
-      snippet_deck = snippet_deck_of(deck, heading_translation: "Part One")
 
-      expect(snippet_deck.name_translation).to eq("Vampire · Part One")
+      expect(deck.name_translation).to eq("Vampire")
     end
 
-    it "is nil with neither translation" do
+    it "is nil without a translation" do
       deck = create(:reading_deck)
+      create(:source, word_list: deck.word_list)
 
-      expect(snippet_deck_of(deck).name_translation).to be_nil
+      expect(deck.name_translation).to be_nil
     end
   end
 

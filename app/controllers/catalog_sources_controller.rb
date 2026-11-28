@@ -12,7 +12,7 @@ class CatalogSourcesController < ApplicationController
   end
 
   def copy
-    current_user.deck_starting(source)
+    current_user.reading_deck_over(source.word_list)
     flash[:success] = t("catalog.copy.success")
     redirect_to(decks_path)
   end

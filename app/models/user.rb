@@ -62,14 +62,10 @@ class User < ApplicationRecord
     sections.rotate(current).lazy.filter_map(&:first_unmet).first
   end
 
-  def reading_deck_over(word_list, snippet:)
+  # This user's deck over a list, made if need be.
+  def reading_deck_over(word_list)
     decks.create_with(distractor_pool: "category", study_goal:)
-      .find_or_create_by!(type: "ReadingDeck", word_list:, snippet:)
-  end
-
-  # This user's deck over a whole source, made if need be.
-  def deck_starting(source)
-    reading_deck_over(source.word_list, snippet: nil)
+      .find_or_create_by!(type: "ReadingDeck", word_list:)
   end
 
   # This user's deck for a catalog or shared deck: the deck itself, a copy of

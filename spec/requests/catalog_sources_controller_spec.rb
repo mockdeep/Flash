@@ -43,7 +43,7 @@ RSpec.describe CatalogSourcesController do
     it "lets a member who has it study it" do
       login_as(default_user)
       source = listed_source
-      deck = default_user.deck_starting(source)
+      deck = default_user.reading_deck_over(source.word_list)
 
       get(catalog_source_path(source))
 
@@ -67,7 +67,7 @@ RSpec.describe CatalogSourcesController do
 
       post(copy_catalog_source_path(source))
 
-      expect(default_user.decks.last.snippet).to be_nil
+      expect(default_user.decks.last.word_list).to eq(source.word_list)
     end
 
     it "goes to the member's decks" do
@@ -84,13 +84,12 @@ RSpec.describe CatalogSourcesController do
       post(try_catalog_source_path(source), params: { time_zone: "UTC" })
     end
 
-    it "starts a guest on the whole source" do
+    it "starts a guest on the source" do
       source = listed_source
 
       try_source(source)
 
-      word_list = source.word_list
-      expect(Deck.last).to have_attributes(word_list:, snippet: nil)
+      expect(Deck.last.word_list).to eq(source.word_list)
     end
 
     it "opens the guest's deck" do

@@ -22,19 +22,8 @@ class Deck < ApplicationRecord
   }.freeze
   Progress = Data.define(:total, :done, :lowest)
 
-  # The senses a snippet deck studies: those its snippet's sentences use,
-  # and its source's title and author (`Snippet#studied_sense_ids`).
-  SNIPPET_SENSES = <<~SQL.squish
-    SELECT CAST(token ->> 'sense_id' AS bigint)
-    FROM snippets
-    JOIN snippet_sentences ON snippet_sentences.source_id = snippets.source_id
-      AND (snippet_sentences.snippet_id = snippets.id
-        OR snippet_sentences.snippet_id IS NULL)
-    CROSS JOIN jsonb_array_elements(snippet_sentences.tokens) token
-    WHERE snippets.id = decks.snippet_id
-  SQL
-  # A language deck's cards are the entries its list selects (a snippet
-  # deck's, only those its snippet uses), each scored by the weakest of the
+  # A language deck's cards are the entries its list selects, each scored
+  # by the weakest of the
   # owner's skill_scores on the entry's senses, and a guest's deck stops at
   # the first GUEST_CARD_LIMIT of them in list order. Only reading decks
   # exist, so the skill is fixed here until 4.7. Senses are looked up one
@@ -52,8 +41,6 @@ class Deck < ApplicationRecord
       AND skill_scores.user_id = decks.user_id
       AND skill_scores.skill = 'reading'
     WHERE sense_memberships.word_list_id = decks.word_list_id
-      AND (decks.snippet_id IS NULL OR sense_memberships.sense_id IN
-        (#{SNIPPET_SENSES}))
     GROUP BY senses.entry_id
   SQL
   # Both counts come from one pass over the entries, since grouping them is
@@ -89,24 +76,19 @@ class Deck < ApplicationRecord
       (SELECT COUNT(*) FROM cards WHERE cards.deck_id = decks.id)
     ELSE
       (#{ENTRY_COUNT_FROM}
-        WHERE sense_memberships.word_list_id = decks.word_list_id
-        AND (decks.snippet_id IS NULL OR sense_memberships.sense_id IN
-          (#{SNIPPET_SENSES})))
+        WHERE sense_memberships.word_list_id = decks.word_list_id)
     END AS cards_count
   SQL
+
+  # Dropped once this is deployed.
+  self.ignored_columns += ["snippet_id"]
 
   belongs_to :word_list
   belongs_to :user
   belongs_to :source_deck, class_name: "Deck"
-  belongs_to :snippet
   has_many :cards, dependent: :delete_all
   has_one :source, through: :word_list
   has_many :snippets, through: :source
-  belongs_to :studyable_snippet,
-             -> { studyable },
-             class_name: "Snippet",
-             foreign_key: :snippet_id,
-             inverse_of: false
   has_many :study_days, dependent: :delete_all
   has_one :todays_study_day,
           -> { where(studied_on: Date.current) },
@@ -163,10 +145,8 @@ class Deck < ApplicationRecord
   validates :word_list, presence: true, unless: :flat_cards?
   validates :word_list, absence: true, if: :flat_cards?
   validate(:one_deck_per_word_list, unless: :flat_cards?)
-  validate(:snippet_of_word_list, if: :snippet)
 
-  # A source's section decks follow the source.
-  scope :ordered, -> { left_joins(:word_list).order(NAME_SOURCE, :snippet_id) }
+  scope :ordered, -> { left_joins(:word_list).order(NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
   scope :with_progress,
         -> { joins(:user).joins(language_progress).select(PROGRESS_COLUMNS) }
@@ -174,10 +154,7 @@ class Deck < ApplicationRecord
 
   def music? = false
 
-  def name_translation
-    [source&.title_translation, snippet&.heading_translation]
-      .compact_blank.join(" · ").presence
-  end
+  def name_translation = source&.title_translation.presence
 
   def cards_count = self[:cards_count] || progress.total
   def done_count = self[:done_count] || progress.done
@@ -202,10 +179,7 @@ class Deck < ApplicationRecord
 
   def card(id) = cards.find(id)
 
-  # A snippet deck's text is its own snippet.
-  def finished_snippets
-    (snippet ? [snippet] : snippets).select { it.status == :finished }
-  end
+  def finished_snippets = snippets.select { it.status == :finished }
 
   # What the Read tab shows the deck's owner.
   def readable_snippets
@@ -213,9 +187,7 @@ class Deck < ApplicationRecord
   end
 
   def shares_texts?
-    return false unless source&.shareable?
-
-    snippet_id ? studyable_snippet.present? : source.studyable?
+    source.present? && source.shareable? && source.studyable?
   end
 
   # A streak climbs once a day, so a card answered correctly today waits for
@@ -324,11 +296,6 @@ class Deck < ApplicationRecord
 
   def count_progress = cards.pick(*progress_counts)
 
-  # A snippet deck studies only the senses its snippet uses.
-  def studied_senses
-    snippet ? Sense.where(id: snippet.studied_sense_ids) : Sense.all
-  end
-
   def progress_counts
     done = ["COUNT(*) FILTER (WHERE correct_streak >= ?)", round]
     [
@@ -361,16 +328,9 @@ class Deck < ApplicationRecord
   def one_deck_per_word_list
     return if word_list_id.blank?
 
-    sibling =
-      Deck.where(user_id:, word_list_id:, type:, snippet_id:).where.not(id:)
+    sibling = Deck.where(user_id:, word_list_id:, type:).where.not(id:)
     return unless sibling.exists?
 
     errors.add(:base, "This deck is already in your decks")
-  end
-
-  def snippet_of_word_list
-    return if snippet.word_list == word_list
-
-    errors.add(:snippet, "must be from the deck's word list")
   end
 end

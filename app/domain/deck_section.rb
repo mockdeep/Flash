@@ -53,11 +53,7 @@ class DeckSection
 
   def anchor = name.parameterize
 
-  # A source's decks share a card, so they count once.
-  def card_count
-    decks.where(word_list_id: nil).count +
-      decks.distinct.count(:word_list_id) + sources.count
-  end
+  def card_count = decks.count + sources.count
 
   def holds?(deck) = decks.exists?(id: deck)
 

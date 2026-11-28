@@ -12,17 +12,6 @@ RSpec.describe ReadingMap::Started do
     create(:reading_deck, word_list: create(:word_list, **list), **deck)
   end
 
-  # The learner's decks over two sections of one source, in the order
-  # given: each a place in the source, the first being 0.
-  def section_decks(*places)
-    list = create(:word_list)
-    snippets = create_list(:snippet, 2, word_list: list)
-
-    places.map do |place|
-      create(:reading_deck, word_list: list, snippet: snippets[place])
-    end
-  end
-
   def met_goal(deck)
     count = deck.study_goal
     deck.study_days.create!(studied_on: Date.current, completed_count: count)
@@ -40,12 +29,6 @@ RSpec.describe ReadingMap::Started do
       deck = deck_over
 
       expect(started.decks(deck.word_list_id)).to eq([deck])
-    end
-
-    it "gives a source's section decks in the source's order" do
-      decks = section_decks(1, 0)
-
-      expect(started.decks(decks.first.word_list_id)).to eq(decks.reverse)
     end
 
     it "gives none for a list the learner hasn't started" do
@@ -103,13 +86,6 @@ RSpec.describe ReadingMap::Started do
 
     it "puts a deck never studied after one that has been" do
       decks = [deck_over(name: "A"), deck_over({ last_studied_at: 1.day.ago })]
-
-      expect(started.next_deck).to eq(decks.last)
-    end
-
-    it "is a source's first unmet section" do
-      decks = section_decks(0, 1)
-      met_goal(decks.first)
 
       expect(started.next_deck).to eq(decks.last)
     end
