@@ -50,7 +50,7 @@ module Views
             else
               card = study.next_card
 
-              p(class: "study-level") { level_text }
+              render(Components::StudyLevel.new(deck:, level: study.level))
               render(
                 Components::CardFront.new(
                   text: card.front,
@@ -87,13 +87,6 @@ module Views
       end
 
       def goal_reached? = !deck.no_goal? && completed >= study_goal
-
-      # On a deck over a text, how far into it study has reached.
-      def level_text
-        place = StudyPlace.new(deck).page
-        level = "Level #{study.level}"
-        place ? "#{level} · Studying up to page #{place}" : level
-      end
 
       def render_nothing_left
         if deck.all_done?

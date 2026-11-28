@@ -7,7 +7,8 @@ class Study
   FUZZY_FIND_LEVEL = 3
   READING_LEVEL = 2
   # A right answer counts toward the day's goal (`counted`), outside
-  # practice. Only Music completes rounds.
+  # practice. Only Music completes rounds. `level` is the level the card was
+  # asked at, before the answer moved it; Music has none.
   Result =
     Data.define(
       :card,
@@ -20,6 +21,7 @@ class Study
       :round_completed,
       :reading_passed,
       :practice,
+      :level,
     ) do
       def initialize(
         counted: false,
@@ -28,6 +30,7 @@ class Study
         practice: false,
         **rest
       )
+        rest.with_defaults!(level: nil)
         super
       end
 
@@ -126,6 +129,7 @@ class Study
   # streak without recording a translation distractor.
   def answer_reading(card_id:, answer:, possible_answers: [])
     card = deck.card(card_id)
+    level = card.correct_streak + 1
     correct = card.reading == answer
     card.record_miss! unless correct
     Result.new(
@@ -137,11 +141,13 @@ class Study
       possible_answers: [*possible_answers, card.reading].uniq,
       reading_passed: correct,
       practice: practice?,
+      level:,
     )
   end
 
   def answer_card(card_id:, answer:, possible_answers: [])
     card = deck.card(card_id)
+    level = card.correct_streak + 1
     result_answers = [*possible_answers, card.back].uniq
     if card.back == answer
       card.record_correct! unless practice?
@@ -154,6 +160,7 @@ class Study
         possible_answers: result_answers,
         counted: !practice?,
         practice: practice?,
+        level:,
       )
     else
       card.record_miss!(answer)
@@ -165,6 +172,7 @@ class Study
         selected_answer: answer,
         possible_answers: result_answers,
         practice: practice?,
+        level:,
       )
     end
   end

@@ -457,6 +457,7 @@ app/
 │   ├── study_answers.rb          # Study answer area per presentation mode (buttons / fuzzy find, reading stage)
 │   ├── study_example.rb          # Optional example sentence on the answer view
 │   ├── study_goal_dialog.rb      # Edit daily study-goal dialog
+│   ├── study_level.rb            # "Level N" (· "Studying up to page N") above the card, the same before and after the answer
 │   ├── reading_lookup.rb         # A Read-tab word's popover: reading or article + gloss (+ Restudy once the word is done), or why a skipped word has no card
 │   ├── snippet_reading.rb        # Read tab text, one `ReadingPages` page in the `reading` frame: the source's credit on the first page, then the page word by word, each marked by its reading SkillScore (new / missed / done); lookup popovers (Restudy once a word is done)
 │   ├── reading_page_links.rb     # A Read-tab page's Back / Next links (arrow-key hotkeys) around "Page N of M"
