@@ -180,16 +180,6 @@ RSpec.describe Source do
     end
   end
 
-  describe "#first_section" do
-    it "is the first snippet with anything to study" do
-      source = create(:source)
-      create(:snippet, source:)
-      studyable = create(:snippet, :finished, source:)
-
-      expect(source.first_section).to eq(studyable)
-    end
-  end
-
   describe "#preview_deck" do
     it "is an unsaved reading deck over the whole list" do
       source = create(:source)

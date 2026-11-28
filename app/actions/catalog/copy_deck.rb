@@ -37,9 +37,8 @@ module Catalog
 
     def flat_content(source) = { name: source.name, source_deck: source }
 
-    def list_content(source)
-      { word_list: source.word_list, snippet: source.snippet }
-    end
+    # A copy of a deck over a source covers the whole source.
+    def list_content(source) = { word_list: source.word_list }
 
     def copy_rows(source, card_limit)
       copy_distractors = source.distractor_pool == "preset"

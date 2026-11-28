@@ -9,7 +9,8 @@ module Components
       @deck = deck
     end
 
-    def render? = sections.many?
+    # A deck over the whole source has no section to pick.
+    def render? = @deck.snippet && sections.many?
 
     def view_template
       details(class: "section-picker") do

@@ -163,8 +163,6 @@ class Deck < ApplicationRecord
   validates :word_list, presence: true, unless: :flat_cards?
   validates :word_list, absence: true, if: :flat_cards?
   validate(:one_deck_per_word_list, unless: :flat_cards?)
-  # A source is studied a section at a time.
-  validates :snippet, presence: true, if: -> { word_list&.source }
   validate(:snippet_of_word_list, if: :snippet)
 
   # A source's section decks follow the source.

@@ -271,11 +271,11 @@ RSpec.describe User do
   end
 
   describe "#deck_starting" do
-    it "makes the user's deck for the source's first section" do
+    it "makes the user's deck over the whole source" do
       snippet = create(:snippet, :finished)
       user = create(:user)
 
-      expect(user.deck_starting(snippet.source).snippet).to eq(snippet)
+      expect(user.deck_starting(snippet.source).snippet).to be_nil
     end
 
     it "reuses the deck the user already has for it" do

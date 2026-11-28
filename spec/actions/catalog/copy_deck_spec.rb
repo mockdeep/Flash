@@ -85,11 +85,11 @@ RSpec.describe Catalog::CopyDeck do
         create(:reading_deck, word_list: first.word_list, snippet: section)
       end
 
-      it "copies a section's deck at its section" do
+      it "copies a section's deck over the whole source" do
         source = second_section_deck
         result = described_class.call(user: create(:user), deck: source)
 
-        expect(result.record.snippet).to eq(source.snippet)
+        expect(result.record.snippet).to be_nil
       end
 
       it "leaves the copy's progress independent of the source" do
