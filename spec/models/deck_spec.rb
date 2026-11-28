@@ -622,13 +622,58 @@ RSpec.describe Deck do
     end
   end
 
-  describe "#not_done_count" do
-    it "counts the cards whose streak is below the given one" do
+  describe "#target_work_left" do
+    it "counts the steps every card has left to finish" do
       deck = create(:deck)
       create(:basic_card, deck:, correct_streak: 1)
-      create(:basic_card, deck:, correct_streak: 2)
+      create(:basic_card, deck:, correct_streak: Deck::LEVELS)
 
-      expect(deck.not_done_count(2)).to eq(1)
+      expect(deck.target_work_left).to eq(2)
+    end
+
+    it "is nothing for a deck without cards" do
+      expect(create(:deck).target_work_left).to eq(0)
+    end
+  end
+
+  describe "#target_label" do
+    it "is the deck without a chapter" do
+      expect(described_class.new.target_label).to eq("the deck")
+    end
+
+    it "is the chapter's label" do
+      snippet = create(:snippet, heading: "Capítulo III")
+
+      expect(described_class.new(target_snippet: snippet).target_label)
+        .to eq("Capítulo III")
+    end
+  end
+
+  describe "#target_snippet" do
+    def chapter_target(snippet)
+      { **target_attributes, target_snippet: snippet }
+    end
+
+    it "must be from the deck's text" do
+      deck = create(:reading_deck)
+
+      expect(deck.update(chapter_target(create(:snippet)))).to be(false)
+    end
+
+    it "may be a chapter of the deck's text" do
+      snippet = create(:snippet)
+      deck = create(:reading_deck, word_list: snippet.word_list)
+
+      expect(deck.update(chapter_target(snippet))).to be(true)
+    end
+
+    it "is cleared outside target mode" do
+      snippet = create(:snippet)
+      deck = create(:reading_deck, word_list: snippet.word_list)
+      deck.update!(chapter_target(snippet))
+
+      expect { deck.update!(goal_mode: "session") }
+        .to change_record(deck, :target_snippet_id).to(nil)
     end
   end
 

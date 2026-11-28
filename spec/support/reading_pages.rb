@@ -16,6 +16,23 @@ module Helpers
       [create(:reading_deck, word_list:), sentences.last]
     end
 
+    # A deck over a new text of two chapters, "I" and "II", each using one
+    # word at the given streak; and the chapters.
+    def chapter_deck(*streaks)
+      deck = create(:reading_deck)
+      source = create(:source, word_list: deck.word_list)
+      chapters = ["I", "II"].map { create(:snippet, source:, heading: it) }
+      chapters.zip(streaks).each { word_in_chapter(deck, *it) }
+      [deck, chapters]
+    end
+
+    def word_in_chapter(deck, snippet, correct_streak)
+      card = create(:language_card, deck:, correct_streak:)
+      sense_id = Integer(card.id.split("-").first)
+      tokens = [{ "text" => card.front, "sense_id" => sense_id }]
+      create(:snippet_sentence, snippet:, tokens:)
+    end
+
     def one_word_sentence(snippet, word, position)
       sense = create(:sense, entry: create(:entry, headword: word))
       tokens = [{ "text" => word, "sense_id" => sense.id }, { "text" => "。" }]

@@ -16,8 +16,8 @@ module Components
         close you are.
       TEXT
       "target" => <<~TEXT,
-        Pick a date to finish the deck by. Each day's goal is worked out for
-        you.
+        Pick a date to finish the deck by, or for a text, a chapter to get
+        up to. Each day's goal is worked out for you.
       TEXT
     }.freeze
 

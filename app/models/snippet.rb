@@ -70,6 +70,17 @@ class Snippet < ApplicationRecord
 
   def title = [source.title, heading].compact_blank.join(" · ")
 
+  # What a learner picks it by: its heading, or its place in its source.
+  def label = heading.presence || "Section #{source.snippets.index(self) + 1}"
+
+  # The senses its source's sentences use up to and including it, the
+  # title and author among them.
+  def sense_ids_through
+    SnippetSentence.where(source_id:)
+      .where("snippet_id IS NULL OR snippet_id <= ?", id)
+      .select(TOKEN_SENSE_IDS)
+  end
+
   # New or finished when every sentence is; in progress otherwise.
   def status
     statuses = sentences.map(&:status).uniq

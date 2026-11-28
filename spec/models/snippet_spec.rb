@@ -71,6 +71,46 @@ RSpec.describe Snippet do
     end
   end
 
+  describe "#label" do
+    it "is its heading" do
+      expect(create(:snippet, heading: "Parte Um").label).to eq("Parte Um")
+    end
+
+    it "is its place in its source without a heading" do
+      first = create(:snippet)
+      second = create(:snippet, source: first.source)
+
+      expect(second.label).to eq("Section 2")
+    end
+  end
+
+  describe "#sense_ids_through" do
+    def sentence_using(snippet, sense_id, **)
+      create(
+        :snippet_sentence,
+        snippet:,
+        tokens: [{ "sense_id" => sense_id }],
+        **,
+      )
+    end
+
+    # Chapters using senses 1 and 2, under a title using sense 3.
+    def first_of_two
+      first = create(:snippet)
+      sentence_using(first, 1)
+      sentence_using(create(:snippet, source: first.source), 2)
+      create(:front_matter, source: first.source, tokens: [{ "sense_id" => 3 }])
+      first
+    end
+
+    it "holds the senses up to and including it, with the front matter" do
+      first = first_of_two
+
+      expect(first.sense_ids_through.pluck(Snippet::TOKEN_SENSE_IDS))
+        .to contain_exactly(1, 3)
+    end
+  end
+
   describe "#title" do
     it "joins the source's title and the heading" do
       source = build(:source, title: "春节")

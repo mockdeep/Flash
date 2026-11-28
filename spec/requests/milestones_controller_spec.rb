@@ -17,6 +17,15 @@ RSpec.describe MilestonesController do
   end
 
   describe "#update" do
+    it "sets a chapter to get up to" do
+      login_as(default_user)
+      deck, (snippet,) = chapter_deck(0, 0)
+      chapter = { **target_params[:deck], target_snippet_id: snippet.id }
+
+      expect { update_milestone(deck, deck: chapter) }
+        .to change_record(deck, :target_snippet_id).to(snippet.id)
+    end
+
     it "updates the deck study goal" do
       login_as(default_user)
       deck = create(:deck)
