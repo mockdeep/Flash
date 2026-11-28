@@ -7,7 +7,7 @@ module Views
         div(class: "guide") do
           h1 { "How Flash Works" }
           render_lead
-          render(Components::GuideRounds.new)
+          render(Components::GuideLevels.new)
           render(Components::GuideGoals.new)
           render(Components::GuideReading.new)
         end

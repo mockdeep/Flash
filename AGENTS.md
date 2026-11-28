@@ -431,7 +431,7 @@ app/
 │   ├── guide_example.rb          # Captioned figure around a guide picture
 │   ├── guide_goals.rb            # Guide #goals section: the three goal modes, milestone buttons
 │   ├── guide_reading.rb          # Guide #reading section: sample Read-tab words in each state
-│   ├── guide_rounds.rb           # Guide #rounds section: one card (花) through rounds 1–3
+│   ├── guide_levels.rb           # Guide #levels section: one card (花) through levels 1–3, the daily order and the level bar
 │   ├── card_reading.rb           # Pronunciation/pinyin gloss (rendered inside CardFront on reveal)
 │   ├── catalog_rail_card.rb      # A catalog rail card: a public deck, or a listed source through its preview deck
 │   ├── catalog_toggle_button.rb  # Add / remove a deck or source to the catalog, given its listing path
@@ -585,7 +585,7 @@ app/
 │   │   └── replacements/
 │   │       └── new.rb        # Re-import (replace) a deck's cards form
 │   ├── pages/
-│   │   ├── guide.rb          # Public "How Flash Works": rounds (one card through rounds 1–3), goals, the Read tab; sections #rounds / #goals / #reading
+│   │   ├── guide.rb          # Public "How Flash Works": levels (one card through levels 1–3), goals, the Read tab; sections #levels / #goals / #reading
 │   │   ├── pricing.rb
 │   │   ├── privacy.rb
 │   │   └── terms.rb
@@ -963,7 +963,7 @@ When a deck reaches its goal for the day, the milestone's main button moves on t
 A deck can aim to be finished by a date, or a deck over a text to get up to a chapter by a date, and the daily goal is worked out from it instead of set by hand:
 - **Set** in the study-goal dialog (`Components::StudyGoalDialog` → `MilestonesController#update`). It holds three whole forms (`Components::GoalForm`, one per `deck.goal_mode`, each with a hidden `goal_mode` field and a `namespace:` for unique ids; the "none" form has no fields) and a "No goal" / "Daily goal" / "Target date" radio set outside the forms. A `:has()` rule in `edit-card.css` shows the form matching the checked radio, so no JS is involved and the hidden form never submits. The target form's fields are `Components::TargetGoalFields` ("Finish": the whole deck or "Up to" each studyable snippet by `Snippet#label`, shown once the text has more than one; "By" a date; and today's goal with a Recalculate button once a target is saved).
 - **Chapter**: `decks.target_snippet_id` (none for the whole deck) must be a snippet of the deck's source. A push that deletes it sets it to null, leaving the target on the whole deck. `Deck#target_label` names it in prompts ("the deck", or the chapter's label).
-- **Validation**: `target_date` is required in `"target"` mode, and a `before_validation` clears it and the chapter in the other modes. It must not be past, checked only when it changes, so a deck can outlive its date. (`target_round` is left from round targets; `Deck` ignores it until it is dropped.)
+- **Validation**: `target_date` is required in `"target"` mode, and a `before_validation` clears it and the chapter in the other modes. It must not be past, checked only when it changes, so a deck can outlive its date.
 - **Maths** (`Deck#target_goal`): work left (`Deck#target_work_left`, one query, kept until `reload`) = the steps every card the target covers has left to finish (`Deck::STEPS_LEFT`: 3 minus its streak), divided by the days left including today, rounded up. A chapter target covers the entries holding a sense its source's sentences use up to and including that chapter, the title and author among them (`Snippet#sense_ids_through`, `LanguageDeck#target_rows`). A passed date puts all the work left on today.
 - **Saved** on `StudyDay#goal` when today's row is created, and again (with the count reset to 0) by `StudyDay#recalculate!` when the goal mode or target changes or the dialog's "Recalculate" button is pressed. `StudyDay#study_goal` uses it in target mode, else the deck's daily goal; a day's row made after the deck is finished saves no goal, so it falls back.
 - **Lowering the goal**: a new batch (the milestone's Keep Going, or Reset All Goals) goes through `StudyDay#keep_going!` instead, which sizes the batch to `Deck#cards_to_lower_goal` — one step per day after today, which always lowers tomorrow's goal (`Deck#next_target_goal`: work left over the days *after* today, rounded up) by one, so every batch is the same size. With no day after today, or less work left than that, the batch is all the work left. The milestone shows "Your daily goal is now N cards" from `next_target_goal`, so each extra batch ends on a visibly lower goal; nothing new is stored.
