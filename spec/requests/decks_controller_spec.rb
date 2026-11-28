@@ -160,7 +160,7 @@ RSpec.describe DecksController do
 
     it "shows Done for a deck whose cards are all done" do
       deck = create(:deck, user: default_user)
-      create(:basic_card, deck:, correct_streak: 1)
+      create(:basic_card, :done, deck:)
       login_as(default_user)
 
       get(decks_path)
@@ -197,10 +197,16 @@ RSpec.describe DecksController do
       expect(rendered).to have_text("Last studied about 1 hour ago")
     end
 
+    # A deck with a card to study.
+    def carded_deck(**)
+      deck = create(:deck, user: default_user, **)
+      deck.tap { create(:basic_card, deck:) }
+    end
+
     def seed_unmet_and_recent
       studied_deck("Recent", 1.hour.ago)
-      create(:deck, user: default_user, name: "Zebra")
-      create(:deck, user: default_user, name: "Apple")
+      carded_deck(name: "Zebra")
+      carded_deck(name: "Apple")
     end
 
     it "features the first deck with an unmet goal over a recent one" do
@@ -213,7 +219,8 @@ RSpec.describe DecksController do
     end
 
     def level_deck(name, level)
-      create(:reading_deck, word_list: create(:word_list, level:, name:))
+      deck = create(:reading_deck, word_list: create(:word_list, level:, name:))
+      deck.tap { create(:language_card, deck:) }
     end
 
     it "features the deck the reading map puts next in a language" do
@@ -228,7 +235,7 @@ RSpec.describe DecksController do
 
     it "labels a featured deck with an unmet goal as up next" do
       login_as(default_user)
-      create(:deck, user: default_user)
+      carded_deck
 
       get(decks_path)
 
@@ -238,7 +245,7 @@ RSpec.describe DecksController do
     def seed_met_and_unmet
       met = create(:deck, user: default_user, name: "Apple", study_goal: 1)
       met.study_days.create!(studied_on: Date.current, completed_count: 1)
-      create(:deck, user: default_user, name: "Zebra")
+      carded_deck(name: "Zebra")
     end
 
     it "skips decks that have met today's goal" do
@@ -251,9 +258,9 @@ RSpec.describe DecksController do
     end
 
     def seed_waiting_and_unmet
-      waiting = create(:deck, user: default_user, name: "Apple", round: 2)
+      waiting = create(:deck, user: default_user, name: "Apple")
       create(:basic_card, :correct_today, deck: waiting)
-      create(:deck, user: default_user, name: "Zebra")
+      carded_deck(name: "Zebra")
     end
 
     it "skips decks waiting for tomorrow" do
@@ -295,47 +302,66 @@ RSpec.describe DecksController do
 
     it "features a deck in each section" do
       login_as(default_user)
-      create(:reading_deck)
-      create(:deck)
+      create(:language_card, deck: create(:reading_deck))
+      carded_deck
 
       get(decks_path)
 
       expect(rendered).to have_css(".rail-card--featured", count: 2)
     end
 
-    it "shows filled segments for completed rounds" do
-      deck = create(:deck, user: default_user, round: 3, goal_mode: "none")
-      create(:basic_card, deck:)
-      login_as(default_user)
-
-      get(decks_path)
-
-      expect(rendered).to have_css(".round-fill--done", count: 2)
-    end
-
-    def seed_half_done_deck
+    # A deck half finished.
+    def half_done_deck
       deck = create(:deck, user: default_user)
       create(:basic_card, :done, deck:)
       create(:basic_card, deck:)
+      login_as(default_user)
     end
 
-    it "partially fills the current round's segment" do
-      seed_half_done_deck
-      login_as(default_user)
+    it "shows a deck's words by level" do
+      half_done_deck
 
       get(decks_path)
 
-      expect(rendered).to have_css(".round-fill[style='width: 50%']")
+      expect(rendered).to have_css(".level-bar__finished")
     end
 
-    it "marks decks past the final round as complete" do
-      deck = create(:deck, user: default_user, round: 4)
-      create(:basic_card, deck:)
+    it "says how much of a deck is finished" do
+      half_done_deck
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".round-tag", text: "50% finished")
+    end
+
+    it "marks a deck whose cards are all finished as complete" do
+      deck = create(:deck, user: default_user)
+      create(:basic_card, :done, deck:)
       login_as(default_user)
 
       get(decks_path)
 
       expect(rendered).to have_css(".round-tag--complete", text: "Complete ✓")
+    end
+
+    it "marks a music deck past its last round as complete" do
+      deck = create(:music_deck, user: default_user, round: 4)
+      create(:music_card, deck:)
+      login_as(default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".round-tag--complete", text: "Complete ✓")
+    end
+
+    it "shows a music deck's rounds" do
+      deck = create(:music_deck, user: default_user, round: 2)
+      create(:music_card, deck:)
+      login_as(default_user)
+
+      get(decks_path)
+
+      expect(rendered).to have_css(".round-tag", text: "Round 2")
     end
 
     it "shows a catalog badge for a public deck" do
@@ -415,13 +441,22 @@ RSpec.describe DecksController do
       expect(rendered).to have_text("Study Deck")
     end
 
-    it "shows the deck's round" do
-      deck = create(:deck, round: 2)
+    it "shows a music deck's round" do
+      deck = create(:music_deck, round: 2)
       login_as(default_user)
 
       get(deck_path(deck))
 
       expect(rendered).to have_css(".catalog-show-meta", text: "Round 2")
+    end
+
+    it "leaves the round out for other decks" do
+      deck = create(:deck, round: 2)
+      login_as(default_user)
+
+      get(deck_path(deck))
+
+      expect(rendered).to have_no_css(".catalog-show-meta", text: "Round")
     end
 
     it "shows the language of a language deck" do

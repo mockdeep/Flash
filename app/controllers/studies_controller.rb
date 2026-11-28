@@ -6,7 +6,6 @@ class StudiesController < ApplicationController
 
   def show
     deck = find_deck
-    deck.catch_up_round!
     practice = practice?(deck)
     study = Study.for(deck:, exclude_card_id: params[:exclude], practice:)
     deck.study_days.today.keep_going! if params[:reset_session]
@@ -52,7 +51,7 @@ class StudiesController < ApplicationController
   end
 
   def record_completion(deck, result)
-    deck.study_days.today.record_completion! if result.card_completed?
+    deck.study_days.today.record_completion! if result.counted?
   end
 
   # Music decks have no study goal, so their views take no session progress.

@@ -153,9 +153,19 @@ RSpec.describe DeckSection do
   end
 
   describe "#first_unmet" do
+    it "skips a deck with nothing to study" do
+      create(:deck, name: "Alpha")
+      deck = create(:deck, name: "Zebra")
+      create(:basic_card, deck:)
+
+      section = described_class.for(default_user.decks).first
+      expect(section.first_unmet).to eq(deck)
+    end
+
     it "returns the first deck by name still under today's goal" do
-      create(:deck, name: "Zebra")
+      create(:basic_card, deck: create(:deck, name: "Zebra"))
       deck = create(:deck, name: "Alpha")
+      create(:basic_card, deck:)
 
       section = described_class.for(default_user.decks).first
       expect(section.first_unmet).to eq(deck)
@@ -164,7 +174,7 @@ RSpec.describe DeckSection do
     def level_deck(level, name)
       word_list = create(:word_list, level:, name:)
 
-      create(:reading_deck, word_list:)
+      create(:reading_deck, word_list:).tap { create(:language_card, deck: it) }
     end
 
     it "follows the reading map in a language" do

@@ -12,14 +12,14 @@ class SkillScore < ApplicationRecord
   validates :skill, inclusion: { in: SKILLS }
   validates :sense_id, uniqueness: { scope: [:user_id, :skill] }
 
-  # How the word stands at a deck's round, as the Read tab marks it; nil
-  # while it is part way there.
-  def state(round)
+  # How the word stands, as the Read tab marks it; nil while it is part way
+  # to finished.
+  def state
     if view_count.zero?
       "new"
     elsif correct_streak.zero?
       "missed"
-    elsif correct_streak >= round
+    elsif correct_streak >= Deck::LEVELS
       "done"
     end
   end

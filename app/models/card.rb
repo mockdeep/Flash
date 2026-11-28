@@ -32,7 +32,7 @@ class Card < ApplicationRecord
 
   def self.backs = pluck(:back)
 
-  def done? = correct_streak >= deck.round
+  def done? = correct_streak >= deck.finish_streak
 
   # A miss resets the streak; when the chosen answer is given it's also
   # remembered as a distractor for future option lists (the reading stage

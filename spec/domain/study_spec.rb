@@ -19,17 +19,11 @@ RSpec.describe Study do
     end
   end
 
-  describe "#active_card_threshold" do
-    it "returns the base threshold at round 1" do
-      deck = create(:deck, round: 1)
+  describe "#level" do
+    it "is one past the card's streak" do
+      card = create(:basic_card, correct_streak: 1)
 
-      expect(described_class.new(deck:).active_card_threshold).to eq(20)
-    end
-
-    it "doubles with each round" do
-      deck = create(:deck, round: 3)
-
-      expect(described_class.new(deck:).active_card_threshold).to eq(80)
+      expect(described_class.new(deck: card.deck).level).to eq(2)
     end
   end
 
@@ -43,13 +37,31 @@ RSpec.describe Study do
       expect(study.next_card).to be_a(Card)
     end
 
-    it "limits cards to threshold" do
-      stub_const("Study::ACTIVE_CARD_THRESHOLD", 5)
-      deck = create(:deck, round: 1)
+    it "limits cards to the window" do
+      stub_const("Study::WINDOW", 5)
+      deck = create(:deck)
       create_list(:basic_card, 10, deck:)
       card = described_class.new(deck:).next_card
 
       expect(deck.cards.not_done(1).ordered.limit(5)).to include(card)
+    end
+
+    it "studies the highest level first" do
+      deck = create(:deck)
+      create(:basic_card, deck:)
+      high = create(:basic_card, deck:, correct_streak: 1, view_count: 1)
+
+      expect(described_class.new(deck:).next_card).to eq(high)
+    end
+
+    it "keeps to the highest level's batch" do
+      deck = create(:deck)
+      high = create(:basic_card, deck:, correct_streak: 2, view_count: 2)
+      create(:basic_card, deck:)
+
+      study = described_class.new(deck:, exclude_card_id: high.id)
+
+      expect(study.next_card).to eq(high)
     end
 
     it "returns nil when no cards available" do
@@ -69,9 +81,9 @@ RSpec.describe Study do
       expect(study.next_card).to be_nil
     end
 
-    it "does not return cards beyond the threshold" do
-      stub_const("Study::ACTIVE_CARD_THRESHOLD", 5)
-      deck = create(:deck, round: 1)
+    it "does not return cards beyond the window" do
+      stub_const("Study::WINDOW", 5)
+      deck = create(:deck)
       create_list(:basic_card, 10, deck:)
       card = described_class.new(deck:).next_card
 
@@ -140,117 +152,71 @@ RSpec.describe Study do
       deck = create(:deck)
       card = create(:basic_card, deck:)
       study = described_class.new(deck:).tap(&:next_card)
-      card.update!(correct_streak: deck.round)
+      card.update!(correct_streak: Deck::LEVELS)
 
       expect(study.next_card).to eq(card)
     end
   end
 
   describe "#presentation_mode" do
-    it "returns :multiple_choice below the fuzzy find round" do
-      deck = create(:deck, round: described_class::FUZZY_FIND_ROUND - 1)
+    def study_of(streak, reading: nil, **)
+      card = create(:basic_card, correct_streak: streak, reading:)
+      described_class.new(deck: card.deck, **)
+    end
 
-      expect(described_class.new(deck:).presentation_mode)
+    def pinned(streak, reading: nil)
+      card = create(:basic_card, correct_streak: streak, reading:)
+      described_class.new(deck: card.deck, card_id: card.id)
+    end
+
+    it "returns :multiple_choice at level 1" do
+      expect(study_of(0, reading: "liǎng").presentation_mode)
         .to eq(:multiple_choice)
     end
 
-    it "returns :fuzzy_find at the fuzzy find round" do
-      deck = create(:deck, round: described_class::FUZZY_FIND_ROUND)
-
-      expect(described_class.new(deck:).presentation_mode).to eq(:fuzzy_find)
+    it "returns :reading at level 2 for a card with a reading" do
+      expect(study_of(1, reading: "liǎng").presentation_mode).to eq(:reading)
     end
 
-    it "returns :fuzzy_find above the fuzzy find round" do
-      deck = create(:deck, round: described_class::FUZZY_FIND_ROUND + 1)
-
-      expect(described_class.new(deck:).presentation_mode).to eq(:fuzzy_find)
+    it "returns :multiple_choice at level 2 for a card without a reading" do
+      expect(study_of(1).presentation_mode).to eq(:multiple_choice)
     end
 
-    context "when the deck is at the reading round" do
-      def reading_round_deck
-        create(:deck, round: described_class::READING_ROUND)
-      end
-
-      it "returns :reading when the next card has a reading" do
-        deck = reading_round_deck
-        create(:basic_card, deck:, reading: "liǎng")
-
-        expect(described_class.new(deck:).presentation_mode).to eq(:reading)
-      end
-
-      it "returns :multiple_choice when the next card has no reading" do
-        deck = reading_round_deck
-        create(:basic_card, deck:)
-
-        expect(described_class.new(deck:).presentation_mode)
-          .to eq(:multiple_choice)
-      end
-
-      it "returns :multiple_choice when pinned to a card by card_id" do
-        deck = reading_round_deck
-        card = create(:basic_card, deck:, reading: "liǎng")
-
-        study = described_class.new(deck:, card_id: card.id)
-
-        expect(study.presentation_mode).to eq(:multiple_choice)
-      end
-    end
-
-    context "when the deck is at the fuzzy find round" do
-      def fuzzy_find_deck
-        create(:deck, round: described_class::FUZZY_FIND_ROUND)
-      end
-
-      it "returns :fuzzy_reading when the next card has a reading" do
-        deck = fuzzy_find_deck
-        create(:basic_card, deck:, reading: "liǎng")
-
-        expect(described_class.new(deck:).presentation_mode)
-          .to eq(:fuzzy_reading)
-      end
-
-      it "returns :fuzzy_find when pinned to a card by card_id" do
-        deck = fuzzy_find_deck
-        card = create(:basic_card, deck:, reading: "liǎng")
-
-        study = described_class.new(deck:, card_id: card.id)
-
-        expect(study.presentation_mode).to eq(:fuzzy_find)
-      end
-    end
-
-    it "returns :multiple_choice below the reading round" do
-      deck = create(:deck, round: described_class::READING_ROUND - 1)
-      create(:basic_card, deck:, reading: "liǎng")
-
-      expect(described_class.new(deck:).presentation_mode)
+    it "returns :multiple_choice at level 2 once the reading is confirmed" do
+      expect(pinned(1, reading: "liǎng").presentation_mode)
         .to eq(:multiple_choice)
+    end
+
+    it "returns :fuzzy_reading at level 3 for a card with a reading" do
+      expect(study_of(2, reading: "liǎng").presentation_mode)
+        .to eq(:fuzzy_reading)
+    end
+
+    it "returns :fuzzy_find at level 3 for a card without a reading" do
+      expect(study_of(2).presentation_mode).to eq(:fuzzy_find)
+    end
+
+    it "returns :fuzzy_find at level 3 once the reading is confirmed" do
+      expect(pinned(2, reading: "liǎng").presentation_mode).to eq(:fuzzy_find)
     end
   end
 
   describe "#prompt_reading" do
-    def deck_with_twins(round:)
-      deck = create(:reading_deck, round:)
-      create(:language_card, deck:, front: "过", reading: "guò")
-      create(:language_card, deck:, front: "过", reading: "guo")
-      deck
-    end
-
     it "shows a homograph's reading on the translation question" do
-      study = described_class.new(deck: deck_with_twins(round: 1))
+      study = described_class.new(deck: twins(correct_streak: 0))
 
       expect(study.prompt_reading).to eq(study.next_card.reading)
     end
 
     it "hides a homograph's reading during the reading stage" do
-      deck = deck_with_twins(round: described_class::READING_ROUND)
+      deck = twins(correct_streak: 1)
 
       expect(described_class.new(deck:).prompt_reading).to be_nil
     end
 
     it "shows a confirmed reading" do
-      deck = create(:deck, round: described_class::READING_ROUND)
-      card = create(:basic_card, deck:, reading: "liǎng")
+      deck = create(:deck)
+      card = create(:basic_card, deck:, reading: "liǎng", correct_streak: 1)
 
       study = described_class.new(deck:, card_id: card.id)
 
@@ -263,6 +229,15 @@ RSpec.describe Study do
 
       expect(described_class.new(deck:).prompt_reading).to be_nil
     end
+  end
+
+  # A language deck holding two words written alike, at the given streak.
+  def twins(correct_streak:)
+    deck = create(:reading_deck)
+    ["guò", "guo"].each do |reading|
+      create(:language_card, deck:, front: "过", reading:, correct_streak:)
+    end
+    deck
   end
 
   describe "#possible_answers" do
@@ -432,12 +407,10 @@ RSpec.describe Study do
     end
 
     context "when in fuzzy find mode" do
-      def fuzzy_find_deck
-        create(:deck, round: Study::FUZZY_FIND_ROUND)
-      end
+      def fuzzy_find_deck = create(:deck)
 
       def almost_done_card(deck, back)
-        create(:basic_card, deck:, back:, correct_streak: deck.round - 1)
+        create(:basic_card, deck:, back:, correct_streak: Deck::LEVELS - 1)
       end
 
       it "returns all back values for cards in the deck" do
@@ -463,8 +436,8 @@ RSpec.describe Study do
 
     context "when in fuzzy reading mode" do
       def deck_with_prompt(reading:)
-        deck = create(:deck, round: Study::FUZZY_FIND_ROUND)
-        create(:basic_card, deck:, reading:)
+        deck = create(:deck)
+        create(:basic_card, deck:, reading:, correct_streak: Deck::LEVELS - 1)
         deck
       end
 
@@ -491,20 +464,17 @@ RSpec.describe Study do
       end
 
       it "excludes the readings of homograph twins" do
-        deck = create(:reading_deck, round: Study::FUZZY_FIND_ROUND)
-        create(:language_card, deck:, front: "过", reading: "guò")
-        create(:language_card, deck:, front: "过", reading: "guo")
-        study = described_class.new(deck:)
+        study = described_class.new(deck: twins(correct_streak: 2))
 
         expect(study.possible_answers).to eq([study.next_card.reading])
       end
     end
 
     context "when in reading mode" do
-      # A reading-round deck holding the prompt card the study will pick.
+      # A deck holding the level 2 prompt card the study will pick.
       def deck_with_prompt(front:, reading:)
-        deck = create(:deck, round: Study::READING_ROUND)
-        create(:basic_card, deck:, front:, reading:)
+        deck = create(:deck)
+        create(:basic_card, deck:, front:, reading:, correct_streak: 1)
         deck
       end
 
@@ -530,10 +500,7 @@ RSpec.describe Study do
       end
 
       it "excludes the readings of homograph twins" do
-        deck = create(:reading_deck, round: Study::READING_ROUND)
-        create(:language_card, deck:, front: "过", reading: "guò")
-        create(:language_card, deck:, front: "过", reading: "guo")
-        study = described_class.new(deck:)
+        study = described_class.new(deck: twins(correct_streak: 1))
 
         expect(study.possible_answers).to eq([study.next_card.reading])
       end
@@ -688,8 +655,7 @@ RSpec.describe Study do
 
   describe "#answer_reading" do
     def reading_card(**attrs)
-      deck = create(:deck, round: Study::READING_ROUND)
-      create(:basic_card, deck:, reading: "liǎng", **attrs)
+      create(:basic_card, reading: "liǎng", correct_streak: 1, **attrs)
     end
 
     def answer_reading(card:, answer:)
@@ -799,7 +765,7 @@ RSpec.describe Study do
     end
 
     it "leaves a right answer unscored" do
-      card = create(:basic_card, :correct_today, deck: create(:deck, round: 2))
+      card = create(:basic_card, :correct_today)
 
       practice_answer(card, card.back)
 
@@ -807,15 +773,21 @@ RSpec.describe Study do
     end
 
     it "resets the streak on a miss" do
-      card = create(:basic_card, :correct_today, deck: create(:deck, round: 2))
+      card = create(:basic_card, :correct_today)
 
       practice_answer(card, "wrong")
 
       expect(card.reload.correct_streak).to eq(0)
     end
 
+    it "doesn't count a right answer toward the day's goal" do
+      card = create(:basic_card, :correct_today)
+
+      expect(practice_answer(card, card.back).counted?).to be(false)
+    end
+
     it "marks the result as practice" do
-      card = create(:basic_card, :correct_today, deck: create(:deck, round: 2))
+      card = create(:basic_card, :correct_today)
 
       expect(practice_answer(card, card.back).practice?).to be(true)
     end
@@ -853,80 +825,33 @@ RSpec.describe Study do
         expect(card.reload.correct_streak).to eq(1)
       end
 
-      it "marks card as done when streak reaches deck round" do
-        deck = create(:deck, round: 1)
-        card = create(:basic_card, deck:, back: "Paris")
-        create(:basic_card, deck:)
+      it "finishes a card at the last level" do
+        deck = create(:deck)
+        card = create(:basic_card, deck:, correct_streak: Deck::LEVELS - 1)
         answer_card(deck:, card:)
 
         expect(card.reload.done?).to be(true)
       end
 
-      it "keeps card not done when streak below deck round" do
-        deck = create(:deck, round: 5)
-        card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
-        study = described_class.new(deck:)
-
-        study.answer_card(card_id: card.id, answer: "Paris")
+      it "keeps a card unfinished below the last level" do
+        deck = create(:deck)
+        card = create(:basic_card, deck:)
+        answer_card(deck:, card:)
 
         expect(card.reload.done?).to be(false)
       end
 
-      it "returns card_completed true when streak meets deck round" do
-        deck = create(:deck, round: 1)
-        card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
-        study = described_class.new(deck:)
+      it "counts the answer toward the day's goal" do
+        card = create(:basic_card)
 
-        result = study.answer_card(card_id: card.id, answer: "Paris")
-
-        expect(result.card_completed?).to be(true)
+        expect(answer_card(deck: card.deck, card:).counted?).to be(true)
       end
 
-      it "returns card_completed false when streak below deck round" do
-        deck = create(:deck, round: 5)
-        card = create(:basic_card, deck:, back: "Paris", correct_streak: 0)
-        study = described_class.new(deck:)
+      it "leaves the deck's round alone" do
+        deck = create(:deck)
+        card = create(:basic_card, deck:)
 
-        result = study.answer_card(card_id: card.id, answer: "Paris")
-
-        expect(result.card_completed?).to be(false)
-      end
-
-      it "returns round_completed true when last card is completed" do
-        deck = create(:deck, round: 1)
-        card = create(:basic_card, deck:, back: "Paris")
-        study = described_class.new(deck:)
-
-        result = study.answer_card(card_id: card.id, answer: "Paris")
-
-        expect(result.round_completed?).to be(true)
-      end
-
-      it "advances deck round when last card is completed" do
-        deck = create(:deck, round: 1)
-        card = create(:basic_card, deck:, back: "Paris")
-        answer_card(deck:, card:)
-
-        expect(deck.reload.round).to eq(2)
-      end
-
-      it "returns round_completed false when other cards remain" do
-        deck = create(:deck, round: 1)
-        card = create(:basic_card, deck:, back: "Paris")
-        create(:basic_card, deck:)
-
-        result = answer_card(deck:, card:)
-
-        expect(result.round_completed?).to be(false)
-      end
-
-      it "does not advance deck round when other cards remain" do
-        deck = create(:deck, round: 1)
-        card = create(:basic_card, deck:, back: "Paris")
-        create(:basic_card, deck:)
-        answer_card(deck:, card:)
-
-        expect(deck.reload.round).to eq(1)
+        expect { answer_card(deck:, card:) }.not_to change_record(deck, :round)
       end
 
       it "returns result with correct true" do
@@ -1038,14 +963,14 @@ RSpec.describe Study do
         expect(card.reload.distractors).to eq(["London"])
       end
 
-      it "returns result with card_completed false" do
+      it "doesn't count the answer toward the day's goal" do
         deck = create(:deck)
         card = create(:basic_card, deck:, back: "Paris")
         study = described_class.new(deck:)
 
         result = study.answer_card(card_id: card.id, answer: "London")
 
-        expect(result.card_completed?).to be(false)
+        expect(result.counted?).to be(false)
       end
 
       it "returns result with correct false" do

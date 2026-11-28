@@ -5,10 +5,13 @@ class Deck < ApplicationRecord
   DISTRACTOR_POOLS = ["category", "preset", "none"].freeze
   GOAL_MODES = ["none", "session", "target"].freeze
   NAME_SOURCE = Arel.sql("COALESCE(decks.name, word_lists.name)")
+  # A word climbs a level with each day it is answered right and is
+  # finished at this streak. Music decks go by rounds instead.
+  LEVELS = 3
   # Mirrors StudyDay#study_goal.
   GOAL_UNMET = <<~SQL.squish
     study_days.completed_count <
-      CASE WHEN decks.goal_mode = 'target' AND decks.round <= decks.target_round
+      CASE WHEN decks.goal_mode = 'target' AND study_days.goal IS NOT NULL
         THEN study_days.goal
         ELSE decks.study_goal
       END
@@ -20,17 +23,39 @@ class Deck < ApplicationRecord
     true => "MAX(skill_scores.last_correct_at) >= ?",
     false => "COALESCE(MAX(skill_scores.last_correct_at) < ?, TRUE)",
   }.freeze
-  Progress = Data.define(:total, :done, :lowest)
+  Progress = Data.define(:total, :done, :level1, :level2, :level3)
+  # Mirrors #finish_streak.
+  FINISH_STREAK =
+    "CASE WHEN decks.type = 'MusicDeck' THEN decks.round ELSE #{LEVELS} END"
+      .freeze
+  # How many of a deck's rows (cards, or a language deck's entries) there
+  # are, how many are finished and how many seen sit at each level; the
+  # rest are new.
+  PROGRESS_FILTERS = {
+    "total" => "TRUE",
+    "done" => "rows.correct_streak >= %<finish>s",
+    "level1" => "rows.correct_streak = 0 AND rows.view_count > 0",
+    "level2" => "rows.correct_streak = 1",
+    "level3" => "rows.correct_streak = 2",
+  }.freeze
+  # One count's SQL, given the streak a row is finished at.
+  PROGRESS_COUNT =
+    ->(filter, finish) { "COUNT(*) FILTER (WHERE #{format(filter, finish:)})" }
+  PROGRESS_SELECTS =
+    PROGRESS_FILTERS.map do |name, filter|
+      "#{PROGRESS_COUNT.call(filter, FINISH_STREAK)} AS #{name}"
+    end
 
   # A language deck's cards are the entries its list selects, each scored
-  # by the weakest of the
-  # owner's skill_scores on the entry's senses, and a guest's deck stops at
+  # by the weakest of the owner's skill_scores on the entry's senses, and a
+  # guest's deck stops at
   # the first GUEST_CARD_LIMIT of them in list order. Only reading decks
   # exist, so the skill is fixed here until 4.7. Senses are looked up one
   # by one (OFFSET 0 keeps the planner from flattening it), since otherwise
   # it reads every sense in the compendium for each deck.
   LANGUAGE_ENTRIES = <<~SQL.squish
     SELECT MIN(COALESCE(skill_scores.correct_streak, 0)) AS correct_streak,
+      MIN(COALESCE(skill_scores.view_count, 0)) AS view_count,
       ROW_NUMBER() OVER (ORDER BY MIN(sense_memberships.position)) AS list_row
     FROM sense_memberships
     JOIN LATERAL (
@@ -43,27 +68,27 @@ class Deck < ApplicationRecord
     WHERE sense_memberships.word_list_id = decks.word_list_id
     GROUP BY senses.entry_id
   SQL
-  # Both counts come from one pass over the entries, since grouping them is
-  # the costly part.
-  LANGUAGE_PROGRESS = <<~SQL.squish
-    LEFT JOIN LATERAL (
-      SELECT COUNT(*) AS total,
-        COUNT(*) FILTER (WHERE entries.correct_streak >= decks.round) AS done
-      FROM (#{LANGUAGE_ENTRIES}) entries
-      WHERE users.role <> 'guest' OR entries.list_row <= :card_limit
+  # Every count comes from one pass over the entries, since grouping them
+  # is the costly part.
+  PROGRESS = <<~SQL.squish
+    JOIN LATERAL (
+      SELECT #{PROGRESS_SELECTS.join(", ")}
+      FROM cards rows WHERE rows.deck_id = decks.id
+    ) flat_progress ON TRUE
+    JOIN LATERAL (
+      SELECT #{PROGRESS_SELECTS.join(", ")}
+      FROM (#{LANGUAGE_ENTRIES}) rows
+      WHERE users.role <> 'guest' OR rows.list_row <= :card_limit
     ) language_progress ON TRUE
   SQL
+  # A deck has cards or entries, never both, so the other side counts 0.
   PROGRESS_COLUMNS = <<~SQL.squish
     decks.*,
-    CASE WHEN decks.word_list_id IS NULL THEN
-      (SELECT COUNT(*) FROM cards WHERE cards.deck_id = decks.id)
-    ELSE language_progress.total
-    END AS cards_count,
-    CASE WHEN decks.word_list_id IS NULL THEN
-      (SELECT COUNT(*) FROM cards
-        WHERE cards.deck_id = decks.id AND cards.correct_streak >= decks.round)
-    ELSE language_progress.done
-    END AS done_count
+    flat_progress.total + language_progress.total AS cards_count,
+    flat_progress.done + language_progress.done AS done_count,
+    flat_progress.level1 + language_progress.level1 AS level1_count,
+    flat_progress.level2 + language_progress.level2 AS level2_count,
+    flat_progress.level3 + language_progress.level3 AS level3_count
   SQL
   # A list's entries, counted without anyone's progress, for the catalog.
   ENTRY_COUNT_FROM = <<~SQL.squish
@@ -102,8 +127,8 @@ class Deck < ApplicationRecord
     with_goal.where(study_days: { id: nil }).or(with_goal.where(GOAL_UNMET))
   end
 
-  def self.language_progress
-    sanitize_sql_array([LANGUAGE_PROGRESS, { card_limit: GUEST_CARD_LIMIT }])
+  def self.progress_joins
+    sanitize_sql_array([PROGRESS, { card_limit: GUEST_CARD_LIMIT }])
   end
 
   # Flat-card decks own their name (the column); language decks override the
@@ -121,16 +146,9 @@ class Deck < ApplicationRecord
   validates :study_goal,
             numericality: { greater_than_or_equal_to: 1, only_integer: true }
   validates :goal_mode, inclusion: { in: GOAL_MODES }
-  validates :target_round, :target_date, presence: true, if: :target_mode?
-  # Checked only when set, so a deck that moves on past its target or
-  # outlives its date can still be saved.
-  validates :target_round,
-            numericality: {
-              greater_than_or_equal_to: :round,
-              only_integer: true,
-            },
-            allow_nil: true,
-            if: :will_save_change_to_target_round?
+  validates :target_date, presence: true, if: :target_mode?
+  # Checked only when set, so a deck that outlives its date can still be
+  # saved.
   validates :target_date,
             comparison: { greater_than_or_equal_to: -> { Date.current } },
             allow_nil: true,
@@ -146,7 +164,7 @@ class Deck < ApplicationRecord
   scope :ordered, -> { left_joins(:word_list).order(NAME_SOURCE) }
   scope :publicly_visible, -> { where(visibility: "public") }
   scope :with_progress,
-        -> { joins(:user).joins(language_progress).select(PROGRESS_COLUMNS) }
+        -> { joins(:user).joins(progress_joins).select(PROGRESS_COLUMNS) }
   scope :with_entry_counts, -> { select(ENTRY_COUNT_COLUMNS) }
 
   def music? = false
@@ -156,6 +174,20 @@ class Deck < ApplicationRecord
   def cards_count = self[:cards_count] || progress.total
   def done_count = self[:done_count] || progress.done
   def remaining_count = cards_count - done_count
+
+  # Its words at a level (1 to LEVELS) that have been seen.
+  def level_count(level)
+    name = "level#{level}"
+    self[:"#{name}_count"] || progress.public_send(name)
+  end
+
+  def new_count
+    cards_count - done_count - (1..LEVELS).sum { level_count(it) }
+  end
+
+  # The streak at which a card is done: a word's last level, or for Music
+  # the deck's round.
+  def finish_streak = LEVELS
 
   def reload(*)
     @progress = nil
@@ -188,39 +220,36 @@ class Deck < ApplicationRecord
   end
 
   # A streak climbs once a day, so a card answered correctly today waits for
-  # tomorrow; practice studies just those cards.
+  # tomorrow; practice studies just those cards. The highest level comes
+  # first, each level in the deck's order.
   def study_pool(limit:, practice: false)
-    pool = cards.not_done(round)
+    pool = cards.not_done(finish_streak)
     pool = practice ? pool.correct_today : pool.not_correct_today
-    pool.ordered.limit(limit).to_a
+    pool.order(correct_streak: :desc).ordered.limit(limit).to_a
   end
 
-  # Cards left in the round, but every one answered correctly today.
-  def waiting_for_tomorrow? = !all_done? && study_pool(limit: 1).empty?
+  # Cards left to finish, but every one answered correctly today.
+  def waiting_for_tomorrow? = !all_done? && nothing_to_study?
+
+  def nothing_to_study? = study_pool(limit: 1).empty?
 
   def all_done? = progress.done == progress.total
 
-  # Progress is shared between a user's decks, so a deck can open with every
-  # card done at its round; it moves on to the first round with work left.
-  def catch_up_round!
-    lowest = progress.lowest
-    update!(round: lowest + 1) if lowest && lowest >= round
-  end
-
-  def not_done_count(at_round) = cards.not_done(at_round).count
+  def not_done_count(streak) = cards.not_done(streak).count
 
   def target_mode? = goal_mode == "target"
 
   def no_goal? = goal_mode == "none"
 
-  def target_active? = target_mode? && round <= target_round
+  def target_active? = target_mode? && !all_done?
 
   def target_missed? = target_active? && target_date < Date.current
 
-  def target_reached? = target_mode? && round > target_round
+  def target_reached? = target_mode? && all_done?
 
-  # Card completions left to finish the target round, spread over the days
-  # left including today. A passed date puts everything left on today.
+  # The steps left to finish the deck (a word at level 2 has two to go),
+  # spread over the days left including today. A passed date puts
+  # everything left on today.
   def target_goal
     return unless target_active?
 
@@ -236,7 +265,7 @@ class Deck < ApplicationRecord
     target_work_left.fdiv(days_after_today).ceil
   end
 
-  # Card completions that lower tomorrow's goal by one: a card for each day
+  # Steps that lower tomorrow's goal by one: a card for each day
   # after today, which keeps every batch the same size. With no day after
   # today, or less work left than that, it is all the work left.
   def cards_to_lower_goal
@@ -283,31 +312,29 @@ class Deck < ApplicationRecord
 
   private
 
-  # Total, done and lowest streak come from one query, kept per round: a
-  # study page asks for them several times, and a new round mid-request
+  # Every count comes from one query, kept per finish streak: a study page
+  # asks for them several times, and a music deck's new round mid-request
   # counts afresh.
   def progress
     @progress ||= {}
-    @progress[round] ||= Progress.new(*count_progress)
+    @progress[finish_streak] ||= Progress.new(*count_progress)
   end
 
-  def count_progress = cards.pick(*progress_counts)
-
-  def progress_counts
-    done = ["COUNT(*) FILTER (WHERE correct_streak >= ?)", round]
-    [
-      Arel.sql("COUNT(*)"),
-      Arel.sql(self.class.sanitize_sql_array(done)),
-      Arel.sql("MIN(correct_streak)"),
-    ]
+  def count_progress
+    counts =
+      PROGRESS_FILTERS.values.map do |filter|
+        Arel.sql(PROGRESS_COUNT.call(filter, finish_streak))
+      end
+    Deck.unscoped.from(progress_rows, :rows).pick(*counts)
   end
+
+  def progress_rows = cards
 
   def clear_target
-    self.target_round = nil
     self.target_date = nil
   end
 
-  def target_work_left = (round..target_round).sum { |at| not_done_count(at) }
+  def target_work_left = (1..LEVELS).sum { not_done_count(it) }
 
   def days_after_today = (Date.tomorrow..target_date).count
 

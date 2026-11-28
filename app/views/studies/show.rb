@@ -46,10 +46,11 @@ module Views
             if goal_reached?
               render(Components::SessionMilestone.new(deck:, study_goal:, demo:))
             elsif study.next_card.nil?
-              render(Components::ComeBackTomorrow.new(deck:, demo:))
+              render_nothing_left
             else
               card = study.next_card
 
+              p(class: "study-level") { "Level #{study.level}" }
               render(
                 Components::CardFront.new(
                   text: card.front,
@@ -86,6 +87,14 @@ module Views
       end
 
       def goal_reached? = !deck.no_goal? && completed >= study_goal
+
+      def render_nothing_left
+        if deck.all_done?
+          render(Components::DeckFinished.new(deck:, demo:))
+        else
+          render(Components::ComeBackTomorrow.new(deck:, demo:))
+        end
+      end
 
       # Turbo keeps only the study frame from a frame request, so the text
       # is left out of it.

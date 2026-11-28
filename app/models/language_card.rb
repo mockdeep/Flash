@@ -8,10 +8,8 @@
 class LanguageCard
   CORRECT = <<~SQL.squish
     correct_count = skill_scores.correct_count + 1,
-    correct_streak = GREATEST(
-      skill_scores.correct_streak,
-      LEAST(skill_scores.correct_streak + 1, :round)
-    ),
+    correct_streak = GREATEST(skill_scores.correct_streak,
+      LEAST(skill_scores.correct_streak + 1, :finish)),
     view_count = skill_scores.view_count + 1,
     last_correct_at = excluded.last_correct_at,
     updated_at = excluded.updated_at
@@ -43,7 +41,7 @@ class LanguageCard
 
   def front = entry.term(form)
 
-  def done? = correct_streak >= deck.round
+  def done? = correct_streak >= deck.finish_streak
 
   def homograph? = deck.homograph?(self)
 
@@ -54,10 +52,11 @@ class LanguageCard
   def distractors = deck.backs_of(decoy_sense_ids).uniq
 
   # Credit fans out to every member sense, each climbing by one but not past
-  # the deck's round, so overlapping lists can't stack a sense's streak. A
-  # streak already past the round, earned in a deck at a higher one, stays.
+  # a finished word's streak, so overlapping lists can't stack a sense's
+  # streak. A streak already past it, from before levels, stays.
   def record_correct!
-    correct = SkillScore.sanitize_sql_array([CORRECT, { round: deck.round }])
+    correct =
+      SkillScore.sanitize_sql_array([CORRECT, { finish: deck.finish_streak }])
     score(
       correct,
       correct_count: 1,

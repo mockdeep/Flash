@@ -16,7 +16,6 @@ RSpec.describe "editing a card" do
   end
 
   def create_card
-    default_deck.update!(round: 2)
     create(
       :basic_card,
       deck: default_deck,

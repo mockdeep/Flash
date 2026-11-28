@@ -18,7 +18,7 @@ FactoryBot.define do
     end
 
     trait(:done) do
-      correct_streak { deck.round }
+      correct_streak { deck.finish_streak }
     end
 
     trait(:correct_today) do

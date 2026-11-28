@@ -1,9 +1,13 @@
 # frozen_string_literal: true
 
 class Study
-  ACTIVE_CARD_THRESHOLD = 20
-  FUZZY_FIND_ROUND = 3
-  READING_ROUND = 2
+  # The words of a level in play at once: the first this many in the deck's
+  # order.
+  WINDOW = 20
+  FUZZY_FIND_LEVEL = 3
+  READING_LEVEL = 2
+  # A right answer counts toward the day's goal (`counted`), outside
+  # practice. Only Music completes rounds.
   Result =
     Data.define(
       :card,
@@ -12,14 +16,23 @@ class Study
       :question,
       :selected_answer,
       :possible_answers,
-      :card_completed,
+      :counted,
       :round_completed,
       :reading_passed,
       :practice,
     ) do
-      def initialize(reading_passed: false, practice: false, **rest) = super
+      def initialize(
+        counted: false,
+        round_completed: false,
+        reading_passed: false,
+        practice: false,
+        **rest
+      )
+        super
+      end
+
       def correct? = correct
-      def card_completed? = card_completed
+      def counted? = counted
       def round_completed? = round_completed
       def reading_passed? = reading_passed
       def practice? = practice
@@ -60,13 +73,13 @@ class Study
 
   def practice? = @practice
 
-  def active_card_threshold
-    (2**(deck.round - 1)) * ACTIVE_CARD_THRESHOLD
-  end
+  # The card's level, which sets how it is asked.
+  def level = next_card.correct_streak + 1
 
-  # Unseen cards come first, in the pool's order; the rest at random.
+  # The highest level's batch, from the first WINDOW words of the pool:
+  # unseen ones first, in the pool's order, the rest at random.
   def pick_next_card(exclude_card_id:)
-    pool = deck.study_pool(limit: active_card_threshold, practice: practice?)
+    pool = batch(deck.study_pool(limit: WINDOW, practice: practice?))
     fresh = pool.reject { |card| card.id.to_s == exclude_card_id.to_s }
     fresh.find { |card| card.view_count.zero? } || fresh.sample || pool.sample
   end
@@ -122,8 +135,6 @@ class Study
       question: card.front,
       selected_answer: answer,
       possible_answers: [*possible_answers, card.reading].uniq,
-      card_completed: false,
-      round_completed: false,
       reading_passed: correct,
       practice: practice?,
     )
@@ -134,9 +145,6 @@ class Study
     result_answers = [*possible_answers, card.back].uniq
     if card.back == answer
       card.record_correct! unless practice?
-      card_completed = card.done?
-      round_completed = card_completed && deck.all_done?
-      deck.update!(round: deck.round + 1) if round_completed
       Result.new(
         card:,
         correct: true,
@@ -144,8 +152,7 @@ class Study
         question: card.front,
         selected_answer: answer,
         possible_answers: result_answers,
-        card_completed:,
-        round_completed:,
+        counted: !practice?,
         practice: practice?,
       )
     else
@@ -157,8 +164,6 @@ class Study
         question: card.front,
         selected_answer: answer,
         possible_answers: result_answers,
-        card_completed: false,
-        round_completed: false,
         practice: practice?,
       )
     end
@@ -166,12 +171,16 @@ class Study
 
   private
 
-  def fuzzy_find? = deck.round >= FUZZY_FIND_ROUND
+  def batch(pool)
+    pool.select { it.correct_streak == pool.first.correct_streak }
+  end
+
+  def fuzzy_find? = level >= FUZZY_FIND_LEVEL
 
   def reading_stage?
     !reading_confirmed &&
-      deck.round >= READING_ROUND &&
-      next_card&.reading.present?
+      next_card.reading.present? &&
+      level >= READING_LEVEL
   end
 
   # Decoys come from the siblings whose front character count is closest to

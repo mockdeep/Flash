@@ -66,16 +66,15 @@ RSpec.describe Card do
   end
 
   describe "#done?" do
-    it "returns true when correct_streak meets deck round" do
-      deck = create(:deck, round: 2)
-      card = create(:basic_card, deck:, correct_streak: 2)
+    it "returns true once the card is finished" do
+      card = create(:basic_card, correct_streak: Deck::LEVELS)
 
       expect(card.done?).to be(true)
     end
 
-    it "returns false when correct_streak is below deck round" do
-      deck = create(:deck, round: 2)
-      card = create(:basic_card, deck:, correct_streak: 1)
+    it "returns false while the card is unfinished" do
+      deck = create(:deck, round: 4)
+      card = create(:basic_card, deck:, correct_streak: Deck::LEVELS - 1)
 
       expect(card.done?).to be(false)
     end

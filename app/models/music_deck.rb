@@ -13,6 +13,10 @@ class MusicDeck < Deck
 
   def music? = true
 
+  # A round studies windows of that many cards, so a card is done once its
+  # streak reaches the round.
+  def finish_streak = round
+
   def card_type = "MusicCard"
 
   def flat_cards? = true

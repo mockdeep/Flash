@@ -9,7 +9,6 @@ FactoryBot.define do
 
     trait(:with_target) do
       goal_mode { "target" }
-      target_round { 1 }
       target_date { Date.current }
     end
   end
